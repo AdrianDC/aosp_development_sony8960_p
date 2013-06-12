@@ -2,9 +2,11 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_PREBUILT_JAVA_LIBRARIES := \
-	tools-common-prebuilt$(COMMON_JAVA_PACKAGE_SUFFIX)
-
+LOCAL_MODULE := tools-common-prebuilt
 LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := tools-common-prebuilt.jar
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 
-include $(BUILD_HOST_PREBUILT)
+include $(BUILD_PREBUILT)
