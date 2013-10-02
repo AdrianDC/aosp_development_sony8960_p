@@ -1,6 +1,5 @@
-The objects in this prebuilt directory can be rebuilt
-using the source archive
+The prebuilt ccache was built from source files inside ccache-3.1.9.tar.gz.
+The ccache-3.1.9.tar.gz file was dowloaded from http://ccache.samba.org/download.html.
 
-ccache-2.4-android-20070905.tar.gz
-
-hosted at <http://android.kernel.org/pub/>.
+Linux build environment: x86_64, Ubuntu 12.04 (precise)
+Mac OS X build environment: x86_64, Mac OS X 10.8.5 (Moutain Lion)
