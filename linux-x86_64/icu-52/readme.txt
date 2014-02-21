@@ -3,9 +3,9 @@ of some ICU tools potentially needed during
 the Android build process. The tools can be
 re-created using the following steps:
 
-(1) Copy the whole "/extlibs/icu-51"
+(1) Copy the whole "/extlibs/icu-52"
     directory somewhere else. Please
-    do not use a vanilla ICU 51 for
+    do not use a vanilla ICU 52 for
     this, since the Android version
     includes some patches for tweaking
     file sizes.
