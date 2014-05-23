@@ -21,5 +21,5 @@ include $(call first-makefiles-under, \
 		$(LOCAL_PATH)/$(HOST_PREBUILT_TAG))
 
 ifdef TARGET_2ND_PREBUILT_TAG
-include $(call first-makefiles-under, $(LOCAL_PATH)/$(TARGET_2ND_PREBUILT_TAG)
+include $(call first-makefiles-under, $(LOCAL_PATH)/$(TARGET_2ND_PREBUILT_TAG))
 endif
