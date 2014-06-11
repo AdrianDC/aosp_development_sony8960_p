@@ -1,7 +1,7 @@
 The object in this prebuilt directory is a copy of the jar from
 	platform/tools/base
 
-From the commit 27910857387deaff54a233258d3ca56c1600c98f
+From the commit bac237a65a5a566eea83aba7f0912395a78211e1
 
 Note: Before dropping the ddmlib-prebuilt.jar, please run
 the following command to strip the jar manifest file,
