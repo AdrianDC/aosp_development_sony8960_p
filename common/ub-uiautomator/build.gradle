@@ -1,3 +1,6 @@
-// allow other projects to directly use 'ub-uiautomator.jar'
-configurations.add("default")
+if (!configurations.findByName("default")) {
+    // allow other projects to directly use 'ub-uiautomator.jar'
+    configurations.add("default")
+}
+
 artifacts.add("default", file('ub-uiautomator.jar'))
