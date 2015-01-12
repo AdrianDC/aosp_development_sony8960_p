@@ -14,9 +14,6 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-# don't enable this module for unbundled branch (where source should be used)
-ifeq (,$(TARGET_BUILD_APPS))
-
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := com.android.uiautomator.platform.common
@@ -27,4 +24,3 @@ LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_PREBUILT)
 
-endif
