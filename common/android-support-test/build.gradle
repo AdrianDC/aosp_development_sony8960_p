@@ -1,2 +1,5 @@
 // allow other projects to directly use 'android-support-test.jar'
+if (!configurations.findByName("default")) {
+    configurations.create("default")
+}
 artifacts.add("default", file('android-support-test.jar'))
