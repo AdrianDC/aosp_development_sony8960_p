@@ -14,6 +14,7 @@
 
 LOCAL_PATH:= $(call my-dir)
 
+# for Andoird JUnit runner
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := android-support-test
@@ -24,3 +25,12 @@ LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_PREBUILT)
 
+# for espresso
+include $(CLEAR_VARS)
+LOCAL_MODULE := espresso-core
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := espresso-core.jar
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+
+include $(BUILD_PREBUILT)
