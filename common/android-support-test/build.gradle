@@ -3,3 +3,4 @@ if (!configurations.findByName("default")) {
     configurations.create("default")
 }
 artifacts.add("default", file('android-support-test.jar'))
+artifacts.add("default", file('espresso-core.jar'))
