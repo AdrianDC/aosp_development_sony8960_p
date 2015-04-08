@@ -1,4 +1,6 @@
 The object in this prebuilt directory can be rebuilt from
-	platform/frameworks/uiautomator
+	platform/frameworks/janktesthelper
 
-From the revision d6ae1c175f4907baceb0368e949173798372bd0b
+From the revision 9c0e562526e5b5a4d457ee8f6709f22ae527ef2c
+
+Prebuilt jar obtained from ub-support-test@1841076
