@@ -18,21 +18,21 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := rules/rules-0.2-release.jar
+LOCAL_SRC_FILES := rules/rules-0.3-release.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-nodep
-LOCAL_SDK_VERSION := 21
+LOCAL_SDK_VERSION := 22
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-rules-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := rules/rules-0.2-release-no-dep.jar
+LOCAL_SRC_FILES := rules/rules-0.3-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -40,7 +40,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-runner-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := runner/runner-0.2-release-no-dep.jar
+LOCAL_SRC_FILES := runner/runner-0.3-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -50,7 +50,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-core-2.1-release.jar
+LOCAL_SRC_FILES := espresso/espresso-core-2.2-release.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -58,7 +58,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-core-2.1-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso-core-2.2-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -68,7 +68,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-contrib
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-contrib-2.1-release.jar
+LOCAL_SRC_FILES := espresso/espresso-contrib-2.2-release.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -76,7 +76,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-contrib-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-contrib-2.1-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso-contrib-2.2-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -85,7 +85,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-idling-resource-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-idling-resource-2.1-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso-idling-resource-2.2-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -95,7 +95,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-intents
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-intents-2.1-release.jar
+LOCAL_SRC_FILES := espresso/espresso-intents-2.2-release.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
@@ -103,7 +103,25 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-intents-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-intents-2.1-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso-intents-2.2-release-no-dep.jar
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+include $(BUILD_PREBUILT)
+
+# for espresso-web
+## Note: the following jar already contains espresso-core
+include $(CLEAR_VARS)
+LOCAL_MODULE := espresso-web
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := espresso/espresso-web-2.2-release.jar
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := espresso-web-nodep
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := espresso/espresso-web-2.2-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 include $(BUILD_PREBUILT)
