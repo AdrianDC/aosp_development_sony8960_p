@@ -26,3 +26,10 @@ if (!configurations.findByName("espresso-core")) {
     configurations.create("espresso-core")
 }
 artifacts.add("espresso-core", file("espresso/espresso-core-2.2-release.jar"))
+
+// To use the "runner-no-dep.jar", add the following dependency:
+//     compile project(path: ":android-support-test", configuration: "runner-no-dep")
+if (!configurations.findByName("runner-no-dep")) {
+    configurations.create("runner-no-dep")
+}
+artifacts.add("runner-no-dep", file("runner/runner-0.3-release-no-dep.jar"))
