@@ -1,4 +1,0 @@
-if (!configurations.findByName("default")) {
-    configurations.create("default")
-}
-artifacts.add("default", file("runner-0.3-release-no-dep.jar"))
