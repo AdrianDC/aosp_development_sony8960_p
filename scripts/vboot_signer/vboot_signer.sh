@@ -2,7 +2,7 @@
 
 usage()
 {
-	echo usage: $0 futility input.img key.vbpubk key.vbprivk output.keyblock output.img
+	echo usage: $0 futility input.img key.vbpubk key.vbprivk subkey.vbprivk output.keyblock output.img
 }
 
 cleanup()
@@ -10,7 +10,7 @@ cleanup()
 	rm -f ${EMPTY}
 }
 
-if [ "$#" -ne 6 ]; then
+if [ "$#" -ne 7 ]; then
 	echo ERROR: invalid number of arguments
 	usage
 	exit 1
@@ -20,15 +20,16 @@ futility=$1
 input=$2
 pubkey=$3
 privkey=$4
-keyblock=$5
-output=$6
+subkey=$5
+keyblock=$6
+output=$7
 
 EMPTY=$(mktemp /tmp/tmp.XXXXXXXX)
 trap cleanup EXIT
 echo " " > ${EMPTY}
 
 echo signing ${input} with ${privkey} to generate ${output}
-${futility} vbutil_keyblock --pack ${keyblock} --datapubkey ${pubkey} --signprivate ${privkey}
+${futility} vbutil_keyblock --pack ${keyblock} --datapubkey ${pubkey} --signprivate ${subkey} --flags 0x7
 if [ $? -ne 0 ]; then
 	echo ERROR: unable to generate keyblock
 	exit $?
