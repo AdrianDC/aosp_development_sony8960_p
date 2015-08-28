@@ -1,4 +1,13 @@
-The object in this prebuilt directory can be rebuilt from
+The android-support-test object in this prebuilt directory can be rebuilt from
 	platform/frameworks/testing/support
 
 From the revision 32f8bbf84d78eead862ef613a64a052e80b91dc9
+
+TODO: We have different revisions, because at this point we could only update
+the espresso prebuilts. Updating android-support-test requires changes to the
+tests. We should move this forward so we can keep a single version.
+
+Espresso objects can be rebuilt from
+	platform/frameworks/testing/support on ub-support-test branch
+
+From the revision dea2d2c8ce28636f4c77bfd0158891489fd3110f
