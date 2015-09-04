@@ -14,23 +14,17 @@
 
 LOCAL_PATH := $(call my-dir)
 
-# for Android JUnit runner
+# for Android JUnit runner and Espresso
 include $(CLEAR_VARS)
-LOCAL_MODULE := android-support-test
-LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := android-support-test.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-include $(BUILD_PREBUILT)
 
-# for Espresso
-include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
+    android-support-test:android-support-test.jar \
     espresso-core:espresso/espresso-core-2.2-release.jar \
     espresso-contrib:espresso/espresso-contrib-2.2-release.jar \
     espresso-contrib-nodep:espresso/espresso-contrib-2.2-release-no-dep.jar \
     espresso-idling-resource-nodep:espresso/espresso-idling-resource-2.2-release-no-dep.jar \
     espresso-intents:espresso/espresso-intents-2.2-release.jar \
     espresso-intents-nodep:espresso/espresso-intents-2.2-release-no-dep.jar \
+
 include $(BUILD_MULTI_PREBUILT)
