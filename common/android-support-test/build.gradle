@@ -10,4 +10,4 @@ artifacts.add("default", file("android-support-test.jar"))
 if (!configurations.findByName("espresso-core")) {
     configurations.create("espresso-core")
 }
-artifacts.add("espresso-core", file("espresso-core.jar"))
+artifacts.add("espresso-core", file("espresso/espresso-core-2.2-release.jar"))
