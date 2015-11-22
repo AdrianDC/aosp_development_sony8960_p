@@ -3268,6 +3268,9 @@
   <java-symbol type="array" name="config_batteryPackageTypeService" />
 
   <java-symbol type="string" name="popup_window_default_title" />
+
+  <java-symbol type="bool" name="config_useSystemClockforRotationSensor" />
+
   <java-symbol type="bool" name="config_showAreaUpdateInfoSettings" />
   <java-symbol type="layout" name="shutdown_dialog" />
   <java-symbol type="dimen" name="chooser_service_spacing" />
