@@ -1,7 +1,7 @@
 We have 2 versions of the ASM library in our source tree:
 
 The one in prebuilt/common/asm is used for build-time utilities. It
-has a module name in the form of "asm-4.0".
+has a module name in the form of "asm-5.0".
 
 The one in prebuilts/tools/common/asm-tools is shipped in the
 SDK/tools/lib/ folder. It has modules names in the form of "asm-tools"
