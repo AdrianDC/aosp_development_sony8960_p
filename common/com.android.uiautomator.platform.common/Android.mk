@@ -21,6 +21,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := com.android.uiautomator.platform.common.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-
+# Mark static Java library as uninstallable.
+LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
-
