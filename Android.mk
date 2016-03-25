@@ -15,9 +15,16 @@
 #
 LOCAL_PATH := $(my-dir)
 
-include $(call first-makefiles-under, \
-		$(LOCAL_PATH)/common \
-		$(LOCAL_PATH)/$(TARGET_PREBUILT_TAG) \
-		$(LOCAL_PATH)/$(HOST_PREBUILT_TAG) \
-		$(if $(TARGET_2ND_PREBUILT_TAG), \
-			$(LOCAL_PATH)/$(TARGET_2ND_PREBUILT_TAG)))
+subdirs := \
+  $(LOCAL_PATH)/common \
+  $(LOCAL_PATH)/$(TARGET_PREBUILT_TAG) \
+  $(LOCAL_PATH)/$(HOST_PREBUILT_TAG)
+
+ifdef TARGET_2ND_PREBUILT_TAG
+ifneq ($(TARGET_TRANSLATE_2ND_ARCH),true)
+subdirs += \
+  $(LOCAL_PATH)/$(TARGET_2ND_PREBUILT_TAG)
+endif
+endif
+
+include $(call first-makefiles-under, $(subdirs))
