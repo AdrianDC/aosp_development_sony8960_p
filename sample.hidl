@@ -1,0 +1,80 @@
+/* License comment 
+*/
+
+version 10.3;
+package android.hardware.foo;
+import android.hardware.bar;
+import android.hardware.baz;
+import android.hardware.cow;
+interface asdf { 
+typedef int32_t int;
+
+struct C {
+  ref<int> r;
+};
+
+struct B {
+  string s;
+  handle bar;
+};
+
+union udfoo : int {
+  ref<int> r on (A);
+  ref<int> s on (B);
+};
+struct foo {
+  vec<udfoo> baz;
+  int[17] arr;
+};
+  const C1 = 5;
+  const CH2 = 'a';
+  const CH3 = '\n';
+  enum en : char {a,b = 2, c = 'a',d = C1};
+  fun(char c, int i);
+  fun_gen(char c, int i) generates(u32 foo);
+  @foo @bar(2) @baz(a=5, b=7) 
+  oneway fun2(uint8_t u);
+  union undisc_t {
+	uint8_t a;
+	char b;
+  };
+
+  enum u_disc_t : uint8_t {
+	A,
+	A_AGAIN = A,
+	B = 17,
+	ALSO_A,
+	SOME_OTHER_ENUM
+  };
+
+  union u_t : u_disc_t {
+	int a on(A, A_AGAIN, ALSO_A);
+	char c on(C); 
+	uint8_t b on(B);
+  };
+
+  struct s_t {
+	u_t u;
+	u_disc_t disc selects (u);
+  };
+
+// comment
+
+ fun1(s_t info);
+  fun2(u_t info, u_disc_t which selects(info));
+  fun3(u_t info);
+  fun4(s_t info, u_disc_t which selects(info.u));
+  fun5(s_t info, u_disc_t which selects(info));
+
+  struct whatever {
+    union : u_disc_t {
+      char a on(A);
+      int a on(A);
+      char a on(A);
+      uint32_t b on(B);
+    } the_union;
+    char other_field;
+  };
+};
+// Done
+/* Really done */
