@@ -1,4 +1,6 @@
-The object in this prebuilt directory can be rebuilt from
+The object in this prebuilt directory can be rebuilt from:
 	platform/frameworks/testing/ on ub-support-test-release branch
 
-From the revision e2a9641b4f5aaa8f958a60f718999ff81189b7b2
+From the revision: e948a3e3020aa79320ee195f3e1db6489b72e68d
+
+ub-support-test-release branch build number: 2817726
