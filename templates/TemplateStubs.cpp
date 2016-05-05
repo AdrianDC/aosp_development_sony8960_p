@@ -42,12 +42,12 @@ _aidl_ret_status = ::android::BAD_TYPE;
 break;
 }
 // START param_read_snips
-// START param_read_scalar
-_aidl_ret_status = _aidl_data.aidl_reader_fun(&param_name);
+// START param_read_scalar_int32_t
+_aidl_ret_status = _aidl_data.readInt32(&param_name);
 if (((_aidl_ret_status) != (::android::OK))) {
 break;
 }
-// END param_read_scalar
+// END param_read_scalar_int32_t
 // END param_read_snips
 ::android::binder::Status _aidl_status(function_name(function_params_stubs));
 _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
@@ -58,12 +58,12 @@ if (!_aidl_status.isOk()) {
 break;
 }
 // START param_write_ret_snips
-// START param_write_scalar
-_aidl_ret_status = _aidl_reply->aidl_writer_fun(param_name);
+// START param_write_scalar_int32_t
+_aidl_ret_status = _aidl_reply->writeInt32(param_name);
 if (((_aidl_ret_status) != (::android::OK))) {
 break;
 }
-// END param_write_scalar
+// END param_write_scalar_int32_t
 // END param_write_ret_snips
 }
 break;

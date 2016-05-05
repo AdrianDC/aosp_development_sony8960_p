@@ -1,5 +1,5 @@
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TEST_SERVICE_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TEST_SERVICE_H_
+#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TestService_H_
+#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TestService_H_
 
 #include <hwbinder/IInterface.h>
 #include <android/hardware/tests/ITestService.h>
@@ -21,4 +21,4 @@ public:
 
 }  // namespace android
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TEST_SERVICE_H_
+#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_TestService_H_

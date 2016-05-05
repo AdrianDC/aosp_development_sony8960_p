@@ -16,7 +16,7 @@
 
 %x LONG_COMMENT LINE_COMMENT STRING
 
-identifier  [_a-zA-Z][_a-zA-Z0-9]*
+identifier  [_a-zA-Z]([_a-zA-Z0-9]|\:\:)*
 whitespace  ([ \t\r]+)
 intvalue    [-+]?(0|[1-9][0-9]*)
 
@@ -88,6 +88,7 @@ import                { return yy::parser::token::IMPORT; }
 ref                   { return yy::parser::token::REF; }
 vec                   { return yy::parser::token::VEC; }
 on                    { return yy::parser::token::ON; }
+var                    { return yy::parser::token::VAR; }
 
 int8_t                { yylval->type = new ScalarType(new Element(yytext, extra_text,
 		          Element::NAME, yylloc->begin.line)); return yy::parser::token::INT8; }
@@ -122,7 +123,7 @@ string                { yylval->type = new StringType(); return yy::parser::toke
 		          Element::INT, yylloc->begin.line);
                         return yy::parser::token::INTVALUE; }
 
-    /* syntax error! */
+    /* syntax Error! */
 .                     { printf("UNKNOWN(%s)", yytext);
                         yylval->element = new Element(yytext, extra_text, Element::ERROR, yylloc->begin.line);
                         return yy::parser::token::IDENTIFIER;

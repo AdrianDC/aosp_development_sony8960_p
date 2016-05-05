@@ -101,7 +101,7 @@ CodeWriterPtr GetFileWriter(const std::string& output_file) {
   if (to != nullptr) {
     result.reset(new FileCodeWriter(to, close_on_destruction));
   } else {
-    cerr << "unable to open " << output_file << " for write" << endl;
+    cerr << "unable to open " << output_file << " for Write" << endl;
   }
 
   return result;

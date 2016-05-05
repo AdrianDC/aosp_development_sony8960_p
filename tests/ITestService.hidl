@@ -1,0 +1,6 @@
+version 1.0;
+package android.hardware.tests;
+
+interface ITestService {
+  echoInteger(int32_t echo_me) generates (int32_t _aidl_return);
+};

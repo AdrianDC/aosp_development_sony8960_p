@@ -44,14 +44,14 @@ enum class HidlError {
   OK = 0,
 };
 
-int compile_hidl_to_cpp(const CppOptions& options,
+int Compile_hidl_to_cpp(const CppOptions& options,
                         const IoDelegate& io_delegate);
-int compile_hidl_to_cpp(const CppOptions& options,
+int Compile_hidl_to_cpp(const CppOptions& options,
                         const IoDelegate& io_delegate);
 
 namespace internals {
 
-bool parse_preprocessed_file(const IoDelegate& io_delegate,
+bool Parse_preprocessed_file(const IoDelegate& io_delegate,
                              const std::string& filename);
 
 } // namespace internals

@@ -31,9 +31,9 @@ class Thing {
   void SetText(string text) { text_ = text; }
   const char *c_str() const { return text_.c_str(); }
   const string& GetComments() const { return comments_; }
-  virtual const string Typename() = 0;
+  virtual const string TypeName() = 0;
 
-  virtual void Dump() = 0;
+  virtual void Dump();
   virtual string Generate(string /*prefix*/) { return ""; }
   static void SetParser(Parser *ps);
   virtual const Subs GetSubs(string /*section*/) const { Subs subs; return subs; }
@@ -47,7 +47,7 @@ class Header : public Thing {
  public:
   void Dump() override;
   string Generate(string prefix) override;
-  const string Typename() override { return "header"; };
+  const string TypeName() override { return "header"; };
 };
 
 class Element : public Thing {
@@ -55,19 +55,21 @@ class Element : public Thing {
   enum e_type {CHAR, INT, NAME, ESTRING, COMMENT, ERROR};
   const std::vector<const char *> type_names{"Char", "Int", "Name", "String", "Comment", "Error"};
   Element(const string& text, const string& comments,
-          e_type type, int line);
-  Element(const string& text, e_type type, int line);
+          e_type type, int Line);
+  Element(const string& text, e_type type, int Line);
 
   const string& GetComments() const { return comments_; }
   bool HasScalarValue() const;
   bool HasIntegerValue() const;
   bool IsDefinedType() const;
   long GetIntegerValue() const;
+  string NoQuoteText() const { return (type_ == ESTRING) ? GetText().substr(1,GetText().length()-2) : GetText();}
+  bool HasStringValue() const { return type_ == ESTRING; }
   void AddDottedElement(Element *element);
   int Line() const { return line_; }
   void Dump() override;
   string Generate(string prefix) override;
-  const string Typename() override { return "element"; }
+  const string TypeName() override { return "element"; }
 
  private:
   string comments_;
@@ -83,7 +85,7 @@ class Const : public Thing {
   const Element *GetValue() const { return value_; }
   void Dump() override;
   string Generate(string prefix) override;
-  const string Typename() override { return "const"; }
+  const string TypeName() override { return "const"; }
 
  private:
   Element *name_;
@@ -103,11 +105,13 @@ class Fields {
 
   string GenSemiList(string section);
   string GenByType(string section, string prefix);
-  string GenParamWriter(string section);
-  string GenParamReader(string section);
+  string TextByPrefix(string section, string prefix);
+  //  string GenParamAccessor(string section, string prefix);
+  string GenVtsList(string section, string label);
   void Dump();
   bool HasPtrFixup();
   bool HasFdFixup();
+  vector<Field *> GetVec() { return fields_; }
 
  private:
   vector<Field *> fields_;
@@ -123,15 +127,17 @@ class Type : public Thing {
   virtual bool IsHandle() { return false; }
   virtual bool IsString() { return false; }
   virtual bool IsCompound() { return false; }
-  virtual Fields *GetFields() { printf("GetFields called on %s!\n", Description().c_str()); return(new Fields()); }
-  virtual string Description() = 0;
+  virtual bool IsPrimitive() { return false; }
+  virtual Fields *GetFields() { return(empty_fields_); }
   virtual bool HasFdFixup() { return false; }
   virtual bool HasPtrFixup() { return false; }
-  virtual string AidlWriter() { return "Type_needs_aidl_writer"; }
-  virtual string AidlReader() { return "Type_needs_aidl_reader"; }
+  virtual string VtsType() { return "VtsTypeUnknown"; }
+  virtual string SubtypeSuffix() { return ""; }
+  virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
   bool HasFixup();
 
  private:
+  static Fields *empty_fields_;
   DISALLOW_COPY_AND_ASSIGN(Type);
 };
 
@@ -154,8 +160,7 @@ class StructType : public CompoundType {
  public:
   StructType(Fields *fields);
   void Dump() override;
-  const string Typename() override { return "struct_type"; }
-  string Description() override;
+  const string TypeName() override { return "struct_type"; }
   string Generate(string prefix) override;
 
  private:
@@ -166,9 +171,9 @@ class EnumType : public CompoundType {
  public:
   EnumType(Type* type, Fields* fields);
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "enum_type"; }
+  const string TypeName() override { return "enum_type"; }
   string Generate(string prefix) override;
+  string TypeOfEnum(string section) override { return type_->Generate(section); }
 
  private:
   Type *type_;
@@ -181,8 +186,7 @@ class UnionType : public CompoundType {
   UnionType(Fields *fields); // Undiscriminated
   UnionType(Type* type, Fields* fields); // Disc
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "union_type"; }
+  const string TypeName() override { return "union_type"; }
   string Generate(string prefix) override;
 
  private:
@@ -211,8 +215,7 @@ class VecType : public DerivedType {
   void Dump() override;
   const Subs GetSubs(string section) const override;
   bool IsVec() override { return true; }
-  string Description() override;
-  const string Typename() override { return "vec"; }
+  const string TypeName() override { return "vec"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return true; }
 
@@ -225,8 +228,7 @@ class RefType : public DerivedType {
   RefType(Type *type);
   void Dump() override;
   bool IsRef() override { return true; }
-  string Description() override;
-  const string Typename() override { return "ref"; }
+  const string TypeName() override { return "ref"; }
   string Generate(string prefix) override;
   virtual bool HasFdFixup() override { return true; }
 
@@ -240,8 +242,7 @@ class ArrayType : public DerivedType {
   void Dump() override;
   bool IsArray() override { return true; }
   const Subs GetSubs(string section) const override;
-  string Description() override;
-  const string Typename() override { return "array"; }
+  const string TypeName() override { return "array"; }
   string Generate(string prefix) override;
 
  private:
@@ -255,9 +256,9 @@ class NamedType : public DerivedType {
   NamedType(Element *name);
   Element *GetName() { return name_; }
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "named_type"; }
+  const string TypeName() override { return "named_type"; }
   string Generate(string prefix) override;
+  virtual string SubtypeSuffix() override;
 
  private:
   Element *name_;
@@ -267,15 +268,14 @@ class NamedType : public DerivedType {
 class ScalarType : public Type {
  public:
   ScalarType(Element *name);
+  virtual bool IsPrimitive() override { return true; }
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "scalar"; }
+  const string TypeName() override { return "scalar"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
-  virtual string AidlWriter() override;
-  virtual string AidlReader() override;
-
+  virtual string VtsType() override { return name_->GetText(); }
+  virtual string SubtypeSuffix() override { return "_" + name_->GetText(); }
  private:
   Element *name_;
   DISALLOW_COPY_AND_ASSIGN(ScalarType);
@@ -286,8 +286,7 @@ class HandleType : public Type {
   HandleType();
   void Dump() override;
   bool IsHandle() override { return true; }
-  string Description() override;
-  const string Typename() override { return "handle"; }
+  const string TypeName() override { return "handle"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return true; }
@@ -300,8 +299,7 @@ class OpaqueType : public Type {
  public:
   OpaqueType();
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "opaque"; }
+  const string TypeName() override { return "opaque"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
@@ -315,8 +313,7 @@ class StringType : public Type {
   StringType();
   void Dump() override;
   bool IsString() override { return true; }
-  string Description() override;
-  const string Typename() override { return "string"; }
+  const string TypeName() override { return "string"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return false; }
@@ -340,8 +337,7 @@ class TypedefDecl : public TypeDecl {
  public:
   TypedefDecl(Element *name, Type *type);
   void Dump() override;
-  const string Typename() override { return "typedef_decl"; }
-  string Description() override;
+  const string TypeName() override { return "typedef_decl"; }
   string Generate(string prefix) override;
 
  private:
@@ -352,8 +348,7 @@ class EnumDecl : public TypeDecl {
  public:
   EnumDecl(Element *name, Type *type);
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "enum_decl"; }
+  const string TypeName() override { return "enum_decl"; }
   const Subs GetSubs(string section) const override;
 
  private:
@@ -364,8 +359,7 @@ class StructDecl : public TypeDecl {
  public:
   StructDecl(Element *name, Type *type);
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "struct_decl"; }
+  const string TypeName() override { return "struct_decl"; }
   const Subs GetSubs(string section) const override;
 
  private:
@@ -376,38 +370,45 @@ class UnionDecl : public TypeDecl {
  public:
   UnionDecl(Element *name, Type *type);
   void Dump() override;
-  string Description() override;
-  const string Typename() override { return "union_decl"; }
+  const string TypeName() override { return "union_decl"; }
   string Generate(string prefix) override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(UnionDecl);
 };
 
+class Annotation;
 
 class Field : public Thing {
  public:
   // TODO: Split into subclasses
-  enum e_kind {BASIC, SELECTS, SELECTED, ENUM, ENUM_VAL};
+  enum e_kind {BASIC, SELECTS, SELECTED, ENUM, ENUM_VAL, INITTED};
   Field(Type *type, Element* name,
         std::vector<Element*>* selectors);
   Field(Type *type, Element *name); // Basic
   Field(Type *type, Element *name, Element *selected);
+  Field(Element *name, Type *type, Element *value); // INITTED
   Field(Element *name); // Enum
-  Field(Element *name, Element *value); // For enums with defined values
+  Field(Element *name, Element *value); // For enums with Defined values
   void Dump() override;
+  int Line() { return name_->Line(); }
   string Generate(string prefix) override;
   Type *GetType() { return type_; }
-  const string Typename() override { return "field"; }
+  const string TypeName() override { return "field"; }
   Element *GetName() { return name_; }
   Element *GetValue() { return value_; }
   const string& GetComments() const { return comments_; }
   const Subs GetSubs(string section) const override;
-
+  const string NameText() { return name_->GetText(); }
+  void SetAnnotation(Annotation *a) { annotation_ = a; }
+  string GenVtsValues(string section);
+  virtual string GetInitText();
  private:
   void BuildText();
 
+  Annotation *annotation_ = nullptr;
   string comments_;
+  Element *initializer_ = nullptr;
   e_kind kind_;
   Element *name_ = nullptr;
   Element *selected_ = nullptr;
@@ -417,20 +418,79 @@ class Field : public Thing {
   DISALLOW_COPY_AND_ASSIGN(Field);
 };
 
+class Annotation;
+
+class AnnotationValue : public Thing {
+ public:
+  AnnotationValue(Element *value);
+  AnnotationValue(Annotation *annotation);
+  const string TypeName() override { return "AnnotationValue"; };
+  Element *GetValue() { return value_; }
+  Annotation *GetAnnotation() { return annotation_; }
+  string NoQuoteText();
+
+ private:
+  Element *value_ = nullptr;
+  Annotation *annotation_ = nullptr;
+  DISALLOW_COPY_AND_ASSIGN(AnnotationValue);
+};
+
+using AnnotationValues = std::vector<AnnotationValue*>;
+using AnnotationEntry = std::pair<const string, AnnotationValues*>;
+using AnnotationEntries = std::map<string, AnnotationValues*>;
+
+class Annotation : public Thing {
+ public:
+  Annotation(Element *name);
+  Annotation(Element *name, AnnotationValues *values);
+  Annotation(Element *name,
+             AnnotationEntries *entries);
+  const string TypeName() override { return "Annotation"; };
+  const string NameText() { return name_->GetText(); }
+  int Line() { return name_->Line(); }
+  AnnotationEntries *Entries() { return entries_; }
+  bool HasKey(string key);
+  AnnotationValues *GetValues(string key);
+  AnnotationValues *GetUnnamedValues() { return values_; }
+
+ private:
+  AnnotationEntries *entries_ = nullptr;
+  Element *name_;
+  AnnotationValues *values_ = nullptr;
+  DISALLOW_COPY_AND_ASSIGN(Annotation);
+};
+
+class Annotations : public Thing {
+ public:
+  Annotations() = default;
+  void Add(Annotation *a);
+  void Dump();
+  const string TypeName() override { return "Annotations"; };
+  const vector<Annotation*>GetAs() { return annotations_; }
+  Annotation *GetAnnotation(string key);
+  bool HasKey(string key);
+  string GenVtsCalls(string section, string anno_name, string out_label);
+
+ private:
+  std::vector<Annotation*>annotations_;
+  DISALLOW_COPY_AND_ASSIGN(Annotations);
+};
+
 class Function : public Thing {
  public:
-  Function(std::vector<string *>* annotations,
+  Function(Annotations* annotations,
            bool oneway,
            Element* name,
            Fields *fields,
            Fields *generates);
   void Dump() override;
   virtual const Subs GetSubs(string section) const override;
-  const string Typename() override { return "function"; }
+  const string TypeName() override { return "function"; }
   const Element *GetName() { return name_; }
+  string GenCallflow(string section) const;
 
  private:
-  std::vector<string *>* annotations_;
+  Annotations* annotations_;
   Fields *fields_;
   Fields *generates_;
   Element* name_;
@@ -442,7 +502,8 @@ using TypeMap = std::map<string, TypeDecl*>;
 
 class Parser {
  public:
-  explicit Parser(const android::hidl::IoDelegate& io_delegate);
+  explicit Parser(const android::hidl::IoDelegate& io_delegate,
+                  android::hidl::CppOptions::e_out_type out_type);
   ~Parser();
 
   // Parse contents of file |filename|.
@@ -456,7 +517,7 @@ class Parser {
 
   void AddComment(const string& comment);
 
-  void SetInterface(Element *name);
+  void SetInterface(Annotations *annotations, Element *name);
   Element *GetInterface() { return interface_; }
 
   void SetVersion(int major, int minor);
@@ -479,21 +540,27 @@ class Parser {
 
   void AddTypedef(TypedefDecl* type);
 
+  void AddVar(Field* type);
+
   bool IsTypeDeclared(Element *name);
 
   TypeDecl *GetDeclaredType(Element *name); // nullptr if not found
 
   void Error(const char *format, ...);
 
-  void Error(int line, const char *format, ...);
+  void Error(int Line, const char *format, ...);
 
   void Error(string &s);
+  int GetErrorCount() { return error_; }
 
   void Dump();
-  void Write(android::hidl::CppOptions::e_out_type out_type);
+  void Write();
   void SetWriter(android::hidl::CodeWriterPtr writer);
   string TextByPrefix(string section, string prefix);
   string CallEnumList(string section);
+  void WriteDepFileIfNeeded(
+          std::unique_ptr<android::hidl::CppOptions> options,
+          android::hidl::IoDelegate &io_delegate);
 
  private:
   void AddThing(Thing *thing);
@@ -503,6 +570,7 @@ class Parser {
   void VaError(const char *format, va_list args);
 
   const android::hidl::IoDelegate& io_delegate_;
+  android::hidl::CppOptions::e_out_type out_type_;
   int error_ = 0;
   string filename_;
   void* scanner_ = nullptr;
@@ -513,8 +581,10 @@ class Parser {
   int version_major_, version_minor_;
   std::vector<Element *>* namespace_ = nullptr;
   Element *interface_ = nullptr;
+  Annotations *interface_annotations_ = nullptr;
   TypeMap types_;
   std::map<string, const Element*> consts_;
+  Fields vars_;
   std::vector<const std::vector<Element *>*> imports_;
   std::vector<Thing *> things_;
   DISALLOW_COPY_AND_ASSIGN(Parser);

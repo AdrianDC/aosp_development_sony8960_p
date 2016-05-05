@@ -18,11 +18,17 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 %skeleton "glr.cc"
 
 %union {
-    Element* element;
+    Element *element;
     std::vector<Element *> *elements;
-    Field* field;
+    Field *field;
     Fields *fields;
-    Type* type;
+    Type *type;
+    AnnotationEntry *annotation_entry;
+    AnnotationEntries *annotation_entries;
+    AnnotationValues *annotation_values;
+    Annotation *annotation;
+    AnnotationValue *annotation_value;
+    Annotations *annotations;
     int integer;
     bool boolean;
     std::string *str;
@@ -31,7 +37,7 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 %token '(' ')' ',' '@' '=' '[' ']' '<' '>' '.' '{' '}' ';'
 %token CONST STRUCT UNION ENUM TYPEDEF VERSION INTERFACE
-%token PACKAGE GENERATES IMPORT REF VEC ON SELECTS
+%token PACKAGE GENERATES IMPORT REF VEC ON VAR SELECTS
 %token INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64
 %token CHAR OPAQUE HANDLE STRINGTOK ONEWAY
 
@@ -41,12 +47,15 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 %token<element> INTVALUE C_STR
 
 %type<strings> namespace
-%type<strings> annotations
+%type<annotations> annotations
 %type<element> dotted_ids
 %type<str> imports
-%type<str> annotation_entry annotation  annotation_entries
+%type<annotation_entry> annotation_entry
+%type<annotation> annotation
+%type<annotation_entries> annotation_entries
 %type<str> typedef_decl
-%type<str> annotation_value annotation_values
+%type<annotation_value> annotation_value
+%type<annotation_values> annotation_values
 %type<boolean> oneway
 %type<element> scalar_value const_value
 %type<elements> id_list namespace_list
@@ -64,8 +73,8 @@ comments
  | comments COMMENT { ps->AddComment($2); }
 
 intro
- : version namespace imports INTERFACE IDENTIFIER
-  { ps->SetInterface($5); }
+ : version namespace imports annotations INTERFACE IDENTIFIER
+  { ps->SetInterface($4, $6); }
 
 version
  : VERSION INTVALUE '.' INTVALUE ';'
@@ -100,6 +109,7 @@ decl
  | function_decl  {}
  | union_decl     {}
  | typedef_decl   {}
+ | top_var_decl   {} // Only for 'b' type files
 
 struct_decl
  : STRUCT IDENTIFIER '{' var_decls_semi '}' ';'
@@ -124,7 +134,7 @@ enum_decl
 
 function_decl
  : annotations oneway IDENTIFIER '(' func_args ')' ';'
-  { ps->AddFunction(new Function($1, $2, $3, $5, nullptr)); }
+  { ps->AddFunction(new Function($1, $2, $3, $5, new Fields)); }
  | annotations oneway IDENTIFIER '(' func_args ')' GENERATES '(' func_args ')' ';'
   { ps->AddFunction(new Function($1, $2, $3, $5, $9)); }
 
@@ -143,11 +153,17 @@ var_decls_semi
  | var_decls_semi var_decl ';'
   { $$->Add($2); }
 
+top_var_decl
+ : VAR var_decl ';'
+  { ps->AddVar($2); }
+
 var_decl
  : any_type IDENTIFIER
   { $$ = new Field($1, $2); }
  | any_type IDENTIFIER SELECTS '(' dotted_ids ')'
   { $$ = new Field($1, $2, $5); }
+ | any_type IDENTIFIER '=' const_value
+  { $$ = new Field($2, $1, $4); }
 
 dotted_ids
  : IDENTIFIER {}
@@ -194,40 +210,43 @@ enum_field
   { $$ = new Field($1, $3); }
 
 annotations
- : {$$ = new std::vector<std::string *>;}
- | annotations annotation { $$->push_back($2); }
+ : {$$ = new Annotations();}
+ | annotations annotation { $$->Add($2); }
 
-// TODO: Memory leaks here
 annotation
  : '@' IDENTIFIER
-  { $$ = new std::string($2->GetText()); }
- | '@' IDENTIFIER '(' const_value ')'
-  { $$ = new std::string($2->GetText()); $$->append($4->GetText()); }
+  { $$ = new Annotation($2); }
+ | '@' IDENTIFIER '(' annotation_value ')'
+  { $$ = new Annotation($2, new AnnotationValues{$4}); }
+ | '@' IDENTIFIER '(' '{' annotation_values '}' ')'
+  { $$ = new Annotation($2, $5); }
  | '@' IDENTIFIER '(' annotation_entries ')'
-  { $$ = new std::string($2->GetText()); }
+  { $$ = new Annotation($2, $4); }
 
 annotation_entries
  : annotation_entry
-  {$$ = $1;}
+  { $$ = new AnnotationEntries();
+    $$->emplace(*$1); } // TODO: delete $1 ?
  | annotation_entries ',' annotation_entry
-  { $$->append(*$3); }
+  { $$->emplace(*$3); }
 
 annotation_entry
  : IDENTIFIER '=' annotation_value
-  { $$ = new std::string($1->GetText()); $$->append(" = "); $$->append(*$3); }
+  { $$ = new AnnotationEntry{$1->GetText(), new AnnotationValues{$3}}; } // TODO: delete $1?
  | IDENTIFIER '=' '{' annotation_values '}'
-  { $$ = new std::string($1->GetText()); $$->append(" = "); $$->append(*$4); }
+  { $$ = new AnnotationEntry{$1->GetText(), $4}; }
 
 annotation_values
- : annotation_value { }
+ : annotation_value 
+  { $$ = new AnnotationValues{$1}; }
  | annotation_values ',' annotation_value
-  { $$ = $1; $$->append(*$3); }
+  { $$->push_back($3); }
 
 annotation_value
  : const_value
-  { $$ = new std::string($1->GetText()); }
+  { $$ = new AnnotationValue($1); }
  | annotation
-  { $$ = new std::string(*$1); }
+  { $$ = new AnnotationValue($1); }
 
 scalar_type
  : UINT8     { }

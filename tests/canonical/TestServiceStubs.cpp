@@ -29,17 +29,19 @@ namespace tests {
 switch (_aidl_code) {
 case Call::ECHOINTEGER:
 {
-int32_t in_echo_me;
+int32_t echo_me;
 int32_t _aidl_return;
+
 if (!(_aidl_data.checkInterface(this))) {
 _aidl_ret_status = ::android::BAD_TYPE;
 break;
 }
-_aidl_ret_status = _aidl_data.readInt32(&in_echo_me);
+_aidl_ret_status = _aidl_data.readInt32(&echo_me);
 if (((_aidl_ret_status) != (::android::OK))) {
 break;
 }
-::android::binder::Status _aidl_status(echoInteger(in_echo_me, &_aidl_return));
+
+::android::binder::Status _aidl_status(echoInteger(echo_me, &_aidl_return));
 _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
 if (((_aidl_ret_status) != (::android::OK))) {
 break;
@@ -51,8 +53,10 @@ _aidl_ret_status = _aidl_reply->writeInt32(_aidl_return);
 if (((_aidl_ret_status) != (::android::OK))) {
 break;
 }
+
 }
 break;
+
 default:
 {
 _aidl_ret_status = ::android::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);

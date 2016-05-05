@@ -1,5 +1,5 @@
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TEST_SERVICE_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TEST_SERVICE_H_
+#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TestService_H_
+#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TestService_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
@@ -16,9 +16,12 @@ namespace tests {
 class ITestService : public ::android::IInterface {
 public:
 DECLARE_META_INTERFACE(TestService);
-virtual ::android::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) = 0;
+  virtual ::android::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) = 0;
+
 enum Call {
   ECHOINTEGER = ::android::IBinder::FIRST_CALL_TRANSACTION + 0,
+
+
 };
 };  // class ITestService
 
@@ -28,4 +31,4 @@ enum Call {
 
 }  // namespace android
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TEST_SERVICE_H_
+#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_TestService_H_
