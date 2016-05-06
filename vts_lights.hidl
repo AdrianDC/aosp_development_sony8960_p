@@ -1,0 +1,10 @@
+version 1.0;
+package android.hardware.tests;
+
+interface ISampleLightsHalServiceWithVtsAnnotation {
+  struct light_state_t {
+    string s;
+    handle bar;
+  };
+  setLight(light_state_t state) generates (int32_t _hidl_return);
+};
