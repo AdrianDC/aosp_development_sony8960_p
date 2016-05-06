@@ -1,6 +1,7 @@
 version 1.0;
 package android.hardware.tests;
 
+@hal_type("GPS")
 interface ISampleGpsHalServiceWithVtsCallFlowAnnotation {
   @param(name="mode", normal={1, 2, 3})
   @next_calls({"stop"})
@@ -12,5 +13,5 @@ interface ISampleGpsHalServiceWithVtsCallFlowAnnotation {
 
   @next_calls({"cleanup"})
   @exit
-  cleanup() generates (void);
-}
+  cleanup();
+};

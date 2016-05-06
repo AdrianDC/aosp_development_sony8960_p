@@ -6,7 +6,7 @@ original_data_structure_name: "ISampleLightsHalServiceWithVtsAnnotation"
 
 api: {
   name: "setLight"
-  return_type: {
+  return_type_hidl: {
     primitive_type: "int32_t"
   }
   arg: {

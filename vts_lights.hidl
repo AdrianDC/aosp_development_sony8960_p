@@ -1,6 +1,7 @@
 version 1.0;
 package android.hardware.tests;
 
+@hal_type("LIGHT")
 interface ISampleLightsHalServiceWithVtsAnnotation {
   struct light_state_t {
     string s;

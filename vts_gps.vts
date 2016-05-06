@@ -6,19 +6,19 @@ original_data_structure_name: "ISampleGpsHalServiceWithVtsCallFlowAnnotation"
 
 api: {
   name: "start"
-  return_type: {
+  return_type_hidl: {
     primitive_type: "int32_t"
   }
   arg: {
     primitive_type: "int32_t"
     values: {
-      int32: 1
+      int32_t: 1
     }
     values: {
-      int32: 2
+      int32_t: 2
     }
     values: {
-      int32: 3
+      int32_t: 3
     }
   }
   callflow: {
@@ -29,7 +29,7 @@ api: {
 
 api: {
   name: "stop"
-  return_type: {
+  return_type_hidl: {
     primitive_type: "int32_t"
   }
   callflow: {
