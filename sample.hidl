@@ -8,6 +8,7 @@ import android.hardware.baz;
 import android.hardware.cow;
 interface asdf { 
 typedef int32_t int;
+typedef uint32_t u32;
 
 struct C {
   ref<int> r;
