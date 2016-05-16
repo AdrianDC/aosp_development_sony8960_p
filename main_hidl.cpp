@@ -34,13 +34,16 @@ int main(int argc, char** argv) {
 
   android::hidl::IoDelegate io_delegate;
   android::hidl::CodeWriterPtr writer = android::hidl::GetFileWriter(options->OutputFileName());
-  Parser p{io_delegate};
+  Parser p{io_delegate, options->OutputType()};
   Thing::SetParser(&p);
   p.SetWriter(std::move(writer));
   p.ParseFile(options->InputFileName());
   if (options->PrintStuff()) {
     p.Dump();
   }
-  p.Write(options->OutputType());
-  //  return android::hidl::compile_hidl_to_cpp(*options, io_delegate);
+  p.Write();
+  p.WriteDepFileIfNeeded(std::move(options), io_delegate);
+  printf("Exit error count: %d\n", p.GetErrorCount());
+  return p.GetErrorCount();
+  //  return android::hidl::Compile_hidl_to_cpp(*options, io_delegate);
 }

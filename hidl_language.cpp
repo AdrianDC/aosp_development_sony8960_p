@@ -36,10 +36,15 @@ void yy_delete_buffer(YY_BUFFER_STATE, void *);
 
 
 Parser *Thing::ps_;
+Fields *Type::empty_fields_ = new Fields();
 
 Thing::Thing() {}
 Thing::Thing(string text) : text_(text) {}
-
+void Thing::Dump()
+{
+  std::cout << "Implement Dump for "
+            << TypeName() << endl;
+}
 
 Const::Const(Element *name, Element *value)
     : name_(name),
@@ -56,17 +61,17 @@ void Const::Dump()
 }
 
 Element::Element(const string& text, const string& comments,
-                 e_type type, int line)
+                 e_type type, int Line)
     : Thing(text),
       comments_(comments),
-      line_(line),
+      line_(Line),
       type_(type)
 {
 }
-Element::Element(const string& text, e_type type, int line)
+Element::Element(const string& text, e_type type, int Line)
     : Thing(text),
       comments_(""),
-      line_(line),
+      line_(Line),
       type_(type)
 {
 }
@@ -141,7 +146,7 @@ RefType::RefType(Type *base)
     : DerivedType(base)
 {
   if (base->HasFixup()) {
-    ps_->Error("Ref types aren't allowed to have fixups (TODO: find line number - sorry!)");
+    ps_->Error("Ref types aren't allowed to have fixups (TODO: find Line number - sorry!)");
   }
 }
 
@@ -368,6 +373,16 @@ Field::Field(Type *type, Element *name)
    // TODO
 }
 
+Field::Field(Element *name, Type *type, Element *value)
+    : initializer_(value),
+      kind_(INITTED),
+      name_(name),
+      type_(type)
+{
+  BuildText();
+   // TODO
+}
+
 // Used for scalar that selects a discriminated union
 Field::Field(Type *type, Element *name, Element *selected)
     : kind_(SELECTED),
@@ -441,8 +456,11 @@ void Field::BuildText()
 
 
 
-Parser::Parser(const IoDelegate& io_delegate)
-    : io_delegate_(io_delegate) {
+Parser::Parser(const IoDelegate& io_delegate,
+android::hidl::CppOptions::e_out_type out_type)
+    : io_delegate_(io_delegate),
+      out_type_(out_type)
+{
   yylex_init(&scanner_);
 }
 
@@ -461,6 +479,7 @@ bool Parser::ParseFile(const string& filename) {
   unique_ptr<string> new_buffer = io_delegate_.GetFileContents(filename);
   if (!new_buffer) {
     LOG(ERROR) << "Error while opening file for parsing: '" << filename << "'";
+    Error("Error while opening file for parsing: '%s'", filename.c_str());
     return false;
   }
 
@@ -499,12 +518,13 @@ void Parser::AddComment(Element *comment) {
   AddThing(comment);
 }
 
-void Parser::SetInterface(Element *name) {
+void Parser::SetInterface(Annotations *annotations, Element *name) {
   if (interface_) {
     Error(name->Line(), "Only one interface per file please!");
   }
   name->SetText(name->GetText().substr(1, string::npos));
   interface_ = name;
+  interface_annotations_ = annotations;
 }
 
 void Parser::SetVersion(int major, int minor) {
@@ -560,7 +580,40 @@ void Parser::AddConst(Const *constant) {
   RegisterConstant(name, value);
 }
 
-Function::Function(vector<string *>* annotations,
+Annotation::Annotation(Element *name)
+    : name_(name)
+{
+}
+
+Annotation::Annotation(Element *name, AnnotationValues *values)
+    : name_(name),
+      values_(values)
+{
+}
+
+Annotation::Annotation(Element *name,
+                       AnnotationEntries *entries)
+    : entries_(entries),
+      name_(name)
+{
+}
+
+AnnotationValue::AnnotationValue(Element *value)
+    : value_(value)
+{
+}
+
+AnnotationValue::AnnotationValue(Annotation *annotation)
+    : annotation_(annotation)
+{
+}
+
+void Annotations::Add(Annotation *annotation)
+{
+  annotations_.push_back(annotation);
+}
+
+Function::Function(Annotations* annotations,
                    bool oneway,
                    Element* name,
                    Fields *fields,
@@ -571,6 +624,35 @@ Function::Function(vector<string *>* annotations,
       name_(name),
       oneway_(oneway)
 {
+  std::map<string, Field*>params;
+  for (auto & f : fields->GetVec()) {
+    if (params.find(f->NameText()) != params.end()) {
+      ps_->Error(f->GetName()->Line(),
+                 "Duplicate param name %s",
+                 f->NameText().c_str());
+    }
+    params[f->NameText()] = f;
+  }
+  for (auto & a : annotations->GetAs()) {
+    if (a->NameText() == "param") {
+      if (!a->Entries()) {
+        ps_->Error(a->Line(), "'param' annotation needs entries including 'name'");
+      }
+      AnnotationEntries::iterator name_entry =
+          a->Entries()->find("name");
+      if (name_entry == a->Entries()->end()) {
+        ps_->Error(a->Line(), "'param' annotation needs 'name' entry");
+      }
+      string name = name_entry->second->front()->GetValue()->NoQuoteText();
+      std::map<string, Field*>::iterator field_entry =
+          params.find(name);
+      if (field_entry != params.end()) {
+        field_entry->second->SetAnnotation(a);
+      } else {
+        ps_->Error(a->Line(), "Param name '%s' not in function", name.c_str());
+      }
+    }
+  }
 }
 
 void Function::Dump()
@@ -578,14 +660,7 @@ void Function::Dump()
   cout << "Function: " << name_->GetText() << " with fields: ";
   fields_->Dump();
   cout << " oneway " << oneway_;
-  if (annotations_->size() > 0) {
-    cout << endl << "  annotations: ";
-    for (auto & annotation : *annotations_) {
-      cout << *annotation << ", ";
-    }
-  } else {
-    cout << " no annotations; ";
-  }
+  annotations_->Dump();
   if (generates_) {
     cout << endl << "  generating ";
     generates_->Dump();
@@ -593,7 +668,18 @@ void Function::Dump()
   cout << endl;
 }
 
-
+void Annotations::Dump()
+{
+  cout << "TODO: Annotation Dump" << endl;
+  /* if (annotations_->size() > 0) {
+    cout << endl << "  annotations: ";
+    for (auto & annotation : *annotations_) {
+      cout << *annotation << ", ";
+    }
+  } else {
+    cout << " no annotations; ";
+    }*/
+}
 void Parser::AddFunction(Function *function)
 {
   AddThing(function);
@@ -612,6 +698,23 @@ void Parser::AddEnum(EnumDecl *en)
   // TODO: Register constants from en's fields
 }
 
+void Parser::AddVar(Field *field)
+{
+  if (out_type_ != android::hidl::CppOptions::BINDER) {
+    Error(field->Line(), "Top level var decls aren't allowed");
+  } else {
+    vars_.Add(field);
+  }
+}
+
+string Field::GetInitText()
+{
+  if (initializer_) {
+    return " = " + initializer_->GetText();
+  } else {
+    return "";
+  }
+}
 
 void Parser::AddTypedef(TypedefDecl *type) {
   RegisterType(type);
@@ -673,10 +776,10 @@ void Parser::VaError(const char *format, va_list args) {
   printf("\n");
 }
 
-void Parser::Error(int line, const char *format, ...) {
+void Parser::Error(int Line, const char *format, ...) {
   error_++;
   va_list args;
-  printf("Error: Line %d: ", line);
+  printf("Error: Line %d: ", Line);
   va_start(args, format);
   VaError(format, args);
   va_end(args);
@@ -694,4 +797,42 @@ void Parser::Error(const char *format, ...) {
 void Parser::Error(string &s) {
   cout << s;
   error_++;
+}
+
+void Parser::WriteDepFileIfNeeded(
+    std::unique_ptr<android::hidl::CppOptions> options,
+    android::hidl::IoDelegate &io_delegate)
+{
+  string dep_file_name = options->DependencyFilePath();
+  if (dep_file_name.empty()) {
+    return;  // nothing to do
+  }
+  android::hidl::CodeWriterPtr writerP = io_delegate.GetCodeWriter(dep_file_name);
+  if (!writerP) {
+    LOG(ERROR) << "Could not open dependency file: " << dep_file_name;
+    // Parser::Error tells the build system there was a problem
+    Error("Build system error: Could not open dependency file: %s", dep_file_name.c_str());
+    return;
+  }
+
+  vector<string> hidl_sources = {options->InputFileName()};
+  /*  for (const auto& import : imports) {
+    if (!import->GetFilename().empty()) {
+      hidl_sources.push_back(import->GetFilename());
+    }
+    }*/
+
+  string output_file = options->OutputFileName();
+  android::hidl::CodeWriter *writer = writerP.get();
+
+  // Encode that the output file depends on hidl input files.
+  writer->Write("%s : \\\n", output_file.c_str());
+  writer->Write("  %s", Join(hidl_sources, " \\\n  ").c_str());
+  writer->Write("\n\n");
+
+  // Output "<input_hidl_file>: " so make won't fail if the input .hidl file
+  // has been deleted, moved or renamed in incremental build.
+  for (const auto& src : hidl_sources) {
+    writer->Write("%s :\n", src.c_str());
+  }
 }

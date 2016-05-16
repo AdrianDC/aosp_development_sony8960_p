@@ -15,7 +15,13 @@ def read_file(fname, snips, labels)
     end
     if labels.size > 0 && !(/\/\/\s*SKIP/ =~ line)
       snips[labels[-1][0]][labels[-1][1]] = "" if !snips[labels[-1][0]][labels[-1][1]]
-      snips[labels[-1][0]][labels[-1][1]] += "#{line}\\n"
+      line_text = line.gsub(/\s*\/\/.*?$/, "")
+      if (line_text =~ /^\s*$/) && (line !~ /^\s*$/)
+        line_text = ""
+      else
+        line_text = "#{line_text}\\n"
+      end
+      snips[labels[-1][0]][labels[-1][1]] += line_text
     end
     if /\/\/\s*SECTION\s+(?<new_section>\S+)/ =~ line
       section = new_section
@@ -34,7 +40,7 @@ def read_file(fname, snips, labels)
   end
 end
 
-"IFoo.h BnFoo.h BpFoo.h FooStubs.cpp FooProxy.cpp".split.each {|fname|
+"templates/BnTemplate.h templates/TemplateProxy.cpp templates/BpTemplate.h templates/TemplateStubs.cpp templates/ITemplate.h templates/Template.vts".split.each {|fname|
   read_file(fname, snips, labels)
 }
 

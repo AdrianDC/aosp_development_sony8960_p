@@ -54,54 +54,64 @@ LOCAL_SRC_FILES := \
     io_delegate.cpp \
     line_reader.cpp \
     options.cpp \
-    snippets.cpp
 
 include $(BUILD_HOST_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libhidl-parse
-LOCAL_MODULE_HOST_OS := $(hidl_module_host_os)
-
-LOCAL_C_INCLUDES := external/gtest/include
-LOCAL_CLANG_CFLAGS := $(hidl_cflags)
-# Tragically, the code is riddled with unused parameters.
-LOCAL_CLANG_CFLAGS += -Wno-unused-parameter
-# yacc dumps a lot of code *just in case*.
-LOCAL_CLANG_CFLAGS += -Wno-unused-function
-LOCAL_CLANG_CFLAGS += -Wno-unneeded-internal-declaration
-# yacc is a tool from a more civilized age.
-LOCAL_CLANG_CFLAGS += -Wno-deprecated-register
-# yacc also has a habit of using char* over const char*.
-LOCAL_CLANG_CFLAGS += -Wno-writable-strings
-LOCAL_STATIC_LIBRARIES := $(hidl_static_libraries)
-
-#LOCAL_SRC_FILES := \
-#    hidl_language_l.ll \
-#    hidl_language_y.yy \
-
-#include $(BUILD_HOST_STATIC_LIBRARY)
-
 
 
 # hidl-cpp executable
 include $(CLEAR_VARS)
 LOCAL_MODULE := hidl-cpp
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_IS_HOST_MODULE := true
+
+intermediates:= $(local-generated-sources-dir)
+private_input_files := \
+	$(LOCAL_PATH)/templates/BnTemplate.h \
+	$(LOCAL_PATH)/templates/BpTemplate.h \
+	$(LOCAL_PATH)/templates/ITemplate.h \
+	$(LOCAL_PATH)/templates/Template.vts \
+	$(LOCAL_PATH)/templates/TemplateBinder.h \
+	$(LOCAL_PATH)/templates/TemplateProxy.cpp \
+	$(LOCAL_PATH)/templates/TemplateStubs.cpp \
+
+the_py_script := $(LOCAL_PATH)/make_snippets.py
+GEN := $(intermediates)/snippets.cpp
+$(GEN): PRIVATE_INPUT_FILES := $(private_input_files)
+$(GEN): PRIVATE_PY_SCRIPT := $(the_py_script)
+$(GEN): PRIVATE_CUSTOM_TOOL = python $(PRIVATE_PY_SCRIPT) $@ $(PRIVATE_INPUT_FILES)
+$(GEN): $(private_input_files) $(the_py_script)
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
 
 LOCAL_MODULE_HOST_OS := $(hidl_module_host_os)
 LOCAL_CFLAGS := $(hidl_cflags)
 LOCAL_C_INCLUDES := external/gtest/include 
 LOCAL_SRC_FILES := main_hidl.cpp
+
 LOCAL_STATIC_LIBRARIES := libhidl-common $(hidl_static_libraries)
 include $(BUILD_HOST_EXECUTABLE)
 
-# template executable
 include $(CLEAR_VARS)
-LOCAL_MODULE := hidl-template
+LOCAL_MODULE := hidl_test
+LOCAL_MODULE_CLASS := FAKE
+LOCAL_IS_HOST_MODULE := true
 
-LOCAL_MODULE_HOST_OS := $(hidl_module_host_os)
-LOCAL_CFLAGS := $(hidl_cflags)
-LOCAL_SRC_FILES := template.cpp
-include $(BUILD_HOST_EXECUTABLE)
+include $(BUILD_SYSTEM)/base_rules.mk
+
+the_py_script := $(LOCAL_PATH)/tests/testAll.py
+$(LOCAL_BUILT_MODULE): PRIVATE_PY_SCRIPT := $(the_py_script)
+$(LOCAL_BUILT_MODULE): PRIVATE_OUT_DIR := $(intermediates)/test_out
+$(LOCAL_BUILT_MODULE): PRIVATE_TEST_DIR := $(LOCAL_PATH)/tests
+$(LOCAL_BUILT_MODULE): PRIVATE_HIDL_EXEC := $(HOST_OUT_EXECUTABLES)/hidl-cpp
+$(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-cpp
+	@echo "host Test: $(PRIVATE_MODULE)"
+	@mkdir -p $(dir $@)
+	@mkdir -p $(PRIVATE_OUT_DIR)
+	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_TEST_DIR) $(PRIVATE_OUT_DIR)
+	$(hide) touch $@
+
+
 
 # Unit tests
 include $(CLEAR_VARS)

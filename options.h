@@ -29,11 +29,12 @@ namespace hidl {
 
 class CppOptions final {
  public:
-  enum e_out_type {IFOO, BNFOO, BPFOO, FOOSTUBS, FOOPROXY};
+  enum e_out_type {IFOO, BNFOO, BPFOO, FOOSTUBS, FOOPROXY, VTS,
+                   BINDER};
 
   ~CppOptions() = default;
 
-  // Parses the command line and returns a non-null pointer to an CppOptions
+  // Parses the command Line and returns a non-null pointer to an CppOptions
   // object on success.
   // Prints the usage statement on failure.
   static std::unique_ptr<CppOptions> Parse(int argc, const char* const* argv);

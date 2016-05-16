@@ -39,19 +39,21 @@ unique_ptr<CppOptions> cpp_usage() {
        << endl
        << "OPTIONS:" << endl
       //       << "   -I<DIR>   search path for import statements" << endl
-       << "   -d<FILE>  generate dependency file" << endl
+       << "   -d<FILE>  Generate dependency file" << endl
        << "   -p        print info from input file (for debugging)" << endl
-       << "   -On       generate BnFoo.h" << endl
-       << "   -Op       generate BpFoo.h" << endl
-       << "   -Oi       generate IFoo.h" << endl
-       << "   -Os       generate FooStubs.cpp" << endl
-       << "   -Ox       generate FooProxy.cpp" << endl
+       << "   -On       Generate BnFoo.h" << endl
+       << "   -Op       Generate BpFoo.h" << endl
+       << "   -Oi       Generate IFoo.h" << endl
+       << "   -Os       Generate FooStubs.cpp" << endl
+       << "   -Ox       Generate FooProxy.cpp" << endl
+       << "   -Ov       Generate Foo.vts" << endl
+       << "   -Ob       Generate Binder .h file (for Ian)" << endl
        << "       (only the last -O option will be used. Default is -Oi.)" << endl
        << endl
        << "INPUT_FILE:" << endl
        << "   a hidl interface file" << endl
        << "OUTPUT_FILE:" << endl
-       << "   path to write generated file" << endl;
+       << "   path to Write generated file" << endl;
   return unique_ptr<CppOptions>(nullptr);
 }
 
@@ -91,6 +93,8 @@ unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
         case 'i': options->out_type_ = CppOptions::IFOO; break;
         case 's': options->out_type_ = CppOptions::FOOSTUBS; break;
         case 'x': options->out_type_ = CppOptions::FOOPROXY; break;
+        case 'v': options->out_type_ = CppOptions::VTS; break;
+        case 'b': options->out_type_ = CppOptions::BINDER; break;
         default:
           cerr << "Invalid argument '" << s << "'." << endl;
           return cpp_usage();

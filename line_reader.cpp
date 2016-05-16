@@ -39,12 +39,12 @@ class FileLineReader : public LineReader {
     return input_stream_.is_open() && input_stream_.good();
   }
 
-  bool ReadLine(string* line) override {
+  bool ReadLine(string* Line) override {
     if (!input_stream_.good()) {
       return false;
     }
-    line->clear();
-    std::getline(input_stream_, *line);
+    Line->clear();
+    std::getline(input_stream_, *Line);
     return true;
   }
 
@@ -59,12 +59,12 @@ class MemoryLineReader : public LineReader {
   MemoryLineReader(const string& contents) : input_stream_(contents) {}
   virtual ~MemoryLineReader() = default;
 
-  bool ReadLine(string* line) override {
+  bool ReadLine(string* Line) override {
     if (!input_stream_.good()) {
       return false;
     }
-    line->clear();
-    std::getline(input_stream_, *line);
+    Line->clear();
+    std::getline(input_stream_, *Line);
     return true;
   }
 

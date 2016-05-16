@@ -1,5 +1,5 @@
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TEST_SERVICE_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TEST_SERVICE_H_
+#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_
+#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
@@ -17,6 +17,7 @@ public:
 explicit BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl);
 virtual ~BpTestService() = default;
 ::android::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) override;
+
 };  // class BpTestService
 
 }  // namespace tests
@@ -25,4 +26,4 @@ virtual ~BpTestService() = default;
 
 }  // namespace android
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TEST_SERVICE_H_
+#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_

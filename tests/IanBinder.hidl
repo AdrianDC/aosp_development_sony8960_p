@@ -1,0 +1,16 @@
+version 1.0;
+package android.hardware.tests;
+
+interface IMappableRegion {
+
+  enum  MappingType : int32_t {
+                        UNDEFINED_MAPPING,
+                        ASHMEM_MAPPING,
+                        FILE_MAPPING
+                    };
+		    var   ref<char> mFd = -1;
+                    var MappingType mRegionType = MappingType::UNDEFINED_MAPPING;
+                    var int64_t mOffset;
+                    var uint64_t mSize = 0;
+              
+};

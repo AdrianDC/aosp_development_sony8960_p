@@ -30,7 +30,7 @@ namespace hidl {
 class CodeWriter {
  public:
   // Write a formatted string to this writer in the usual printf sense.
-  // Returns false on error.
+  // Returns false on Error.
   virtual bool Write(const char* format, ...) = 0;
   virtual bool Close() = 0;
   virtual ~CodeWriter() = default;

@@ -21,7 +21,15 @@ public:
 DECLARE_META_INTERFACE(package_name);
   // START declarations
   virtual ::android::binder::Status function_name(param_list) = 0; // ALL declare_function
-  enum enum_name { enum_fields } ; // ALL declare_enum_decl
+ // START declare_enum_decl
+  enum class enum_name { enum_fields };
+  const char* GetNameOf(enum_name f) {
+    static const char* names[] = {quoted_fields_of_enum }
+    //do errror checking
+    return names[int(f)];
+}
+  size_t enum_limits<foo>::max() { return 1; }
+// END declare_enum_decl
   struct struct_name { // START declare_struct_decl
     int field_filler; // ALL struct_fields
   }; // END declare_struct_decl

@@ -29,7 +29,7 @@ class LineReader {
  public:
   LineReader() = default;
   virtual ~LineReader() = default;
-  virtual bool ReadLine(std::string* line) = 0;
+  virtual bool ReadLine(std::string* Line) = 0;
 
   static std::unique_ptr<LineReader> ReadFromFile(
       const std::string& file_path);

@@ -2,5 +2,5 @@ version 1.0;
 package android.hardware.tests;
 
 interface ITestService {
-  echoInteger() generates (int32_t response);
+  echoInteger(int48_t echo_me) generates (int32_t _aidl_return);
 };

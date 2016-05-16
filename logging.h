@@ -19,7 +19,7 @@
 
 // We must include windows.h before android-base/logging.h on Windows.
 #ifdef _WIN32
-//#include <windows.h>// TODO This suddenly caused a weird error (enum started failing in auto-gen lex file) and I commented it out. Why? (It may be related that va_start() suddenly became undeclared though I hadn't touched that code in days.) -- CJP
+//#include <windows.h>// TODO This suddenly caused a weird Error (enum started failing in auto-gen lex file) and I commented it out. Why? (It may be related that Va_start() suddenly became undeclared though I hadn't touched that code in days.) -- CJP
 #endif
 
 #include <android-base/logging.h>

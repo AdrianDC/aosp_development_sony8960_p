@@ -1,0 +1,33 @@
+// SECTION vts
+// START file
+component_class: HAL_HIDL
+component_type: vts_ct_enum // ALL component_type_enum
+component_type_version: version_string
+
+original_data_structure_name: "Ipackage_name"
+
+//START code_snips
+// START code_for_function
+api: {
+  name: "function_name"
+  // START vts_args
+  arg_or_ret_type: {
+    vts_type_type: "type_name"
+// START vts_values
+    values: {
+      type_name: the_value
+    }
+// END vts_values
+  }
+ // END vts_args
+// START vts_callflow
+  callflow: {
+    entry: true // ALL anno_entry
+    exit: true // ALL anno_exit
+    callflow_label: callflow_func_name // ALL anno_calls
+  }
+// END vts_callflow
+}
+// END code_for_function
+// END code_snips
+// END file

@@ -1,0 +1,17 @@
+version 1.0;
+package android.hardware.tests;
+
+@hal_type("GPS")
+interface ISampleGpsHalServiceWithVtsCallFlowAnnotation {
+  @param(name="mode", normal={1, 2, 3})
+  @next_calls({"stop"})
+  @entry
+  start(int32_t mode) generates (int32_t _retcode);
+
+  @next_calls({"cleanup"})
+  stop() generates (int32_t _retcode);
+
+  @next_calls({"cleanup"})
+  @exit
+  cleanup();
+};
