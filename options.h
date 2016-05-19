@@ -44,15 +44,15 @@ class CppOptions final {
 
   std::vector<std::string> ImportPaths() const { return import_paths_; }
   std::string DependencyFilePath() const { return dep_file_name_; }
-  e_out_type OutputType() const { return out_type_; }
+  std::string OutputType() const { return section_; }
   bool PrintStuff() const { return print_stuff_; }
 
  private:
   CppOptions() = default;
 
-  e_out_type out_type_ = IFOO;
   bool print_stuff_ = false;
   std::string input_file_name_;
+  std::string section_;
   std::vector<std::string> import_paths_;
   std::string output_file_name_;
   std::string dep_file_name_;

@@ -48,7 +48,7 @@ LOCAL_STATIC_LIBRARIES := $(hidl_static_libraries)
 LOCAL_SRC_FILES := \
     code_writer.cpp \
     generate.cpp \
-    hidl_language.cpp \
+    ast.cpp \
     hidl_language_l.ll \
     hidl_language_y.yy \
     io_delegate.cpp \
@@ -58,9 +58,9 @@ LOCAL_SRC_FILES := \
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 
-# hidl-cpp executable
+# hidl-gen executable
 include $(CLEAR_VARS)
-LOCAL_MODULE := hidl-cpp
+LOCAL_MODULE := hidl-gen
 LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_IS_HOST_MODULE := true
 
@@ -103,14 +103,13 @@ the_py_script := $(LOCAL_PATH)/tests/testAll.py
 $(LOCAL_BUILT_MODULE): PRIVATE_PY_SCRIPT := $(the_py_script)
 $(LOCAL_BUILT_MODULE): PRIVATE_OUT_DIR := $(intermediates)/test_out
 $(LOCAL_BUILT_MODULE): PRIVATE_TEST_DIR := $(LOCAL_PATH)/tests
-$(LOCAL_BUILT_MODULE): PRIVATE_HIDL_EXEC := $(HOST_OUT_EXECUTABLES)/hidl-cpp
-$(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-cpp
+$(LOCAL_BUILT_MODULE): PRIVATE_HIDL_EXEC := $(HOST_OUT_EXECUTABLES)/hidl-gen
+$(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-gen
 	@echo "host Test: $(PRIVATE_MODULE)"
 	@mkdir -p $(dir $@)
 	@mkdir -p $(PRIVATE_OUT_DIR)
 	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_TEST_DIR) $(PRIVATE_OUT_DIR)
 	$(hide) touch $@
-
 
 
 # Unit tests
@@ -229,3 +228,5 @@ LOCAL_HIDL_INCLUDES := \
 #include $(BUILD_PACKAGE)
 
 endif  # not defined BRILLO
+
+include $(call all-makefiles-under,$(LOCAL_PATH))

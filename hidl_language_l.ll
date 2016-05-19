@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "hidl_language.h"
+#include "ast.h"
 #include "hidl_language_y.h"
 
 #define YY_USER_ACTION yylloc->columns(yyleng);
@@ -88,7 +88,6 @@ import                { return yy::parser::token::IMPORT; }
 ref                   { return yy::parser::token::REF; }
 vec                   { return yy::parser::token::VEC; }
 on                    { return yy::parser::token::ON; }
-var                    { return yy::parser::token::VAR; }
 
 int8_t                { yylval->type = new ScalarType(new Element(yytext, extra_text,
 		          Element::NAME, yylloc->begin.line)); return yy::parser::token::INT8; }

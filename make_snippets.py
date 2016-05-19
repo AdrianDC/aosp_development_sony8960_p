@@ -14,7 +14,10 @@
 # limitations under the License.
 #
 
-import re, sys
+import re
+import sys
+
+
 snips = {}
 labels = []
 

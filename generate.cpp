@@ -1,4 +1,4 @@
-#include "hidl_language.h"
+#include "ast.h"
 #include "snippets.h"
 #include <iostream>
 #include <map>
@@ -151,12 +151,17 @@ const Subs ArrayType::GetSubs(string section) const
 
 const Subs Function::GetSubs(string section) const
 {
+  string ret_params{generates_->GenCommaList(section)};
+  if (ret_params != "") {  // TODO move this to template file
+    ret_params = ", std::function<void(" + ret_params + ")> callback = nullptr"; // ::android::hidl::binder::Status
+  }
   Subs subs{{"function_name", name_->GetText()},
     {"package_name", ps_->GetInterface()->GetText()},
-    {"param_list", fields_->GenCommaList(section) + ", " +
-          generates_->GenCommaList(section, true)},
-    {"function_params_proxy", fields_->GenCommaList(section) + ", " +
-          generates_->GenCommaList(section, true)},
+    {"call_param_list", fields_->GenCommaList(section, "")},
+    {"return_param_list", ret_params},
+        /*    {"function_params_proxy",
+          generates_->GenCommaList(section,
+          fields_->GenCommaList(section, ""), true)},*/
     {"function_params_stubs",
           generates_->GenCommaNameList(
               fields_->GenCommaNameList("", false), true)},
@@ -290,18 +295,19 @@ string Fields::GenCommaNameList(string prev_list, bool out_params)
   return output;
 }
 
-string Fields::GenCommaList(string section, bool out_params)
+string Fields::GenCommaList(string section, string prev, bool out_params)
 {
-  string output {""};
+  string output {prev};
   for (auto & field : fields_) {
     if (output != "") {
       output += ", ";
     }
     if (field->GetType()) { // Enum fields don't have a type
-      output += field->GetType()->Generate(section) +
-          (out_params ? "* " : " ");
+      output += field->GetType()->Generate(section);
     }
-    output += field->GetName()->GetText();
+    if (!out_params) {
+      output += " " + field->GetName()->GetText();
+    }
     if (field->GetValue()) { // some Enum fields have this
       output += " = " + field->GetValue()->GetText();
     }
@@ -455,32 +461,24 @@ string Parser::CallEnumList(string section)
   return out;
 }
 
+void Parser::BuildNamespaceText(string section,
+                                std::vector<Element *>*namespace_,
+                                string& namespace_open,
+                                string& namespace_close)
+{
+  namespace_open = "";
+  namespace_close = "";
+  for (auto & name : *namespace_) {
+    Subs subs{{"namespace_name", name->GetText()}};
+    namespace_open += Snip(section, "namespace_open_line", subs);
+    namespace_close = Snip(section, "namespace_close_line", subs) +
+        namespace_close;
+  }
+}
+
+
 void Parser::Write()
 {
-  string section;
-  switch (out_type_) {
-    case CppOptions::IFOO:
-      section = "i_h";
-      break;
-    case CppOptions::BNFOO:
-      section = "bn_h";
-      break;
-    case CppOptions::BPFOO:
-      section = "bp_h";
-      break;
-    case CppOptions::FOOSTUBS:
-      section = "stubs_cpp";
-      break;
-    case CppOptions::FOOPROXY:
-      section = "proxy_cpp";
-      break;
-    case CppOptions::VTS:
-      section = "vts";
-      break;
-    case CppOptions::BINDER:
-      section = "binder";
-      break;
-  }
   if (!interface_) {
     Error("Cannot Write output; don't have interface.");
     return;
@@ -493,22 +491,26 @@ void Parser::Write()
       (c_type_a = interface_annotations_->GetAnnotation("hal_type"))) {
     if (c_type_a->GetUnnamedValues() && c_type_a->GetUnnamedValues()->front()->GetValue()->HasStringValue()) {
       Subs subs{{"vts_ct_enum", c_type_a->GetUnnamedValues()->front()->NoQuoteText()}};
-      component_type = Snip(section, "component_type_enum", subs);
+      component_type = Snip(section_, "component_type_enum", subs);
     } else {
       Error("hal_type annotation needs one string value");
     }
   }
+  string namespace_open, namespace_close;
+  BuildNamespaceText(section_, namespace_, namespace_open, namespace_close);
   Subs subs {
     {"header_guard", interface_->GetText()},
     {"version_string", version},
     {"component_type_enum", component_type},
     {"package_name", interface_->GetText()},
-    {"declarations", TextByPrefix(section, "declare_")},
-    {"code_snips", TextByPrefix(section, "code_for_")},
-    {"call_enum_list", CallEnumList(section)},
-    {"vars_writer", vars_.TextByPrefix(section, "param_write_")},
-    {"vars_reader", vars_.TextByPrefix(section, "param_read_")},
-    {"vars_decl", vars_.GenSemiList(section)},
+    {"declarations", TextByPrefix(section_, "declare_")},
+    {"code_snips", TextByPrefix(section_, "code_for_")},
+    {"call_enum_list", CallEnumList(section_)},
+    {"namespace_open_section", namespace_open},
+    {"namespace_close_section", namespace_close},
+    {"vars_writer", vars_.TextByPrefix(section_, "param_write_")},
+    {"vars_reader", vars_.TextByPrefix(section_, "param_read_")},
+    {"vars_decl", vars_.GenSemiList(section_)},
   };
-  writer_->Write("%s", Snip(section, "file", subs).c_str());
+  writer_->Write("%s", Snip(section_, "file", subs).c_str());
 }

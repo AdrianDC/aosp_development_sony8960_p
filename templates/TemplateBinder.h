@@ -1,15 +1,16 @@
 // SECTION binder
 // START file
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/TemplateBinder.h
 #ifndef I_HIDL_BINDER_header_guard_H
 #define I_HIDL_BINDER_header_guard_H
 
 #include "binder/Parcel.h"
 #include "binder/Parcelable.h"
 
-namespace android {
-    namespace service {
-        namespace media {
-            namespace rtstreams {
+// START namespace_open_section
+namespace namespace_name {//ALL namespace_open_line
+//END namespace_open_section
 
                 class package_name : public Parcelable {
 
@@ -53,9 +54,9 @@ namespace android {
                   // END vars_decl
                 };
 
-            }
-        }
-    }
-}
+// START namespace_close_section
+}  // namespace namespace_name  //ALL namespace_close_line
+//END namespace_close_section
+
 #endif // I_HIDL_BINDER_header_guard_H
 // END file

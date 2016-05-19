@@ -23,6 +23,8 @@
 #include "logging.h"
 #include "os.h"
 
+#include "snippets.h"
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -35,20 +37,21 @@ namespace hidl
 namespace {
 
 unique_ptr<CppOptions> cpp_usage() {
-  cerr << "usage: hidl-cpp INPUT_FILE OUTPUT_FILE" << endl
+  cerr << "usage: hidl-cpp OPTIONS TYPE INPUT_FILE OUTPUT_FILE" << endl
        << endl
        << "OPTIONS:" << endl
       //       << "   -I<DIR>   search path for import statements" << endl
        << "   -d<FILE>  Generate dependency file" << endl
        << "   -p        print info from input file (for debugging)" << endl
-       << "   -On       Generate BnFoo.h" << endl
-       << "   -Op       Generate BpFoo.h" << endl
-       << "   -Oi       Generate IFoo.h" << endl
-       << "   -Os       Generate FooStubs.cpp" << endl
-       << "   -Ox       Generate FooProxy.cpp" << endl
-       << "   -Ov       Generate Foo.vts" << endl
-       << "   -Ob       Generate Binder .h file (for Ian)" << endl
-       << "       (only the last -O option will be used. Default is -Oi.)" << endl
+       << endl
+       << "TYPE:" << endl
+       << "   bn_h        Generate BnFoo.h" << endl
+       << "   bp_h        Generate BpFoo.h" << endl
+       << "   i_h         Generate IFoo.h" << endl
+       << "   stubs_cpp   Generate FooStubs.cpp" << endl
+       << "   proxy_cpp   Generate FooProxy.cpp" << endl
+       << "   vts         Generate Foo.vts" << endl
+       << "   binder      Generate Binder .h file" << endl
        << endl
        << "INPUT_FILE:" << endl
        << "   a hidl interface file" << endl
@@ -82,23 +85,6 @@ unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
       options->dep_file_name_ = the_rest;
     } else if (s[1] == 'p') {
       options->print_stuff_ = true;
-    } else if (s[1] == 'O') {
-      if (strlen(s) != 3) {
-        cerr << "Invalid argument '" << s << "'." << endl;
-        return cpp_usage();
-      }
-      switch(s[2]) {
-        case 'p': options->out_type_ = CppOptions::BPFOO; break;
-        case 'n': options->out_type_ = CppOptions::BNFOO; break;
-        case 'i': options->out_type_ = CppOptions::IFOO; break;
-        case 's': options->out_type_ = CppOptions::FOOSTUBS; break;
-        case 'x': options->out_type_ = CppOptions::FOOPROXY; break;
-        case 'v': options->out_type_ = CppOptions::VTS; break;
-        case 'b': options->out_type_ = CppOptions::BINDER; break;
-        default:
-          cerr << "Invalid argument '" << s << "'." << endl;
-          return cpp_usage();
-      }
     } else {
       cerr << "Invalid argument '" << s << "'." << endl;
       return cpp_usage();
@@ -107,14 +93,20 @@ unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
 
   // There are exactly three positional arguments.
   const int remaining_args = argc - i;
-  if (remaining_args != 2) {
-    cerr << "Expected 2 positional arguments but got " << remaining_args << "." << endl;
+  if (remaining_args != 3) {
+    cerr << "Expected 3 positional arguments but got " << remaining_args << "." << endl;
     return cpp_usage();
   }
 
-  options->input_file_name_ = argv[i];
-  options->output_file_name_ = argv[i + 1];
+  options->section_ = argv[i++];
+  options->input_file_name_ = argv[i++];
+  options->output_file_name_ = argv[i++];
 
+  SnipMapMap::iterator smm_it = snippets_cpp.find(options->section_);
+  if (smm_it == snippets_cpp.end()) {
+    std::cout << "File type " << options->section_ << " not found." << endl;
+    return cpp_usage();
+  }
   if (!EndsWith(options->input_file_name_, ".hidl")) {
     cerr << "Expected .hidl file for input but got " << options->input_file_name_ << endl;
     return cpp_usage();

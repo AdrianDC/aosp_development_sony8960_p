@@ -1,3 +1,5 @@
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/Template.vts
 component_class: HAL_HIDL
 component_type: GPS
 

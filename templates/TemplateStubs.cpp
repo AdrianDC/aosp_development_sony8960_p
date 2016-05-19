@@ -1,30 +1,24 @@
 // SECTION stubs_cpp
 // START file
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/TemplateStubs.cpp
 #include <android/hardware/tests/Ipackage_name.h>
 #include <android/hardware/tests/Bppackage_name.h>
 
-namespace android {
-
-namespace hardware {
-
-namespace tests {
+// START namespace_open_section
+namespace namespace_name {//ALL namespace_open_line
+//END namespace_open_section
 
 IMPLEMENT_META_INTERFACE(package_name, "android.hardware.tests.Ipackage_name");
 
-}  // namespace tests
-
-}  // namespace hardware
-
-}  // namespace android
+// START namespace_close_section
+}  // namespace namespace_name  //ALL namespace_close_line
+//END namespace_close_section
 
 #include <android/hardware/tests/Bnpackage_name.h>
 #include <binder/Parcel.h>
 
-namespace android {
-
-namespace hardware {
-
-namespace tests {
+namespace_open_section
 
 ::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
 ::android::status_t _aidl_ret_status = ::android::OK;
@@ -81,9 +75,5 @@ _aidl_ret_status = ::android::binder::Status::fromExceptionCode(::android::binde
 return _aidl_ret_status;
 }
 
-}  // namespace tests
-
-}  // namespace hardware
-
-}  // namespace android
+namespace_close_section
 // END file

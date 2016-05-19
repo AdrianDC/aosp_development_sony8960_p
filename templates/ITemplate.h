@@ -1,6 +1,8 @@
 #define param_list ::android::String16* _aidl_return
 // SECTION i_h
 // START file
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/ITemplate.h
 #ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
 #define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
 
@@ -10,17 +12,15 @@
 #include <cstdint>
 #include <utils/StrongPointer.h>
 
-namespace android {
+// START namespace_open_section
+namespace namespace_name {//ALL namespace_open_line
+//END namespace_open_section
 
-namespace hardware {
-
-namespace tests {
-
-class Ipackage_name : public ::android::IInterface {
+class Ipackage_name : public hidl::IInterface {
 public:
 DECLARE_META_INTERFACE(package_name);
   // START declarations
-  virtual ::android::binder::Status function_name(param_list) = 0; // ALL declare_function
+  virtual ::android::hidl::binder::Status function_name(call_param_list return_param_list) = 0; // ALL declare_function
  // START declare_enum_decl
   enum class enum_name { enum_fields };
   const char* GetNameOf(enum_name f) {
@@ -36,16 +36,14 @@ DECLARE_META_INTERFACE(package_name);
   // END declarations
 enum Call {
   // START call_enum_list
-  call_enum_name = ::android::IBinder::FIRST_CALL_TRANSACTION + 0, // ALL first_call_enum
+  call_enum_name = hidl::IBinder::FIRST_CALL_TRANSACTION + 0, // ALL first_call_enum
   // END call_enum_list
 };
 };  // class Ipackage_name
 
-}  // namespace tests
-
-}  // namespace hardware
-
-}  // namespace android
+// START namespace_close_section
+}  // namespace namespace_name  //ALL namespace_close_line
+//END namespace_close_section
 
 #endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
 // END file

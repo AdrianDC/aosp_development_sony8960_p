@@ -99,9 +99,10 @@ class Type;
 class Fields {
  public:
   void Add(Field *field) { fields_.push_back(field); }
-  string GenCommaList(string section, bool out_params);
+  string GenCommaList(string section, string prev, bool out_params);
+  string GenCommaList(string section, string prev) {return GenCommaList(section, prev, false);}
+  string GenCommaList(string section) {return GenCommaList(section, "", false);}
   string GenCommaNameList(string prev, bool out_params);
-  string GenCommaList(string section) {return GenCommaList(section, false);}
 
   string GenSemiList(string section);
   string GenByType(string section, string prefix);
@@ -503,7 +504,7 @@ using TypeMap = std::map<string, TypeDecl*>;
 class Parser {
  public:
   explicit Parser(const android::hidl::IoDelegate& io_delegate,
-                  android::hidl::CppOptions::e_out_type out_type);
+                  std::string out_type);
   ~Parser();
 
   // Parse contents of file |filename|.
@@ -540,8 +541,6 @@ class Parser {
 
   void AddTypedef(TypedefDecl* type);
 
-  void AddVar(Field* type);
-
   bool IsTypeDeclared(Element *name);
 
   TypeDecl *GetDeclaredType(Element *name); // nullptr if not found
@@ -558,6 +557,10 @@ class Parser {
   void SetWriter(android::hidl::CodeWriterPtr writer);
   string TextByPrefix(string section, string prefix);
   string CallEnumList(string section);
+  void BuildNamespaceText(string section,
+                                  std::vector<Element *>*namespace_,
+                                  string& namespace_open,
+                                  string& namespace_close);
   void WriteDepFileIfNeeded(
           std::unique_ptr<android::hidl::CppOptions> options,
           android::hidl::IoDelegate &io_delegate);
@@ -570,7 +573,7 @@ class Parser {
   void VaError(const char *format, va_list args);
 
   const android::hidl::IoDelegate& io_delegate_;
-  android::hidl::CppOptions::e_out_type out_type_;
+  std::string section_;
   int error_ = 0;
   string filename_;
   void* scanner_ = nullptr;

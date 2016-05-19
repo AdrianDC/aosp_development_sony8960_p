@@ -1,4 +1,4 @@
-#include "hidl_language.h"
+#include "ast.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -457,9 +457,9 @@ void Field::BuildText()
 
 
 Parser::Parser(const IoDelegate& io_delegate,
-android::hidl::CppOptions::e_out_type out_type)
+               string out_type)
     : io_delegate_(io_delegate),
-      out_type_(out_type)
+      section_(out_type)
 {
   yylex_init(&scanner_);
 }
@@ -696,15 +696,6 @@ void Parser::AddEnum(EnumDecl *en)
   AddThing(en);
   RegisterType(en);
   // TODO: Register constants from en's fields
-}
-
-void Parser::AddVar(Field *field)
-{
-  if (out_type_ != android::hidl::CppOptions::BINDER) {
-    Error(field->Line(), "Top level var decls aren't allowed");
-  } else {
-    vars_.Add(field);
-  }
 }
 
 string Field::GetInitText()

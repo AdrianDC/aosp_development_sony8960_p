@@ -1,5 +1,7 @@
 // SECTION vts
 // START file
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/Template.vts
 component_class: HAL_HIDL
 component_type: vts_ct_enum // ALL component_type_enum
 component_type_version: version_string

@@ -1,5 +1,5 @@
 %{
-#include "hidl_language.h"
+#include "ast.h"
 #include "hidl_language_y.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +37,7 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 %token '(' ')' ',' '@' '=' '[' ']' '<' '>' '.' '{' '}' ';'
 %token CONST STRUCT UNION ENUM TYPEDEF VERSION INTERFACE
-%token PACKAGE GENERATES IMPORT REF VEC ON VAR SELECTS
+%token PACKAGE GENERATES IMPORT REF VEC ON SELECTS
 %token INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64
 %token CHAR OPAQUE HANDLE STRINGTOK ONEWAY
 
@@ -109,7 +109,6 @@ decl
  | function_decl  {}
  | union_decl     {}
  | typedef_decl   {}
- | top_var_decl   {} // Only for 'b' type files
 
 struct_decl
  : STRUCT IDENTIFIER '{' var_decls_semi '}' ';'
@@ -152,10 +151,6 @@ var_decls_semi
   { $$ = new Fields; $$->Add($1); }
  | var_decls_semi var_decl ';'
   { $$->Add($2); }
-
-top_var_decl
- : VAR var_decl ';'
-  { ps->AddVar($2); }
 
 var_decl
  : any_type IDENTIFIER

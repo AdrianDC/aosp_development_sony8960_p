@@ -1,36 +1,31 @@
 // SECTION proxy_cpp
 // START file
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/TemplateProxy.cpp
 #include <android/hardware/tests/Ipackage_name.h>
 #include <android/hardware/tests/Bppackage_name.h>
 
-namespace android {
-
-namespace hardware {
-
-namespace tests {
+// START namespace_open_section
+namespace namespace_name {//ALL namespace_open_line
+//END namespace_open_section
 
 IMPLEMENT_META_INTERFACE(package_name, "android.hardware.tests.Ipackage_name");
 
-}  // namespace tests
+// START namespace_close_section
+}  // namespace namespace_name  //ALL namespace_close_line
+//END namespace_close_section
 
-}  // namespace hardware
-
-}  // namespace android
 #include <android/hardware/tests/Bppackage_name.h>
 #include <binder/Parcel.h>
 
-namespace android {
-
-namespace hardware {
-
-namespace tests {
+namespace_open_section
 
 Bppackage_name::Bppackage_name(const ::android::sp<::android::IBinder>& _aidl_impl)
     : BpInterface<Ipackage_name>(_aidl_impl){
 }
 // START code_snips
 // START code_for_function
-::android::binder::Status Bppackage_name::function_name(function_params_proxy) {
+::android::binder::Status Bppackage_name::function_name(call_param_list return_param_list) {
 ::android::Parcel _aidl_data;
 ::android::Parcel _aidl_reply;
 ::android::status_t _aidl_ret_status = ::android::OK;
@@ -72,9 +67,7 @@ return _aidl_status;
 }
 // END code_for_function
 // END code_snips
-}  // namespace tests
 
-}  // namespace hardware
+namespace_close_section
 
-}  // namespace android
 // END file

@@ -30,7 +30,7 @@ using android::status_t;
 using android::String16;
 
 // libbinder:
-using android::getService;
+using android::hidl::getService;
 
 // generated
 using android::hardware::tests::ITestService;

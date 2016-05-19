@@ -21,14 +21,14 @@ using android::OK;
 using android::sp;
 using android::String16;
 
-// libbinder:
-using android::BnInterface;
-using android::defaultServiceManager;
-using android::IInterface;
-using android::IPCThreadState;
-using android::Parcel;
-using android::ProcessState;
-using android::binder::Status;
+// libhwbinder:
+using android::hidl::BnInterface;
+using android::hidl::defaultServiceManager;
+using android::hidl::IInterface;
+using android::hidl::IPCThreadState;
+using android::hidl::Parcel;
+using android::hidl::ProcessState;
+using android::hidl::binder::Status;
 
 // Standard library
 using std::map;
@@ -57,7 +57,7 @@ class TestService : public BnTestService {
     TestService() {}
     virtual ~TestService() = default;
 
-    virtual ::android::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) {
+    virtual Status echoInteger(int32_t echo_me, int32_t* _aidl_return) {
         *_aidl_return = echo_me;
         return Status::ok();
     }
