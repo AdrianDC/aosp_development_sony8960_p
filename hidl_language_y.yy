@@ -154,11 +154,9 @@ var_decls_semi
 
 var_decl
  : any_type IDENTIFIER
-  { $$ = new Field($1, $2); }
+  { $$ = new TypedField($1, $2); }
  | any_type IDENTIFIER SELECTS '(' dotted_ids ')'
-  { $$ = new Field($1, $2, $5); }
- | any_type IDENTIFIER '=' const_value
-  { $$ = new Field($2, $1, $4); }
+  { $$ = new TypedField($1, $2, $5); }
 
 dotted_ids
  : IDENTIFIER {}
@@ -184,7 +182,7 @@ disc_union_fields
 
 disc_union_field
  : any_type IDENTIFIER ON '(' id_list ')' ';'
-  { $$ = new Field($1, $2, $5); }
+  { $$ = new TypedField($1, $2, $5); }
 
 id_list
  : IDENTIFIER
@@ -200,9 +198,9 @@ enum_fields
 
 enum_field
  : IDENTIFIER
-  { $$ = new Field($1); }
+  { $$ = new EnumField($1); }
  | IDENTIFIER '=' scalar_value
-  { $$ = new Field($1, $3); }
+  { $$ = new EnumValueField($1, $3); }
 
 annotations
  : {$$ = new Annotations();}

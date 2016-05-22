@@ -52,31 +52,92 @@ class Header : public Thing {
 
 class Element : public Thing {
  public:
-  enum e_type {CHAR, INT, NAME, ESTRING, COMMENT, ERROR};
-  const std::vector<const char *> type_names{"Char", "Int", "Name", "String", "Comment", "Error"};
-  Element(const string& text, const string& comments,
-          e_type type, int Line);
-  Element(const string& text, e_type type, int Line);
-
   const string& GetComments() const { return comments_; }
-  bool HasScalarValue() const;
-  bool HasIntegerValue() const;
-  bool IsDefinedType() const;
-  long GetIntegerValue() const;
-  string NoQuoteText() const { return (type_ == ESTRING) ? GetText().substr(1,GetText().length()-2) : GetText();}
-  bool HasStringValue() const { return type_ == ESTRING; }
+  virtual long GetScalarValue() const {CHECK(false); return false;}
+  virtual bool HasIntegerValue() const { return false; }
+  virtual bool HasScalarValue() const { return false; }
+  virtual bool IsDefinedType() const { return false; }
+  virtual long GetIntegerValue() const;
+  virtual string NoQuoteText() const { return GetText();}
+  virtual bool HasStringValue() const { return false; }
   void AddDottedElement(Element *element);
   int Line() const { return line_; }
   void Dump() override;
   string Generate(string prefix) override;
   const string TypeName() override { return "element"; }
+  virtual const string ElementTypename() const = 0;
+
+ protected:
+  Element(const string& text, const string& comments, int Line);
+  Element(const string& text, int Line);
 
  private:
   string comments_;
   int line_;
-  e_type type_;
   DISALLOW_COPY_AND_ASSIGN(Element);
 };
+
+class CharElement : public Element {
+ public:
+  CharElement(const string& text, const string& comments, int Line);
+  CharElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "char"; }
+  virtual bool HasScalarValue() const { return true; }
+  DISALLOW_COPY_AND_ASSIGN(CharElement);
+};
+
+class IntElement : public Element {
+ public:
+  IntElement(const string& text, const string& comments, int Line);
+  //  IntElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "int"; }
+  virtual bool HasScalarValue() const { return true; }
+  virtual long GetIntegerValue() const override { return stoi(text_); }
+  DISALLOW_COPY_AND_ASSIGN(IntElement);
+};
+
+class NameElement : public Element {
+ public:
+  NameElement(const string& text, const string& comments, int Line);
+  //  NameElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "name"; }
+  virtual bool HasScalarValue() const override;  // need to look up name
+  virtual bool HasIntegerValue() const override;
+  virtual long GetScalarValue() const override;  // need to look up name
+  virtual long GetIntegerValue() const override;
+  virtual bool IsDefinedType() const override;
+  DISALLOW_COPY_AND_ASSIGN(NameElement);
+};
+
+class StringElement : public Element {
+ public:
+  StringElement(const string& text, const string& comments, int Line);
+  StringElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "string"; }
+  virtual string NoQuoteText() const override { return GetText().substr(1,GetText().length()-2); }
+  virtual bool HasStringValue() const { return true; }
+
+  DISALLOW_COPY_AND_ASSIGN(StringElement);
+};
+
+class CommentElement : public Element {
+ public:
+  CommentElement(const string& text, const string& comments, int Line);
+  //  CommentElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "comment"; }
+
+  DISALLOW_COPY_AND_ASSIGN(CommentElement);
+};
+
+class ErrorElement : public Element {
+ public:
+  ErrorElement(const string& text, const string& comments, int Line);
+  //  ErrorElement(const string& text, int Line);
+  virtual const string ElementTypename() const override { return "error"; }
+
+  DISALLOW_COPY_AND_ASSIGN(ErrorElement);
+};
+
 
 class Const : public Thing {
  public:
@@ -96,6 +157,7 @@ class Const : public Thing {
 class Field;
 class Type;
 
+// TODO - split Fields into TypedFields and EnumFields
 class Fields {
  public:
   void Add(Field *field) { fields_.push_back(field); }
@@ -382,41 +444,71 @@ class Annotation;
 
 class Field : public Thing {
  public:
-  // TODO: Split into subclasses
-  enum e_kind {BASIC, SELECTS, SELECTED, ENUM, ENUM_VAL, INITTED};
-  Field(Type *type, Element* name,
-        std::vector<Element*>* selectors);
-  Field(Type *type, Element *name); // Basic
-  Field(Type *type, Element *name, Element *selected);
-  Field(Element *name, Type *type, Element *value); // INITTED
-  Field(Element *name); // Enum
-  Field(Element *name, Element *value); // For enums with Defined values
   void Dump() override;
   int Line() { return name_->Line(); }
   string Generate(string prefix) override;
-  Type *GetType() { return type_; }
+  virtual Type *GetType() const { return nullptr; }
   const string TypeName() override { return "field"; }
   Element *GetName() { return name_; }
-  Element *GetValue() { return value_; }
+  virtual Element *GetValue() { return nullptr; }
   const string& GetComments() const { return comments_; }
   const Subs GetSubs(string section) const override;
   const string NameText() { return name_->GetText(); }
   void SetAnnotation(Annotation *a) { annotation_ = a; }
   string GenVtsValues(string section);
   virtual string GetInitText();
- private:
-  void BuildText();
+
+ protected:
+  virtual void BuildText() = 0;
+  Field(Element *name, vector<Element*>* selectors);
+  Field(Element *name, Element *selected);
+  Field(Element *name);
 
   Annotation *annotation_ = nullptr;
   string comments_;
   Element *initializer_ = nullptr;
-  e_kind kind_;
   Element *name_ = nullptr;
   Element *selected_ = nullptr;
   std::vector<Element*> *selectors_;
-  Type *type_ = nullptr;
-  Element *value_ = nullptr;
   DISALLOW_COPY_AND_ASSIGN(Field);
+};
+
+class TypedField : public Field {
+ public:
+  TypedField(Type *type, Element* name,
+        std::vector<Element*>* selectors);
+  TypedField(Type *type, Element *name); // Basic
+  TypedField(Type *type, Element *name, Element *selected);
+
+  virtual Type *GetType() const override { return type_; }
+
+ private:
+  virtual void BuildText() override;
+
+  Type *type_;
+  DISALLOW_COPY_AND_ASSIGN(TypedField);
+};
+
+class EnumField : public Field {
+ public:
+  EnumField(Element *name);
+
+ private:
+  virtual void BuildText() override;
+
+  DISALLOW_COPY_AND_ASSIGN(EnumField);
+};
+
+class EnumValueField : public EnumField {
+ public:
+  EnumValueField(Element *name, Element *value);
+  virtual Element *GetValue() override { return value_; }
+ private:
+  virtual void BuildText() override;
+
+  Element *value_ = nullptr;
+
+  DISALLOW_COPY_AND_ASSIGN(EnumValueField);
 };
 
 class Annotation;

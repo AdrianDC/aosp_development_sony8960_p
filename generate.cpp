@@ -131,8 +131,11 @@ const Subs Field::GetSubs(string section) const
   //  string type_name { type_->TypeName() };
   Subs subs{{"param_name", name_->GetText()},
     {"init_value", initializer_ ? initializer_->GetText() : ""}};
-  Subs type_subs {type_->GetSubs(section)};
-  subs.insert(subs.end(), type_subs.begin(), type_subs.end());
+  Type *type = GetType();
+  if (type) {
+    Subs type_subs {type->GetSubs(section)};
+    subs.insert(subs.end(), type_subs.begin(), type_subs.end());
+  }
   return subs;
 }
 

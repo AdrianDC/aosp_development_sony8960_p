@@ -60,51 +60,80 @@ void Const::Dump()
        << value_->GetText() << endl;
 }
 
-Element::Element(const string& text, const string& comments,
-                 e_type type, int Line)
+Element::Element(const string& text, const string& comments, int Line)
     : Thing(text),
       comments_(comments),
-      line_(Line),
-      type_(type)
+      line_(Line)
 {
 }
-Element::Element(const string& text, e_type type, int Line)
+Element::Element(const string& text, int Line)
     : Thing(text),
       comments_(""),
-      line_(Line),
-      type_(type)
+      line_(Line)
 {
 }
+
+CharElement::CharElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
+
+IntElement::IntElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
+
+NameElement::NameElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
+
+StringElement::StringElement(const string& text, int line)
+    : Element(text, "", line)
+{}
+
+StringElement::StringElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
+
+CommentElement::CommentElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
+
+ErrorElement::ErrorElement(const string& text, const string& comments, int line)
+    : Element(text, comments, line)
+{}
 
 void Element::Dump()
 {
-  cout << "Element(" << type_names[type_] << "): " << text_ << endl;
+  cout << "Element(" << ElementTypename() << "): " << text_ << endl;
 }
 
-bool Element::HasScalarValue() const {
+bool NameElement::HasScalarValue() const {
+  return false; // TODO - look up name
+}
+bool NameElement::HasIntegerValue() const {
   return false; // TODO
 }
-bool Element::HasIntegerValue() const {
-  return (type_ == INT); // TODO
-}
-bool Element::IsDefinedType() const {
+bool NameElement::IsDefinedType() const
+{
   return false; // TODO
 }
-long Element::GetIntegerValue() const {
-  switch (type_) {
-    case INT:
-      return stoi(text_);
-    case NAME:
-      CHECK(false) << "TODO - find const";
-      return 0;
-    default:
-      CHECK(false) << "Bad type " << (int)type_;
-      return 0;
-  }
-
+long NameElement::GetIntegerValue() const
+{
+  CHECK(false) << "TODO - find const";
+  return 0;
+}
+long NameElement::GetScalarValue() const
+{
+  CHECK(false) << "TODO - find const";
+  return 0;
+}
+long Element::GetIntegerValue() const
+{
+  CHECK(false) << "Bad type for GetIntegerValue: "
+               << ElementTypename();
+  return 0;
 }
 void Element::AddDottedElement(Element *element) {
-   // TODO
+  CHECK(false); // TODO
 }
 
 CompoundType::CompoundType(Fields *fields)
@@ -354,66 +383,58 @@ void Fields::Dump()
 }
 
 // Used for discriminated union entry (tells what vals select it)
-Field::Field(Type *type, Element* name,
+Field::Field(Element* name,
              vector<Element*>* selectors)
-    : kind_(SELECTS),
-      name_(name),
-      selectors_(selectors),
-      type_(type)
+    : name_(name),
+      selectors_(selectors)
 {
-  BuildText();
-   // TODO
-}
-Field::Field(Type *type, Element *name)
-    : kind_(BASIC),
-      name_(name),
-      type_(type)
-{
-  BuildText();
-   // TODO
 }
 
-Field::Field(Element *name, Type *type, Element *value)
-    : initializer_(value),
-      kind_(INITTED),
-      name_(name),
+TypedField::TypedField(Type *type, Element* name,
+             vector<Element*>* selectors)
+    : Field(name, selectors),
       type_(type)
 {
   BuildText();
-   // TODO
 }
+
+TypedField::TypedField(Type *type, Element *name)
+    : Field(name),
+      type_(type)
+{
+  BuildText();
+}
+
 
 // Used for scalar that selects a discriminated union
-Field::Field(Type *type, Element *name, Element *selected)
-    : kind_(SELECTED),
-      name_(name),
-      selected_(selected),
+Field::Field(Element *name, Element *selected)
+    : name_(name),
+      selected_(selected)
+{
+}
+TypedField::TypedField(Type *type, Element *name, Element *selected)
+    : Field(name, selected),
       type_(type)
 {
-  (void)name_;
   (void)comments_;
-  (void)kind_;
-  (void)selected_;
-  (void)selectors_;
-  (void)type_;
-  (void)value_;
-   // TODO
   BuildText();
 }
+
 Field::Field(Element *name)
-    : kind_(ENUM),
-      name_(name)
+    : name_(name)
+{
+}
+EnumField::EnumField(Element *name)
+    : Field(name)
 {
   BuildText();
-   // TODO
 }
-Field::Field(Element *name, Element *value)
-    : kind_(ENUM_VAL),
-      name_(name),
+
+EnumValueField::EnumValueField(Element *name, Element *value)
+    : EnumField(name),
       value_(value)
 {
   BuildText();
-   // TODO
 }
 
 void Field::Dump()
@@ -421,38 +442,22 @@ void Field::Dump()
   cout << "<F>" << text_;
 }
 
-void Field::BuildText()
+void TypedField::BuildText()
 {
-  text_.empty();
-  switch (kind_) {
-    case BASIC:
-      text_.append(type_->GetText());
-      text_.append(" ");
-      text_.append(name_->GetText());
-      break;
-    case SELECTS:
-      text_.append(type_->GetText());
-      text_.append(" ");
-      text_.append(name_->GetText());
-      break;
-    case SELECTED:
-      text_.append(type_->GetText());
-      text_.append(" ");
-      text_.append(name_->GetText());
-      break;
-    case ENUM:
-      text_.append(name_->GetText());
-      break;
-    case ENUM_VAL:
-      text_.append(name_->GetText());
-      text_.append("=");
-      text_.append(value_->GetText());
-      break;
-    default:
-      text_.append("Bad kind of field");
-  }
+  text_ = type_->GetText();
+  text_.append(" ");
+  text_.append(name_->GetText());
 }
-
+void EnumField::BuildText()
+{
+  text_ = name_->GetText();
+}
+void EnumValueField::BuildText()
+{
+  text_ = name_->GetText();
+  text_.append("=");
+  text_.append(value_->GetText());
+}
 
 
 
