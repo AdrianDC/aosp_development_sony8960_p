@@ -12,7 +12,7 @@ namespace tests {
 
 class BnTestService : public ::android::hidl::BnInterface<ITestService> {
 public:
-::android::status_t onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0) override;
+::android::status_t onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
 };  // class BnTestService
 
 }  // namespace tests

@@ -16,7 +16,7 @@ class BpTestService : public ::android::hidl::BpInterface<ITestService> {
 public:
 explicit BpTestService(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
 virtual ~BpTestService() = default;
-::android::hidl::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) override;
+::android::hidl::binder::Status echoInteger(int32_t echo_me, ITestService::echoInteger_cb _cb) override;
 };  // class BpTestService
 
 }  // namespace tests

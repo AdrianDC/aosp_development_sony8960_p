@@ -31,6 +31,8 @@ using android::String16;
 
 // libbinder:
 using android::hidl::getService;
+using android::hidl::hidl_version;
+using android::hidl::make_hidl_version;
 
 // generated
 using android::hardware::tests::ITestService;
@@ -46,9 +48,9 @@ namespace client {
 
 const char kServiceName[] = "android.hardware.tests.ITestService";
 
-bool GetService(sp<ITestService>* service) {
+bool GetService(sp<ITestService>* service, hidl_version version) {
   cout << "Retrieving test service binder" << endl;
-  status_t status = getService(String16(kServiceName), service);
+  status_t status = getService(String16(kServiceName), version, service);
   if (status != OK) {
     cerr << "Failed to get service binder: '" << kServiceName
          << "' status=" << status << endl;
@@ -68,12 +70,14 @@ int main(int /* argc */, char * argv []) {
   sp<ITestService> service;
   namespace client_tests = android::hardware::tests::client;
 
-
-  if (!client_tests::GetService(&service)) return 1;
+  hidl_version version = make_hidl_version(4,0);
+  if (!client_tests::GetService(&service, version)) return 1;
 
   int echo_value;
-  service->echoInteger(32, &echo_value);
-  cout << "Got response from binder service: " << echo_value << endl;
+  service->echoInteger(32, [](auto ret) {
+    cout << "Got response from binder service: " << ret << endl;
+    }
+  );
 
   return 0;
 }

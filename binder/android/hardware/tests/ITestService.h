@@ -16,7 +16,8 @@ namespace tests {
 class ITestService : public ::android::hidl::IInterface {
 public:
 DECLARE_META_INTERFACE(TestService);
-virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, int32_t* _aidl_return) = 0;
+using echoInteger_cb = std::function<void(int32_t)>;
+virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, echoInteger_cb = nullptr) = 0;
 enum Call {
   ECHOINTEGER = ::android::hidl::IBinder::FIRST_CALL_TRANSACTION + 0,
 };

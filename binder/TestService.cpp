@@ -29,6 +29,8 @@ using android::hidl::IPCThreadState;
 using android::hidl::Parcel;
 using android::hidl::ProcessState;
 using android::hidl::binder::Status;
+using android::hidl::hidl_version;
+using android::hidl::make_hidl_version;
 
 // Standard library
 using std::map;
@@ -57,8 +59,8 @@ class TestService : public BnTestService {
     TestService() {}
     virtual ~TestService() = default;
 
-    virtual Status echoInteger(int32_t echo_me, int32_t* _aidl_return) {
-        *_aidl_return = echo_me;
+    virtual Status echoInteger(int32_t echo_me, ITestService::echoInteger_cb callback) {
+        callback(echo_me);
         return Status::ok();
     }
   private:
@@ -81,9 +83,9 @@ int Run() {
     ALOGE("Failed to add binder FD to Looper");
     return -1;
   }
-
+  hidl_version version = android::hidl::make_hidl_version(4,1);
   defaultServiceManager()->addService(service->getInterfaceDescriptor(),
-                                      service);
+                                      service, version);
 
   ALOGI("Entering loop");
   while (true) {
