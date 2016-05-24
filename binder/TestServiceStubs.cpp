@@ -59,6 +59,35 @@ namespace tests {
             }
             break;
         }
+        case Call::SHAREBUFFERWITHREF:
+        {
+            int32_t in_buffer;
+            int32_t _aidl_return;
+            bool callback_called;
+            if (!(_aidl_data.checkInterface(this))) {
+                _aidl_ret_status = ::android::BAD_TYPE;
+                break;
+            }
+            in_buffer = _aidl_data.readFileDescriptor();
+            // Make the call into the server
+            ::android::hidl::binder::Status _aidl_status(shareBufferWithRef(in_buffer,
+                        [&](auto ret) {
+                            callback_called = true;
+                            // Write "OK" to parcel
+                            ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                            // Serialize
+                            _aidl_reply->writeInt32(ret);
+                            // Callback
+                            _cb(*_aidl_reply);
+                        }
+            ));
+            if (!callback_called) {
+                // Callback not called, the call must have returned an error
+                // TODO set something like ERR_NO_CALLBACK if the call retuned OK
+                _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+            }
+            break;
+        }
         default:
         {
             _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);

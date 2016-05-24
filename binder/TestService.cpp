@@ -1,3 +1,4 @@
+#include <iostream>
 #include <map>
 
 #include <unistd.h>
@@ -31,8 +32,12 @@ using android::hidl::ProcessState;
 using android::hidl::binder::Status;
 using android::hidl::hidl_version;
 using android::hidl::make_hidl_version;
+using android::hidl::from_ref;
 
 // Standard library
+using std::cerr;
+using std::cout;
+using std::endl;
 using std::map;
 using std::string;
 using std::unique_ptr;
@@ -61,6 +66,19 @@ class TestService : public BnTestService {
 
     virtual Status echoInteger(int32_t echo_me, ITestService::echoInteger_cb callback) {
         callback(echo_me);
+        return Status::ok();
+    }
+    virtual Status shareBufferWithRef(int buffer, ITestService::shareBufferWithRef_cb callback) {
+        // Map back to struct lots_of_data
+        ITestService::lots_of_data* dataPtr;
+        if (from_ref(buffer, &dataPtr)) {
+            // Failed
+            callback(1);
+        } else {
+            cout << "Data element at position 1481 is " << unsigned(dataPtr->buffer[1481]) << endl;
+            callback(0);
+        }
+
         return Status::ok();
     }
   private:

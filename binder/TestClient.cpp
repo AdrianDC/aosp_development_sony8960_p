@@ -33,6 +33,8 @@ using android::String16;
 using android::hidl::getService;
 using android::hidl::hidl_version;
 using android::hidl::make_hidl_version;
+using android::hidl::gen_ref;
+using android::hidl::from_ref;
 
 // generated
 using android::hardware::tests::ITestService;
@@ -64,7 +66,6 @@ bool GetService(sp<ITestService>* service, hidl_version version) {
 }  // namespace aidl
 }  // namespace android
 
-/* Runs all the test cases in aidl_test_client_*.cpp files. */
 int main(int /* argc */, char * argv []) {
   android::base::InitLogging(argv, android::base::StderrLogger);
   sp<ITestService> service;
@@ -73,11 +74,26 @@ int main(int /* argc */, char * argv []) {
   hidl_version version = make_hidl_version(4,0);
   if (!client_tests::GetService(&service, version)) return 1;
 
-  int echo_value;
   service->echoInteger(32, [](auto ret) {
     cout << "Got response from binder service: " << ret << endl;
     }
   );
-
+  // Generate a ref<lots_of_data>
+  ITestService::lots_of_data *data_ptr;
+  int fd = -1;
+  gen_ref(&fd, &data_ptr);
+  cout << "gen_ref generated file descriptor " << fd << endl;
+  // Now fill up the buffer with fun data
+  for (size_t i = 0; i < sizeof(ITestService::lots_of_data); i++) {
+     data_ptr->buffer[i] = i & 0xFF;
+  }
+  if (fd >= 0) {
+    service->shareBufferWithRef(fd, [](auto ret) {
+      cout << "Got response from binder service: " << ret << endl;
+    }
+    );
+  } else {
+    cerr << "Failed to generate a reference" << endl;
+  }
   return 0;
 }
