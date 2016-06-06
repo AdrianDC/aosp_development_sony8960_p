@@ -31,5 +31,42 @@ api: {
 // END vts_callflow
 }
 // END code_for_function
-// END code_snips
+
+// START code_for_struct_decl
+aggregate_type_name: "struct_name"
+aggregate_type_definition: {
+ // START struct_gen_fields
+  primitive_type: "field_type_vts" // START struct_field_scalar
+  primitive_name: "param_name"
+
+ // END struct_field_scalar
+
+  primitive_type: "bytes" // START struct_field_string
+  primitive_name: "param_name"
+
+ // END struct_field_string
+
+  primitive_type: "handle" // START struct_field_handle
+  primitive_name: "param_name"
+
+ // END struct_field_handle
+
+ // END struct_gen_fields
+}
+// END code_for_struct_decl
+
+  }// END code_snips
+
+aggregate_type_name: "const"
+aggregate_type_definition: {
+// START declarations
+  primitive_type: "const_vts_type"        // START declare_const
+  primitive_name: "const_name"
+  primitive_value: {
+    const_vts_type: const_value
+  }
+
+        // END declare_const
+// END declarations
+}
 // END file

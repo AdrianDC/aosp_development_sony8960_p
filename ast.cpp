@@ -459,6 +459,15 @@ void EnumValueField::BuildText()
   text_.append(value_->GetText());
 }
 
+string NamedType::SubtypeSuffix()
+{
+  if (base_->TypeName() == "named_type") {
+    return base_->SubtypeSuffix();
+  } else {
+    return "_" + base_->TypeName();
+  }
+}
+
 
 
 Parser::Parser(const IoDelegate& io_delegate,

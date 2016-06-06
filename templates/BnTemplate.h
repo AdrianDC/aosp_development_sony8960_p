@@ -6,15 +6,15 @@
 #define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_header_guard_H_
 
 #include <hwbinder/IInterface.h>
-#include <Ipackage_name.h>
+#include <namespace_slashes/Ipackage_name.h>
 
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-class Bnpackage_name : public hidl::BnInterface<Ipackage_name> {
+class Bnpackage_name : public ::android::hidl::BnInterface<Ipackage_name> {
 public:
-::android::status_t onTransact(uint32_t _aidl_code, const hidl::Parcel& _aidl_data, hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0) override;
+  ::android::status_t onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
 };  // class Bnpackage_name
 
 // START namespace_close_section

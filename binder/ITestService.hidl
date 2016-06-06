@@ -2,6 +2,7 @@ version 1.0;
 package android.hardware.tests;
 
 interface ITestService {
+
   struct simple_t {
     uint32_t int1;
     uint32_t int2;
@@ -9,7 +10,7 @@ interface ITestService {
 
   struct lots_of_data {
     uint8_t[4096] buffer;
-  }
+  };
   echoInteger(int32_t echo_me, simple_t my_struct) generates (int32_t ret);
   // Use of ref<T> is deprecated.
   shareBufferWithRef(ref<lots_of_data> buffer) generates (int32_t ret);

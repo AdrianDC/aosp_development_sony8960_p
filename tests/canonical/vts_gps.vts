@@ -64,3 +64,8 @@ api: {
 
 }
 
+
+aggregate_type_name: "const"
+aggregate_type_definition: {
+
+}

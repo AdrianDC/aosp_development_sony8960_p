@@ -34,7 +34,7 @@ class Thing {
   virtual const string TypeName() = 0;
 
   virtual void Dump();
-  virtual string Generate(string /*prefix*/) { return ""; }
+  virtual string Generate(string /*section*/) { return ""; }
   static void SetParser(Parser *ps);
   virtual const Subs GetSubs(string /*section*/) const { Subs subs; return subs; }
  protected:
@@ -46,7 +46,7 @@ class Thing {
 class Header : public Thing {
  public:
   void Dump() override;
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   const string TypeName() override { return "header"; };
 };
 
@@ -63,7 +63,7 @@ class Element : public Thing {
   void AddDottedElement(Element *element);
   int Line() const { return line_; }
   void Dump() override;
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   const string TypeName() override { return "element"; }
   virtual const string ElementTypename() const = 0;
 
@@ -146,7 +146,8 @@ class Const : public Thing {
   const Element *GetName() const { return name_; }
   const Element *GetValue() const { return value_; }
   void Dump() override;
-  string Generate(string prefix) override;
+  string Generate(string ) override;
+  const Subs GetSubs(string section) const override;
   const string TypeName() override { return "const"; }
 
  private:
@@ -165,13 +166,13 @@ class Fields {
   string GenCommaList(string section, string prev, bool out_params);
   string GenCommaList(string section, string prev) {return GenCommaList(section, prev, false);}
   string GenCommaList(string section) {return GenCommaList(section, "", false);}
-  string GenCommaNameList(string prev, bool out_params);
+  string GenCommaNameList(string section, string prev_list, string snippet = "");
 
   string GenSemiList(string section);
   string GenByType(string section, string prefix);
   string TextByPrefix(string section, string prefix);
-  //  string GenParamAccessor(string section, string prefix);
   string GenVtsList(string section, string label);
+  int Size() { return fields_.size(); }
   void Dump();
   bool HasPtrFixup();
   bool HasFdFixup();
@@ -195,7 +196,7 @@ class Type : public Thing {
   virtual Fields *GetFields() { return(empty_fields_); }
   virtual bool HasFdFixup() { return false; }
   virtual bool HasPtrFixup() { return false; }
-  virtual string VtsType() { return "VtsTypeUnknown"; }
+  virtual string VtsType() const { return "VtsTypeUnknown"; }
   virtual string SubtypeSuffix() { return ""; }
   virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
   bool HasFixup();
@@ -265,6 +266,7 @@ class DerivedType : public Type {
   DerivedType() = default;
   virtual bool HasFdFixup() override { return base_->HasFdFixup(); }
   virtual bool HasPtrFixup() override { return base_->HasPtrFixup(); }
+  virtual Type *GetBase() { return base_; }
 
  protected:
   Type *base_;
@@ -293,7 +295,7 @@ class RefType : public DerivedType {
   void Dump() override;
   bool IsRef() override { return true; }
   const string TypeName() override { return "ref"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual bool HasFdFixup() override { return true; }
 
  private:
@@ -307,7 +309,8 @@ class ArrayType : public DerivedType {
   bool IsArray() override { return true; }
   const Subs GetSubs(string section) const override;
   const string TypeName() override { return "array"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
+  string GenerateDimension() { return dimension_->GetText(); }
 
  private:
   Element *dimension_;
@@ -321,8 +324,9 @@ class NamedType : public DerivedType {
   Element *GetName() { return name_; }
   void Dump() override;
   const string TypeName() override { return "named_type"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual string SubtypeSuffix() override;
+  const Subs GetSubs(string section) const override { return base_->GetSubs(section); };
 
  private:
   Element *name_;
@@ -335,10 +339,11 @@ class ScalarType : public Type {
   virtual bool IsPrimitive() override { return true; }
   void Dump() override;
   const string TypeName() override { return "scalar"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
+  const Subs GetSubs(string section) const override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
-  virtual string VtsType() override { return name_->GetText(); }
+  virtual string VtsType() const override { return name_->GetText(); }
   virtual string SubtypeSuffix() override { return "_" + name_->GetText(); }
  private:
   Element *name_;
@@ -351,7 +356,7 @@ class HandleType : public Type {
   void Dump() override;
   bool IsHandle() override { return true; }
   const string TypeName() override { return "handle"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return true; }
 
@@ -364,7 +369,7 @@ class OpaqueType : public Type {
   OpaqueType();
   void Dump() override;
   const string TypeName() override { return "opaque"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
 
@@ -378,7 +383,7 @@ class StringType : public Type {
   void Dump() override;
   bool IsString() override { return true; }
   const string TypeName() override { return "string"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return false; }
 
@@ -402,7 +407,7 @@ class TypedefDecl : public TypeDecl {
   TypedefDecl(Element *name, Type *type);
   void Dump() override;
   const string TypeName() override { return "typedef_decl"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(TypedefDecl);
@@ -435,7 +440,7 @@ class UnionDecl : public TypeDecl {
   UnionDecl(Element *name, Type *type);
   void Dump() override;
   const string TypeName() override { return "union_decl"; }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(UnionDecl);
@@ -447,7 +452,7 @@ class Field : public Thing {
  public:
   void Dump() override;
   int Line() { return name_->Line(); }
-  string Generate(string prefix) override;
+  string Generate(string section) override;
   virtual Type *GetType() const { return nullptr; }
   const string TypeName() override { return "field"; }
   Element *GetName() { return name_; }
@@ -613,6 +618,7 @@ class Parser {
 
   void SetInterface(Annotations *annotations, Element *name);
   Element *GetInterface() { return interface_; }
+  string GetPackageName() const { return interface_->GetText(); }
 
   void SetVersion(int major, int minor);
 
@@ -650,10 +656,12 @@ class Parser {
   void SetWriter(android::hidl::CodeWriterPtr writer);
   string TextByPrefix(string section, string prefix);
   string CallEnumList(string section);
+  string CallbackDeclList(string section);
   void BuildNamespaceText(string section,
-                                  std::vector<Element *>*namespace_,
-                                  string& namespace_open,
-                                  string& namespace_close);
+                          std::vector<Element *>*namespace_,
+                          string& namespace_open,
+                          string& namespace_close,
+                          string& namespace_slashes);
   void WriteDepFileIfNeeded(
           std::unique_ptr<android::hidl::CppOptions> options,
           android::hidl::IoDelegate &io_delegate);

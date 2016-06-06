@@ -7,6 +7,16 @@ component_type_version: 1.0
 
 original_data_structure_name: "ISampleLightsHalServiceWithVtsAnnotation"
 
+aggregate_type_name: "light_state_t"
+aggregate_type_definition: {
+  primitive_type: "bytes"
+  primitive_name: "s"
+
+  primitive_type: "handle"
+  primitive_name: "bar"
+
+
+}
 api: {
   name: "setLight"
   return_type_hidl: {
@@ -21,3 +31,8 @@ api: {
 
 }
 
+
+aggregate_type_name: "const"
+aggregate_type_definition: {
+
+}

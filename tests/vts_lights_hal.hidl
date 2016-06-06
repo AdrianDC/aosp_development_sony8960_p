@@ -1,0 +1,29 @@
+version 1.0;
+package android.hardware.tests;
+
+@hal_type("LIGHT")
+
+interface ISampleLightsHalServiceWithVtsAnnotation {
+  const LIGHT_FLASH_NONE = 0;
+  const LIGHT_FLASH_TIMED = 1;
+  const LIGHT_FLASH_HARDWARE = 2;
+  const BRIGHTNESS_MODE_USER = 0;
+  const BRIGHTNESS_MODE_SENSOR = 1;
+  const LIGHT_ID_BACKLIGHT = "backlight";
+  const LIGHT_ID_KEYBOARD = "keyboard";
+  const LIGHT_ID_BUTTONS = "buttons";
+  const LIGHT_ID_BATTERY = "battery";
+  const LIGHT_ID_NOTIFICATIONS = "notifications";
+  const LIGHT_ID_ATTENTION = "attention";
+  const LIGHT_ID_BLUETOOTH = "bluetooth";
+  const LIGHT_ID_WIFI = "wifi";
+  struct light_state_t {
+    uint32_t color;
+    int32_t flashMode;
+    int32_t flashOnMs;
+    int32_t flashOffMs;
+    int32_t brightnessMode;
+  };
+  setLight(light_state_t state) generates (int32_t _hidl_return);
+};
+

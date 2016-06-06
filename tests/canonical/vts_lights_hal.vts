@@ -1,0 +1,125 @@
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/Template.vts
+component_class: HAL_HIDL
+component_type: LIGHT
+
+component_type_version: 1.0
+
+original_data_structure_name: "ISampleLightsHalServiceWithVtsAnnotation"
+
+aggregate_type_name: "light_state_t"
+aggregate_type_definition: {
+  primitive_type: "uint32_t"
+  primitive_name: "color"
+
+  primitive_type: "int32_t"
+  primitive_name: "flashMode"
+
+  primitive_type: "int32_t"
+  primitive_name: "flashOnMs"
+
+  primitive_type: "int32_t"
+  primitive_name: "flashOffMs"
+
+  primitive_type: "int32_t"
+  primitive_name: "brightnessMode"
+
+
+}
+api: {
+  name: "setLight"
+  return_type_hidl: {
+    primitive_type: "int32_t"
+
+  }
+  arg: {
+    aggregate_type: "light_state_t"
+
+  }
+
+
+}
+
+
+aggregate_type_name: "const"
+aggregate_type_definition: {
+  primitive_type: "int32_t"
+  primitive_name: "LIGHT_FLASH_NONE"
+  primitive_value: {
+    int32_t: 0
+  }
+
+  primitive_type: "int32_t"
+  primitive_name: "LIGHT_FLASH_TIMED"
+  primitive_value: {
+    int32_t: 1
+  }
+
+  primitive_type: "int32_t"
+  primitive_name: "LIGHT_FLASH_HARDWARE"
+  primitive_value: {
+    int32_t: 2
+  }
+
+  primitive_type: "int32_t"
+  primitive_name: "BRIGHTNESS_MODE_USER"
+  primitive_value: {
+    int32_t: 0
+  }
+
+  primitive_type: "int32_t"
+  primitive_name: "BRIGHTNESS_MODE_SENSOR"
+  primitive_value: {
+    int32_t: 1
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_BACKLIGHT"
+  primitive_value: {
+    bytes: "backlight"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_KEYBOARD"
+  primitive_value: {
+    bytes: "keyboard"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_BUTTONS"
+  primitive_value: {
+    bytes: "buttons"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_BATTERY"
+  primitive_value: {
+    bytes: "battery"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_NOTIFICATIONS"
+  primitive_value: {
+    bytes: "notifications"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_ATTENTION"
+  primitive_value: {
+    bytes: "attention"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_BLUETOOTH"
+  primitive_value: {
+    bytes: "bluetooth"
+  }
+
+  primitive_type: "bytes"
+  primitive_name: "LIGHT_ID_WIFI"
+  primitive_value: {
+    bytes: "wifi"
+  }
+
+
+}

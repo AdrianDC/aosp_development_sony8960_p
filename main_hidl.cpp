@@ -43,7 +43,9 @@ int main(int argc, char** argv) {
   }
   p.Write();
   p.WriteDepFileIfNeeded(std::move(options), io_delegate);
-  printf("Exit error count: %d\n", p.GetErrorCount());
+  if (p.GetErrorCount()) {
+    printf("Exit error count: %d\n", p.GetErrorCount());
+  }
   return p.GetErrorCount();
   //  return android::hidl::Compile_hidl_to_cpp(*options, io_delegate);
 }

@@ -60,9 +60,9 @@ class BinderCallback : public LooperCallback {
 };
 
 class TestService : public BnTestService {
-  public:
-    TestService() {}
-    virtual ~TestService() = default;
+ public:
+  TestService() {}
+  virtual ~TestService() = default;
 
   virtual Status echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb callback) {
             std::cout << "struct at addr " << (void *)my_struct << std::endl;

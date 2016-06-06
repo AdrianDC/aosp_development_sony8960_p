@@ -1,4 +1,4 @@
-//#include <ITestService.h>
+#include <ITestService.h>
 #include <stdio.h>
 int main(int, char**)
 {

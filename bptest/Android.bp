@@ -4,9 +4,18 @@ hidl_output {
      output_type: "i_h",
      srcs: ["ITestService.hidl"],
 }
+hidl_output {
+     name: "fooproxy",
+     output_name: "TestServiceProxy.cpp",
+     output_type: "proxy_cpp",
+     srcs: ["ITestService.hidl"],
+}
 
-cc_binary_host {
+cc_binary {
     name: "test_hidl_build",
     srcs: ["foo.cpp"],
-//    deps: ["ifoo"],
+    generated_headers: ["ifoo"],
+    generated_sources: ["fooproxy"],
+    include_dirs: ["system/libhwbinder/include", "system/core/base/include"],
 }
+

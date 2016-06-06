@@ -49,7 +49,9 @@ class Tester(object):
     self.ProcessFile("ITest.hidl", "foo", "bn_h")
     self.Test(self.last_return == 0)
     self.TestOutput("vts_gps.hidl", "vts_gps.vts", "vts")
+     # , True)  # echoes stdout from hidl-gen, for debugging
     self.TestOutput("vts_lights.hidl", "vts_lights.vts", "vts")
+    self.TestOutput("vts_lights_hal.hidl", "vts_lights_hal.vts", "vts")
     self.TestOutput("ITestService.hidl", "ITestService.h", "i_h")
     self.TestOutput("ITestService.hidl", "BnTestService.h", "bn_h")
     self.TestOutput("ITestService.hidl", "BpTestService.h", "bp_h")
@@ -67,8 +69,8 @@ class Tester(object):
     self.last_return = proc.returncode
 #    print "Ret from RunC is %d" % self.last_return
 
-  def TestOutput(self, hidl_name, out_name, out_type):
-    self.ProcessFile(hidl_name, out_name, out_type)
+  def TestOutput(self, hidl_name, out_name, out_type, print_out = None):
+    self.ProcessFile(hidl_name, out_name, out_type, print_out)
     if self.last_return != 0:
       self.Error("hidl-gen error on file %s (type %s): %s" % (
           hidl_name, out_type, self.last_stdout + self.last_stderr))
@@ -87,13 +89,15 @@ class Tester(object):
     print string
     self.errors += 1
 
-  def ProcessFile(self, hidl_name, out_name, out_type):
+  def ProcessFile(self, hidl_name, out_name, out_type, print_out=None):
     self.last_hidl_name = hidl_name
     self.last_out_type = out_type
     hidl_path = self.test_dir + hidl_name
     self.last_out_path = self.output_dir + out_name
     self.RunCommand([self.hidl_cpp_path, out_type,
                      hidl_path, self.last_out_path])
+    if print_out:
+      print self.last_stdout
     if self.last_return == 0:
       with open(self.last_out_path) as out_file:
         self.last_out_text = out_file.read()

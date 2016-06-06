@@ -15,12 +15,16 @@
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-class Bppackage_name : public ::android::BpInterface<Ipackage_name> {
+class Bppackage_name : public ::android::hidl::BpInterface<Ipackage_name> {
 public:
-explicit Bppackage_name(const ::android::sp<::android::IBinder>& _aidl_impl);
+explicit Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
 virtual ~Bppackage_name() = default;
   // START declarations
-::android::binder::Status function_name(call_param_list return_param_list) override; // ALL declare_function
+/*
+, Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
+const Ipackage_name::struct_name *param_name // ALL param_decl_named_type_struct_decl
+*/
+::android::hidl::binder::Status function_name(call_param_list callback_description) override; // ALL declare_function
   // END declarations
 };  // class Bppackage_name
 
