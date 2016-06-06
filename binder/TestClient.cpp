@@ -74,7 +74,10 @@ int main(int /* argc */, char * argv []) {
   hidl_version version = make_hidl_version(4,0);
   if (!client_tests::GetService(&service, version)) return 1;
 
-  service->echoInteger(32, [](auto ret) {
+  ITestService::simple_t my_struct;
+  my_struct.int1 = 1481;
+  my_struct.int2 = 2592;
+  service->echoInteger(32, &my_struct, [](auto ret) {
     cout << "Got response from binder service: " << ret << endl;
     }
   );

@@ -27,7 +27,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
     : BpInterface<ITestService>(_aidl_impl){
 }
 
-::android::hidl::binder::Status BpTestService::echoInteger(int32_t echo_me, ITestService::echoInteger_cb _cb) {
+::android::hidl::binder::Status BpTestService::echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb _cb) {
     ::android::hidl::Parcel _aidl_data;
     ::android::hidl::Parcel _aidl_reply;
     ::android::status_t _aidl_ret_status = ::android::OK;
@@ -43,6 +43,8 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
     if (((_aidl_ret_status) != (::android::OK))) {
         goto _aidl_error;
     }
+    _aidl_data.writeBuffer((void *)my_struct, sizeof(my_struct));
+
     _aidl_ret_status = remote()->transact(ITestService::ECHOINTEGER, _aidl_data, &_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
         goto _aidl_error;

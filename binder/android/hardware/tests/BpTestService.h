@@ -16,7 +16,7 @@ class BpTestService : public ::android::hidl::BpInterface<ITestService> {
 public:
 explicit BpTestService(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
 virtual ~BpTestService() = default;
-::android::hidl::binder::Status echoInteger(int32_t echo_me, ITestService::echoInteger_cb _cb) override;
+::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb _cb) override;
 ::android::hidl::binder::Status shareBufferWithRef(int32_t echo_me, ITestService::shareBufferWithRef_cb _cb) override;
 };  // class BpTestService
 

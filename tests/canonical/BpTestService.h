@@ -12,13 +12,12 @@ namespace android {
 namespace hardware {
 namespace tests {
 
-
-class BpTestService : public ::android::BpInterface<ITestService> {
+class BpTestService : public ::android::hidl::BpInterface<ITestService> {
 public:
-explicit BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl);
+explicit BpTestService(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
 virtual ~BpTestService() = default;
-::android::binder::Status echoInteger(int32_t echo_me , std::function<void(int32_t _aidl_return)> callback = nullptr) override;
-
+::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb _cb) override;
+::android::hidl::binder::Status shareBufferWithRef(int32_t echo_me, ITestService::shareBufferWithRef_cb _cb) override;
 };  // class BpTestService
 
 }  // namespace tests

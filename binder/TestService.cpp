@@ -64,7 +64,9 @@ class TestService : public BnTestService {
     TestService() {}
     virtual ~TestService() = default;
 
-    virtual Status echoInteger(int32_t echo_me, ITestService::echoInteger_cb callback) {
+  virtual Status echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb callback) {
+            std::cout << "struct at addr " << (void *)my_struct << std::endl;
+            std::cout << "int1 " << my_struct->int1 << " int 2 " << my_struct->int2 << std::endl;
         callback(echo_me);
         return Status::ok();
     }

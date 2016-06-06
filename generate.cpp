@@ -96,7 +96,8 @@ string NamedType::Generate(string section)
 }
 string RefType::Generate(string section)
 {
-  return "hidl_ref<" + base_->Generate(section) + ">";
+  //  return "hidl_ref<" + base_->Generate(section) + ">";
+  return "int";
 }
 string UnionType::Generate(string section)
 {

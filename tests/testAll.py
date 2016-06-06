@@ -78,7 +78,7 @@ class Tester(object):
       good_text = canonical.read()
     if good_text != self.last_out_text:
       self.Error(("Output file %s (%s) is wrong for hidl file %s\n"
-                  "  meld %s %s") % (out_name, out_type, hidl_name,
+                  "meld %s %s") % (out_name, out_type, hidl_name,
                                      canonical_path,
                                      self.last_out_path))
 

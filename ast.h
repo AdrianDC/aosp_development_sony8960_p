@@ -92,6 +92,7 @@ class IntElement : public Element {
   //  IntElement(const string& text, int Line);
   virtual const string ElementTypename() const override { return "int"; }
   virtual bool HasScalarValue() const { return true; }
+  virtual bool HasIntegerValue() const { return true; }
   virtual long GetIntegerValue() const override { return stoi(text_); }
   DISALLOW_COPY_AND_ASSIGN(IntElement);
 };

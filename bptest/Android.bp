@@ -1,0 +1,12 @@
+hidl_output {
+     name: "ifoo",
+     output_name: "ITestService.h",
+     output_type: "i_h",
+     srcs: ["ITestService.hidl"],
+}
+
+cc_binary_host {
+    name: "test_hidl_build",
+    srcs: ["foo.cpp"],
+//    deps: ["ifoo"],
+}

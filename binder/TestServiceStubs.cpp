@@ -32,6 +32,7 @@ namespace tests {
             int32_t in_echo_me;
             int32_t _aidl_return;
             bool callback_called;
+            simple_t *my_struct;
             if (!(_aidl_data.checkInterface(this))) {
                 _aidl_ret_status = ::android::BAD_TYPE;
                 break;
@@ -40,8 +41,9 @@ namespace tests {
                 if (((_aidl_ret_status) != (::android::OK))) {
                 break;
             }
+            my_struct = (simple_t *)_aidl_data.readBuffer();
             // Make the call into the server
-            ::android::hidl::binder::Status _aidl_status(echoInteger(in_echo_me,
+            ::android::hidl::binder::Status _aidl_status(echoInteger(in_echo_me, my_struct,
                         [&](auto ret) {
                             callback_called = true;
                             // Write "OK" to parcel
