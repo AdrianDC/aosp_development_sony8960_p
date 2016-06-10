@@ -151,18 +151,32 @@ const Subs Field::GetSubs(string section) const
   Type *type = GetType();
   if (type) {
     Subs type_subs {type->GetSubs(section)};
-    //  PrintSubs("FieldTypeSubs", type_subs);
+    //PrintSubs("FieldTypeSubs", type_subs);
     subs.insert(subs.end(), type_subs.begin(), type_subs.end());
   } else {
     cout << "Null type!" << endl;
   }
-  //  PrintSubs("Field subs", subs);
+  //PrintSubs("Field subs", subs);
   return subs;
 }
 
 const Subs VecType::GetSubs(string section) const
 {
   Subs subs{{"vec_name", "myVecName"}};
+  return subs;
+}
+
+const Subs NamedType::GetSubs(string section) const
+{
+  Subs base_subs{ base_->GetSubs(section) };
+  Subs subs{{"named_type_name", name_->GetText()}};
+  subs.insert(subs.end(), base_subs.begin(), base_subs.end());
+  return subs;
+}
+
+const Subs RefType::GetSubs(string section) const
+{
+  Subs subs{{"base_type_name", base_->Generate(section)}};
   return subs;
 }
 
@@ -177,7 +191,7 @@ const Subs ArrayType::GetSubs(string section) const
 const Subs ScalarType::GetSubs(string section) const
 {
   Subs subs{{"field_type_vts", VtsType()},
-    {"base_type_name", VtsType()}};
+    {"base_type_name", name_->GetText()}};
   return subs;
 }
 
@@ -342,10 +356,14 @@ string Fields::GenCommaList(string section, string prev, bool out_params)
       special_string = Snip(section, "param_decl_"
                             + field->GetType()->TypeName()
                             + field->GetType()->SubtypeSuffix(),
-                            field->GetSubs(section));
+                            field->GetSubs(section)) +
+          Snip(section, "param_decl_"
+               + field->GetType()->TypeName()
+               + "_all",
+               field->GetSubs(section));
     }
     if (special_string != "") {
-      output += make_inline(special_string);
+      output += (section == "json") ? special_string : make_inline(special_string);
     } else {
       if (field->GetType()) { // Enum fields don't have a type
         output += field->GetType()->Generate(section);
@@ -370,7 +388,11 @@ string Fields::GenSemiList(string section)
       special_string = Snip(section, "field_decl_"
                             + field->GetType()->TypeName()
                             + field->GetType()->SubtypeSuffix(),
-                            field->GetSubs(section));
+                            field->GetSubs(section)) +
+          Snip(section, "field_decl_"
+               + field->GetType()->TypeName()
+               + "_all",
+               field->GetSubs(section));
     }
     if (special_string != "") {
       output += make_inline(special_string);
@@ -460,6 +482,7 @@ string Fields::TextByPrefix(string section, string prefix)
   // cout << " <<< TBP " << prefix << endl;
   for (auto & thing : fields_) {
     out += Snip(section, prefix + thing->GetType()->TypeName() + thing->GetType()->SubtypeSuffix(), thing->GetSubs(section));
+    out += Snip(section, prefix + thing->GetType()->TypeName() + "_all", thing->GetSubs(section));
     //  cout << "    type '" << (prefix+thing->TypeName()) << "' size " << out.size() << endl;
   }
   return out;
@@ -542,6 +565,8 @@ void Parser::Write()
   Subs subs {
     {"header_guard", GetPackageName()},
     {"version_string", version},
+    {"version_major_string", std::to_string(version_major_)},
+    {"version_minor_string", std::to_string(version_minor_)},
     {"component_type_enum", component_type},
     {"package_name", GetPackageName()},
     {"declarations", TextByPrefix(section_, "declare_")},

@@ -45,13 +45,14 @@ unique_ptr<CppOptions> cpp_usage() {
        << "   -p        print info from input file (for debugging)" << endl
        << endl
        << "TYPE:" << endl
+       << "   binder      Generate Binder .h file" << endl
        << "   bn_h        Generate BnFoo.h" << endl
        << "   bp_h        Generate BpFoo.h" << endl
        << "   i_h         Generate IFoo.h" << endl
-       << "   stubs_cpp   Generate FooStubs.cpp" << endl
+       << "   json        Generate Foo.json" << endl
        << "   proxy_cpp   Generate FooProxy.cpp" << endl
+       << "   stubs_cpp   Generate FooStubs.cpp" << endl
        << "   vts         Generate Foo.vts" << endl
-       << "   binder      Generate Binder .h file" << endl
        << endl
        << "INPUT_FILE:" << endl
        << "   a hidl interface file" << endl

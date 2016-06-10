@@ -1,0 +1,61 @@
+// SECTION json
+// START file
+hidl {
+  version_major: version_major_string,
+  version_minor: version_minor_string,
+  name: "package_name",
+  things: [
+    // START declarations
+    // START declare_struct_decl
+    {
+      type: "struct",
+      name: "struct_name",
+      fields: [
+        // START struct_gen_fields
+        { // START struct_field_array
+          name: "param_name",
+          type: "array",
+          base_type: {
+            type: "base_type_name",
+          },
+          dimension: array_size,
+        }, // END struct_field_array
+        { // START struct_field_scalar
+          name: "param_name",
+          type: "base_type_name",
+        }, // END struct_field_scalar
+        // END struct_gen_fields
+      ],
+    },    // END declare_struct_decl
+    { // START declare_function
+      type: "function",
+      name: "function_name",
+      params: [
+        // START call_param_list
+        { // START param_decl_scalar_all
+          name: "param_name",
+          type: "base_type_name"
+        }// END param_decl_scalar_all
+        { // START param_decl_named_type_all
+          name: "param_name",
+          type: "named_type_name"
+        } // END param_decl_named_type_all
+        { // START param_decl_ref
+          name: "param_name",
+          type: "ref",
+          base_type: {
+            type: "base_type_name"
+          }
+        } // END param_decl_ref
+        // END call_param_list
+      ],
+      generates: [
+        // ALL return_param_list
+      ]
+    }, // END declare_function
+    // END declarations
+    {} // comma fodder
+  ]
+}
+
+// END file

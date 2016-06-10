@@ -294,6 +294,7 @@ class RefType : public DerivedType {
   RefType(Type *type);
   void Dump() override;
   bool IsRef() override { return true; }
+  const Subs GetSubs(string section) const override;
   const string TypeName() override { return "ref"; }
   string Generate(string section) override;
   virtual bool HasFdFixup() override { return true; }
@@ -323,10 +324,10 @@ class NamedType : public DerivedType {
   NamedType(Element *name);
   Element *GetName() { return name_; }
   void Dump() override;
+  const Subs GetSubs(string section) const override;
   const string TypeName() override { return "named_type"; }
   string Generate(string section) override;
   virtual string SubtypeSuffix() override;
-  const Subs GetSubs(string section) const override { return base_->GetSubs(section); };
 
  private:
   Element *name_;

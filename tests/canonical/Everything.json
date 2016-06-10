@@ -1,0 +1,83 @@
+hidl {
+  version_major: 1,
+  version_minor: 0,
+  name: "Everything",
+  things: [
+    {
+      type: "struct",
+      name: "simple_t",
+      fields: [
+        {
+          name: "int1",
+          type: "uint32_t",
+        },
+        {
+          name: "int2",
+          type: "uint32_t",
+        },
+
+      ],
+    },
+    {
+      type: "struct",
+      name: "lots_of_data",
+      fields: [
+        {
+          name: "buffer",
+          type: "array",
+          base_type: {
+            type: "uint8_t",
+          },
+          dimension: 4096,
+        },
+
+      ],
+    },
+    {
+      type: "function",
+      name: "echoInteger",
+      params: [
+        {
+          name: "echo_me",
+          type: "int32_t"
+        }
+,         {
+          name: "my_struct",
+          type: "simple_t"
+        }
+
+      ],
+      generates: [
+        {
+          name: "ret",
+          type: "int32_t"
+        }
+
+      ]
+    },
+    {
+      type: "function",
+      name: "shareBufferWithRef",
+      params: [
+        {
+          name: "buffer",
+          type: "ref",
+          base_type: {
+            type: "lots_of_data"
+          }
+        }
+
+      ],
+      generates: [
+        {
+          name: "ret",
+          type: "int32_t"
+        }
+
+      ]
+    },
+
+    {} // comma fodder
+  ]
+}
+

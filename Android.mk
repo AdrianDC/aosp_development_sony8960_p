@@ -70,6 +70,7 @@ private_input_files := \
 	$(LOCAL_PATH)/templates/BpTemplate.h \
 	$(LOCAL_PATH)/templates/ITemplate.h \
 	$(LOCAL_PATH)/templates/Template.vts \
+	$(LOCAL_PATH)/templates/Template.json \
 	$(LOCAL_PATH)/templates/TemplateBinder.h \
 	$(LOCAL_PATH)/templates/TemplateProxy.cpp \
 	$(LOCAL_PATH)/templates/TemplateStubs.cpp \
