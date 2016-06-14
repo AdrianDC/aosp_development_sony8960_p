@@ -31,7 +31,7 @@ class Thing {
   void SetText(string text) { text_ = text; }
   const char *c_str() const { return text_.c_str(); }
   const string& GetComments() const { return comments_; }
-  virtual const string TypeName() = 0;
+  virtual const string TypeName() const = 0;
 
   virtual void Dump();
   virtual string Generate(string /*section*/) { return ""; }
@@ -47,7 +47,7 @@ class Header : public Thing {
  public:
   void Dump() override;
   string Generate(string section) override;
-  const string TypeName() override { return "header"; };
+  const string TypeName() const override { return "header"; };
 };
 
 class Element : public Thing {
@@ -64,7 +64,7 @@ class Element : public Thing {
   int Line() const { return line_; }
   void Dump() override;
   string Generate(string section) override;
-  const string TypeName() override { return "element"; }
+  const string TypeName() const override { return "element"; }
   virtual const string ElementTypename() const = 0;
 
  protected:
@@ -148,7 +148,7 @@ class Const : public Thing {
   void Dump() override;
   string Generate(string ) override;
   const Subs GetSubs(string section) const override;
-  const string TypeName() override { return "const"; }
+  const string TypeName() const override { return "const"; }
 
  private:
   Element *name_;
@@ -197,7 +197,8 @@ class Type : public Thing {
   virtual bool HasFdFixup() { return false; }
   virtual bool HasPtrFixup() { return false; }
   virtual string VtsType() const { return "VtsTypeUnknown"; }
-  virtual string SubtypeSuffix() { return ""; }
+  virtual string SubtypeSuffix() const { return ""; }
+  virtual const string TypeSuffix(bool subtype) const { return subtype ? "UNUSED" : TypeName(); }
   virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
   bool HasFixup();
 
@@ -225,7 +226,7 @@ class StructType : public CompoundType {
  public:
   StructType(Fields *fields);
   void Dump() override;
-  const string TypeName() override { return "struct_type"; }
+  const string TypeName() const override { return "struct_type"; }
   string Generate(string prefix) override;
 
  private:
@@ -236,7 +237,8 @@ class EnumType : public CompoundType {
  public:
   EnumType(Type* type, Fields* fields);
   void Dump() override;
-  const string TypeName() override { return "enum_type"; }
+  const string TypeName() const override { return "enum_type"; }
+  virtual const string TypeSuffix(bool subtype) const override;
   string Generate(string prefix) override;
   string TypeOfEnum(string section) override { return type_->Generate(section); }
 
@@ -251,7 +253,7 @@ class UnionType : public CompoundType {
   UnionType(Fields *fields); // Undiscriminated
   UnionType(Type* type, Fields* fields); // Disc
   void Dump() override;
-  const string TypeName() override { return "union_type"; }
+  const string TypeName() const override { return "union_type"; }
   string Generate(string prefix) override;
 
  private:
@@ -267,6 +269,7 @@ class DerivedType : public Type {
   virtual bool HasFdFixup() override { return base_->HasFdFixup(); }
   virtual bool HasPtrFixup() override { return base_->HasPtrFixup(); }
   virtual Type *GetBase() { return base_; }
+  virtual const string TypeSuffix(bool subtype) const override;
 
  protected:
   Type *base_;
@@ -281,7 +284,7 @@ class VecType : public DerivedType {
   void Dump() override;
   const Subs GetSubs(string section) const override;
   bool IsVec() override { return true; }
-  const string TypeName() override { return "vec"; }
+  const string TypeName() const override { return "vec"; }
   string Generate(string prefix) override;
   virtual bool HasPtrFixup() override { return true; }
 
@@ -295,7 +298,7 @@ class RefType : public DerivedType {
   void Dump() override;
   bool IsRef() override { return true; }
   const Subs GetSubs(string section) const override;
-  const string TypeName() override { return "ref"; }
+  const string TypeName() const override { return "ref"; }
   string Generate(string section) override;
   virtual bool HasFdFixup() override { return true; }
 
@@ -309,7 +312,7 @@ class ArrayType : public DerivedType {
   void Dump() override;
   bool IsArray() override { return true; }
   const Subs GetSubs(string section) const override;
-  const string TypeName() override { return "array"; }
+  const string TypeName() const override { return "array"; }
   string Generate(string section) override;
   string GenerateDimension() { return dimension_->GetText(); }
 
@@ -325,9 +328,10 @@ class NamedType : public DerivedType {
   Element *GetName() { return name_; }
   void Dump() override;
   const Subs GetSubs(string section) const override;
-  const string TypeName() override { return "named_type"; }
+  const string TypeName() const override { return "named_type"; }
+  virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
   string Generate(string section) override;
-  virtual string SubtypeSuffix() override;
+  virtual string SubtypeSuffix() const override;
 
  private:
   Element *name_;
@@ -339,13 +343,14 @@ class ScalarType : public Type {
   ScalarType(Element *name);
   virtual bool IsPrimitive() override { return true; }
   void Dump() override;
-  const string TypeName() override { return "scalar"; }
+  const string TypeName() const override { return "scalar"; }
   string Generate(string section) override;
   const Subs GetSubs(string section) const override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
   virtual string VtsType() const override { return name_->GetText(); }
-  virtual string SubtypeSuffix() override { return "_" + name_->GetText(); }
+  virtual string SubtypeSuffix() const override { return "_" + name_->GetText(); }
+  virtual const string TypeSuffix(bool subtype) const override;
  private:
   Element *name_;
   DISALLOW_COPY_AND_ASSIGN(ScalarType);
@@ -356,7 +361,7 @@ class HandleType : public Type {
   HandleType();
   void Dump() override;
   bool IsHandle() override { return true; }
-  const string TypeName() override { return "handle"; }
+  const string TypeName() const override { return "handle"; }
   string Generate(string section) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return true; }
@@ -369,7 +374,7 @@ class OpaqueType : public Type {
  public:
   OpaqueType();
   void Dump() override;
-  const string TypeName() override { return "opaque"; }
+  const string TypeName() const override { return "opaque"; }
   string Generate(string section) override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
@@ -378,12 +383,25 @@ class OpaqueType : public Type {
   DISALLOW_COPY_AND_ASSIGN(OpaqueType);
 };
 
+class ImportType : public Type {
+ public:
+  ImportType();
+  void Dump() override;
+  const string TypeName() const override { return "import"; }
+  string Generate(string /*section*/) override { return "ImportTypeGen"; }
+  virtual bool HasPtrFixup() override { return false; }
+  virtual bool HasFdFixup() override { return false; }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ImportType);
+};
+
 class StringType : public Type {
  public:
   StringType();
   void Dump() override;
   bool IsString() override { return true; }
-  const string TypeName() override { return "string"; }
+  const string TypeName() const override { return "string"; }
   string Generate(string section) override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return false; }
@@ -396,6 +414,7 @@ class TypeDecl : public DerivedType {
  public:
   TypeDecl(Element *name, Type *base);
   const Element *GetName() const { return name_; };
+  virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
 
  protected:
   Element *name_;
@@ -407,7 +426,8 @@ class TypedefDecl : public TypeDecl {
  public:
   TypedefDecl(Element *name, Type *type);
   void Dump() override;
-  const string TypeName() override { return "typedef_decl"; }
+  const string TypeName() const override { return "typedef_decl"; }
+  const Subs GetSubs(string section) const override;
   string Generate(string section) override;
 
  private:
@@ -418,7 +438,7 @@ class EnumDecl : public TypeDecl {
  public:
   EnumDecl(Element *name, Type *type);
   void Dump() override;
-  const string TypeName() override { return "enum_decl"; }
+  const string TypeName() const override { return "enum_decl"; }
   const Subs GetSubs(string section) const override;
 
  private:
@@ -429,7 +449,7 @@ class StructDecl : public TypeDecl {
  public:
   StructDecl(Element *name, Type *type);
   void Dump() override;
-  const string TypeName() override { return "struct_decl"; }
+  const string TypeName() const override { return "struct_decl"; }
   const Subs GetSubs(string section) const override;
 
  private:
@@ -440,11 +460,22 @@ class UnionDecl : public TypeDecl {
  public:
   UnionDecl(Element *name, Type *type);
   void Dump() override;
-  const string TypeName() override { return "union_decl"; }
+  const string TypeName() const override { return "union_decl"; }
   string Generate(string section) override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(UnionDecl);
+};
+
+class ImportDecl : public TypeDecl {
+ public:
+  ImportDecl(Element *name);
+  void Dump() override;
+  const string TypeName() const override { return "import_decl"; }
+  string Generate(string section) override;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ImportDecl);
 };
 
 class Annotation;
@@ -455,7 +486,7 @@ class Field : public Thing {
   int Line() { return name_->Line(); }
   string Generate(string section) override;
   virtual Type *GetType() const { return nullptr; }
-  const string TypeName() override { return "field"; }
+  const string TypeName() const override { return "field"; }
   Element *GetName() { return name_; }
   virtual Element *GetValue() { return nullptr; }
   const string& GetComments() const { return comments_; }
@@ -524,7 +555,7 @@ class AnnotationValue : public Thing {
  public:
   AnnotationValue(Element *value);
   AnnotationValue(Annotation *annotation);
-  const string TypeName() override { return "AnnotationValue"; };
+  const string TypeName() const override { return "AnnotationValue"; };
   Element *GetValue() { return value_; }
   Annotation *GetAnnotation() { return annotation_; }
   string NoQuoteText();
@@ -545,7 +576,7 @@ class Annotation : public Thing {
   Annotation(Element *name, AnnotationValues *values);
   Annotation(Element *name,
              AnnotationEntries *entries);
-  const string TypeName() override { return "Annotation"; };
+  const string TypeName() const override { return "Annotation"; };
   const string NameText() { return name_->GetText(); }
   int Line() { return name_->Line(); }
   AnnotationEntries *Entries() { return entries_; }
@@ -565,7 +596,7 @@ class Annotations : public Thing {
   Annotations() = default;
   void Add(Annotation *a);
   void Dump();
-  const string TypeName() override { return "Annotations"; };
+  const string TypeName() const override { return "Annotations"; };
   const vector<Annotation*>GetAs() { return annotations_; }
   Annotation *GetAnnotation(string key);
   bool HasKey(string key);
@@ -585,7 +616,7 @@ class Function : public Thing {
            Fields *generates);
   void Dump() override;
   virtual const Subs GetSubs(string section) const override;
-  const string TypeName() override { return "function"; }
+  const string TypeName() const override { return "function"; }
   const Element *GetName() { return name_; }
   string GenCallflow(string section) const;
 

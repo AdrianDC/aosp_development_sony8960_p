@@ -105,6 +105,10 @@ string UnionDecl::Generate(string section)
 {
   return "Union code goes here for name " + name_->Generate(section) + "\n";
 }
+string ImportDecl::Generate(string section)
+{
+  return "Import code goes here for name " + name_->Generate(section) + "\n";
+}
 string NamedType::Generate(string section)
 {
   return name_->GetText();
@@ -166,6 +170,11 @@ const Subs VecType::GetSubs(string section) const
   return subs;
 }
 
+const Subs TypedefDecl::GetSubs(string section) const
+{
+  return base_->GetSubs(section);
+}
+
 const Subs NamedType::GetSubs(string section) const
 {
   Subs base_subs{ base_->GetSubs(section) };
@@ -199,14 +208,28 @@ const Subs Function::GetSubs(string section) const
 {
   string callback_param;
   if (generates_->Size()) {
-    Subs subs {{"function_name", name_->GetText()}};
+    Subs subs {{"function_name", name_->GetText()},
+      {"package_name", ps_->GetPackageName()}};
     callback_param = make_inline(Snip(section, "callback_param", subs));
+  }
+  string call_param_list = fields_->GenCommaList(section, "");
+  string params_and_callback;
+  if (call_param_list == "" || callback_param == "") {
+    params_and_callback = call_param_list + callback_param;
+  } else {
+    params_and_callback = call_param_list + ", " + callback_param;
+  }
+  string callback_invocation;
+  if (generates_->Size() > 0) {
+    string return_param_names = generates_->GenCommaNameList(section, "", "");
+    Subs subs{{"return_param_names", return_param_names}};
+    callback_invocation = Snip(section, "callback_invocation", subs);
   }
   Subs subs{{"function_name", name_->GetText()},
     {"package_name", ps_->GetInterface()->GetText()},
-    {"call_param_list", fields_->GenCommaList(section, "")},
+    {"params_and_callback", params_and_callback},
+    {"call_param_list", call_param_list},
     {"return_param_list", generates_->GenCommaList(section, "")},
-    {"callback_description", callback_param},
     {"function_params_stubs", fields_->GenCommaNameList(section, "", "")},
     {"return_params_stubs", generates_->GenCommaNameList(section, "", "return_param_decl")},
     {"param_write_ret_snips", generates_->TextByPrefix(section, "param_write_")},
@@ -215,8 +238,8 @@ const Subs Function::GetSubs(string section) const
     {"param_read_snips", fields_->TextByPrefix(section, "param_read_")},
     {"func_name_as_enum", upcase(name_->GetText())},
     {"param_decls", fields_->GenSemiList(section)},
+    {"callback_invocation", callback_invocation},
     {"generates_variables", generates_->GenSemiList(section)},
-    {"return_param_names", generates_->GenCommaNameList(section, "", "")},
     {"vts_args", generates_->GenVtsList(section, "return_type_hidl") +
           fields_->GenVtsList(section, "arg")},
     {"vts_callflow", GenCallflow(section)},
@@ -354,12 +377,13 @@ string Fields::GenCommaList(string section, string prev, bool out_params)
     string special_string;
     if (field->GetType()) {
       special_string = Snip(section, "param_decl_"
-                            + field->GetType()->TypeName()
-                            + field->GetType()->SubtypeSuffix(),
+                            + field->GetType()->TypeSuffix(true),
                             field->GetSubs(section)) +
           Snip(section, "param_decl_"
-               + field->GetType()->TypeName()
-               + "_all",
+               + field->GetType()->TypeSuffix(false),
+               field->GetSubs(section)) +
+          Snip(section, "param_decl_"
+               + field->GetType()->TypeName(),
                field->GetSubs(section));
     }
     if (special_string != "") {
@@ -386,12 +410,10 @@ string Fields::GenSemiList(string section)
     string special_string;
     if (field->GetType()) {
       special_string = Snip(section, "field_decl_"
-                            + field->GetType()->TypeName()
-                            + field->GetType()->SubtypeSuffix(),
+                            + field->GetType()->TypeSuffix(true),
                             field->GetSubs(section)) +
           Snip(section, "field_decl_"
-               + field->GetType()->TypeName()
-               + "_all",
+               + field->GetType()->TypeSuffix(false),
                field->GetSubs(section));
     }
     if (special_string != "") {
@@ -441,6 +463,7 @@ const Subs EnumDecl::GetSubs(string section) const
     {"enum_fields", base_->GetFields()->GenCommaList(section)},
     {"enum_name", name_->GetText()},
     {"enum_base_type", base_->TypeOfEnum(section)},
+    {"quoted_fields_of_enum", base_->GetFields()->GenCommaNameList(section, "", "enum_quoted_name")},
   };
   return subs;
 }
@@ -476,13 +499,40 @@ string Parser::TextByPrefix(string section, string prefix)
   return out;
 }
 
+const string EnumType::TypeSuffix(bool subtype) const
+{
+  if (subtype) {
+    return TypeName() + "_" + type_->TypeSuffix(subtype);
+  } else {
+    return TypeName() + "_all";
+  }
+}
+
+const string DerivedType::TypeSuffix(bool subtype) const
+{
+  if (subtype) {
+    return TypeName() + "_" + base_->TypeSuffix(subtype);
+  } else {
+    return TypeName() + "_all";
+  }
+}
+
+const string ScalarType::TypeSuffix(bool subtype) const
+{
+  if (subtype) {
+    return TypeName() + SubtypeSuffix();
+  } else {
+    return TypeName() + "_all";
+  }
+}
+
 string Fields::TextByPrefix(string section, string prefix)
 {
   string out;
   // cout << " <<< TBP " << prefix << endl;
   for (auto & thing : fields_) {
-    out += Snip(section, prefix + thing->GetType()->TypeName() + thing->GetType()->SubtypeSuffix(), thing->GetSubs(section));
-    out += Snip(section, prefix + thing->GetType()->TypeName() + "_all", thing->GetSubs(section));
+    out += Snip(section, prefix + thing->GetType()->TypeSuffix(true), thing->GetSubs(section));
+    out += Snip(section, prefix + thing->GetType()->TypeSuffix(false), thing->GetSubs(section));
     //  cout << "    type '" << (prefix+thing->TypeName()) << "' size " << out.size() << endl;
   }
   return out;
@@ -562,11 +612,18 @@ void Parser::Write()
   }
   string namespace_open, namespace_close, namespace_slashes;
   BuildNamespaceText(section_, namespace_, namespace_open, namespace_close, namespace_slashes);
+  string imports_section;
+  for (auto & import : imports_) {
+    Subs subs {{"import_name", import->back()->GetText()}};
+    imports_section += Snip(section_, "import_line", subs);
+  }
+
   Subs subs {
     {"header_guard", GetPackageName()},
     {"version_string", version},
     {"version_major_string", std::to_string(version_major_)},
     {"version_minor_string", std::to_string(version_minor_)},
+    {"imports_section", imports_section},
     {"component_type_enum", component_type},
     {"package_name", GetPackageName()},
     {"declarations", TextByPrefix(section_, "declare_")},

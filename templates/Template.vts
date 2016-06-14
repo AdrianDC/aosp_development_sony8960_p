@@ -41,6 +41,11 @@ aggregate_type_definition: {
 
  // END struct_field_scalar
 
+  primitive_type: "vec" // START struct_field_vec
+  primitive_name: "data"
+
+ // END struct_field_vec
+
   primitive_type: "bytes" // START struct_field_string
   primitive_name: "param_name"
 

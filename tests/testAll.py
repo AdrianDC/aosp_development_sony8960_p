@@ -57,7 +57,7 @@ class Tester(object):
     self.TestOutput("ITestService.hidl", "BpTestService.h", "bp_h")
     self.TestOutput("ITestService.hidl", "TestServiceProxy.cpp", "proxy_cpp")
     self.TestOutput("ITestService.hidl", "TestServiceStubs.cpp", "stubs_cpp")
-    self.TestOutput("IEverything.hidl", "Everything.json", "json", True)
+    self.TestOutput("IEverything.hidl", "Everything.json", "json")
 #    self.TestOutput("IanBinder.hidl", "IanBinder.h", "binder")
 
   def RunCommand(self, command):

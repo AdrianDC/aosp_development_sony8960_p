@@ -227,6 +227,11 @@ StructDecl::StructDecl(Element *name, Type *base)
 UnionDecl::UnionDecl(Element *name, Type *base)
     : TypeDecl(name, base)
 {}
+ImportDecl::ImportDecl(Element *name)
+    : TypeDecl(name, new ImportType())
+{}
+ImportType::ImportType()
+{}
 
 
 bool Type::HasFixup()
@@ -258,6 +263,11 @@ void StructType::Dump()
 {
   cout << "Struct fields:" << endl;
   fields_->Dump();
+}
+
+void ImportType::Dump()
+{
+  cout << "Import type:" << endl;
 }
 
 void EnumType::Dump()
@@ -364,6 +374,12 @@ void UnionDecl::Dump()
   cout << " } ";
 }
 
+void ImportDecl::Dump()
+{
+  cout << "Import ";
+  name_->Dump();
+}
+
 void Thing::SetParser(Parser *ps) {ps_=ps;}
 void Parser::SetWriter(android::hidl::CodeWriterPtr writer)
 {
@@ -459,7 +475,7 @@ void EnumValueField::BuildText()
   text_.append(value_->GetText());
 }
 
-string NamedType::SubtypeSuffix()
+string NamedType::SubtypeSuffix() const
 {
   if (base_->TypeName() == "named_type") {
     return base_->SubtypeSuffix();
@@ -559,6 +575,7 @@ void Parser::SetNamespace(vector<Element *>* names) {
 
 void Parser::AddImport(const vector<Element *>* names) {
   imports_.push_back(names);
+  RegisterType(new ImportDecl(names->back()));
 }
 
 void Parser::AddStruct(StructDecl *structure) {
@@ -722,6 +739,7 @@ string Field::GetInitText()
 }
 
 void Parser::AddTypedef(TypedefDecl *type) {
+  Error(type->GetName()->Line(), "Typedef isn't supported yet");
   RegisterType(type);
   AddThing(type);
 }

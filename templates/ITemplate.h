@@ -19,6 +19,12 @@ namespace namespace_name {//ALL namespace_open_line
 template<typename T>
 using hidl_ref = int;
 
+template<typename T>
+struct hidl_vec<T> {
+  T *buffer;
+  size_t count;
+};
+
 class Ipackage_name : public ::android::hidl::IInterface {
 public:
 DECLARE_META_INTERFACE(package_name);
@@ -29,21 +35,21 @@ typedef struct { // START code_for_struct_decl
 
   // END code_for_struct_decl
   // END code_snips
-/*
-, function_name_cb _cb = nullptr // ALL callback_param // Used in callback_description
-const Ipackage_name::struct_name *param_name // ALL param_decl_named_type_struct_decl
-base_type_name param_name[array_size] // ALL field_decl_array
-*/
   // START callback_decls
+/*
+function_name_cb _cb = nullptr // ALL callback_param // Used in callback_description
+const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
+base_type_name param_name[array_size] // ALL field_decl_array_all
+*/
   using function_name_cb = std::function<void(return_param_list)>; // ALL callback_decl_line
   // END callback_decls
 
   // START declarations
   // START declare_function
-  virtual ::android::hidl::binder::Status function_name(call_param_list callback_description) = 0;
+  virtual ::android::hidl::binder::Status function_name(params_and_callback) = 0;
   // END declare_function
   // START declare_enum_decl
-  enum class enum_name { enum_fields };
+  enum class enum_name : enum_base_type { enum_fields };
   const char* GetNameOf(enum_name f) {
     static const char* names[] = {quoted_fields_of_enum }
     //do errror checking
@@ -51,6 +57,7 @@ base_type_name param_name[array_size] // ALL field_decl_array
 }
   size_t enum_limits<foo>::max() { return 1; }
 // END declare_enum_decl
+  "param_name" // ALL enum_quoted_name
   // END declarations
 enum Call {
   // START call_enum_list

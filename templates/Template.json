@@ -36,17 +36,17 @@ hidl {
           name: "param_name",
           type: "base_type_name"
         }// END param_decl_scalar_all
-        { // START param_decl_named_type_all
+        { // START param_decl_named_type
           name: "param_name",
           type: "named_type_name"
-        } // END param_decl_named_type_all
-        { // START param_decl_ref
+        } // END param_decl_named_type
+        { // START param_decl_ref_all
           name: "param_name",
           type: "ref",
           base_type: {
             type: "base_type_name"
           }
-        } // END param_decl_ref
+        } // END param_decl_ref_all
         // END call_param_list
       ],
       generates: [

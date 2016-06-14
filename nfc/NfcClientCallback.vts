@@ -1,0 +1,43 @@
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/Template.vts
+component_class: HAL_HIDL
+
+component_type_version: 1.0
+
+original_data_structure_name: "INfcClientCallback"
+
+aggregate_type_name: "nfc_data_t"
+aggregate_type_definition: {
+  primitive_type: "vec"
+  primitive_name: "data"
+
+
+}
+api: {
+  name: "sendEvent"
+  arg: {
+    aggregate_type: "nfc_event_t"
+
+  }
+  arg: {
+    aggregate_type: "nfc_status_t"
+
+  }
+
+
+}
+api: {
+  name: "sendData"
+  arg: {
+    aggregate_type: "nfc_data_t"
+
+  }
+
+
+}
+
+
+aggregate_type_name: "const"
+aggregate_type_definition: {
+
+}

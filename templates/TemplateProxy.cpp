@@ -25,12 +25,12 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 }
 // START code_snips
 /*
-, ITestService::function_name_cb _cb // ALL callback_param // Used in callback_description
-const Ipackage_name::struct_name* param_name // ALL param_decl_named_type_struct_decl
+ITestService::function_name_cb _cb // ALL callback_param // Used in callback_description
+const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
 
 */
 // START code_for_function
-::android::hidl::binder::Status Bppackage_name::function_name(call_param_list callback_description) {
+::android::hidl::binder::Status Bppackage_name::function_name(params_and_callback) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -41,24 +41,37 @@ const Ipackage_name::struct_name* param_name // ALL param_decl_named_type_struct
     goto _aidl_error;
   }
 // START param_write_snips
+
+// START param_write_import
+  _aidl_ret_status = _aidl_data.writeStrongBinder(param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+// END param_write_import
+// START param_write_enum_type_scalar_uint32_t
+  _aidl_ret_status = _aidl_data.writeUint32(param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+// END param_write_enum_type_scalar_uint32_t
 // START param_write_scalar_int32_t
   _aidl_ret_status = _aidl_data.writeInt32(param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
 // END param_write_scalar_int32_t
-  // START param_write_named_type_struct_decl
+  // START param_write_struct_type
   _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name, sizeof(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  // END param_write_named_type_struct_decl
-    // START param_write_ref
+  // END param_write_struct_type
+    // START param_write_ref_all
   _aidl_ret_status = _aidl_data.writeFileDescriptor(param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-    // END param_write_ref
+    // END param_write_ref_all
 // END param_write_snips
   _aidl_ret_status = remote()->transact(Ipackage_name::func_name_as_enum, _aidl_data, &_aidl_reply);
   if (((_aidl_ret_status) != (::android::OK))) {
@@ -78,16 +91,13 @@ const Ipackage_name::struct_name* param_name // ALL param_decl_named_type_struct
     goto _aidl_error;
   }
 // END param_read_scalar_int32_t
-// START param_read_named_type_struct_decl
-  _aidl_ret_status = _aidl_reply.CODE_HERE
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-// END param_read_named_type_struct_decl
+// START param_read_struct_type
+  param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
+// END param_read_struct_type
 // END param_read_ret_snips
 
-  // Invoke callback to client
-  _cb(return_param_names);
+  // Invoke callback to client  // START callback_invocation
+  _cb(return_param_names);      // END callback_invocation
 
 _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);

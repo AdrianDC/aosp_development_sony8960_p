@@ -47,7 +47,7 @@ def read_file(fname):
       if re.match(r"\s*$", line_text) and not re.match(r"\s*$", line):
         line_text = ""
       else:
-        line_text = line_text + "\\n"
+        line_text = line_text.replace("\\", "\\\\") + "\\n"
         line_text = line_text.replace("\"", "\\\"")
       snips[labels[-1][0]][labels[-1][1]] += line_text
     sec_match = re.search(r"//\s*SECTION\s+(\S+)", line)

@@ -31,12 +31,12 @@ namespace_open_section
 // START code_for_function
     case Call::func_name_as_enum:
       {
-        /*
-  Ipackage_name::struct_name *param_name // ALL field_decl_named_type_struct_decl
-         */
 // START param_decls
-        int32_t should_be_replaced;
-        int32_t ret_FOO;
+        /*
+  Ipackage_name::struct_name *param_name // ALL field_decl_struct_type
+         */
+        int32_t should_be_replaced; // These will be replaced
+        int32_t ret_FOO;   // with auto-generated declarations
 // END param_decls
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
@@ -50,12 +50,24 @@ namespace_open_section
           break;
         }
 // END param_read_scalar_int32_t
-// START param_read_ref
+// START param_read_enum_type_scalar_int32_t
+        _aidl_ret_status = _aidl_data.readInt32(&param_name);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          break;
+        }
+// END param_read_enum_type_scalar_int32_t
+// START param_read_enum_type_scalar_uint32_t
+        _aidl_ret_status = _aidl_data.readInt32(&param_name);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          break;
+        }
+// END param_read_enum_type_scalar_uint32_t
+// START param_read_ref_all
         param_name = _aidl_data.readFileDescriptor();
-// END param_read_ref
-  // START param_read_named_type_struct_decl
-        param_name = (simple_t *)_aidl_data.readBuffer();
-  // END param_read_named_type_struct_decl
+// END param_read_ref_all
+  // START param_read_struct_type
+        param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
+  // END param_read_struct_type
 // END param_read_snips
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(

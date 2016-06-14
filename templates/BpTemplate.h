@@ -21,10 +21,10 @@ explicit Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _aidl_imp
 virtual ~Bppackage_name() = default;
   // START declarations
 /*
-, Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
-const Ipackage_name::struct_name *param_name // ALL param_decl_named_type_struct_decl
+Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
+const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
 */
-::android::hidl::binder::Status function_name(call_param_list callback_description) override; // ALL declare_function
+::android::hidl::binder::Status function_name(params_and_callback) override; // ALL declare_function
   // END declarations
 };  // class Bppackage_name
 

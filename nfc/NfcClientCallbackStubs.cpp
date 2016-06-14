@@ -1,57 +1,59 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateStubs.cpp
-#include <android/hardware/tests/ITestService.h>
-#include <android/hardware/tests/BpTestService.h>
+#include <android/hardware/tests/INfcClientCallback.h>
+#include <android/hardware/tests/BpNfcClientCallback.h>
 
 namespace android {
 namespace hardware {
-namespace tests {
+namespace nfc {
 
 
-IMPLEMENT_META_INTERFACE(TestService, "android.hardware.tests.ITestService");
+IMPLEMENT_META_INTERFACE(NfcClientCallback, "android.hardware.tests.INfcClientCallback");
 
-}  // namespace tests
+}  // namespace nfc
 }  // namespace hardware
 }  // namespace android
 
 
 #include <iostream>
-#include <android/hardware/tests/BnTestService.h>
+#include <android/hardware/tests/BnNfcClientCallback.h>
 #include <binder/Parcel.h>
 
 namespace android {
 namespace hardware {
-namespace tests {
+namespace nfc {
 
 
-::android::status_t BnTestService::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t BnNfcClientCallback::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   switch (_aidl_code) {
-    case Call::ECHOINTEGER:
+    case Call::SENDEVENT:
       {
-int32_t echo_me;
-  ITestService::simple_t *my_struct ;
+nfc_event_t event;
+nfc_status_t event_status;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
           _aidl_ret_status = ::android::BAD_TYPE;
           break;
         }
-        _aidl_ret_status = _aidl_data.readInt32(&echo_me);
+        _aidl_ret_status = _aidl_data.readInt32(&event);
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }
-        my_struct = (ITestService::simple_t *)_aidl_data.readBuffer();
+        _aidl_ret_status = _aidl_data.readInt32(&event_status);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          break;
+        }
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoInteger(echo_me, my_struct,
-                           [&](auto ret ) {
+             sendEvent(event, event_status,
+                           [&]() {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
-                             _aidl_reply->writeInt32(ret);
 
                             // Callback
                              _cb(*_aidl_reply);
@@ -64,26 +66,25 @@ int32_t echo_me;
         }
         break;
       }
-    case Call::SHAREBUFFERWITHREF:
+    case Call::SENDDATA:
       {
-hidl_ref<lots_of_data> buffer;
+  INfcClientCallback::nfc_data_t *data ;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
           _aidl_ret_status = ::android::BAD_TYPE;
           break;
         }
-        buffer = _aidl_data.readFileDescriptor();
+        data = (INfcClientCallback::nfc_data_t *)_aidl_data.readBuffer();
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             shareBufferWithRef(buffer,
-                           [&](auto ret ) {
+             sendData(data,
+                           [&]() {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
-                             _aidl_reply->writeInt32(ret);
 
                             // Callback
                              _cb(*_aidl_reply);
@@ -109,7 +110,7 @@ hidl_ref<lots_of_data> buffer;
   return _aidl_ret_status;
 }
 
-}  // namespace tests
+}  // namespace nfc
 }  // namespace hardware
 }  // namespace android
 
