@@ -78,8 +78,9 @@ namespace_open_section
 // END param_read_snips
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             function_name(function_params_stubs,
-                           [&](return_params_stubs) {
+             function_name(stub_arguments));
+        /*
+        [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -97,13 +98,13 @@ namespace_open_section
 // END param_write_ret_snips
                             // Callback
                              _cb(*_aidl_reply);
-                           }
-                           ));
-        if (!callback_called) {
+                           }  // END callback_code
+        */
+        if (!callback_called) {  // START callback_check
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-        }
+        }  // END callback_check
         break;
       }
 // END code_for_function

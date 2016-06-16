@@ -45,8 +45,7 @@ int32_t echo_me;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoInteger(echo_me, my_struct,
-                           [&](auto ret ) {
+             echoInteger(echo_me, my_struct,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -56,12 +55,16 @@ int32_t echo_me;
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::SHAREBUFFERWITHREF:
@@ -77,8 +80,7 @@ hidl_ref<lots_of_data> buffer;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             shareBufferWithRef(buffer,
-                           [&](auto ret ) {
+             shareBufferWithRef(buffer,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -88,12 +90,16 @@ hidl_ref<lots_of_data> buffer;
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
 

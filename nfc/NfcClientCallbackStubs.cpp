@@ -48,22 +48,11 @@ nfc_status_t event_status;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             sendEvent(event, event_status,
-                           [&]() {
-                             callback_called = true;
-                             // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
-                             // Serialize
+             sendEvent(event, event_status));
+        /*
+callback_code
+        */
 
-                            // Callback
-                             _cb(*_aidl_reply);
-                           }
-                           ));
-        if (!callback_called) {
-          // Callback not called, the call must have returned an error
-          // TODO set something like ERR_NO_CALLBACK if the call retuned OK
-          _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-        }
         break;
       }
     case Call::SENDDATA:
@@ -79,22 +68,11 @@ nfc_status_t event_status;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             sendData(data,
-                           [&]() {
-                             callback_called = true;
-                             // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
-                             // Serialize
+             sendData(data));
+        /*
+callback_code
+        */
 
-                            // Callback
-                             _cb(*_aidl_reply);
-                           }
-                           ));
-        if (!callback_called) {
-          // Callback not called, the call must have returned an error
-          // TODO set something like ERR_NO_CALLBACK if the call retuned OK
-          _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-        }
         break;
       }
 

@@ -43,8 +43,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             open(clientCallback,
-                           [&](auto retval ) {
+             open(clientCallback,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -54,12 +53,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::WRITE:
@@ -75,8 +78,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             write(data,
-                           [&](auto retval ) {
+             write(data,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -86,12 +88,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::CORE_INITIALIZED:
@@ -105,8 +111,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             core_initialized(,
-                           [&](auto retval ) {
+             core_initialized(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -116,12 +121,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::PRE_DISCOVER:
@@ -135,8 +144,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             pre_discover(,
-                           [&](auto retval ) {
+             pre_discover(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -146,12 +154,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::CLOSE:
@@ -165,8 +177,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             close(,
-                           [&](auto retval ) {
+             close(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -176,12 +187,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::CONTROL_GRANTED:
@@ -195,8 +210,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             control_granted(,
-                           [&](auto retval ) {
+             control_granted(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -206,12 +220,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
     case Call::POWER_CYCLE:
@@ -225,8 +243,7 @@ namespace nfc {
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             power_cycle(,
-                           [&](auto retval ) {
+             power_cycle(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -236,12 +253,16 @@ namespace nfc {
                             // Callback
                              _cb(*_aidl_reply);
                            }
-                           ));
+));
+        /*
+callback_code
+        */
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
           _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
         }
+
         break;
       }
 

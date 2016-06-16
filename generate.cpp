@@ -225,14 +225,29 @@ const Subs Function::GetSubs(string section) const
     Subs subs{{"return_param_names", return_param_names}};
     callback_invocation = Snip(section, "callback_invocation", subs);
   }
+  string function_params_stubs{fields_->GenCommaNameList(section, "", "")};
+  string function_callback_text;
+  string callback_check;
+  if (generates_->Size()) {
+    Subs subs{{"param_write_ret_snips", generates_->TextByPrefix(section, "param_write_")},
+      {"return_params_stubs", generates_->GenCommaNameList(section, "", "return_param_decl")},
+          };
+    function_callback_text = Snip(section, "callback_code", subs);
+    callback_check = Snip(section, "callback_check", Subs{});
+  }
+  string stub_arguments;
+  if (function_callback_text == "" || function_params_stubs == "") {
+    stub_arguments = function_params_stubs + function_callback_text;
+  } else {
+    stub_arguments = function_params_stubs + ",  " + function_callback_text;
+  }
   Subs subs{{"function_name", name_->GetText()},
     {"package_name", ps_->GetInterface()->GetText()},
     {"params_and_callback", params_and_callback},
     {"call_param_list", call_param_list},
     {"return_param_list", generates_->GenCommaList(section, "")},
-    {"function_params_stubs", fields_->GenCommaNameList(section, "", "")},
-    {"return_params_stubs", generates_->GenCommaNameList(section, "", "return_param_decl")},
-    {"param_write_ret_snips", generates_->TextByPrefix(section, "param_write_")},
+    {"stub_arguments", stub_arguments},
+    {"callback_check", callback_check},
     {"param_read_ret_snips", generates_->TextByPrefix(section, "param_read_")},
     {"param_write_snips", fields_->TextByPrefix(section, "param_write_")},
     {"param_read_snips", fields_->TextByPrefix(section, "param_read_")},
