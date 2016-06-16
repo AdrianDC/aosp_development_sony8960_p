@@ -575,11 +575,15 @@ void Parser::BuildNamespaceText(string section,
                                 std::vector<Element *>*namespace_,
                                 string& namespace_open,
                                 string& namespace_close,
-                                string& namespace_slashes)
+                                string& namespace_slashes,
+                                string& namespace_dots,
+                                string& namespace_underscores)
 {
   namespace_open = "";
   namespace_close = "";
   namespace_slashes = "";
+  namespace_dots = "";
+  namespace_underscores = "";
   for (auto & name : *namespace_) {
     Subs subs{{"namespace_name", name->GetText()}};
     namespace_open += Snip(section, "namespace_open_line", subs);
@@ -587,6 +591,10 @@ void Parser::BuildNamespaceText(string section,
         namespace_close;
     if (namespace_slashes != "") namespace_slashes += "/";
     namespace_slashes += name->GetText();
+    if (namespace_dots != "") namespace_dots += ".";
+    namespace_dots += name->GetText();
+    if (namespace_underscores != "") namespace_underscores += "_";
+    namespace_underscores += name->GetText();
   }
 }
 
@@ -610,8 +618,9 @@ void Parser::Write()
       Error("hal_type annotation needs one string value");
     }
   }
-  string namespace_open, namespace_close, namespace_slashes;
-  BuildNamespaceText(section_, namespace_, namespace_open, namespace_close, namespace_slashes);
+  string namespace_open, namespace_close, namespace_slashes, namespace_dots, namespace_underscores;
+  BuildNamespaceText(section_, namespace_, namespace_open, namespace_close,
+                     namespace_slashes, namespace_dots, namespace_underscores);
   string imports_section;
   for (auto & import : imports_) {
     Subs subs {{"import_name", import->back()->GetText()}};
@@ -633,6 +642,8 @@ void Parser::Write()
     {"namespace_open_section", namespace_open},
     {"namespace_close_section", namespace_close},
     {"namespace_slashes", namespace_slashes},
+    {"namespace_dots", namespace_dots},
+    {"namespace_underscores", namespace_underscores},
     {"vars_writer", vars_.TextByPrefix(section_, "param_write_")},
     {"vars_reader", vars_.TextByPrefix(section_, "param_read_")},
     {"vars_decl", vars_.GenSemiList(section_)},

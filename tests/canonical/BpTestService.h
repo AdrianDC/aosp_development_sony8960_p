@@ -1,7 +1,7 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/BpTemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_
+#ifndef HIDL_GENERATED_android_hardware_tests_BP_TestService_H_
+#define HIDL_GENERATED_android_hardware_tests_BP_TestService_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
@@ -27,4 +27,4 @@ virtual ~BpTestService() = default;
 }  // namespace android
 
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_TestService_H_
+#endif  // HIDL_GENERATED_android_hardware_tests_BP_TestService_H_

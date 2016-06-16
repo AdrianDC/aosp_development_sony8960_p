@@ -2,8 +2,8 @@
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/BpTemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_header_guard_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_header_guard_H_
+#ifndef HIDL_GENERATED_namespace_underscores_BN_header_guard_H_
+#define HIDL_GENERATED_namespace_underscores_BN_header_guard_H_
 
 #include <hwbinder/IInterface.h>
 #include <namespace_slashes/Ipackage_name.h>
@@ -21,5 +21,5 @@ public:
 }  // namespace namespace_name  //ALL namespace_close_line
 //END namespace_close_section
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_header_guard_H_
+#endif  // HIDL_GENERATED_namespace_underscores_BN_header_guard_H_
 // END file

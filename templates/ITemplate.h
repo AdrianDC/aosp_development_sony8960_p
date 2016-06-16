@@ -3,8 +3,8 @@
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/ITemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
+#ifndef HIDL_GENERATED_namespace_underscores_I_header_guard_H_
+#define HIDL_GENERATED_namespace_underscores_I_header_guard_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
@@ -70,5 +70,5 @@ enum Call {
 }  // namespace namespace_name  //ALL namespace_close_line
 //END namespace_close_section
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_header_guard_H_
+#endif  // HIDL_GENERATED_namespace_underscores_I_header_guard_H_
 // END file

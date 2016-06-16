@@ -693,7 +693,9 @@ class Parser {
                           std::vector<Element *>*namespace_,
                           string& namespace_open,
                           string& namespace_close,
-                          string& namespace_slashes);
+                          string& namespace_slashes,
+                          string& namespace_dots,
+                          string& namespace_underscores);
   void WriteDepFileIfNeeded(
           std::unique_ptr<android::hidl::CppOptions> options,
           android::hidl::IoDelegate &io_delegate);

@@ -1,12 +1,12 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/BpTemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_Nfc_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_Nfc_H_
+#ifndef HIDL_GENERATED_android_hardware_nfc_BP_Nfc_H_
+#define HIDL_GENERATED_android_hardware_nfc_BP_Nfc_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
 #include <utils/Errors.h>
-#include <android/hardware/tests/INfc.h>
+#include <android/hardware/nfc/INfc.h>
 
 namespace android {
 namespace hardware {
@@ -32,4 +32,4 @@ virtual ~BpNfc() = default;
 }  // namespace android
 
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_Nfc_H_
+#endif  // HIDL_GENERATED_android_hardware_nfc_BP_Nfc_H_

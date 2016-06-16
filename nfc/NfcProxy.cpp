@@ -1,21 +1,21 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateProxy.cpp
-#include <android/hardware/tests/INfc.h>
-#include <android/hardware/tests/BpNfc.h>
+#include <android/hardware/nfc/INfc.h>
+#include <android/hardware/nfc/BpNfc.h>
 
 namespace android {
 namespace hardware {
 namespace nfc {
 
 
-IMPLEMENT_META_INTERFACE(Nfc, "android.hardware.tests.INfc");
+IMPLEMENT_META_INTERFACE(Nfc, "android.hardware.nfc.INfc");
 
 }  // namespace nfc
 }  // namespace hardware
 }  // namespace android
 
 
-#include <android/hardware/tests/BpNfc.h>
+#include <android/hardware/nfc/BpNfc.h>
 #include <binder/Parcel.h>
 
 namespace android {

@@ -3,13 +3,13 @@
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/BpTemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_header_guard_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_header_guard_H_
+#ifndef HIDL_GENERATED_namespace_underscores_BP_header_guard_H_
+#define HIDL_GENERATED_namespace_underscores_BP_header_guard_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
 #include <utils/Errors.h>
-#include <android/hardware/tests/Ipackage_name.h>
+#include <namespace_slashes/Ipackage_name.h>
 
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line
@@ -32,5 +32,5 @@ const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
 }  // namespace namespace_name  //ALL namespace_close_line
 //END namespace_close_section
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BP_header_guard_H_
+#endif  // HIDL_GENERATED_namespace_underscores_BP_header_guard_H_
 // END file

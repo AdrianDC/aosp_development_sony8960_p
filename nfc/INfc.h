@@ -1,7 +1,7 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/ITemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_Nfc_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_Nfc_H_
+#ifndef HIDL_GENERATED_android_hardware_nfc_I_Nfc_H_
+#define HIDL_GENERATED_android_hardware_nfc_I_Nfc_H_
 
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
@@ -75,4 +75,4 @@ enum Call {
 }  // namespace android
 
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_I_Nfc_H_
+#endif  // HIDL_GENERATED_android_hardware_nfc_I_Nfc_H_

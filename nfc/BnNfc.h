@@ -1,7 +1,7 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/BpTemplate.h
-#ifndef HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_Nfc_H_
-#define HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_Nfc_H_
+#ifndef HIDL_GENERATED_android_hardware_nfc_BN_Nfc_H_
+#define HIDL_GENERATED_android_hardware_nfc_BN_Nfc_H_
 
 #include <hwbinder/IInterface.h>
 #include <android/hardware/nfc/INfc.h>
@@ -21,4 +21,4 @@ public:
 }  // namespace android
 
 
-#endif  // HIDL_GENERATED_ANDROID_HARDWARE_TESTS_BN_Nfc_H_
+#endif  // HIDL_GENERATED_android_hardware_nfc_BN_Nfc_H_

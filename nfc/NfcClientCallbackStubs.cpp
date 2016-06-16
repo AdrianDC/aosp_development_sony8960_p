@@ -1,14 +1,14 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateStubs.cpp
-#include <android/hardware/tests/INfcClientCallback.h>
-#include <android/hardware/tests/BpNfcClientCallback.h>
+#include <android/hardware/nfc/INfcClientCallback.h>
+#include <android/hardware/nfc/BpNfcClientCallback.h>
 
 namespace android {
 namespace hardware {
 namespace nfc {
 
 
-IMPLEMENT_META_INTERFACE(NfcClientCallback, "android.hardware.tests.INfcClientCallback");
+IMPLEMENT_META_INTERFACE(NfcClientCallback, "android.hardware.nfc.INfcClientCallback");
 
 }  // namespace nfc
 }  // namespace hardware
@@ -16,7 +16,7 @@ IMPLEMENT_META_INTERFACE(NfcClientCallback, "android.hardware.tests.INfcClientCa
 
 
 #include <iostream>
-#include <android/hardware/tests/BnNfcClientCallback.h>
+#include <android/hardware/nfc/BnNfcClientCallback.h>
 #include <binder/Parcel.h>
 
 namespace android {

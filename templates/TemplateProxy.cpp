@@ -2,20 +2,20 @@
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateProxy.cpp
-#include <android/hardware/tests/Ipackage_name.h>
-#include <android/hardware/tests/Bppackage_name.h>
+#include <namespace_slashes/Ipackage_name.h>
+#include <namespace_slashes/Bppackage_name.h>
 
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-IMPLEMENT_META_INTERFACE(package_name, "android.hardware.tests.Ipackage_name");
+IMPLEMENT_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 
 // START namespace_close_section
 }  // namespace namespace_name  //ALL namespace_close_line
 //END namespace_close_section
 
-#include <android/hardware/tests/Bppackage_name.h>
+#include <namespace_slashes/Bppackage_name.h>
 #include <binder/Parcel.h>
 
 namespace_open_section
