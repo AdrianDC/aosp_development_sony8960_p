@@ -37,11 +37,11 @@ nfc_status_t event_status;
           _aidl_ret_status = ::android::BAD_TYPE;
           break;
         }
-        _aidl_ret_status = _aidl_data.readInt32(&event);
+        _aidl_ret_status = _aidl_data.readInt32((uint32_t)&event);
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }
-        _aidl_ret_status = _aidl_data.readInt32(&event_status);
+        _aidl_ret_status = _aidl_data.readInt32((uint32_t)&event_status);
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }

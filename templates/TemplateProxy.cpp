@@ -50,13 +50,13 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
   }
 // END param_write_import
 // START param_write_enum_type_scalar_uint32_t
-  _aidl_ret_status = _aidl_data.writeUint32(param_name);
+  _aidl_ret_status = _aidl_data.writeUint32((uint32_t)param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
 // END param_write_enum_type_scalar_uint32_t
 // START param_write_scalar_int32_t
-  _aidl_ret_status = _aidl_data.writeInt32(param_name);
+  _aidl_ret_status = _aidl_data.writeInt32((int32_t)param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

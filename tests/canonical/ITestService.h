@@ -17,14 +17,14 @@ namespace tests {
 template<typename T>
 using hidl_ref = int;
 
+class ITestService : public ::android::hidl::IInterface {
+public:
 template<typename T>
-struct hidl_vec<T> {
+struct hidl_vec {
   T *buffer;
   size_t count;
 };
 
-class ITestService : public ::android::hidl::IInterface {
-public:
 DECLARE_META_INTERFACE(TestService);
 typedef struct {
 uint32_t int1;

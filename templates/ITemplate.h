@@ -11,7 +11,9 @@
 #include <hwbinder/Status.h>
 #include <cstdint>
 #include <utils/StrongPointer.h>
-
+// START imports_section
+#include <namespace_slashes/import_name.h> // ALL import_line
+// END imports_section
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
@@ -19,14 +21,14 @@ namespace namespace_name {//ALL namespace_open_line
 template<typename T>
 using hidl_ref = int;
 
+class Ipackage_name : public ::android::hidl::IInterface {
+public:
 template<typename T>
-struct hidl_vec<T> {
+struct hidl_vec {
   T *buffer;
   size_t count;
 };
 
-class Ipackage_name : public ::android::hidl::IInterface {
-public:
 DECLARE_META_INTERFACE(package_name);
   // START code_snips
 typedef struct { // START code_for_struct_decl
@@ -40,6 +42,7 @@ typedef struct { // START code_for_struct_decl
 function_name_cb _cb = nullptr // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
 base_type_name param_name[array_size] // ALL field_decl_array_all
+sp<import_name> param_name // ALL param_decl_import
 */
   using function_name_cb = std::function<void(return_param_list)>; // ALL callback_decl_line
   // END callback_decls
@@ -51,11 +54,11 @@ base_type_name param_name[array_size] // ALL field_decl_array_all
   // START declare_enum_decl
   enum class enum_name : enum_base_type { enum_fields };
   const char* GetNameOf(enum_name f) {
-    static const char* names[] = {quoted_fields_of_enum }
+    static const char* names[] = {quoted_fields_of_enum };
     //do errror checking
     return names[int(f)];
 }
-  size_t enum_limits<foo>::max() { return 1; }
+  //  size_t enum_limits<foo>::max() { return 1; }
 // END declare_enum_decl
   "param_name" // ALL enum_quoted_name
   // END declarations

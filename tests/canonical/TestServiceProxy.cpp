@@ -37,7 +37,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt32(echo_me);
+  _aidl_ret_status = _aidl_data.writeInt32((int32_t)echo_me);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

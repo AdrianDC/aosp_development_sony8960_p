@@ -58,13 +58,13 @@ namespace_open_section
         }
   // END param_read_import
 // START param_read_enum_type_scalar_int32_t
-        _aidl_ret_status = _aidl_data.readInt32(&param_name);
+        _aidl_ret_status = _aidl_data.readInt32((int32_t)&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }
 // END param_read_enum_type_scalar_int32_t
 // START param_read_enum_type_scalar_uint32_t
-        _aidl_ret_status = _aidl_data.readInt32(&param_name);
+        _aidl_ret_status = _aidl_data.readInt32((uint32_t)&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }

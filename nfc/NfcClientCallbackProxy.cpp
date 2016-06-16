@@ -36,11 +36,11 @@ BpNfcClientCallback::BpNfcClientCallback(const ::android::sp<::android::hidl::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeUint32(event);
+  _aidl_ret_status = _aidl_data.writeUint32((uint32_t)event);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeUint32(event_status);
+  _aidl_ret_status = _aidl_data.writeUint32((uint32_t)event_status);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

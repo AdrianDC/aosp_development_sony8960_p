@@ -646,10 +646,10 @@ void Parser::Write()
                      namespace_slashes, namespace_dots, namespace_underscores);
   string imports_section;
   for (auto & import : imports_) {
-    Subs subs {{"import_name", import->back()->GetText()}};
+    Subs subs {{"import_name", import->back()->GetText()},
+      {"namespace_slashes", namespace_slashes}};
     imports_section += Snip(section_, "import_line", subs);
   }
-
   Subs subs {
     {"header_guard", GetPackageName()},
     {"version_string", version},
