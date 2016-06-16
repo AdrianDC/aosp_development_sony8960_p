@@ -29,12 +29,16 @@ namespace nfc {
   switch (_aidl_code) {
     case Call::OPEN:
       {
-INfcClientCallback clientCallback;
+  sp<INfc::INfcClientCallback> clientCallback ;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
           _aidl_ret_status = ::android::BAD_TYPE;
           break;
+        }
+        _aidl_ret_status = _aidl_data.readStrongBinder(&clientCallback);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          goto _aidl_error;
         }
 
         // Make the call into the server

@@ -472,6 +472,7 @@ class ImportDecl : public TypeDecl {
   ImportDecl(Element *name);
   void Dump() override;
   const string TypeName() const override { return "import_decl"; }
+  const Subs GetSubs(string section) const override;
   string Generate(string section) override;
 
  private:

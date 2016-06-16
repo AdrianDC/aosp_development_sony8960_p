@@ -34,6 +34,7 @@ namespace_open_section
 // START param_decls
         /*
   Ipackage_name::struct_name *param_name // ALL field_decl_struct_type
+  sp<Ipackage_name::import_name> param_name // ALL field_decl_import
          */
         int32_t should_be_replaced; // These will be replaced
         int32_t ret_FOO;   // with auto-generated declarations
@@ -50,6 +51,12 @@ namespace_open_section
           break;
         }
 // END param_read_scalar_int32_t
+  // START param_read_import
+        _aidl_ret_status = _aidl_data.readStrongBinder(&param_name);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          goto _aidl_error;
+        }
+  // END param_read_import
 // START param_read_enum_type_scalar_int32_t
         _aidl_ret_status = _aidl_data.readInt32(&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
@@ -81,6 +88,12 @@ namespace_open_section
 // START param_write_scalar_int32_t
                              _aidl_reply->writeInt32(param_name);
 // END param_write_scalar_int32_t
+// START param_write_import
+  _aidl_ret_status = _aidl_data.writeStrongBinder(param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+// END param_write_import
 // END param_write_ret_snips
                             // Callback
                              _cb(*_aidl_reply);

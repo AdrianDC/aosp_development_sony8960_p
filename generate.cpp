@@ -447,6 +447,14 @@ const Subs StructDecl::GetSubs(string section) const
   return subs;
 }
 
+const Subs ImportDecl::GetSubs(string section) const
+{
+  Subs subs {
+    {"import_name", name_->GetText()},
+  };
+  return subs;
+}
+
 const Subs Const::GetSubs(string section) const
 {
   Subs subs {

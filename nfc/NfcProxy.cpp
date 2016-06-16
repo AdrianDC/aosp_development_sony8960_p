@@ -26,7 +26,7 @@ namespace nfc {
 BpNfc::BpNfc(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
     : BpInterface<INfc>(_aidl_impl){
 }
-::android::hidl::binder::Status BpNfc::open(INfcClientCallback clientCallback, ITestService::open_cb _cb ) {
+::android::hidl::binder::Status BpNfc::open(sp<INfc::INfcClientCallback> clientCallback , ITestService::open_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;

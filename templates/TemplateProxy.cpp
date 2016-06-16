@@ -27,6 +27,7 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 /*
 ITestService::function_name_cb _cb // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
+sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 
 */
 // START code_for_function
@@ -91,6 +92,12 @@ const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
     goto _aidl_error;
   }
 // END param_read_scalar_int32_t
+  // START param_read_import
+  _aidl_ret_status = _aidl_data.readStrongBinder(&param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  // END param_read_import
 // START param_read_struct_type
   param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
 // END param_read_struct_type
