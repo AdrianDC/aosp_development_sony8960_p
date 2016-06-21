@@ -45,6 +45,7 @@ unique_ptr<CppOptions> cpp_usage() {
        << "   -p        print info from input file (for debugging)" << endl
        << endl
        << "TYPE:" << endl
+       << "   all_cpp     Generate FooAll.cpp (combined proxy/stub)" << endl
        << "   binder      Generate Binder .h file" << endl
        << "   bn_h        Generate BnFoo.h" << endl
        << "   bp_h        Generate BpFoo.h" << endl

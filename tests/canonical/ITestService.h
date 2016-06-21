@@ -24,6 +24,10 @@ struct hidl_vec {
   T *buffer;
   size_t count;
 };
+struct hidl_string {
+  char *buffer;
+  ptrdiff_t length;
+};
 
 DECLARE_META_INTERFACE(TestService);
 typedef struct {

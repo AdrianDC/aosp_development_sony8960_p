@@ -1,0 +1,59 @@
+version 1.0;
+package android.hardware.tests;
+
+interface ITypes {
+
+  struct simple_t {
+    uint32_t int1;
+    uint32_t int2;
+  };
+
+  enum eu8 : uint8_t { U8F = 34, max = 255, min = 0};
+  enum es8 : int8_t { S8F = 104, max = 127, min = -128 };
+  enum eu16 : uint16_t { U16F = 234, max = 65535, min = 0 };
+  enum es16 : int16_t { S16F = 334, max = 32767, min = -32768 };
+  enum eu32 : uint32_t { U32F = 434, max = 0xffff'f'fff, min = 0};
+  enum es32 : int32_t { S32F = 534, max = 0x7fff'f'fff, min = -2147483648 };
+  enum eu64 : uint64_t { U64F = 634, max = 0xffff'ffff'ffff'f'fffuLL, min = 0 };
+  enum es64 : int64_t { S64F = 734, max=9223372036854775807LL, min=-9223372036854775807LL };
+  enum ec : char { CF = 43, min=0, max=255 };
+
+  struct lots_of_data {
+    uint8_t[4096] buffer;
+  };
+
+  enum disc : uint32_t { US, UF, UI, UC };
+
+  struct s2 {
+    int32_t i;
+  };
+
+  union u1 : disc {
+    string s on(US);
+    ref<uint8_t> fd on(UF);
+    int64_t i on(UI);
+    s2 s2m on(UC);
+  };
+
+  struct s1 {
+    disc dm1;
+    u1 u1m1;
+  };
+
+  struct s0 {
+    s1 s1m1;
+    vec<s1> s1v2;
+    s1 s1m3;
+  };
+
+  echoInteger(int32_t echo_me, simple_t my_struct) generates (int32_t ret);
+  echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i)
+    generates(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i);
+  echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i)
+    generates(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i);
+  echoStruct(s0 s) generates (s0 s);
+  // Use of ref<T> is deprecated.
+  shareBufferWithRef(ref<lots_of_data> buffer) generates (int32_t ret);
+  getHash() generates (uint64_t hash);
+  quit();
+};

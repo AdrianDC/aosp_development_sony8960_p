@@ -56,9 +56,9 @@ int32_t echo_me;
                              _cb(*_aidl_reply);
                            }
 ));
-        /*
-callback_code
-        */
+
+//
+
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK
@@ -91,9 +91,9 @@ hidl_ref<lots_of_data> buffer;
                              _cb(*_aidl_reply);
                            }
 ));
-        /*
-callback_code
-        */
+
+//
+
         if (!callback_called) {
           // Callback not called, the call must have returned an error
           // TODO set something like ERR_NO_CALLBACK if the call retuned OK

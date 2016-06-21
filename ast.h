@@ -166,11 +166,11 @@ class Fields {
   string GenCommaList(string section, string prev, bool out_params);
   string GenCommaList(string section, string prev) {return GenCommaList(section, prev, false);}
   string GenCommaList(string section) {return GenCommaList(section, "", false);}
-  string GenCommaNameList(string section, string prev_list, string snippet = "");
+  string GenCommaNameList(string section, string prev_list, string snippet = "", string name_prefix = "");
 
-  string GenSemiList(string section);
+  string GenSemiList(string section, string prefix = "");
   string GenByType(string section, string prefix);
-  string TextByPrefix(string section, string prefix);
+  string TextByPrefix(string section, string prefix, string name_prefix = "");
   string GenVtsList(string section, string label);
   int Size() { return fields_.size(); }
   void Dump();
@@ -461,7 +461,7 @@ class UnionDecl : public TypeDecl {
   UnionDecl(Element *name, Type *type);
   void Dump() override;
   const string TypeName() const override { return "union_decl"; }
-  string Generate(string section) override;
+  const Subs GetSubs(string section) const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(UnionDecl);
@@ -492,6 +492,7 @@ class Field : public Thing {
   virtual Element *GetValue() { return nullptr; }
   const string& GetComments() const { return comments_; }
   const Subs GetSubs(string section) const override;
+  const Subs GetSubs(string section, string prefix) const;
   const string NameText() { return name_->GetText(); }
   void SetAnnotation(Annotation *a) { annotation_ = a; }
   string GenVtsValues(string section);

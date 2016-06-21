@@ -28,6 +28,10 @@ struct hidl_vec {
   T *buffer;
   size_t count;
 };
+struct hidl_string {
+  char *buffer;
+  ptrdiff_t length;
+};
 
 DECLARE_META_INTERFACE(package_name);
   // START code_snips
@@ -36,6 +40,21 @@ typedef struct { // START code_for_struct_decl
 } struct_name;
 
   // END code_for_struct_decl
+typedef union { // START code_for_union_decl
+    int field_filler; // ALL union_fields
+} union_name;
+
+  // END code_for_union_decl
+
+  // START code_for_enum_decl
+  enum class enum_name : enum_base_type { enum_fields };
+  const char* GetNameOf(enum_name f) {
+    static const char* names[] = {quoted_fields_of_enum };
+    //do errror checking
+    return names[int(f)];
+}
+  //  size_t enum_limits<foo>::max() { return 1; }
+// END code_for_enum_decl
   // END code_snips
   // START callback_decls
 /*
@@ -51,15 +70,6 @@ sp<import_name> param_name // ALL param_decl_import
   // START declare_function
   virtual ::android::hidl::binder::Status function_name(params_and_callback) = 0;
   // END declare_function
-  // START declare_enum_decl
-  enum class enum_name : enum_base_type { enum_fields };
-  const char* GetNameOf(enum_name f) {
-    static const char* names[] = {quoted_fields_of_enum };
-    //do errror checking
-    return names[int(f)];
-}
-  //  size_t enum_limits<foo>::max() { return 1; }
-// END declare_enum_decl
   "param_name" // ALL enum_quoted_name
   // END declarations
 enum Call {

@@ -31,7 +31,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::hidl::binder::Status _aidl_status;
-  int32_t ret;
+  int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
@@ -41,7 +41,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct, sizeof(my_struct));
+  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct, sizeof(my_struct), nullptr);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -57,14 +57,14 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   if (!_aidl_status.isOk()) {
     return _aidl_status;
   }
-  _aidl_ret_status = _aidl_reply.readInt32(&ret);
+  _aidl_ret_status = _aidl_reply.readInt32(&_cb_ret);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
 
 
   // Invoke callback to client
-  _cb(ret);
+  _cb(_cb_ret);
 
 
 _aidl_error:
@@ -76,7 +76,7 @@ _aidl_error:
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::hidl::binder::Status _aidl_status;
-  int32_t ret;
+  int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
@@ -98,14 +98,14 @@ _aidl_error:
   if (!_aidl_status.isOk()) {
     return _aidl_status;
   }
-  _aidl_ret_status = _aidl_reply.readInt32(&ret);
+  _aidl_ret_status = _aidl_reply.readInt32(&_cb_ret);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
 
 
   // Invoke callback to client
-  _cb(ret);
+  _cb(_cb_ret);
 
 
 _aidl_error:
