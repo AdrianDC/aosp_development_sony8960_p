@@ -1,0 +1,76 @@
+// Golden file (Manually Produced)
+// Deprecate once this golden and hidl-gen produce file is the same or equivalent.
+component_class: HAL_HIDL
+component_type: NFC
+component_type_version: 1.0
+component_name: "INfcClientCallback"
+
+package: "android.hardware.nfc"
+
+attribute: {
+  name: "nfc_event_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_OPEN_CPLT_EVT"
+    value: 0
+    enumerator: "HAL_NFC_CLOSE_CPLT_EVT"
+    value: 1
+    enumerator: "HAL_NFC_POST_INIT_CPLT_EVT"
+    value: 2
+    enumerator: "HAL_NFC_PRE_DISCOVER_CPLT_EVT"
+    value: 3
+    enumerator: "HAL_NFC_REQUEST_CONTROL_EVT"
+    value: 4
+    enumerator: "HAL_NFC_RELEASE_CONTROL_EVT"
+    value: 5
+    enumerator: "HAL_NFC_ERROR_EVT"
+    value: 6
+  }
+}
+
+attribute: {
+  name: "nfc_status_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_STATUS_OK"
+    value: 0
+    enumerator: "HAL_NFC_STATUS_FAILED"
+    value: 1
+    enumerator: "HAL_NFC_STATUS_ERR_TRANSPORT"
+    value: 2
+    enumerator: "HAL_NFC_STATUS_ERR_CMD_TIMEOUT"
+    value: 3
+    enumerator: "HAL_NFC_STATUS_REFUSED"
+    value: 4
+  }
+}
+
+attribute: {
+  name: "nfc_data_t"
+  type: TYPE_STRUCT
+  struct_value: {
+    name: "data"
+    type: TYPE_VECTOR_VARIABLE
+    vector_value: {
+      scalar_type_name: "uint8_t"
+    }
+  }
+}
+
+api: {
+  name: "sendEvent"
+  arg: {
+    aggregate_type: "nfc_event_t"
+  }
+  arg: {
+    aggregate_type: "nfc_status_t"
+  }
+}
+
+api: {
+  name: "sendData"
+  arg: {
+    aggregate_type: "nfc_data_t"
+  }
+}
+
