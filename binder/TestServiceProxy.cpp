@@ -31,6 +31,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::hidl::binder::Status _aidl_status;
+  uint64_t buffer_handle;
   int32_t ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -41,11 +42,14 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct, sizeof(my_struct));
+  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct, sizeof(*my_struct), &buffer_handle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-
+  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct->data.buffer, my_struct->data.count * sizeof(*my_struct->data.buffer), nullptr, buffer_handle, 8);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
   _aidl_ret_status = remote()->transact(ITestService::ECHOINTEGER, _aidl_data, &_aidl_reply);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;

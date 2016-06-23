@@ -66,7 +66,12 @@ bool GetService(sp<ITestService>* service, hidl_version version) {
 }  // namespace aidl
 }  // namespace android
 
+#define DATA_BUFFER_SIZE 32
 int main(int /* argc */, char * argv []) {
+  uint8_t data_buffer[DATA_BUFFER_SIZE];
+  for (int i = 0; i < DATA_BUFFER_SIZE; i++) {
+      data_buffer[i] = i;
+  }
   android::base::InitLogging(argv, android::base::StderrLogger);
   sp<ITestService> service;
   namespace client_tests = android::hardware::tests::client;
@@ -77,6 +82,9 @@ int main(int /* argc */, char * argv []) {
   ITestService::simple_t my_struct;
   my_struct.int1 = 1481;
   my_struct.int2 = 2592;
+  my_struct.data.buffer = data_buffer;
+  my_struct.data.count = DATA_BUFFER_SIZE;
+
   service->echoInteger(32, &my_struct, [](auto ret) {
     cout << "Got response from binder service: " << ret << endl;
     }

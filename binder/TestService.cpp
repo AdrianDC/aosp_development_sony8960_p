@@ -66,8 +66,10 @@ class TestService : public BnTestService {
 
   virtual Status echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct, ITestService::echoInteger_cb callback) {
             std::cout << "struct at addr " << (void *)my_struct << std::endl;
-            std::cout << "int1 " << my_struct->int1 << " int 2 " << my_struct->int2 << std::endl;
+            std::cout << "int1 " << my_struct->int1 << " int2 " << my_struct->int2 << std::endl;
+            std::cout << "uint8 at position 18 is " << static_cast<int>(my_struct->data.buffer[18]) << std::endl;
         callback(echo_me);
+        printf("Value is %d\n", my_struct->data.buffer[18]);
         return Status::ok();
     }
     virtual Status shareBufferWithRef(int buffer, ITestService::shareBufferWithRef_cb callback) {

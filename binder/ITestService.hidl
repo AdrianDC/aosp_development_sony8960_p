@@ -6,6 +6,7 @@ interface ITestService {
   struct simple_t {
     uint32_t int1;
     uint32_t int2;
+    vec<uint8_t> data;
   };
 
   struct lots_of_data {
