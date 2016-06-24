@@ -25,7 +25,7 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 }
 // START code_snips
 /*
-ITestService::function_name_cb _cb // ALL callback_param // Used in callback_description
+Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
 sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 
