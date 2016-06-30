@@ -58,7 +58,7 @@ hidl_vec<uint8_t> data;
   //  size_t enum_limits<foo>::max() { return 1; }
   virtual ::android::hidl::binder::Status open(sp<INfcClientCallback> clientCallback , open_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status write(const INfc::nfc_data_t *data , write_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status core_initialized(core_initialized_cb _cb = nullptr ) = 0;
+  virtual ::android::hidl::binder::Status core_initialized(hidl_vec<uint8_t> data, core_initialized_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status pre_discover(pre_discover_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status close(close_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status control_granted(control_granted_cb _cb = nullptr ) = 0;

@@ -61,7 +61,7 @@ interface INfc {
      * If core_initialized() returns any other value, the NCI stack will continue
      * immediately.
      */
-    core_initialized() generates (int32_t retval);
+    core_initialized(vec<uint8_t> data) generates (int32_t retval);
 
     /*
      * pre_discover is called every time before starting RF discovery.

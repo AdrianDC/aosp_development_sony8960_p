@@ -102,6 +102,7 @@ callback_code
       }
     case Call::CORE_INITIALIZED:
       {
+hidl_vec<uint8_t> data;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
@@ -111,7 +112,7 @@ callback_code
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             core_initialized(        [&](auto retval ) {
+             core_initialized(data,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);

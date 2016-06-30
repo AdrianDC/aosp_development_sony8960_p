@@ -45,6 +45,10 @@ api: {
     primitive_type: "int32_t"
 
   }
+  arg: {
+    aggregate_type: "hidl_vec<uint8_t>"
+
+  }
 
 
 }

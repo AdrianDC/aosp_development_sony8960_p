@@ -26,7 +26,7 @@ namespace nfc {
 BpNfc::BpNfc(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
     : BpInterface<INfc>(_aidl_impl){
 }
-::android::hidl::binder::Status BpNfc::open(sp<INfc::INfcClientCallback> clientCallback , ITestService::open_cb _cb ) {
+::android::hidl::binder::Status BpNfc::open(sp<INfc::INfcClientCallback> clientCallback , INfc::open_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -67,7 +67,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::write(const INfc::nfc_data_t* data , ITestService::write_cb _cb ) {
+::android::hidl::binder::Status BpNfc::write(const INfc::nfc_data_t* data , INfc::write_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -108,7 +108,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::core_initialized(ITestService::core_initialized_cb _cb ) {
+::android::hidl::binder::Status BpNfc::core_initialized(hidl_vec<uint8_t> data, INfc::core_initialized_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -145,7 +145,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::pre_discover(ITestService::pre_discover_cb _cb ) {
+::android::hidl::binder::Status BpNfc::pre_discover(INfc::pre_discover_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -182,7 +182,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::close(ITestService::close_cb _cb ) {
+::android::hidl::binder::Status BpNfc::close(INfc::close_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -219,7 +219,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::control_granted(ITestService::control_granted_cb _cb ) {
+::android::hidl::binder::Status BpNfc::control_granted(INfc::control_granted_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -256,7 +256,7 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::power_cycle(ITestService::power_cycle_cb _cb ) {
+::android::hidl::binder::Status BpNfc::power_cycle(INfc::power_cycle_cb _cb ) {
   ::android::hidl::Parcel _aidl_data;
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
