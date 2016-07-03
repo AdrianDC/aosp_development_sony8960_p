@@ -1,6 +1,6 @@
 // SECTION stubs_cpp
 /*
-auto param_name // ALL return_param_decl
+auto param_name // ALL return_param_decl_default
 */
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
@@ -175,6 +175,8 @@ namespace_open_section
              function_name(stub_arguments));
 
         // START // Hide callback_code
+param_name// ALL stub_param_decl_default
+*param_name// ALL stub_param_decl_struct_type
         [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel

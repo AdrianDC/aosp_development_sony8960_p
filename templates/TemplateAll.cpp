@@ -4,6 +4,10 @@
 // see system/tools/hidl/templates/TemplateAll.cpp
 #include <namespace_slashes/Ipackage_name.h>
 #include <namespace_slashes/Bppackage_name.h>
+#include <iostream>
+#include <stdio.h>
+using std::cout;
+using std::endl;
 
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line
@@ -26,7 +30,7 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 // START code_snips
 /*
 Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
-const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
+const Ipackage_name::struct_name& param_name // ALL param_decl_struct_type
 sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 
 */
@@ -165,18 +169,74 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 // END param_write_scalar_char
 
   // START param_write_struct_type
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name, sizeof(param_name), nullptr);
+  {
+    uint64_t parent_handle;
+    _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      goto _aidl_error;
+    }
+    fixup_write_struct;
+  }
+  // END param_write_struct_type
+  // START param_write_string
+  _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
+                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
+                       nullptr);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  // END param_write_struct_type
-    // START param_write_ref_all
+  // END param_write_string
+  // START fixup_write_string
+  _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
+                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
+                       nullptr, parent_handle,
+                       (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  // END fixup_write_string
+  // START fixup_write_vec
+  {
+    uint64_t child_handle;
+    cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
+    void *bufp = (void *)s.s1v2.buffer;
+    size_t size = sizeof(ITypes::s1s[s.s1v2.count]);
+    size_t off = (size_t)((char *)&(s.s1v2.buffer)-(char *)&(s));
+    _aidl_ret_status = _aidl_data.writeBuffer(bufp,
+                                              size,
+                                              &child_handle,
+                                              parent_handle,
+                                              off /* offset_calculator */);
+    printf("c: wb vec : buf %p size %ld offset %ld parent %ld child %ld ret %d\n", bufp, size, off, parent_handle, child_handle, _aidl_ret_status);
+    uint64_t parent_handle = child_handle; // Yes, this is legal, and works; it's like a static stack.
+    if (((_aidl_ret_status) != (::android::OK))) {
+      goto _aidl_error;
+    }
+    for (size_t loop_var = 0; loop_var < s.s1v2.count; loop_var++) {
+      /* fixup_write_vec */
+      inner_vec_fixup
+    }
+  }
+  // END fixup_write_vec
+  // START fixup_write_array
+  Array code goes here
+  // END fixup_write_array
+  // START fixup_write_handle
+  Handle code goes here
+  // END fixup_write_handle
+  // START param_write_vec
+  uint64_t parent_handle;
+  _aidl_data.writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
+  write_vec_fixups;
+  // END param_write_vec
+
+  // START param_write_ref_all
   _aidl_ret_status = _aidl_data.writeFileDescriptor(param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-    // END param_write_ref_all
-// END param_write_snips
+  // END param_write_ref_all
+  // END param_write_snips
   _aidl_ret_status = remote()->transact(Ipackage_name::func_name_as_enum, _aidl_data, &_aidl_reply);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -312,7 +372,8 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 // END param_ret_read_enum_type_scalar_char
 
 // START param_ret_read_struct_type
-  param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
+  param_name = (Ipackage_name::struct_name *)_aidl_reply.readBuffer();
+  fixup_read_struct
 // END param_ret_read_struct_type
 // END param_ret_read_snips
 
@@ -324,12 +385,15 @@ _aidl_error:
   return _aidl_status;
 }
 // END code_for_function
+param_name // ALL callback_var_default
+*param_name // ALL callback_var_struct_type
 // END code_snips
 
 namespace_close_section
 
 /*
-auto param_name // ALL return_param_decl
+auto param_name // ALL return_param_decl_default
+const Ipackage_name::type_desc & param_name // ALL return_param_decl_struct_type
 */
 #include <namespace_slashes/Ipackage_name.h>
 #include <namespace_slashes/Bppackage_name.h>
@@ -490,6 +554,7 @@ namespace_open_section
 // END param_read_ref_all
   // START param_read_struct_type
         param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
+        fixup_read_struct
   // END param_read_struct_type
 // END param_read_snips
         // Make the call into the server
@@ -497,6 +562,8 @@ namespace_open_section
              function_name(stub_arguments));
 
         // START // Hide callback_code
+param_name// ALL stub_param_decl_default
+*param_name// ALL stub_param_decl_struct_type
         [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel
@@ -505,7 +572,9 @@ namespace_open_section
 // START param_ret_write_snips
 
 // START param_ret_write_struct_type
-                             std::cout << "Struct type passed to cb" << std::endl;
+                             std::cout << "Server: Struct type passed to cb" << std::endl;
+                             _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), nullptr);
+                             fixup_ret_write_struct
 // END param_ret_write_struct_type
 
 // START param_ret_write_scalar_uint8_t

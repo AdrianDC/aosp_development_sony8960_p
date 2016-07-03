@@ -35,15 +35,36 @@ interface ITypes {
     s2 s2m on(UC);
   };
 
-  struct s1 {
+  struct s1s {
+    string str1;
+  };
+
+  struct s1u {
     disc dm1;
     u1 u1m1;
   };
 
   struct s0 {
-    s1 s1m1;
-    vec<s1> s1v2;
-    s1 s1m3;
+    s1s s1m1;
+    vec<s1s> s1v2;
+  };
+
+  struct shm_t {
+    uint32_t fdIndex;
+    uint32_t offset;
+    uint32_t extent;
+  };
+  struct GrantorDescriptor {
+    uint32_t flags;
+    shm_t shm;
+  };
+
+  struct MQDescriptor {
+    vec<GrantorDescriptor> grantors;
+    handle mq_handles;
+    uint32_t quantum;
+    uint32_t nQuanta;
+    uint32_t flags;
   };
 
   echoInteger(int32_t echo_me, simple_t my_struct) generates (int32_t ret);

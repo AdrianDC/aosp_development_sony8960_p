@@ -59,7 +59,7 @@ typedef union { // START code_for_union_decl
   // START callback_decls
 /*
 function_name_cb _cb = nullptr // ALL callback_param // Used in callback_description
-const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
+const Ipackage_name::struct_name &param_name // ALL param_decl_struct_type
 base_type_name param_name[array_size] // ALL field_decl_array_all
 sp<import_name> param_name // ALL param_decl_import
 */
@@ -70,7 +70,7 @@ sp<import_name> param_name // ALL param_decl_import
   // START declare_function
   virtual ::android::hidl::binder::Status function_name(params_and_callback) = 0;
   // END declare_function
-  "param_name" // ALL enum_quoted_name
+  "param_name" // ALL enum_quoted_name_default
   // END declarations
 enum Call {
   // START call_enum_list

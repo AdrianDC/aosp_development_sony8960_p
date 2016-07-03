@@ -125,32 +125,58 @@ s2 s2m;
 } u1;
 
 typedef struct {
+hidl_string str1;
+
+} s1s;
+
+typedef struct {
 disc dm1;
 u1 u1m1;
 
-} s1;
+} s1u;
 
 typedef struct {
-s1 s1m1;
-hidl_vec<s1> s1v2;
-s1 s1m3;
+s1s s1m1;
+hidl_vec<s1s> s1v2;
 
 } s0;
+
+typedef struct {
+uint32_t fdIndex;
+uint32_t offset;
+uint32_t extent;
+
+} shm_t;
+
+typedef struct {
+uint32_t flags;
+shm_t shm;
+
+} GrantorDescriptor;
+
+typedef struct {
+hidl_vec<GrantorDescriptor> grantors;
+native_handle mq_handles;
+uint32_t quantum;
+uint32_t nQuanta;
+uint32_t flags;
+
+} MQDescriptor;
 
 
   using echoInteger_cb = std::function<void(int32_t ret)>;
   using echoEnum_cb = std::function<void(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i)>;
   using echoScalar_cb = std::function<void(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i)>;
-  using echoStruct_cb = std::function<void(const ITypes::s0 *s )>;
+  using echoStruct_cb = std::function<void(const ITypes::s0 &s )>;
   using shareBufferWithRef_cb = std::function<void(int32_t ret)>;
   using getHash_cb = std::function<void(uint64_t hash)>;
   using quit_cb = std::function<void()>;
 
 
-  virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITypes::simple_t *my_struct , echoInteger_cb _cb = nullptr ) = 0;
+  virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITypes::simple_t &my_struct , echoInteger_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, echoEnum_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, echoScalar_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status echoStruct(const ITypes::s0 *s , echoStruct_cb _cb = nullptr ) = 0;
+  virtual ::android::hidl::binder::Status echoStruct(const ITypes::s0 &s , echoStruct_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status shareBufferWithRef(hidl_ref<lots_of_data> buffer, shareBufferWithRef_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status getHash(getHash_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status quit() = 0;

@@ -45,7 +45,7 @@ int32_t echo_me;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoInteger(echo_me, my_struct,          [&](auto ret ) {
+             echoInteger(echo_me , *my_struct ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -123,7 +123,7 @@ ec i;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoEnum(a, b, c, d, e, f, g, h, i,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
+             echoEnum(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -236,7 +236,7 @@ char i;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoScalar(a, b, c, d, e, f, g, h, i,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
+             echoScalar(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -279,7 +279,7 @@ char i;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             echoStruct(s,          [&](auto s ) {
+             echoStruct(*s ,          [&](auto s ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -314,7 +314,7 @@ hidl_ref<lots_of_data> buffer;
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
-             shareBufferWithRef(buffer,          [&](auto ret ) {
+             shareBufferWithRef(buffer ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);

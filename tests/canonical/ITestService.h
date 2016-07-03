@@ -46,7 +46,7 @@ uint8_t buffer[4096] ;
   using shareBufferWithRef_cb = std::function<void(int32_t ret)>;
 
 
-  virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITestService::simple_t *my_struct , echoInteger_cb _cb = nullptr ) = 0;
+  virtual ::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITestService::simple_t &my_struct , echoInteger_cb _cb = nullptr ) = 0;
   virtual ::android::hidl::binder::Status shareBufferWithRef(hidl_ref<lots_of_data> buffer, shareBufferWithRef_cb _cb = nullptr ) = 0;
 
 enum Call {

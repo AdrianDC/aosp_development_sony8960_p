@@ -145,18 +145,18 @@ string Field::Generate(string section)
 
 const Subs Field::GetSubs(string section) const
 {
-  return GetSubs(section, "");
+  return GetSubsC(section, FieldContext{"","","",0});
 }
 
-const Subs Field::GetSubs(string section, string prefix) const
+const Subs Field::GetSubsC(string section, const FieldContext &context) const
 {
   //  string type_name { type_->TypeName() };
-  Subs subs{{"param_name", prefix + name_->GetText()},
-    {"package_name", ps_->GetPackageName()},
+  Subs subs{{"param_name", context.var_prefix + name_->GetText()},
+    {"package_name", GetParser()->GetPackageName()},
     {"init_value", initializer_ ? initializer_->GetText() : ""}};
   Type *type = GetType();
   if (type) {
-    Subs type_subs {type->GetSubs(section)};
+    Subs type_subs {type->GetSubsC(section, context)};
     //PrintSubs("FieldTypeSubs", type_subs);
     subs.insert(subs.end(), type_subs.begin(), type_subs.end());
   } else {
@@ -180,6 +180,14 @@ const Subs TypedefDecl::GetSubs(string section) const
 const Subs NamedType::GetSubs(string section) const
 {
   Subs base_subs{ base_->GetSubs(section) };
+  Subs subs{{"named_type_name", name_->GetText()}};
+  subs.insert(subs.end(), base_subs.begin(), base_subs.end());
+  return subs;
+}
+
+const Subs NamedType::GetSubsC(string section, const FieldContext& context) const
+{
+  Subs base_subs{ base_->GetSubsC(section, context) };
   Subs subs{{"named_type_name", name_->GetText()}};
   subs.insert(subs.end(), base_subs.begin(), base_subs.end());
   return subs;
@@ -211,7 +219,7 @@ const Subs Function::GetSubs(string section) const
   string callback_param;
   if (generates_->Size()) {
     Subs subs {{"function_name", name_->GetText()},
-      {"package_name", ps_->GetPackageName()}};
+      {"package_name", GetParser()->GetPackageName()}};
     callback_param = make_inline(Snip(section, "callback_param", subs));
   }
   string call_param_list = fields_->GenCommaList(section, "");
@@ -223,16 +231,16 @@ const Subs Function::GetSubs(string section) const
   }
   string callback_invocation;
   if (generates_->Size() > 0) {
-    string return_param_names = generates_->GenCommaNameList(section, "", "", CB_VAR_PREFIX);
+    string return_param_names = generates_->GenCommaNameList(section, "", "callback_var_", CB_VAR_PREFIX);
     Subs subs{{"return_param_names", return_param_names}};
     callback_invocation = Snip(section, "callback_invocation", subs);
   }
-  string function_params_stubs{fields_->GenCommaNameList(section, "", "")};
+  string function_params_stubs{fields_->GenCommaNameList(section, "", "stub_param_decl_")};
   string function_callback_text;
   string callback_check;
   if (generates_->Size()) {
     Subs subs{{"param_ret_write_snips", generates_->TextByPrefix(section, "param_ret_write_")},
-      {"return_params_stubs", generates_->GenCommaNameList(section, "", "return_param_decl")},
+      {"return_params_stubs", generates_->GenCommaNameList(section, "", "return_param_decl_")},
           };
     function_callback_text = Snip(section, "callback_code", subs);
     callback_check = Snip(section, "callback_check", Subs{});
@@ -244,7 +252,7 @@ const Subs Function::GetSubs(string section) const
     stub_arguments = function_params_stubs + ",  " + function_callback_text;
   }
   Subs subs{{"function_name", name_->GetText()},
-    {"package_name", ps_->GetInterface()->GetText()},
+    {"package_name", GetParser()->GetInterface()->GetText()},
     {"params_and_callback", params_and_callback},
     {"call_param_list", call_param_list},
     {"return_param_list", generates_->GenCommaList(section, "")},
@@ -256,7 +264,7 @@ const Subs Function::GetSubs(string section) const
     {"func_name_as_enum", upcase(name_->GetText())},
     {"param_decls", fields_->GenSemiList(section)},
     {"callback_invocation", callback_invocation},
-    {"generates_variables", generates_->GenSemiList(section, CB_VAR_PREFIX)},
+    {"generates_variables", generates_->GenSemiList(section, FieldContext{"","","",0}.vp(CB_VAR_PREFIX))},
     {"vts_args", generates_->GenVtsList(section, "return_type_hidl") +
           fields_->GenVtsList(section, "arg")},
     {"vts_callflow", GenCallflow(section)},
@@ -283,7 +291,7 @@ string Annotations::GenVtsCalls(string section, string anno_name, string out_lab
         out += Snip(section, "anno_calls", subs);
       }
     } else {
-      ps_->Error(calls->Line(), "Call-graph annotation '%s' needs 1 or more unnamed string values", anno_name.c_str());
+      GetParser()->Error(calls->Line(), "Call-graph annotation '%s' needs 1 or more unnamed string values", anno_name.c_str());
     }
   }
   // cout << "VtsCalls " << out << endl;
@@ -356,7 +364,7 @@ string Field::GenVtsValues(string section)
   string output;
   for (auto & value : *annotation_->GetValues("normal")) {
     if (!value->GetValue()) {
-      ps_->Error(annotation_->Line(), "'normal' annotation needs values!");
+      GetParser()->Error(annotation_->Line(), "'normal' annotation needs values!");
       continue;
     }
     Subs subs{{"type_name", GetType()->VtsType()},
@@ -367,19 +375,28 @@ string Field::GenVtsValues(string section)
 }
 
 
-string Fields::GenCommaNameList(string section, string prev_list, string snippet, string name_prefix)
+string Fields::GenCommaNameList(string section, string prev_list, string snippet_prefix, string name_prefix)
 {
   string output {prev_list};
   for (auto & field : fields_) {
     if (output != "") {
       output += ", ";
     }
-    string name = name_prefix + field->GetName()->GetText();
-    if (snippet == "") {
+    string name = name_prefix + field->GetName();
+    if (snippet_prefix == "") {
       output += name;
     } else {
-      Subs subs{{"param_name", name}};
-      output += make_inline(Snip(section, snippet, subs));
+      Subs subs{{"param_name", name},
+        {"package_name", field->GetParser()->GetPackageName()},
+        {"type_desc", field->GetType() ? field->GetType()->GetName() : ""}};
+      string s;
+      if (field->GetType()) {
+        s = make_inline(Snip(section, snippet_prefix + field->GetType()->TypeSuffix(false), subs));
+      }
+      if (s == "") {
+        s = make_inline(Snip(section, snippet_prefix + "default", subs));
+      }
+      output += s;
     }
   }
   return output;
@@ -411,7 +428,7 @@ string Fields::GenCommaList(string section, string prev, bool out_params)
         output += field->GetType()->Generate(section);
       }
       if (!out_params) {
-        output += " " + field->GetName()->GetText();
+        output += " " + field->GetName();
       }
       if (field->GetValue()) { // some Enum fields have this
         output += " = " + field->GetValue()->GetText();
@@ -421,7 +438,7 @@ string Fields::GenCommaList(string section, string prev, bool out_params)
   return output;
 }
 
-string Fields::GenSemiList(string section, string prefix)
+string Fields::GenSemiList(string section, const FieldContext &context)
 {
   string output {""};
   for (auto & field : fields_) {
@@ -429,16 +446,16 @@ string Fields::GenSemiList(string section, string prefix)
     if (field->GetType()) {
       special_string = Snip(section, "field_decl_"
                             + field->GetType()->TypeSuffix(true),
-                            field->GetSubs(section, prefix)) +
+                            field->GetSubsC(section, context)) +
           Snip(section, "field_decl_"
                + field->GetType()->TypeSuffix(false),
-               field->GetSubs(section, prefix));
+               field->GetSubsC(section, context));
     }
     if (special_string != "") {
       output += make_inline(special_string);
     } else {
       output += field->GetType()->Generate(section) + " " +
-          prefix + field->GetName()->GetText() + field->GetInitText();
+          context.var_prefix + field->GetName() + field->GetInitText();
     }
     output += ";\n";
   }
@@ -455,12 +472,69 @@ string Fields::GenByType(string section, string prefix)
   return output;
 }
 
-const Subs StructDecl::GetSubs(string section) const
+static string TypeFixup(Type *type, string section, FieldContext context)
 {
+  while (type->TypeName() == "named_type" ||
+         type->TypeName() == "struct_decl" ||
+         type->TypeName() == "union_decl") {
+    type = ((NamedType*)type)->GetBase();
+  }
+  if (type->TypeName() == "struct_type") {
+    return ((StructType*)type)->StructWriteFixup(section, context);
+  } else if (type->TypeName() == "union_type") {
+    Subs subs{{"param_name", context.designator}};
+    return "Union Fixup Needed\n";
+  } else if (type->TypeName() == "vec") {
+    context.base_pointer = context.designator+".buffer";
+    context.designator += ".buffer[i"+std::to_string(context.next_var+1)+"]";
+    Subs subs{{"param_name", context.designator},
+      {"loop_var", "i"+std::to_string(context.next_var+1)},
+      {"inner_vec_fixup", TypeFixup(((VecType*)type)->GetBase(), section, context)}};
+    context.next_var += 1;
+    context.base_pointer = context.designator;
+    return Snip(section, "fixup_write_vec", subs);
+  } else if (type->TypeName() == "array") {
+    Subs subs{};
+    return Snip(section, "fixup_write_array", subs);
+  } else if (type->TypeName() == "handle") {
+    Subs subs{};
+    return Snip(section, "fixup_write_handle", subs);
+  } else if (type->TypeName() == "string") {
+    Subs subs{{"param_name", context.designator},
+      {"base_pointer", context.base_pointer}};
+    return Snip(section, "fixup_write_string", subs);
+  } else {
+    printf("Un-handled type-name %s in StructWriteFixup\n", type->TypeName().c_str());
+    return "TypeFixup doesn't handle type '" + type->TypeName();
+  }
+}
+
+const string StructType::StructWriteFixup(string section, const FieldContext &context)
+{
+  string struct_fixup_writer{"  /*fixup_write_struct*/\n"};
+  for (auto & field : GetFields()->GetVec()) {
+    if (!field->HasFixup()) {
+      struct_fixup_writer += "\n//field " + field->GetName() + " doesn't need fixup\n";
+      continue;
+    }
+    Type *type{field->GetType()};
+    FieldContext new_context{"", context.designator + "." + field->GetName(), context.base_pointer, context.next_var};
+    struct_fixup_writer += TypeFixup(type, section, new_context);
+  }
+  return struct_fixup_writer;
+}
+
+const Subs StructDecl::GetSubsC(string section, const FieldContext &context) const
+{
+
   Subs subs {
     {"struct_fields", base_->GetFields()->GenSemiList(section)},
     {"struct_name", name_->GetText()},
     {"struct_gen_fields", base_->GetFields()->GenByType(section, "struct_field_")},
+    {"fixup_write_struct", ((StructType*)GetBase())->StructWriteFixup(section, context)},
+    {"fixup_ret_write_struct", "(void)0; /*kilroy_ret was here*/"},//FixupWriteString(section, Subs{})},
+    {"fixup_read_struct", "(void)0; /*kilroy was here, reading*/"},//FixupRdString(section, Subs{})},
+    {"offset_calculator", "0 /* offset_calculator */"},
   };
   return subs;
 }
@@ -486,7 +560,7 @@ const Subs ImportDecl::GetSubs(string section) const
 const Subs Const::GetSubs(string section) const
 {
   Subs subs {
-    {"const_name", GetName()->GetText()},
+    {"const_name", GetName()},
     {"const_value", GetValue()->GetText()},
     {"const_vts_type", GetValue()->HasStringValue() ? "bytes" : "int32_t"},
   };
@@ -499,7 +573,7 @@ const Subs EnumDecl::GetSubs(string section) const
     {"enum_fields", base_->GetFields()->GenCommaList(section)},
     {"enum_name", name_->GetText()},
     {"enum_base_type", base_->TypeOfEnum(section)},
-    {"quoted_fields_of_enum", base_->GetFields()->GenCommaNameList(section, "", "enum_quoted_name")},
+    {"quoted_fields_of_enum", base_->GetFields()->GenCommaNameList(section, "", "enum_quoted_name_")},
   };
   return subs;
 }
@@ -567,8 +641,11 @@ string Fields::TextByPrefix(string section, string prefix, string name_prefix)
   string out;
   // cout << " <<< TBP " << prefix << endl;
   for (auto & thing : fields_) {
-    out += Snip(section, prefix + thing->GetType()->TypeSuffix(true), thing->GetSubs(section, name_prefix));
-    out += Snip(section, prefix + thing->GetType()->TypeSuffix(false), thing->GetSubs(section, name_prefix));
+    FieldContext fc{name_prefix, thing->GetName(), "&" + thing->GetName(), 0};
+    out += Snip(section, prefix + thing->GetType()->TypeSuffix(true),
+                thing->GetSubsC(section, fc));
+    out += Snip(section, prefix + thing->GetType()->TypeSuffix(false),
+                thing->GetSubsC(section, fc));
     //  cout << "    type '" << (prefix+thing->TypeName()) << "' size " << out.size() << endl;
   }
   return out;
@@ -582,7 +659,7 @@ string Parser::CallEnumList(string section)
     if (thing->TypeName() != "function") {
       continue;
     }
-    string fname{upcase(((Function *)thing)->GetName()->GetText())};
+    string fname{upcase(((Function *)thing)->GetName())};
     if (first) {
       first = false;
       Subs subs{{"call_enum_name", fname}};

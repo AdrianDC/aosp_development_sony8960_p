@@ -66,12 +66,12 @@ class Types : public BnTypes {
   Types() {}
   virtual ~Types() = default;
 
-  virtual Status echoInteger(int32_t echo_me, const ITypes::simple_t* my_struct, ITypes::echoInteger_cb callback) {
-    //std::cout << "struct at addr " << (void *)my_struct << std::endl;
-    //std::cout << "int1 " << my_struct->int1 << " int 2 " << my_struct->int2 << std::endl;
+  virtual Status echoInteger(int32_t echo_me, const ITypes::simple_t& my_struct, ITypes::echoInteger_cb callback) {
+    //std::cout << "struct at addr " << (void *)&my_struct << std::endl;
+    //std::cout << "int1 " << my_struct.int1 << " int 2 " << my_struct.int2 << std::endl;
     addHash(echo_me);
-    addHash(my_struct->int1);
-    addHash(my_struct->int2);
+    addHash(my_struct.int1);
+    addHash(my_struct.int2);
     callback(echo_me);
     return Status::ok();
   }
@@ -116,9 +116,24 @@ class Types : public BnTypes {
     return Status::ok();
   }
 
-  virtual Status echoStruct(const ITypes::s0 *s, ITypes::echoStruct_cb cb) {
-    cout << "echoStruct called" << endl;
+  virtual Status echoStruct(const ITypes::s0 &s, ITypes::echoStruct_cb cb) {
+    cout << "Server: echoStruct called" << endl;
+      cout << "Server: in echoStruct, s is " << &s << endl;
+      int i = s.s1v2.count;
+      cout << "S: vec count(2?): " << i << endl;
+      printf("S: s1m1 len is %ld\n", s.s1m1.str1.length);
+      printf("S: s %p s.s1m1.str1.buf %p s.s1v2.buf %p\n",
+             &s, s.s1m1.str1.buffer, s.s1v2.buffer);
+      printf("S: *  s.s1v2.buf[0].str1.buf %p [1] %p\n", s.s1v2.buffer[0].str1.buffer, s.s1v2.buffer[1].str1.buffer);
+      printf("S: s1m1 str is %s\n", s.s1m1.str1.buffer);
+      printf("S: s1v2[0] len is %ld\n", s.s1v2.buffer[0].str1.length);
+      printf("S: s1v2[0] str is %s\n", s.s1v2.buffer[0].str1.buffer);
+      printf("S: s1v2[1] len is %ld\n", s.s1v2.buffer[1].str1.length);
+      printf("S: s1v2[1] bytes is %c%c%c%c%c\n", s.s1v2.buffer[1].str1.buffer[0],
+             s.s1v2.buffer[1].str1.buffer[1],s.s1v2.buffer[1].str1.buffer[2],
+             s.s1v2.buffer[1].str1.buffer[3],s.s1v2.buffer[1].str1.buffer[4]);
     cb(s);
+    cout << "Server: echoStruct survived cb(s)" << endl;
     return Status::ok();
   }
 

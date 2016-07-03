@@ -325,6 +325,8 @@ _aidl_error:
   return _aidl_status;
 }
 // END code_for_function
+param_name // ALL callback_var_default
+*param_name // ALL callback_var_struct_type
 // END code_snips
 
 namespace_close_section

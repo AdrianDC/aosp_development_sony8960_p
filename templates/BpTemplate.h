@@ -23,7 +23,7 @@ virtual ~Bppackage_name() = default;
 /*
 Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
 sp<import_name> param_name // ALL param_decl_import
-const Ipackage_name::struct_name *param_name // ALL param_decl_struct_type
+const Ipackage_name::struct_name &param_name // ALL param_decl_struct_type
 */
 ::android::hidl::binder::Status function_name(params_and_callback) override; // ALL declare_function
   // END declarations

@@ -23,6 +23,14 @@ class Parser;
 
 using Subs = vector<pair<string, string>>;
 
+struct FieldContext {
+  string var_prefix;
+  string designator;
+  string base_pointer;
+  int next_var;
+  FieldContext vp(string s) {var_prefix = s; return *this;}
+};
+
 class Thing {
  public:
   Thing();
@@ -32,11 +40,14 @@ class Thing {
   const char *c_str() const { return text_.c_str(); }
   const string& GetComments() const { return comments_; }
   virtual const string TypeName() const = 0;
+  virtual int Line() const { return -1; }
 
   virtual void Dump();
   virtual string Generate(string /*section*/) { return ""; }
   static void SetParser(Parser *ps);
+  static Parser *GetParser() { return ps_; }
   virtual const Subs GetSubs(string /*section*/) const { Subs subs; return subs; }
+  virtual const Subs GetSubsC(string /*section*/, const FieldContext& /*context*/) const { Subs subs; return subs; }
  protected:
   static Parser *ps_; // At least it's not global :-)
   string text_;
@@ -61,7 +72,7 @@ class Element : public Thing {
   virtual string NoQuoteText() const { return GetText();}
   virtual bool HasStringValue() const { return false; }
   void AddDottedElement(Element *element);
-  int Line() const { return line_; }
+  int Line() const override { return line_; }
   void Dump() override;
   string Generate(string section) override;
   const string TypeName() const override { return "element"; }
@@ -143,7 +154,8 @@ class ErrorElement : public Element {
 class Const : public Thing {
  public:
   Const(Element *name, Element *value);
-  const Element *GetName() const { return name_; }
+  const string GetName() const { return name_->GetText(); }
+  const Element *GetNameElement() const { return name_; }
   const Element *GetValue() const { return value_; }
   void Dump() override;
   string Generate(string ) override;
@@ -168,7 +180,7 @@ class Fields {
   string GenCommaList(string section) {return GenCommaList(section, "", false);}
   string GenCommaNameList(string section, string prev_list, string snippet = "", string name_prefix = "");
 
-  string GenSemiList(string section, string prefix = "");
+  string GenSemiList(string section, const FieldContext &context = FieldContext{"","","",0});
   string GenByType(string section, string prefix);
   string TextByPrefix(string section, string prefix, string name_prefix = "");
   string GenVtsList(string section, string label);
@@ -196,8 +208,12 @@ class Type : public Thing {
   virtual Fields *GetFields() { return(empty_fields_); }
   virtual bool HasFdFixup() { return false; }
   virtual bool HasPtrFixup() { return false; }
+  virtual const Subs GetSubsC(string section, const FieldContext &/*context*/) const {return GetSubs(section);}
+  virtual string FixupWriteString(string /*section*/, Subs /*subs*/) const { return ""; }
+  virtual string FixupReadString(string /*section*/, Subs /*subs*/) const { return ""; }
   virtual string VtsType() const { return "VtsTypeUnknown"; }
   virtual string SubtypeSuffix() const { return ""; }
+  virtual const string GetName() const { return ""; }
   virtual const string TypeSuffix(bool subtype) const { return subtype ? "UNUSED" : TypeName(); }
   virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
   bool HasFixup();
@@ -227,7 +243,9 @@ class StructType : public CompoundType {
   StructType(Fields *fields);
   void Dump() override;
   const string TypeName() const override { return "struct_type"; }
+  // const string TypeSuffix(bool subtype) const override { return subtype ? "struct_type_NO_SUB" : "struct_type_foo"; }
   string Generate(string prefix) override;
+  const string StructWriteFixup(string section, const FieldContext &context);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StructType);
@@ -268,7 +286,7 @@ class DerivedType : public Type {
   DerivedType() = default;
   virtual bool HasFdFixup() override { return base_->HasFdFixup(); }
   virtual bool HasPtrFixup() override { return base_->HasPtrFixup(); }
-  virtual Type *GetBase() { return base_; }
+  virtual Type *GetBase() const { return base_; }
   virtual const string TypeSuffix(bool subtype) const override;
 
  protected:
@@ -325,9 +343,10 @@ class ArrayType : public DerivedType {
 class NamedType : public DerivedType {
  public:
   NamedType(Element *name);
-  Element *GetName() { return name_; }
+  const string GetName() const override { return name_->GetText(); }
   void Dump() override;
   const Subs GetSubs(string section) const override;
+  const Subs GetSubsC(string section, const FieldContext& context) const override;
   const string TypeName() const override { return "named_type"; }
   virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
   string Generate(string section) override;
@@ -413,8 +432,9 @@ class StringType : public Type {
 class TypeDecl : public DerivedType {
  public:
   TypeDecl(Element *name, Type *base);
-  const Element *GetName() const { return name_; };
+  const string GetName() const override { return name_->GetText(); };
   virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
+  int Line() const override { return name_->Line(); }
 
  protected:
   Element *name_;
@@ -450,7 +470,8 @@ class StructDecl : public TypeDecl {
   StructDecl(Element *name, Type *type);
   void Dump() override;
   const string TypeName() const override { return "struct_decl"; }
-  const Subs GetSubs(string section) const override;
+  const Subs GetSubs(string section) const override {return GetSubsC(section, FieldContext{"","","",0}); }
+  const Subs GetSubsC(string section, const FieldContext &context) const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StructDecl);
@@ -484,19 +505,20 @@ class Annotation;
 class Field : public Thing {
  public:
   void Dump() override;
-  int Line() { return name_->Line(); }
+  int Line() const { return name_->Line(); }
   string Generate(string section) override;
   virtual Type *GetType() const { return nullptr; }
   const string TypeName() const override { return "field"; }
-  Element *GetName() { return name_; }
+  string GetName() { return name_->GetText(); }
   virtual Element *GetValue() { return nullptr; }
   const string& GetComments() const { return comments_; }
   const Subs GetSubs(string section) const override;
-  const Subs GetSubs(string section, string prefix) const;
+  virtual const Subs GetSubsC(string section, const FieldContext &context) const override;
   const string NameText() { return name_->GetText(); }
   void SetAnnotation(Annotation *a) { annotation_ = a; }
   string GenVtsValues(string section);
   virtual string GetInitText();
+  virtual bool HasFixup() const { return false; }
 
  protected:
   virtual void BuildText() = 0;
@@ -519,7 +541,7 @@ class TypedField : public Field {
         std::vector<Element*>* selectors);
   TypedField(Type *type, Element *name); // Basic
   TypedField(Type *type, Element *name, Element *selected);
-
+  virtual bool HasFixup() const override { return type_->HasFixup(); }
   virtual Type *GetType() const override { return type_; }
 
  private:
@@ -551,7 +573,7 @@ class EnumValueField : public EnumField {
   DISALLOW_COPY_AND_ASSIGN(EnumValueField);
 };
 
-class Annotation;
+  //class Annotation;
 
 class AnnotationValue : public Thing {
  public:
@@ -580,7 +602,7 @@ class Annotation : public Thing {
              AnnotationEntries *entries);
   const string TypeName() const override { return "Annotation"; };
   const string NameText() { return name_->GetText(); }
-  int Line() { return name_->Line(); }
+  int Line() const { return name_->Line(); }
   AnnotationEntries *Entries() { return entries_; }
   bool HasKey(string key);
   AnnotationValues *GetValues(string key);
@@ -619,7 +641,7 @@ class Function : public Thing {
   void Dump() override;
   virtual const Subs GetSubs(string section) const override;
   const string TypeName() const override { return "function"; }
-  const Element *GetName() { return name_; }
+  const string GetName() { return name_->GetText(); }
   string GenCallflow(string section) const;
 
  private:

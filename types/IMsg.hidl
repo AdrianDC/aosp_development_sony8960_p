@@ -1,0 +1,37 @@
+version 1.0;
+package android.hardware.tests;
+
+interface IMsg {
+
+  struct simple_t {
+    uint32_t int1;
+    uint32_t int2;
+  };
+
+  struct lots_of_data {
+    uint8_t[4096] buffer;
+  };
+  struct shm_t {
+    uint32_t fdIndex;
+    uint32_t offset;
+    uint32_t extent;
+  };
+  struct GrantorDescriptor {
+    uint32_t flags;
+    shm_t shm;
+  };
+
+  struct MQDescriptor {
+    vec<GrantorDescriptor> grantors;
+    handle mq_handles;
+    uint32_t quantum;
+    uint32_t nQuanta;
+    uint32_t flags;
+  };
+
+
+  configure() generates ( MQDescriptor mqdescIn, MQDescriptor mqdescOut );
+  requestWrite (int32_t count) generates (int32_t ret);
+  requestRead(int32_t count) generates (int32_t ret);
+
+};

@@ -253,15 +253,27 @@ using disc = ::android::hardware::tests::ITypes::disc;
 
 void nestedTest(sp<ITypes> service)
 {
+  char cs1[]{"HiWorld"};
+  char cs2[]{"JiWorldFoo"};
+  char cs3[]{"QiWorld"};
+  char cs4[]{"FiWorld"};
+  char cs5[]{"WiWorld"};
   ITypes::s0 v0;
-  ITypes::s1 v1[2];
+  ITypes::s1s v1[2];
   v0.s1v2.count = 2;
   v0.s1v2.buffer = v1;
-  v0.s1m1.dm1 = disc::US;
-  v0.s1m1.u1m1.s.buffer = (char *)std::string{"HiWorld"}.c_str();
-  v0.s1m1.u1m1.s.length = -1;
-  v1[0].dm1 = disc::UF;
-  int32_t *data_ptr;
+  v0.s1m1.str1.buffer = cs1;
+  v0.s1m1.str1.length = -1;
+  v1[0].str1.buffer = cs3;
+  v1[0].str1.length = -1;
+  v1[1].str1.buffer = cs4;
+  v1[1].str1.length = 5;
+
+  //  v0.s1m1.dm1 = disc::US;
+  //  v0.s1m1.u1m1.s.buffer = cs1;
+  //  v0.s1m1.u1m1.s.length = -1;
+  //  v1[0].dm1 = disc::UF;
+  /*  int32_t *data_ptr;
   int fd = -1;
   gen_ref(&fd, &data_ptr);
   *data_ptr = 0xbeefcafe;
@@ -269,15 +281,28 @@ void nestedTest(sp<ITypes> service)
     v1[0].u1m1.fd = fd;
   } else {
     cout << "Couldn't get fd in nestedTest" << endl;
-  }
-  v1[1].dm1 = disc::UI;
-  v1[1].u1m1.i = 0xada;
-  v0.s1m3.dm1 = disc::UC;
-  v0.s1m3.u1m1.s2m.i = 0xabcdef;
-  cout << "About to call echoStruct" << endl;
-  service->echoStruct(&v0, [](auto s){
-      int i = s->s1v2.count;
-      cout << "vec count(2?): " << i << endl;
+    }*/
+  //  v1[1].dm1 = disc::UI;
+  //  v1[1].u1m1.i = 0xada;
+  //  v0.s1m3.dm1 = disc::UC;
+  //  v0.s1m3.u1m1.s2m.i = 0xabcdef;
+  cout << "Client: About to call echoStruct" << endl;
+  printf("C: &v0 %p v0.s1m1.str1.buf %p v0.s1v2.buf %p v0.s1v2.buf[0].str1.buf %p [1] %p\n",
+         &v0, v0.s1m1.str1.buffer, v0.s1v2.buffer, v0.s1v2.buffer[0].str1.buffer, v0.s1v2.buffer[1].str1.buffer);
+  service->echoStruct(v0, [](const /*android::hardware::tests::ITypes::s0 */ auto & s){
+      cout << "Client: in callback, s is " << &s << endl;
+      printf("C: s %p s.s1m1.str1.buf %p s.s1v2.buf %p s.s1v2.buf[0].str1.buf %p [1] %p\n",
+         &s, s.s1m1.str1.buffer, s.s1v2.buffer, s.s1v2.buffer[0].str1.buffer, s.s1v2.buffer[1].str1.buffer);
+      int i = s.s1v2.count;
+      cout << "Client: vec count(2?): " << i << endl;
+      printf("s1m1 len is %ld\n", s.s1m1.str1.length);
+      printf("s1m1 str is %s\n", s.s1m1.str1.buffer);
+      printf("s1v2[0] len is %ld\n", s.s1v2.buffer[0].str1.length);
+      printf("s1v2[0] str is %s\n", s.s1v2.buffer[0].str1.buffer);
+      printf("s1v2[1] len is %ld\n", s.s1v2.buffer[0].str1.length);
+      printf("s1v2[1] bytes is %c%c%c%c%c\n", s.s1v2.buffer[0].str1.buffer[0],
+             s.s1v2.buffer[0].str1.buffer[1],s.s1v2.buffer[0].str1.buffer[2],
+             s.s1v2.buffer[0].str1.buffer[3],s.s1v2.buffer[0].str1.buffer[4]);
     });
 }
 
@@ -293,6 +318,13 @@ int main(int /* argc */, char * argv []) {
     return 1;
   }
 
+  ITypes::simple_t sts;
+  sts.int1 = sts.int2 = 17;
+  service->echoInteger(42, sts, [](int ret){
+      if (ret != 42) cout << "Client: echoInteger returned " << ret << " instead of 42" << endl;});
+    addHash(42);
+    addHash(sts.int1);
+    addHash(sts.int2);
   enumTestSmall(service);
   enumTestMin(service);
   enumTestMax(service);

@@ -585,11 +585,10 @@ void Parser::AddStruct(StructDecl *structure) {
 
 void Parser::RegisterType(TypeDecl *decl)
 {
-  const Element *name = decl->GetName();
-  string name_text = name->GetText();
+  string name_text = decl->GetName();
 
   if (types_.count(name_text)) {
-    Error(name->Line(), "Type name %s already exists", name_text.c_str());
+    Error(decl->Line(), "Type name %s already exists", name_text.c_str());
   }
   types_.emplace(name_text, decl);
 }
@@ -606,7 +605,7 @@ void Parser::RegisterConstant(const Element *name, const Element *value)
 void Parser::AddConst(Const *constant) {
   AddThing(constant);
 
-  const Element *name = constant->GetName();
+  const Element *name = constant->GetNameElement();
   const Element *value = constant->GetValue();
   RegisterConstant(name, value);
 }
@@ -658,7 +657,7 @@ Function::Function(Annotations* annotations,
   std::map<string, Field*>params;
   for (auto & f : fields->GetVec()) {
     if (params.find(f->NameText()) != params.end()) {
-      ps_->Error(f->GetName()->Line(),
+      ps_->Error(f->Line(),
                  "Duplicate param name %s",
                  f->NameText().c_str());
     }
@@ -739,7 +738,7 @@ string Field::GetInitText()
 }
 
 void Parser::AddTypedef(TypedefDecl *type) {
-  Error(type->GetName()->Line(), "Typedef isn't supported yet");
+  Error(type->Line(), "Typedef isn't supported yet");
   RegisterType(type);
   AddThing(type);
 }

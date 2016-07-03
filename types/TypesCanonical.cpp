@@ -317,13 +317,16 @@ _aidl_error:
   ::android::hidl::binder::Status _aidl_status;
     ITypes::s0 *_cb_s ;
 
+  cout << "Called echoStruct" << endl;
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
   {
     uint64_t parent_handle;
+    cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&s, sizeof(s), &parent_handle);
+    cout << " parent handle " << parent_handle << endl;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
@@ -333,6 +336,8 @@ _aidl_error:
                        (s.s1m1.str1.length < 0 ? strlen(s.s1m1.str1.buffer)+1 : s.s1m1.str1.length),
                        nullptr, parent_handle,
                        (size_t)((char *)&(s.s1m1.str1.buffer)-(char *)(&s)));
+    printf("CL: Writing first string buffer - ptr %p, len %ld, handle %ld, offset %ld ret_status %d\n", (void *)s.s1m1.str1.buffer, (s.s1m1.str1.length < 0 ? strlen(s.s1m1.str1.buffer)+1 : s.s1m1.str1.length),
+           parent_handle, (size_t)((char *)&(s.s1m1.str1.buffer)-(char *)&(s)) , _aidl_ret_status);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -359,16 +364,18 @@ _aidl_error:
                        (s.s1v2.buffer[i1].str1.length < 0 ? strlen(s.s1v2.buffer[i1].str1.buffer)+1 : s.s1v2.buffer[i1].str1.length),
                        nullptr, parent_handle,
                        (size_t)((char *)&(s.s1v2.buffer[i1].str1.buffer)-(char *)(s.s1v2.buffer)));
+        printf("c: wb vec-Str%ld : buf %p size %ld offset %ld parent %ld ret %d\n", i1, bufp, size, off, parent_handle, _aidl_ret_status);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
 
     }
   }
-;
+  cout << "Client: Got to transact" << endl;
   }
 
   _aidl_ret_status = remote()->transact(ITypes::ECHOSTRUCT, _aidl_data, &_aidl_reply);
+  printf("Client: Survived transact, status 0x%x\n", _aidl_ret_status);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -376,18 +383,22 @@ _aidl_error:
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
+  cout << "Client: Survived ReadFromParcel" << endl;
   if (!_aidl_status.isOk()) {
     return _aidl_status;
   }
   _cb_s = (ITypes::s0 *)_aidl_reply.readBuffer();
+  cout << "Client: Survived ReadBuffer, _cb_s is " << _cb_s << endl;
   (void)0; /*kilroy was here, reading*/
 
 
   // Invoke callback to client
   _cb(*_cb_s );
 
+  cout << "Client: Survived callback" << endl;
 
 _aidl_error:
+  cout << "Client: At end, status is " << _aidl_ret_status << endl;
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
@@ -783,6 +794,7 @@ char i;
       {
   ITypes::s0 *s ;
 
+  cout << "Server: got echoStruct call" << endl;
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
           _aidl_ret_status = ::android::BAD_TYPE;
@@ -791,9 +803,14 @@ char i;
         s = (ITypes::s0 *)_aidl_data.readBuffer();
         (void)0; /*kilroy was here, reading*/
 
+        void *p = (void*)_aidl_data.readBuffer();
+        void *q = (void*)_aidl_data.readBuffer();
+        cout <<"server ptrs: "<<s <<" and " <<p <<" and " <<q <<endl;
         // Make the call into the server
+        cout << "Server: about to call echoStruct impl" << endl;
         ::android::hidl::binder::Status _aidl_status(
-             echoStruct(*s ,          [&](const ITypes::s0 & s ) {
+             echoStruct(*s ,          [&](const /*ITypes::s0*/ auto & s ) {
+                 std::cout << "Server: In callback" << endl;
                              callback_called = true;
                              // Write "OK" to parcel
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
@@ -919,4 +936,3 @@ hidl_ref<lots_of_data> buffer;
 }  // namespace tests
 }  // namespace hardware
 }  // namespace android
-
