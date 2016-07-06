@@ -34,7 +34,7 @@ namespace_open_section
 // START param_decls
         /*
   Ipackage_name::struct_name *param_name // ALL field_decl_struct_type
-  sp<Ipackage_name::import_name> param_name // ALL field_decl_import
+  sp<import_name> param_name // ALL field_decl_import
          */
         int32_t should_be_replaced; // These will be replaced
         int32_t ret_FOO;   // with auto-generated declarations
@@ -273,7 +273,7 @@ param_name// ALL stub_param_decl_default
         }
 // END param_ret_write_enum_type_scalar_char
 // START param_ret_write_import
-  _aidl_ret_status = _aidl_reply->writeStrongBinder(param_name);
+        _aidl_ret_status = _aidl_reply->writeStrongBinder(IInterface::asBinder(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

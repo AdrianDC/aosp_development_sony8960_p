@@ -11,6 +11,8 @@ using android::hidl::CppOptions;
 using std::cout;
 using std::endl;
 
+static bool verbose_mode;
+
 #define CB_VAR_PREFIX "_cb_"
 static void PrintSubs(const string &msg, const Subs subs)
 {
@@ -50,6 +52,9 @@ static string Snip(const string &section, const string &name,
     snippet = std::regex_replace(snippet, re, sub.second);
   }
   if (print) cout << "* * Final snippet for '" << name << "': '" << snippet << "' * *" << endl;
+  if (verbose_mode && snippet != "") {
+    snippet = "// START " + name + "\n" + snippet + "\n// END " + name + "\n";
+  }
   return snippet;
 }
 
@@ -73,71 +78,71 @@ static string make_inline(const string in)
   return out;
 }
 
-string Header::Generate(string section)
+const string Header::Generate(string section) const
 {
   Subs subs {};
   return Snip(section, "header", subs);
 }
-string Const::Generate(string section)
+const string Const::Generate(string section) const
 {
   Subs subs {{"NAME", name_->GetText()}, {"VAL", value_->GetText()}};
   return Snip(section, "const", subs);
 }
-string OpaqueType::Generate(string /*section*/)
+const string OpaqueType::Generate(string /*section*/) const
 {
   return "opaque";
 }
-string StringType::Generate(string /*section*/)
+const string StringType::Generate(string /*section*/) const
 {
   return "hidl_string";
 }
-string HandleType::Generate(string /*section*/)
+const string HandleType::Generate(string /*section*/) const
 {
   return "native_handle";
 }
 
-string TypedefDecl::Generate(string section)
+const string TypedefDecl::Generate(string section) const
 {
   string out {"typedef "};
   out += base_->Generate(section) + " " + name_->Generate(section) + ";\n";
   return out;
 }
-string ImportDecl::Generate(string section)
+const string ImportDecl::Generate(string section) const
 {
   return "Import code goes here for name " + name_->Generate(section) + "\n";
 }
-string NamedType::Generate(string section)
+const string NamedType::Generate(string section) const
 {
   return name_->GetText();
 }
-string RefType::Generate(string section)
+const string RefType::Generate(string section) const
 {
   return "hidl_ref<" + base_->Generate(section) + ">";
   //  return "int";
 }
-string UnionType::Generate(string section)
+const string UnionType::Generate(string section) const
 {
   string out {"union {\n"};
   out += fields_->GenSemiList(section);
   out += '}';
   return out;
 }
-string VecType::Generate(string section)
+const string VecType::Generate(string section) const
 {
-  return "hidl_vec<" + base_->Generate(section) + ">";
+  return "generate.cpp VecType: Don't use this anymore";
 }
-string EnumType::Generate(string section)
+const string EnumType::Generate(string section) const
 {
   return "enum {" + fields_->GenCommaList(section) + "}";
 }
 
 
-string Element::Generate(string section)
+const string Element::Generate(string section) const
 {
   return GetText();
 }
 
-string Field::Generate(string section)
+const string Field::Generate(string section) const
 {
   // TODO
   return "Field (TODO)";
@@ -168,7 +173,8 @@ const Subs Field::GetSubsC(string section, const FieldContext &context) const
 
 const Subs VecType::GetSubs(string section) const
 {
-  Subs subs{{"vec_name", "myVecName"}};
+  Subs subs{{"vec_name", "myVecName"},
+    {"decl_base_type", GetBase()->Generate(section)}};
   return subs;
 }
 
@@ -203,7 +209,7 @@ const Subs ArrayType::GetSubs(string section) const
 {
   Subs subs{{"array_name", "myArrayName"},
     {"array_size", dimension_->GetText()},
-    {"base_type_name", base_->Generate(section)}};
+    {"base_type_name", base_->Description(section)}};
   return subs;
 }
 
@@ -438,6 +444,13 @@ string Fields::GenCommaList(string section, string prev, bool out_params)
   return output;
 }
 
+const string VecType::Description(string section) const
+{
+  Subs subs{{"base_type_name", GetBase()->Description(section)}};
+  return Snip(section, "describe_type_vec", subs);
+}
+
+
 string Fields::GenSemiList(string section, const FieldContext &context)
 {
   string output {""};
@@ -454,7 +467,7 @@ string Fields::GenSemiList(string section, const FieldContext &context)
     if (special_string != "") {
       output += make_inline(special_string);
     } else {
-      output += field->GetType()->Generate(section) + " " +
+      output += field->GetType()->Description(section) + " " +
           context.var_prefix + field->GetName() + field->GetInitText();
     }
     output += ";\n";
@@ -472,56 +485,79 @@ string Fields::GenByType(string section, string prefix)
   return output;
 }
 
-static string TypeFixup(Type *type, string section, FieldContext context)
+
+const string ArrayType::FixupText(string section, const FieldContext &context, string prefix) const
 {
-  while (type->TypeName() == "named_type" ||
-         type->TypeName() == "struct_decl" ||
-         type->TypeName() == "union_decl") {
-    type = ((NamedType*)type)->GetBase();
+  Subs subs{};
+  if (!GetBase()->HasFixup()) {
+    return "  // No fixup needed for array\n";
   }
-  if (type->TypeName() == "struct_type") {
-    return ((StructType*)type)->StructWriteFixup(section, context);
-  } else if (type->TypeName() == "union_type") {
-    Subs subs{{"param_name", context.designator}};
-    return "Union Fixup Needed\n";
-  } else if (type->TypeName() == "vec") {
-    context.base_pointer = context.designator+".buffer";
-    context.designator += ".buffer[i"+std::to_string(context.next_var+1)+"]";
-    Subs subs{{"param_name", context.designator},
-      {"loop_var", "i"+std::to_string(context.next_var+1)},
-      {"inner_vec_fixup", TypeFixup(((VecType*)type)->GetBase(), section, context)}};
-    context.next_var += 1;
-    context.base_pointer = context.designator;
-    return Snip(section, "fixup_write_vec", subs);
-  } else if (type->TypeName() == "array") {
-    Subs subs{};
-    return Snip(section, "fixup_write_array", subs);
-  } else if (type->TypeName() == "handle") {
-    Subs subs{};
-    return Snip(section, "fixup_write_handle", subs);
-  } else if (type->TypeName() == "string") {
-    Subs subs{{"param_name", context.designator},
-      {"base_pointer", context.base_pointer}};
-    return Snip(section, "fixup_write_string", subs);
-  } else {
-    printf("Un-handled type-name %s in StructWriteFixup\n", type->TypeName().c_str());
-    return "TypeFixup doesn't handle type '" + type->TypeName();
-  }
+  return "// fixup for array\n" + Snip(section, "fixup_write_array", subs);
 }
 
-const string StructType::StructWriteFixup(string section, const FieldContext &context)
+const string UnionType::FixupText(string section, const FieldContext &context, string prefix) const
 {
-  string struct_fixup_writer{"  /*fixup_write_struct*/\n"};
+    Subs subs{{"param_name", context.designator}};
+    return "Union Fixup Needed\n";
+}
+
+const string HandleType::FixupText(string section, const FieldContext &context, string prefix) const
+{
+    Subs subs{{"param_name", context.designator}};
+    return "Handle Fixup Needed\n";
+}
+
+const string StringType::FixupText(string section, const FieldContext &context, string prefix) const
+{
+    Subs subs{{"param_name", context.designator},
+      {"base_pointer", context.base_pointer}};
+    return Snip(section, prefix+"fixup_string", subs);
+}
+
+const string StructType::FixupText(string section, const FieldContext &context, string prefix) const
+{
+  string struct_fixup_writer{"  // struct fixup " + prefix + "\n"};
   for (auto & field : GetFields()->GetVec()) {
-    if (!field->HasFixup()) {
+    Type *type{field->GetType()};
+    if (!type->HasFixup()) {
       struct_fixup_writer += "\n//field " + field->GetName() + " doesn't need fixup\n";
       continue;
     }
-    Type *type{field->GetType()};
     FieldContext new_context{"", context.designator + "." + field->GetName(), context.base_pointer, context.next_var};
-    struct_fixup_writer += TypeFixup(type, section, new_context);
+    struct_fixup_writer += type->FixupText(section, new_context, prefix);
   }
   return struct_fixup_writer;
+}
+
+const string VecType::FixupText(string section, const FieldContext &context, string prefix) const
+{
+  Type *base = GetBase();
+  string base_fixup;
+  if (!base->HasFixup()) {
+    base_fixup = "// Fixup not needed for this vec " + base->Generate(section);
+  } else {
+    // TODO clean up this cut-and-paste hack job
+    FieldContext new_context{"", context.designator,
+          context.designator, context.next_var+1};
+
+    string outer_base_pointer = new_context.base_pointer;
+    new_context.base_pointer = new_context.designator+".buffer";
+    new_context.designator += ".buffer[i"+std::to_string(new_context.next_var)+"]";
+    string inner_vec_fixup = base->FixupText(section, new_context, prefix);
+    Subs subs{
+      {"inner_vec_fixup", inner_vec_fixup},
+      {"loop_var", "i"+std::to_string(new_context.next_var)},
+      {"base_pointer", outer_base_pointer},
+      {"param_name", context.designator},
+          };
+    base_fixup = Snip(section, "vec_fixup_loop", subs);
+  }
+  Subs subs{{"param_name", context.designator},
+    {"package_name", base->GetParser()->GetPackageName()},
+    {"vec_base_type", base->Description(section)},
+    {"base_pointer", context.base_pointer},
+    {"vec_fixup_loop", base_fixup}};
+  return Snip(section, prefix + "fixup_vec", subs);
 }
 
 const Subs StructDecl::GetSubsC(string section, const FieldContext &context) const
@@ -531,10 +567,20 @@ const Subs StructDecl::GetSubsC(string section, const FieldContext &context) con
     {"struct_fields", base_->GetFields()->GenSemiList(section)},
     {"struct_name", name_->GetText()},
     {"struct_gen_fields", base_->GetFields()->GenByType(section, "struct_field_")},
-    {"fixup_write_struct", ((StructType*)GetBase())->StructWriteFixup(section, context)},
+    {"fixup_write_struct", GetBase()->FixupText(section, context, "write_")},
     {"fixup_ret_write_struct", "(void)0; /*kilroy_ret was here*/"},//FixupWriteString(section, Subs{})},
-    {"fixup_read_struct", "(void)0; /*kilroy was here, reading*/"},//FixupRdString(section, Subs{})},
+    {"fixup_read_struct", GetBase()->FixupText(section, context, "read_")},
     {"offset_calculator", "0 /* offset_calculator */"},
+  };
+  return subs;
+}
+
+const Subs VecType::GetSubsC(string section, const FieldContext &context) const
+{
+
+  Subs subs {
+    {"fixup_write_vec", FixupText(section, context, "write_")},
+    {"decl_base_type", GetBase()->Description(section)},
   };
   return subs;
 }
@@ -578,19 +624,19 @@ const Subs EnumDecl::GetSubs(string section) const
   return subs;
 }
 
-string ArrayType::Generate(string section)
+const string ArrayType::Generate(string section) const
 {
   string out = base_->Generate(section);
   out += '[' + dimension_->Generate(section) + ']';
   return out;
 }
 
-string ScalarType::Generate(string section)
+const string ScalarType::Generate(string section) const
 {
   return name_->GetText();
 }
 
-string StructType::Generate(string section)
+const string StructType::Generate(string section) const
 {
   string out {"struct {\n"};
   out += fields_->GenSemiList(section);
@@ -714,6 +760,7 @@ void Parser::BuildNamespaceText(string section,
 
 void Parser::Write()
 {
+  verbose_mode = verbose_mode_;
   if (!interface_) {
     Error("Cannot Write output; don't have interface.");
     return;

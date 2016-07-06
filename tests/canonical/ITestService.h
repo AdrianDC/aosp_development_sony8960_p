@@ -17,8 +17,8 @@ namespace tests {
 template<typename T>
 using hidl_ref = int;
 
-class ITestService : public ::android::hidl::IInterface {
-public:
+#ifndef HIDL_TYPES
+#define HIDL_TYPES
 template<typename T>
 struct hidl_vec {
   T *buffer;
@@ -28,6 +28,10 @@ struct hidl_string {
   char *buffer;
   ptrdiff_t length;
 };
+#endif // HIDL_TYPES
+
+class ITestService : public ::android::hidl::IInterface {
+public:
 
 DECLARE_META_INTERFACE(TestService);
 typedef struct {

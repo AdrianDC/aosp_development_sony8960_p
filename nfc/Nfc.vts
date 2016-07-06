@@ -46,7 +46,7 @@ api: {
 
   }
   arg: {
-    aggregate_type: "hidl_vec<uint8_t>"
+    aggregate_type: "generate.cpp VecType: Don't use this anymore"
 
   }
 

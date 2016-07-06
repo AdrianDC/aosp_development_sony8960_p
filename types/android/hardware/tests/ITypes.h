@@ -17,8 +17,8 @@ namespace tests {
 template<typename T>
 using hidl_ref = int;
 
-class ITypes : public ::android::hidl::IInterface {
-public:
+#ifndef HIDL_TYPES
+#define HIDL_TYPES
 template<typename T>
 struct hidl_vec {
   T *buffer;
@@ -28,6 +28,10 @@ struct hidl_string {
   char *buffer;
   ptrdiff_t length;
 };
+#endif // HIDL_TYPES
+
+class ITypes : public ::android::hidl::IInterface {
+public:
 
 DECLARE_META_INTERFACE(Types);
 typedef struct {
@@ -137,7 +141,7 @@ u1 u1m1;
 
 typedef struct {
 s1s s1m1;
-hidl_vec<s1s> s1v2;
+hidl_vec<s1s> s1v2 ;
 
 } s0;
 
@@ -155,7 +159,7 @@ shm_t shm;
 } GrantorDescriptor;
 
 typedef struct {
-hidl_vec<GrantorDescriptor> grantors;
+hidl_vec<GrantorDescriptor> grantors ;
 native_handle mq_handles;
 uint32_t quantum;
 uint32_t nQuanta;

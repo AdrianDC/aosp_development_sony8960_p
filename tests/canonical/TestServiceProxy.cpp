@@ -64,6 +64,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 
@@ -105,6 +106,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 

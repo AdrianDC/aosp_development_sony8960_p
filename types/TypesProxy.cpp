@@ -64,6 +64,7 @@ BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 
@@ -177,6 +178,7 @@ ec _cb_i;
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_a , _cb_b , _cb_c , _cb_d , _cb_e , _cb_f , _cb_g , _cb_h , _cb_i );
 
 
@@ -290,6 +292,7 @@ char _cb_i;
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_a , _cb_b , _cb_c , _cb_d , _cb_e , _cb_f , _cb_g , _cb_h , _cb_i );
 
 
@@ -328,6 +331,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(*_cb_s );
 
 
@@ -369,6 +373,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 
@@ -406,6 +411,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_hash );
 
 

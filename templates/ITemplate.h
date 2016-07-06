@@ -21,8 +21,8 @@ namespace namespace_name {//ALL namespace_open_line
 template<typename T>
 using hidl_ref = int;
 
-class Ipackage_name : public ::android::hidl::IInterface {
-public:
+#ifndef HIDL_TYPES
+#define HIDL_TYPES
 template<typename T>
 struct hidl_vec {
   T *buffer;
@@ -32,6 +32,10 @@ struct hidl_string {
   char *buffer;
   ptrdiff_t length;
 };
+#endif // HIDL_TYPES
+
+class Ipackage_name : public ::android::hidl::IInterface {
+public:
 
 DECLARE_META_INTERFACE(package_name);
   // START code_snips
@@ -60,7 +64,9 @@ typedef union { // START code_for_union_decl
 /*
 function_name_cb _cb = nullptr // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name &param_name // ALL param_decl_struct_type
+const hidl_vec<decl_base_type> &param_name // ALL param_decl_vec
 base_type_name param_name[array_size] // ALL field_decl_array_all
+hidl_vec<decl_base_type> param_name// ALL field_decl_vec_all
 sp<import_name> param_name // ALL param_decl_import
 */
   using function_name_cb = std::function<void(return_param_list)>; // ALL callback_decl_line

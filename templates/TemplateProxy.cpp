@@ -27,7 +27,7 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 /*
 Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name* param_name // ALL param_decl_struct_type
-sp<Ipackage_name::import_name> param_name // ALL param_decl_import
+sp<import_name> param_name // ALL param_decl_import
 struct_name *param_name; // ALL field_decl_struct_type
 
 */
@@ -45,7 +45,7 @@ struct_name *param_name; // ALL field_decl_struct_type
 // START param_write_snips
 
 // START param_write_import
-  _aidl_ret_status = _aidl_data.writeStrongBinder(param_name);
+  _aidl_ret_status = _aidl_data.writeStrongBinder(IInterface::asBinder(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -318,6 +318,7 @@ struct_name *param_name; // ALL field_decl_struct_type
 // END param_ret_read_snips
 
   // Invoke callback to client  // START callback_invocation
+  if (_cb != nullptr)
   _cb(return_param_names);      // END callback_invocation
 
 _aidl_error:

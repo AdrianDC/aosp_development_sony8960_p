@@ -487,9 +487,10 @@ string NamedType::SubtypeSuffix() const
 
 
 Parser::Parser(const IoDelegate& io_delegate,
-               string out_type)
+               string out_type, bool verbose_mode)
     : io_delegate_(io_delegate),
-      section_(out_type)
+      section_(out_type),
+      verbose_mode_(verbose_mode)
 {
   yylex_init(&scanner_);
 }

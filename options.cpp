@@ -43,6 +43,7 @@ unique_ptr<CppOptions> cpp_usage() {
       //       << "   -I<DIR>   search path for import statements" << endl
        << "   -d<FILE>  Generate dependency file" << endl
        << "   -p        print info from input file (for debugging)" << endl
+       << "   -v        verbose: output files include all snippet names" << endl
        << endl
        << "TYPE:" << endl
        << "   all_cpp     Generate FooAll.cpp (combined proxy/stub)" << endl
@@ -87,6 +88,8 @@ unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
       options->dep_file_name_ = the_rest;
     } else if (s[1] == 'p') {
       options->print_stuff_ = true;
+    } else if (s[1] == 'v') {
+      options->verbose_ = true;
     } else {
       cerr << "Invalid argument '" << s << "'." << endl;
       return cpp_usage();

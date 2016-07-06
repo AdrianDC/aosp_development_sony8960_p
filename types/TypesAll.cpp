@@ -51,12 +51,12 @@ BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
-      /*fixup_write_struct*/
+      // struct fixup write_
 
 //field int1 doesn't need fixup
 
 //field int2 doesn't need fixup
-;
+
   }
 
   _aidl_ret_status = remote()->transact(ITypes::ECHOINTEGER, _aidl_data, &_aidl_reply);
@@ -77,6 +77,7 @@ BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 
@@ -190,6 +191,7 @@ ec _cb_i;
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_a , _cb_b , _cb_c , _cb_d , _cb_e , _cb_f , _cb_g , _cb_h , _cb_i );
 
 
@@ -303,6 +305,7 @@ char _cb_i;
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_a , _cb_b , _cb_c , _cb_d , _cb_e , _cb_f , _cb_g , _cb_h , _cb_i );
 
 
@@ -327,8 +330,8 @@ _aidl_error:
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
-      /*fixup_write_struct*/
-  /*fixup_write_struct*/
+      // struct fixup write_
+  // struct fixup write_
   _aidl_ret_status = _aidl_data.writeBuffer((void *)s.s1m1.str1.buffer,
                        (s.s1m1.str1.length < 0 ? strlen(s.s1m1.str1.buffer)+1 : s.s1m1.str1.length),
                        nullptr, parent_handle,
@@ -341,20 +344,21 @@ _aidl_error:
     cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
     void *bufp = (void *)s.s1v2.buffer;
     size_t size = sizeof(ITypes::s1s[s.s1v2.count]);
-    size_t off = (size_t)((char *)&(s.s1v2.buffer)-(char *)&(s));
+    size_t off = (size_t)((char *)&(s.s1v2.buffer)-(char *)(&s));
     _aidl_ret_status = _aidl_data.writeBuffer(bufp,
                                               size,
                                               &child_handle,
                                               parent_handle,
                                               off /* offset_calculator */);
     printf("c: wb vec : buf %p size %ld offset %ld parent %ld child %ld ret %d\n", bufp, size, off, parent_handle, child_handle, _aidl_ret_status);
-    uint64_t parent_handle = child_handle; // Yes, this is legal, and works; it's like a static stack.
+     // Redefining a variable inside braces works like a static stack.
+    uint64_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
-    for (size_t i1 = 0; i1 < s.s1v2.count; i1++) {
+        for (size_t i1 = 0; i1 < s.s1v2.count; i1++) {
       /* fixup_write_vec */
-        /*fixup_write_struct*/
+        // struct fixup write_
   _aidl_ret_status = _aidl_data.writeBuffer((void *)s.s1v2.buffer[i1].str1.buffer,
                        (s.s1v2.buffer[i1].str1.length < 0 ? strlen(s.s1v2.buffer[i1].str1.buffer)+1 : s.s1v2.buffer[i1].str1.length),
                        nullptr, parent_handle,
@@ -364,8 +368,9 @@ _aidl_error:
   }
 
     }
+
   }
-;
+
   }
 
   _aidl_ret_status = remote()->transact(ITypes::ECHOSTRUCT, _aidl_data, &_aidl_reply);
@@ -380,10 +385,13 @@ _aidl_error:
     return _aidl_status;
   }
   _cb_s = (ITypes::s0 *)_aidl_reply.readBuffer();
-  (void)0; /*kilroy was here, reading*/
+    // struct fixup read_
+  // struct fixup read_
+
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(*_cb_s );
 
 
@@ -425,6 +433,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_ret );
 
 
@@ -462,6 +471,7 @@ _aidl_error:
 
 
   // Invoke callback to client
+  if (_cb != nullptr)
   _cb(_cb_hash );
 
 
@@ -506,26 +516,10 @@ _aidl_error:
 }  // namespace android
 
 
-/*
-return_param_decl_default
-return_param_decl_struct_type
-*/
+//
 #include <android/hardware/tests/ITypes.h>
 #include <android/hardware/tests/BpTypes.h>
 
-/*
-namespace android {
-namespace hardware {
-namespace tests {
-
-
-IMPLEMENT_META_INTERFACE(Types, "android.hardware.tests.ITypes");
-
-}  // namespace tests
-}  // namespace hardware
-}  // namespace android
-
-*/
 
 #include <iostream>
 #include <android/hardware/tests/BnTypes.h>
@@ -554,7 +548,12 @@ int32_t echo_me;
           break;
         }
         my_struct = (ITypes::simple_t *)_aidl_data.readBuffer();
-        (void)0; /*kilroy was here, reading*/
+          // struct fixup read_
+
+//field int1 doesn't need fixup
+
+//field int2 doesn't need fixup
+
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
@@ -789,7 +788,9 @@ char i;
           break;
         }
         s = (ITypes::s0 *)_aidl_data.readBuffer();
-        (void)0; /*kilroy was here, reading*/
+          // struct fixup read_
+  // struct fixup read_
+
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(

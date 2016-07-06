@@ -46,11 +46,13 @@ class CppOptions final {
   std::string DependencyFilePath() const { return dep_file_name_; }
   std::string OutputType() const { return section_; }
   bool PrintStuff() const { return print_stuff_; }
+  bool Verbose() const { return verbose_; }
 
  private:
   CppOptions() = default;
 
   bool print_stuff_ = false;
+  bool verbose_ = false;
   std::string input_file_name_;
   std::string section_;
   std::vector<std::string> import_paths_;

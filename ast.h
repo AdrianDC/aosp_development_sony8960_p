@@ -43,7 +43,7 @@ class Thing {
   virtual int Line() const { return -1; }
 
   virtual void Dump();
-  virtual string Generate(string /*section*/) { return ""; }
+  virtual const string Generate(string /*section*/) const { return ""; }
   static void SetParser(Parser *ps);
   static Parser *GetParser() { return ps_; }
   virtual const Subs GetSubs(string /*section*/) const { Subs subs; return subs; }
@@ -57,7 +57,7 @@ class Thing {
 class Header : public Thing {
  public:
   void Dump() override;
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   const string TypeName() const override { return "header"; };
 };
 
@@ -74,7 +74,7 @@ class Element : public Thing {
   void AddDottedElement(Element *element);
   int Line() const override { return line_; }
   void Dump() override;
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   const string TypeName() const override { return "element"; }
   virtual const string ElementTypename() const = 0;
 
@@ -158,7 +158,7 @@ class Const : public Thing {
   const Element *GetNameElement() const { return name_; }
   const Element *GetValue() const { return value_; }
   void Dump() override;
-  string Generate(string ) override;
+  const string Generate(string ) const override;
   const Subs GetSubs(string section) const override;
   const string TypeName() const override { return "const"; }
 
@@ -205,15 +205,17 @@ class Type : public Thing {
   virtual bool IsString() { return false; }
   virtual bool IsCompound() { return false; }
   virtual bool IsPrimitive() { return false; }
-  virtual Fields *GetFields() { return(empty_fields_); }
+  virtual Fields *GetFields() const { return(empty_fields_); }
   virtual bool HasFdFixup() { return false; }
   virtual bool HasPtrFixup() { return false; }
-  virtual const Subs GetSubsC(string section, const FieldContext &/*context*/) const {return GetSubs(section);}
-  virtual string FixupWriteString(string /*section*/, Subs /*subs*/) const { return ""; }
-  virtual string FixupReadString(string /*section*/, Subs /*subs*/) const { return ""; }
+  virtual const Subs GetSubsC(string section, const FieldContext &/*context*/) const
+  { return GetSubs(section); }
+  virtual const string FixupText(string /*section*/, const FieldContext &/*context*/, string /*prefix*/) const
+  { return "  // No fixup needed for " + TypeName(); }
   virtual string VtsType() const { return "VtsTypeUnknown"; }
   virtual string SubtypeSuffix() const { return ""; }
   virtual const string GetName() const { return ""; }
+  virtual const string Description(string section) const { return Generate(section); }
   virtual const string TypeSuffix(bool subtype) const { return subtype ? "UNUSED" : TypeName(); }
   virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
   bool HasFixup();
@@ -227,7 +229,7 @@ class CompoundType : public Type {
  public:
   CompoundType(Fields *fields);
   bool IsCompound() override { return true; }
-  Fields *GetFields() override { return fields_; }
+  Fields *GetFields() const override { return fields_; }
   virtual bool HasPtrFixup() override { return fields_->HasPtrFixup(); }
   virtual bool HasFdFixup() override { return fields_->HasFdFixup(); }
 
@@ -243,9 +245,8 @@ class StructType : public CompoundType {
   StructType(Fields *fields);
   void Dump() override;
   const string TypeName() const override { return "struct_type"; }
-  // const string TypeSuffix(bool subtype) const override { return subtype ? "struct_type_NO_SUB" : "struct_type_foo"; }
-  string Generate(string prefix) override;
-  const string StructWriteFixup(string section, const FieldContext &context);
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
+  const string Generate(string prefix) const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StructType);
@@ -257,7 +258,7 @@ class EnumType : public CompoundType {
   void Dump() override;
   const string TypeName() const override { return "enum_type"; }
   virtual const string TypeSuffix(bool subtype) const override;
-  string Generate(string prefix) override;
+  const string Generate(string prefix) const override;
   string TypeOfEnum(string section) override { return type_->Generate(section); }
 
  private:
@@ -272,7 +273,8 @@ class UnionType : public CompoundType {
   UnionType(Type* type, Fields* fields); // Disc
   void Dump() override;
   const string TypeName() const override { return "union_type"; }
-  string Generate(string prefix) override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
+  const string Generate(string prefix) const override;
 
  private:
   Type *discriminator_;
@@ -301,9 +303,12 @@ class VecType : public DerivedType {
   VecType(Type *type);
   void Dump() override;
   const Subs GetSubs(string section) const override;
+  const Subs GetSubsC(string section, const FieldContext& context) const override;
   bool IsVec() override { return true; }
   const string TypeName() const override { return "vec"; }
-  string Generate(string prefix) override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
+  const string Description(string section) const;
+  const string Generate(string prefix) const override;
   virtual bool HasPtrFixup() override { return true; }
 
  private:
@@ -317,7 +322,7 @@ class RefType : public DerivedType {
   bool IsRef() override { return true; }
   const Subs GetSubs(string section) const override;
   const string TypeName() const override { return "ref"; }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   virtual bool HasFdFixup() override { return true; }
 
  private:
@@ -331,7 +336,8 @@ class ArrayType : public DerivedType {
   bool IsArray() override { return true; }
   const Subs GetSubs(string section) const override;
   const string TypeName() const override { return "array"; }
-  string Generate(string section) override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
+  const string Generate(string section) const override;
   string GenerateDimension() { return dimension_->GetText(); }
 
  private:
@@ -349,7 +355,9 @@ class NamedType : public DerivedType {
   const Subs GetSubsC(string section, const FieldContext& context) const override;
   const string TypeName() const override { return "named_type"; }
   virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
+  { return GetBase()->FixupText(section, context, prefix); }
   virtual string SubtypeSuffix() const override;
 
  private:
@@ -363,7 +371,7 @@ class ScalarType : public Type {
   virtual bool IsPrimitive() override { return true; }
   void Dump() override;
   const string TypeName() const override { return "scalar"; }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   const Subs GetSubs(string section) const override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
@@ -381,7 +389,8 @@ class HandleType : public Type {
   void Dump() override;
   bool IsHandle() override { return true; }
   const string TypeName() const override { return "handle"; }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return true; }
 
@@ -394,7 +403,7 @@ class OpaqueType : public Type {
   OpaqueType();
   void Dump() override;
   const string TypeName() const override { return "opaque"; }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
 
@@ -407,7 +416,7 @@ class ImportType : public Type {
   ImportType();
   void Dump() override;
   const string TypeName() const override { return "import"; }
-  string Generate(string /*section*/) override { return "ImportTypeGen"; }
+  const string Generate(string /*section*/) const override { return "ImportTypeGen"; }
   virtual bool HasPtrFixup() override { return false; }
   virtual bool HasFdFixup() override { return false; }
 
@@ -421,7 +430,8 @@ class StringType : public Type {
   void Dump() override;
   bool IsString() override { return true; }
   const string TypeName() const override { return "string"; }
-  string Generate(string section) override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
+  const string Generate(string section) const override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return false; }
 
@@ -448,7 +458,7 @@ class TypedefDecl : public TypeDecl {
   void Dump() override;
   const string TypeName() const override { return "typedef_decl"; }
   const Subs GetSubs(string section) const override;
-  string Generate(string section) override;
+  const string Generate(string section) const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(TypedefDecl);
@@ -472,6 +482,8 @@ class StructDecl : public TypeDecl {
   const string TypeName() const override { return "struct_decl"; }
   const Subs GetSubs(string section) const override {return GetSubsC(section, FieldContext{"","","",0}); }
   const Subs GetSubsC(string section, const FieldContext &context) const override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
+  { return GetBase()->FixupText(section, context, prefix); }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StructDecl);
@@ -483,6 +495,8 @@ class UnionDecl : public TypeDecl {
   void Dump() override;
   const string TypeName() const override { return "union_decl"; }
   const Subs GetSubs(string section) const override;
+  virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
+  { return GetBase()->FixupText(section, context, prefix); }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(UnionDecl);
@@ -494,7 +508,7 @@ class ImportDecl : public TypeDecl {
   void Dump() override;
   const string TypeName() const override { return "import_decl"; }
   const Subs GetSubs(string section) const override;
-  string Generate(string section) override;
+  const string Generate(string section) const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(ImportDecl);
@@ -506,7 +520,7 @@ class Field : public Thing {
  public:
   void Dump() override;
   int Line() const { return name_->Line(); }
-  string Generate(string section) override;
+  const string Generate(string section) const override;
   virtual Type *GetType() const { return nullptr; }
   const string TypeName() const override { return "field"; }
   string GetName() { return name_->GetText(); }
@@ -658,7 +672,7 @@ using TypeMap = std::map<string, TypeDecl*>;
 class Parser {
  public:
   explicit Parser(const android::hidl::IoDelegate& io_delegate,
-                  std::string out_type);
+                  std::string out_type, bool verbose_mode);
   ~Parser();
 
   // Parse contents of file |filename|.
@@ -733,6 +747,7 @@ class Parser {
 
   const android::hidl::IoDelegate& io_delegate_;
   std::string section_;
+  bool verbose_mode_;
   int error_ = 0;
   string filename_;
   void* scanner_ = nullptr;

@@ -31,7 +31,8 @@ Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _a
 /*
 Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_description
 const Ipackage_name::struct_name& param_name // ALL param_decl_struct_type
-sp<Ipackage_name::import_name> param_name // ALL param_decl_import
+const hidl_vec<decl_base_type> &param_name// ALL param_decl_vec
+sp<import_name> param_name // ALL param_decl_import
 
 */
 // START code_for_function
@@ -48,7 +49,7 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 // START param_write_snips
 
 // START param_write_import
-  _aidl_ret_status = _aidl_data.writeStrongBinder(param_name);
+  _aidl_ret_status = _aidl_data.writeStrongBinder(IInterface::asBinder(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -175,9 +176,26 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
-    fixup_write_struct;
+    fixup_write_struct
   }
   // END param_write_struct_type
+  // START param_write_vec_all
+  {
+    uint64_t parent_handle;
+
+    _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      goto _aidl_error;
+    }
+    fixup_write_vec
+  }
+  // END param_write_vec_all
+  // START vec_fixup_loop
+    for (size_t loop_var = 0; loop_var < param_name.count; loop_var++) {
+      /* fixup_write_vec */
+      inner_vec_fixup
+    }
+  // END vec_fixup_loop
   // START param_write_string
   _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
@@ -186,7 +204,7 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
     goto _aidl_error;
   }
   // END param_write_string
-  // START fixup_write_string
+  // START write_fixup_string
   _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
                        nullptr, parent_handle,
@@ -194,36 +212,34 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  // END fixup_write_string
-  // START fixup_write_vec
+  // END write_fixup_string
+  // START write_fixup_vec
   {
     uint64_t child_handle;
     cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
-    void *bufp = (void *)s.s1v2.buffer;
-    size_t size = sizeof(ITypes::s1s[s.s1v2.count]);
-    size_t off = (size_t)((char *)&(s.s1v2.buffer)-(char *)&(s));
+    void *bufp = (void *)param_name.buffer;
+    size_t size = sizeof(Ipackage_name::vec_base_type[param_name.count]);
+    size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
     _aidl_ret_status = _aidl_data.writeBuffer(bufp,
                                               size,
                                               &child_handle,
                                               parent_handle,
                                               off /* offset_calculator */);
     printf("c: wb vec : buf %p size %ld offset %ld parent %ld child %ld ret %d\n", bufp, size, off, parent_handle, child_handle, _aidl_ret_status);
-    uint64_t parent_handle = child_handle; // Yes, this is legal, and works; it's like a static stack.
+     // Redefining a variable inside braces works like a static stack.
+    uint64_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
-    for (size_t loop_var = 0; loop_var < s.s1v2.count; loop_var++) {
-      /* fixup_write_vec */
-      inner_vec_fixup
-    }
+    vec_fixup_loop
   }
-  // END fixup_write_vec
-  // START fixup_write_array
+  // END write_fixup_vec
+  // START write_fixup_array
   Array code goes here
-  // END fixup_write_array
-  // START fixup_write_handle
+  // END write_fixup_array
+  // START write_fixup_handle
   Handle code goes here
-  // END fixup_write_handle
+  // END write_fixup_handle
   // START param_write_vec
   uint64_t parent_handle;
   _aidl_data.writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
@@ -378,6 +394,7 @@ sp<Ipackage_name::import_name> param_name // ALL param_decl_import
 // END param_ret_read_snips
 
   // Invoke callback to client  // START callback_invocation
+  if (_cb != nullptr)
   _cb(return_param_names);      // END callback_invocation
 
 _aidl_error:
@@ -391,20 +408,13 @@ param_name // ALL callback_var_default
 
 namespace_close_section
 
-/*
+// START // hide
 auto param_name // ALL return_param_decl_default
 const Ipackage_name::type_desc & param_name // ALL return_param_decl_struct_type
-*/
+// END // hide
 #include <namespace_slashes/Ipackage_name.h>
 #include <namespace_slashes/Bppackage_name.h>
 
-/*
-namespace_open_section
-
-IMPLEMENT_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
-
-namespace_close_section
-*/
 
 #include <iostream>
 #include <namespace_slashes/Bnpackage_name.h>
@@ -421,9 +431,8 @@ namespace_open_section
       {
 // START param_decls
   Ipackage_name::struct_name *param_name // ALL field_decl_struct_type
-  sp<Ipackage_name::import_name> param_name // ALL field_decl_import
-        int32_t should_be_replaced; // These will be replaced
-        int32_t ret_FOO;   // with auto-generated declarations
+  hidl_vec<decl_base_type> *param_name // ALL field_decl_vec_all
+  sp<import_name> param_name // ALL field_decl_import
 // END param_decls
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
@@ -432,6 +441,9 @@ namespace_open_section
         }
 // START param_read_snips
 
+// START param_read_vec_all
+        param_name = (hidl_vec<decl_base_type> *)_aidl_data.readBuffer();
+// END param_read_vec_all
 // START param_read_scalar_int8_t
         _aidl_ret_status = _aidl_data.readByte(&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
@@ -492,7 +504,7 @@ namespace_open_section
   // START param_read_import
         _aidl_ret_status = _aidl_data.readStrongBinder(&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
-          goto _aidl_error;
+          break;
         }
   // END param_read_import
 // START param_read_enum_type_scalar_int8_t
@@ -662,7 +674,7 @@ param_name// ALL stub_param_decl_default
         }
 // END param_ret_write_enum_type_scalar_char
 // START param_ret_write_import
-  _aidl_ret_status = _aidl_reply->writeStrongBinder(param_name);
+        _aidl_ret_status = _aidl_reply->writeStrongBinder(IInterface::asBinder(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

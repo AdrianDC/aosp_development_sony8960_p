@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 
   android::hidl::IoDelegate io_delegate;
   android::hidl::CodeWriterPtr writer = android::hidl::GetFileWriter(options->OutputFileName());
-  Parser p{io_delegate, options->OutputType()};
+  Parser p{io_delegate, options->OutputType(), options->Verbose()};
   Thing::SetParser(&p);
   p.SetWriter(std::move(writer));
   p.ParseFile(options->InputFileName());
