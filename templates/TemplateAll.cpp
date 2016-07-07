@@ -33,7 +33,7 @@ Ipackage_name::function_name_cb _cb // ALL callback_param // Used in callback_de
 const Ipackage_name::struct_name& param_name // ALL param_decl_struct_type
 const hidl_vec<decl_base_type> &param_name// ALL param_decl_vec
 sp<import_name> param_name // ALL param_decl_import
-
+Ipackage_name::the_type_name//ALL describe_named_type
 */
 // START code_for_function
 ::android::hidl::binder::Status Bppackage_name::function_name(params_and_callback) {
@@ -213,12 +213,18 @@ sp<import_name> param_name // ALL param_decl_import
     goto _aidl_error;
   }
   // END write_fixup_string
+  // START write_fixup_handle
+  _aidl_ret_status = _aidl_data.declareFileDescriptors(param_name.num_fds, parent_handle,
+                       (size_t)((char *)&(param_name.data)-(char *)(base_pointer)));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  // END write_fixup_handle
   // START write_fixup_vec
   {
     uint64_t child_handle;
-    cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
     void *bufp = (void *)param_name.buffer;
-    size_t size = sizeof(Ipackage_name::vec_base_type[param_name.count]);
+    size_t size = sizeof(vec_base_type[param_name.count]);
     size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
     _aidl_ret_status = _aidl_data.writeBuffer(bufp,
                                               size,
@@ -576,6 +582,9 @@ namespace_open_section
         // START // Hide callback_code
 param_name// ALL stub_param_decl_default
 *param_name// ALL stub_param_decl_struct_type
+*param_name// ALL stub_param_decl_struct_decl
+*param_name// ALL stub_param_decl_vec_all
+    // TODO add union and string and native_handle
         [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel

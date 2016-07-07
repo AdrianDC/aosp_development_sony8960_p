@@ -87,9 +87,8 @@ _aidl_error:
       // struct fixup write_
   {
     uint64_t child_handle;
-    cout << "Client: calling writeBuffer in echoStruct. ptr " << &s << " size " << sizeof(s0) << endl;
     void *bufp = (void *)data.data.buffer;
-    size_t size = sizeof(INfcClientCallback::uint8_t[data.data.count]);
+    size_t size = sizeof(uint8_t[data.data.count]);
     size_t off = (size_t)((char *)&(data.data.buffer)-(char *)(&data));
     _aidl_ret_status = _aidl_data.writeBuffer(bufp,
                                               size,
@@ -152,8 +151,10 @@ namespace nfc {
   switch (_aidl_code) {
     case Call::SENDEVENT:
       {
-nfc_event_t event;
-nfc_status_t event_status;
+INfcClientCallback::nfc_event_t
+ event;
+INfcClientCallback::nfc_status_t
+ event_status;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {

@@ -356,6 +356,7 @@ class NamedType : public DerivedType {
   const string TypeName() const override { return "named_type"; }
   virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
   const string Generate(string section) const override;
+  const string Description(string section) const;
   virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
   { return GetBase()->FixupText(section, context, prefix); }
   virtual string SubtypeSuffix() const override;
@@ -445,6 +446,7 @@ class TypeDecl : public DerivedType {
   const string GetName() const override { return name_->GetText(); };
   virtual const string TypeSuffix(bool subtype) const override { return base_->TypeSuffix(subtype); }
   int Line() const override { return name_->Line(); }
+  const string Description(string section) const;
 
  protected:
   Element *name_;

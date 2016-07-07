@@ -401,6 +401,7 @@ string Fields::GenCommaNameList(string section, string prev_list, string snippet
       }
       if (s == "") {
         s = make_inline(Snip(section, snippet_prefix + "default", subs));
+        //        if (field->GetType()) s += " Not found: " + snippet_prefix + field->GetType()->TypeSuffix(false);
       }
       output += s;
     }
@@ -450,6 +451,19 @@ const string VecType::Description(string section) const
   return Snip(section, "describe_type_vec", subs);
 }
 
+const string NamedType::Description(string section) const
+{
+  Subs subs{{"package_name", GetParser()->GetPackageName()},
+    {"the_type_name", GetName()}};
+  return Snip(section, "describe_named_type", subs);
+}
+
+const string TypeDecl::Description(string section) const
+{
+  Subs subs{{"package_name", GetParser()->GetPackageName()},
+    {"the_type_name", GetName()}};
+  return Snip(section, "describe_named_type", subs);
+}
 
 string Fields::GenSemiList(string section, const FieldContext &context)
 {
@@ -503,8 +517,9 @@ const string UnionType::FixupText(string section, const FieldContext &context, s
 
 const string HandleType::FixupText(string section, const FieldContext &context, string prefix) const
 {
-    Subs subs{{"param_name", context.designator}};
-    return "Handle Fixup Needed\n";
+    Subs subs{{"param_name", context.designator},
+      {"base_pointer", context.base_pointer}};
+    return Snip(section, prefix+"fixup_string", subs);
 }
 
 const string StringType::FixupText(string section, const FieldContext &context, string prefix) const
