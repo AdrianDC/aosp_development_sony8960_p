@@ -405,24 +405,24 @@ _aidl_error:
       // struct fixup read_ret_
   // struct fixup read_ret_
   _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
-                       (size_t)((char *)&(s.s1m1.str1.buffer)-(char *)(&s)));
+                       (size_t)((char *)&((*_cb_s).s1m1.str1.buffer)-(char *)(&(*_cb_s))));
   if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
   }
   {
     uint64_t child_handle;
     _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
-                             (size_t)((char *)&(s.s1v2.buffer)-(char *)(&s)));
+                             (size_t)((char *)&((*_cb_s).s1v2.buffer)-(char *)(&(*_cb_s))));
      // Redefining a variable inside braces works like a static stack.
     uint64_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
     }
-        for (size_t i1 = 0; i1 < s.s1v2.count; i1++) {
+        for (size_t i1 = 0; i1 < (*_cb_s).s1v2.count; i1++) {
       /* fixup_write_vec */
         // struct fixup read_ret_
   _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
-                       (size_t)((char *)&(s.s1v2.buffer[i1].str1.buffer)-(char *)(s.s1v2.buffer)));
+                       (size_t)((char *)&((*_cb_s).s1v2.buffer[i1].str1.buffer)-(char *)((*_cb_s).s1v2.buffer)));
   if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
   }

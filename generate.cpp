@@ -502,11 +502,27 @@ string Fields::GenByType(string section, string prefix)
 
 const string ArrayType::FixupText(string section, const FieldContext &context, string prefix) const
 {
-  Subs subs{};
-  if (!GetBase()->HasFixup()) {
-    return "  // No fixup needed for array\n";
+  Type *base = GetBase();
+  string base_fixup, base_ret_fixup;
+  if (!base->HasFixup()) {
+    base_fixup = "// Fixup not needed for this array " + base->Generate(section);
+  } else {
+    // TODO clean up this cut-and-paste hack job
+    FieldContext new_context{"", context.designator,
+          context.base_pointer, context.next_var+1};
+    new_context.designator += "[i"+std::to_string(new_context.next_var)+"]";
+    string inner_array_fixup = base->FixupText(section, new_context, prefix);
+    Subs subs{
+      {"inner_array_fixup", inner_array_fixup},
+      {"loop_var", "i"+std::to_string(new_context.next_var)},
+      {"array_length", GenerateDimension()},
+          };
+    base_fixup = Snip(section, "array_fixup_loop", subs);
   }
-  return "// fixup for array\n" + Snip(section, "fixup_write_array", subs);
+  Subs subs{
+    {"array_fixup_loop", base_fixup},
+  };
+  return Snip(section, prefix + "fixup_array", subs);
 }
 
 const string UnionType::FixupText(string section, const FieldContext &context, string prefix) const
@@ -519,7 +535,7 @@ const string HandleType::FixupText(string section, const FieldContext &context, 
 {
     Subs subs{{"param_name", context.designator},
       {"base_pointer", context.base_pointer}};
-    return Snip(section, prefix+"fixup_string", subs);
+    return Snip(section, prefix+"fixup_handle", subs);
 }
 
 const string StringType::FixupText(string section, const FieldContext &context, string prefix) const
@@ -547,9 +563,10 @@ const string StructType::FixupText(string section, const FieldContext &context, 
 const string VecType::FixupText(string section, const FieldContext &context, string prefix) const
 {
   Type *base = GetBase();
-  string base_fixup;
+  string base_fixup, base_ret_fixup;
   if (!base->HasFixup()) {
     base_fixup = "// Fixup not needed for this vec " + base->Generate(section);
+    base_ret_fixup = base_fixup;
   } else {
     // TODO clean up this cut-and-paste hack job
     FieldContext new_context{"", context.designator,
@@ -561,17 +578,20 @@ const string VecType::FixupText(string section, const FieldContext &context, str
     string inner_vec_fixup = base->FixupText(section, new_context, prefix);
     Subs subs{
       {"inner_vec_fixup", inner_vec_fixup},
+      {"inner_ret_vec_fixup", inner_vec_fixup},
       {"loop_var", "i"+std::to_string(new_context.next_var)},
       {"base_pointer", outer_base_pointer},
       {"param_name", context.designator},
           };
     base_fixup = Snip(section, "vec_fixup_loop", subs);
+    base_ret_fixup = Snip(section, "vec_ret_fixup_loop", subs);
   }
   Subs subs{{"param_name", context.designator},
     {"package_name", base->GetParser()->GetPackageName()},
     {"vec_base_type", base->Description(section)},
     {"base_pointer", context.base_pointer},
-    {"vec_fixup_loop", base_fixup}};
+    {"vec_fixup_loop", base_fixup},
+    {"vec_ret_fixup_loop", base_ret_fixup}};
   return Snip(section, prefix + "fixup_vec", subs);
 }
 
@@ -583,8 +603,10 @@ const Subs StructDecl::GetSubsC(string section, const FieldContext &context) con
     {"struct_name", name_->GetText()},
     {"struct_gen_fields", base_->GetFields()->GenByType(section, "struct_field_")},
     {"fixup_write_struct", GetBase()->FixupText(section, context, "write_")},
-    {"fixup_ret_write_struct", "(void)0; /*kilroy_ret was here*/"},//FixupWriteString(section, Subs{})},
+    {"fixup_ret_write_struct", GetBase()->FixupText(section, context, "write_ret_")},
     {"fixup_read_struct", GetBase()->FixupText(section, context, "read_")},
+    {"fixup_ret_read_struct", GetBase()->FixupText(section, context, "read_ret_")},
+    {"struct_type_description", make_inline(Description(section))},
     {"offset_calculator", "0 /* offset_calculator */"},
   };
   return subs;
@@ -595,6 +617,22 @@ const Subs VecType::GetSubsC(string section, const FieldContext &context) const
 
   Subs subs {
     {"fixup_write_vec", FixupText(section, context, "write_")},
+    {"fixup_ret_write_vec", FixupText(section, context, "write_ret_")},
+    {"fixup_read_vec", FixupText(section, context, "read_")},
+    {"fixup_ret_read_vec", FixupText(section, context, "read_ret_")},
+    {"decl_base_type", GetBase()->Description(section)},
+  };
+  return subs;
+}
+
+const Subs ArrayType::GetSubsC(string section, const FieldContext &context) const
+{
+
+  Subs subs {
+    {"fixup_write_array", FixupText(section, context, "write_")},
+    {"fixup_ret_write_array", FixupText(section, context, "write_ret_")},
+    {"array_size", dimension_->GetText()},
+    {"base_type_name", base_->Description(section)},
     {"decl_base_type", GetBase()->Description(section)},
   };
   return subs;
@@ -702,7 +740,11 @@ string Fields::TextByPrefix(string section, string prefix, string name_prefix)
   string out;
   // cout << " <<< TBP " << prefix << endl;
   for (auto & thing : fields_) {
-    FieldContext fc{name_prefix, thing->GetName(), "&" + thing->GetName(), 0};
+    string thing_name = name_prefix + thing->GetName();
+    if (prefix == "param_read_" || prefix == "param_ret_read_") {
+      thing_name = "(*" + thing_name + ")";
+    }
+    FieldContext fc{name_prefix, thing_name, "&" + thing_name, 0};
     out += Snip(section, prefix + thing->GetType()->TypeSuffix(true),
                 thing->GetSubsC(section, fc));
     out += Snip(section, prefix + thing->GetType()->TypeSuffix(false),

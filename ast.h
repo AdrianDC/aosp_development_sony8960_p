@@ -335,10 +335,11 @@ class ArrayType : public DerivedType {
   void Dump() override;
   bool IsArray() override { return true; }
   const Subs GetSubs(string section) const override;
+  const Subs GetSubsC(string section, const FieldContext& context) const override;
   const string TypeName() const override { return "array"; }
   virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
   const string Generate(string section) const override;
-  string GenerateDimension() { return dimension_->GetText(); }
+  const string GenerateDimension() const { return dimension_->GetText(); }
 
  private:
   Element *dimension_;

@@ -67,7 +67,10 @@ const Ipackage_name::struct_name &param_name // ALL param_decl_struct_type
 const hidl_vec<decl_base_type> &param_name // ALL param_decl_vec
 base_type_name param_name[array_size] // ALL field_decl_array_all
 hidl_vec<decl_base_type> param_name// ALL field_decl_vec_all
+const native_handle_t *param_name// ALL field_decl_handle
 sp<import_name> param_name // ALL param_decl_import
+Ipackage_name::the_type_name//ALL describe_named_type
+hidl_vec<base_type_name>//ALL describe_type_vec
 */
   using function_name_cb = std::function<void(return_param_list)>; // ALL callback_decl_line
   // END callback_decls

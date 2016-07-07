@@ -34,6 +34,7 @@ const Ipackage_name::struct_name& param_name // ALL param_decl_struct_type
 const hidl_vec<decl_base_type> &param_name// ALL param_decl_vec
 sp<import_name> param_name // ALL param_decl_import
 Ipackage_name::the_type_name//ALL describe_named_type
+hidl_vec<base_type_name>//ALL describe_type_vec
 */
 // START code_for_function
 ::android::hidl::binder::Status Bppackage_name::function_name(params_and_callback) {
@@ -41,6 +42,7 @@ Ipackage_name::the_type_name//ALL describe_named_type
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::hidl::binder::Status _aidl_status;
+  const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   generates_variables
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
@@ -179,6 +181,7 @@ Ipackage_name::the_type_name//ALL describe_named_type
     fixup_write_struct
   }
   // END param_write_struct_type
+
   // START param_write_vec_all
   {
     uint64_t parent_handle;
@@ -190,22 +193,46 @@ Ipackage_name::the_type_name//ALL describe_named_type
     fixup_write_vec
   }
   // END param_write_vec_all
+  // START param_write_array_all
+  {
+    uint64_t parent_handle;
+
+    _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      goto _aidl_error;
+    }
+    fixup_write_array
+  }
+  // END param_write_array_all
   // START vec_fixup_loop
     for (size_t loop_var = 0; loop_var < param_name.count; loop_var++) {
       /* fixup_write_vec */
       inner_vec_fixup
     }
   // END vec_fixup_loop
+  // START array_fixup_loop
+    for (size_t loop_var = 0; loop_var < array_length; loop_var++) {
+      /* fixup_write_array */
+      inner_array_fixup
+    }
+  // END array_fixup_loop
   // START param_write_string
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
-                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
-                       nullptr);
+  {
+    uint64_t parent_handle;
+    _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(hidl_string), &parent_handle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
+  _aidl_ret_status = _aidl_data.writeEmbeddedBuffer((void *)param_name.buffer,
+                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
+                                            nullptr, parent_handle, 0);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  }
   // END param_write_string
   // START write_fixup_string
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)param_name.buffer,
+  _aidl_ret_status = _aidl_data.writeEmbeddedBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
                        nullptr, parent_handle,
                        (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
@@ -214,8 +241,8 @@ Ipackage_name::the_type_name//ALL describe_named_type
   }
   // END write_fixup_string
   // START write_fixup_handle
-  _aidl_ret_status = _aidl_data.declareFileDescriptors(param_name.num_fds, parent_handle,
-                       (size_t)((char *)&(param_name.data)-(char *)(base_pointer)));
+  _aidl_ret_status = _aidl_data.writeEmbeddedNativeHandle(param_name, parent_handle,
+                       (size_t)((char *)&(param_name)-(char *)(base_pointer)));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -226,12 +253,11 @@ Ipackage_name::the_type_name//ALL describe_named_type
     void *bufp = (void *)param_name.buffer;
     size_t size = sizeof(vec_base_type[param_name.count]);
     size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
-    _aidl_ret_status = _aidl_data.writeBuffer(bufp,
+    _aidl_ret_status = _aidl_data.writeEmbeddedBuffer(bufp,
                                               size,
                                               &child_handle,
                                               parent_handle,
                                               off /* offset_calculator */);
-    printf("c: wb vec : buf %p size %ld offset %ld parent %ld child %ld ret %d\n", bufp, size, off, parent_handle, child_handle, _aidl_ret_status);
      // Redefining a variable inside braces works like a static stack.
     uint64_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -241,15 +267,12 @@ Ipackage_name::the_type_name//ALL describe_named_type
   }
   // END write_fixup_vec
   // START write_fixup_array
-  Array code goes here
+  array_fixup_loop
   // END write_fixup_array
-  // START write_fixup_handle
-  Handle code goes here
-  // END write_fixup_handle
   // START param_write_vec
   uint64_t parent_handle;
   _aidl_data.writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
-  write_vec_fixups;
+  write_vec_fixups
   // END param_write_vec
 
   // START param_write_ref_all
@@ -393,10 +416,82 @@ Ipackage_name::the_type_name//ALL describe_named_type
   }
 // END param_ret_read_enum_type_scalar_char
 
-// START param_ret_read_struct_type
-  param_name = (Ipackage_name::struct_name *)_aidl_reply.readBuffer();
-  fixup_read_struct
-// END param_ret_read_struct_type
+  // START param_ret_read_struct_type
+  {
+    uint64_t parent_handle;
+    param_name = (struct_type_description*)_aidl_reply.readBuffer(&parent_handle);
+    if ((param_name) == nullptr) {
+      goto _aidl_error;
+    }
+    fixup_ret_read_struct
+  }
+  // END param_ret_read_struct_type
+  // START param_ret_read_vec_all
+  {
+    uint64_t parent_handle;
+
+    param_name = (hidl_vec<decl_base_type> *)_aidl_reply.readBuffer(&parent_handle);
+    if ((param_name) == nullptr) {
+      goto _aidl_error;
+    }
+    fixup_ret_read_vec
+  }
+  // END param_ret_read_vec_all
+  // START param_ret_read_array_all
+  {
+    uint64_t parent_handle;
+
+    param_name = _aidl_reply.readBuffer(&parent_handle);
+    if (param_name == nullptr) {
+      goto _aidl_error;
+    }
+    fixup_ret_read_array
+  }
+  // END param_ret_read_array_all
+  // START param_ret_read_string
+  {
+    uint64_t parent_handle;
+    param_name = _aidl_reply.readBuffer(&parent_handle);
+    if (param_name == nullptr) {
+      goto _aidl_error;
+    }
+    _aidl_ret_pointer = _aidl_reply.readEmbeddedBuffer(nullptr, parent_handle, 0);
+    if (_aidl_ret_pointer == nullptr) {
+      goto _aidl_error;
+    }
+  }
+  // END param_ret_read_string
+  // START read_ret_fixup_string
+  _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
+                       (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+  if (_aidl_ret_pointer == nullptr) {
+      goto _aidl_error;
+  }
+  // END read_ret_fixup_string
+  // START read_ret_fixup_handle
+  _aidl_ret_pointer = _aidl_data.readEmbeddedNativeHandle(parent_handle,
+                       (size_t)((char *)&(param_name)-(char *)(base_pointer)));
+  if (_aidl_ret_pointer == nullptr) {
+      goto _aidl_error;
+  }
+  // END read_ret_fixup_handle
+  // START read_ret_fixup_vec
+  {
+    uint64_t child_handle;
+    _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
+                             (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+     // Redefining a variable inside braces works like a static stack.
+    uint64_t parent_handle = child_handle;
+    if (_aidl_ret_pointer == nullptr) {
+      goto _aidl_error;
+    }
+    vec_fixup_loop
+  }
+  // END read_ret_fixup_vec
+  // START read_ret_fixup_array
+  array_fixup_loop
+  // END read_ret_fixup_array
+
 // END param_ret_read_snips
 
   // Invoke callback to client  // START callback_invocation
@@ -430,6 +525,7 @@ namespace_open_section
 
 ::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
+  const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   switch (_aidl_code) {
 // START code2_snips
 // START code2_for_function
@@ -447,9 +543,6 @@ namespace_open_section
         }
 // START param_read_snips
 
-// START param_read_vec_all
-        param_name = (hidl_vec<decl_base_type> *)_aidl_data.readBuffer();
-// END param_read_vec_all
 // START param_read_scalar_int8_t
         _aidl_ret_status = _aidl_data.readByte(&param_name);
         if (((_aidl_ret_status) != (::android::OK))) {
@@ -567,13 +660,86 @@ namespace_open_section
           break;
         }
 // END param_read_enum_type_scalar_char
+
+  // START param_read_struct_type
+  {
+    uint64_t parent_handle;
+    param_name = (struct_type_description*)_aidl_data.readBuffer(&parent_handle);
+    if ((param_name) == nullptr) {
+      break;
+    }
+    fixup_read_struct
+  }
+  // END param_read_struct_type
+  // START param_read_vec_all
+  {
+    uint64_t parent_handle;
+
+    param_name = (hidl_vec<decl_base_type> *)_aidl_data.readBuffer(&parent_handle);
+    if ((param_name) == nullptr) {
+      break;
+    }
+    fixup_read_vec
+  }
+  // END param_read_vec_all
+  // START param_read_array_all
+  {
+    uint64_t parent_handle;
+
+    param_name = _aidl_data.readBuffer(&parent_handle);
+    if (param_name == nullptr) {
+      break;
+    }
+    fixup_read_array
+  }
+  // END param_read_array_all
+  // START param_read_string
+  {
+    uint64_t parent_handle;
+    param_name = _aidl_data.readBuffer(&parent_handle);
+    if (param_name == nullptr) {
+      break;
+    }
+    _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle, 0);
+    if (_aidl_ret_pointer == nullptr) {
+      break;
+    }
+  }
+  // END param_read_string
+  // START read_fixup_string
+  _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
+                       (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+  if (_aidl_ret_pointer == nullptr) {
+      break;
+  }
+  // END read_fixup_string
+  // START read_fixup_handle
+  _aidl_ret_pointer = _aidl_data.readEmbeddedNativeHandle(parent_handle,
+                       (size_t)((char *)&(param_name)-(char *)(base_pointer)));
+  if (_aidl_ret_pointer == nullptr) {
+      break;
+  }
+  // END read_fixup_handle
+  // START read_fixup_vec
+  {
+    uint64_t child_handle;
+    _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
+                             (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+     // Redefining a variable inside braces works like a static stack.
+    uint64_t parent_handle = child_handle;
+    if (_aidl_ret_pointer == nullptr) {
+      break;
+    }
+    vec_fixup_loop
+  }
+  // END read_fixup_vec
+  // START read_fixup_array
+  array_fixup_loop
+  // END read_fixup_array
+
 // START param_read_ref_all
         param_name = _aidl_data.readFileDescriptor();
 // END param_read_ref_all
-  // START param_read_struct_type
-        param_name = (Ipackage_name::struct_name *)_aidl_data.readBuffer();
-        fixup_read_struct
-  // END param_read_struct_type
 // END param_read_snips
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
@@ -591,12 +757,6 @@ param_name// ALL stub_param_decl_default
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
 // START param_ret_write_snips
-
-// START param_ret_write_struct_type
-                             std::cout << "Server: Struct type passed to cb" << std::endl;
-                             _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), nullptr);
-                             fixup_ret_write_struct
-// END param_ret_write_struct_type
 
 // START param_ret_write_scalar_uint8_t
                              _aidl_reply->writeByte((int8_t)param_name);
@@ -688,6 +848,87 @@ param_name// ALL stub_param_decl_default
     goto _aidl_error;
   }
 // END param_ret_write_import
+
+  // START param_ret_write_struct_type
+  {
+    uint64_t parent_handle;
+    _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    fixup_ret_write_struct
+  }
+  // END param_ret_write_struct_type
+  // START param_ret_write_array_all
+  {
+    uint64_t parent_handle;
+
+    _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    fixup_write_array
+  }
+  // END param_ret_write_array_all
+  // START param_ret_write_vec_all
+  {
+    uint64_t parent_handle;
+
+    _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
+    fixup_ret_write_vec
+  }
+  // END param_ret_write_vec_all
+  // START vec_ret_fixup_loop
+    for (size_t loop_var = 0; loop_var < param_name.count; loop_var++) {
+      /* fixup_write_vec */
+      inner_ret_vec_fixup
+    }
+  // END vec_ret_fixup_loop
+  // START param_ret_write_string
+  {
+    uint64_t parent_handle;
+    _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(hidl_string), &parent_handle);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer((void *)param_name.buffer,
+                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
+                                            nullptr, parent_handle, 0);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  }
+  // END param_ret_write_string
+  // START write_ret_fixup_string
+  _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer((void *)param_name.buffer,
+                       (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
+                       nullptr, parent_handle,
+                       (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
+  // END write_ret_fixup_string
+  // START write_ret_fixup_handle
+  _aidl_ret_status = _aidl_reply->writeEmbeddedNativeHandle(param_name, parent_handle,
+                       (size_t)((char *)&(param_name)-(char *)(base_pointer)));
+  // END write_ret_fixup_handle
+  // START write_ret_fixup_vec
+  {
+    uint64_t child_handle;
+    void *bufp = (void *)param_name.buffer;
+    size_t size = sizeof(vec_base_type[param_name.count]);
+    size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
+    _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer(bufp,
+                                              size,
+                                              &child_handle,
+                                              parent_handle,
+                                              off /* offset_calculator */);
+     // Redefining a variable inside braces works like a static stack.
+    uint64_t parent_handle = child_handle;
+    vec_ret_fixup_loop
+  }
+  // END write_ret_fixup_vec
+  // START write_ret_fixup_array
+  array_fixup_loop
+  // END write_ret_fixup_array
+  // START param_ret_write_vec
+  uint64_t parent_handle;
+  _aidl_reply->writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
+  write_ret_vec_fixups
+  // END param_ret_write_vec
+
+
 // END param_ret_write_snips
                             // Callback
                              _cb(*_aidl_reply);

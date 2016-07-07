@@ -165,7 +165,7 @@ ITypes::shm_t
 
 typedef struct {
 hidl_vec<ITypes::GrantorDescriptor > grantors ;
-native_handle mq_handles;
+const native_handle_t *mq_handles ;
 uint32_t quantum;
 uint32_t nQuanta;
 uint32_t flags;

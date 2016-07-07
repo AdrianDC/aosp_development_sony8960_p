@@ -77,15 +77,15 @@ _aidl_error:
   ::android::hidl::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::hidl::binder::Status _aidl_status;
-  eu8 _cb_a;
-es8 _cb_b;
-eu16 _cb_c;
-es16 _cb_d;
-eu32 _cb_e;
-es32 _cb_f;
-eu64 _cb_g;
-es64 _cb_h;
-ec _cb_i;
+   _cb_a;
+ _cb_b;
+ _cb_c;
+ _cb_d;
+ _cb_e;
+ _cb_f;
+ _cb_g;
+ _cb_h;
+ _cb_i;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {

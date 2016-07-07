@@ -58,7 +58,14 @@ class Tester(object):
     self.TestOutput("ITestService.hidl", "TestServiceProxy.cpp", "proxy_cpp")
     self.TestOutput("ITestService.hidl", "TestServiceStubs.cpp", "stubs_cpp")
     self.TestOutput("IEverything.hidl", "Everything.json", "json")
-#    self.TestOutput("IanBinder.hidl", "IanBinder.h", "binder")
+    self.TestOutput("INfc.hidl", "NfcAll.cpp", "all_cpp")
+    self.TestOutput("INfc.hidl", "INfc.h", "i_h")
+    self.TestOutput("INfc.hidl", "BnNfc.h", "bn_h")
+    self.TestOutput("INfc.hidl", "BpNfc.h", "bp_h")
+    self.TestOutput("ITypes.hidl", "TypesAll.cpp", "all_cpp")
+    self.TestOutput("ITypes.hidl", "ITypes.h", "i_h")
+    self.TestOutput("ITypes.hidl", "BnTypes.h", "bn_h")
+    self.TestOutput("ITypes.hidl", "BpTypes.h", "bp_h")
 
   def RunCommand(self, command):
     """Runs a unix command and stashes the result."""

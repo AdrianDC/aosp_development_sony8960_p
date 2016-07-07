@@ -69,15 +69,15 @@ int32_t echo_me;
       }
     case Call::ECHOENUM:
       {
-eu8 a;
-es8 b;
-eu16 c;
-es16 d;
-eu32 e;
-es32 f;
-eu64 g;
-es64 h;
-ec i;
+ a;
+ b;
+ c;
+ d;
+ e;
+ f;
+ g;
+ h;
+ i;
 
         bool callback_called;
         if (!(_aidl_data.checkInterface(this))) {
