@@ -4,7 +4,8 @@
 #define HIDL_GENERATED_android_hardware_tests_BN_TestService_H_
 
 #include <hwbinder/IInterface.h>
-#include <android/hardware/tests/ITestService.h>
+//#include <android/hardware/tests/ITestService.h>
+#include <ITestService.h>
 
 namespace android {
 namespace hardware {

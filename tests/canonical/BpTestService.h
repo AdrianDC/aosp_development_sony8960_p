@@ -6,7 +6,8 @@
 #include <hwbinder/IBinder.h>
 #include <hwbinder/IInterface.h>
 #include <utils/Errors.h>
-#include <android/hardware/tests/ITestService.h>
+//#include <android/hardware/tests/ITestService.h>
+#include <ITestService.h>
 
 namespace android {
 namespace hardware {

@@ -8,7 +8,7 @@
 #include <hwbinder/Status.h>
 #include <cstdint>
 #include <utils/StrongPointer.h>
-#include <android/hardware/nfc/INfcClientCallback.h>
+#include <INfcClientCallback.h>
 
 namespace android {
 namespace hardware {

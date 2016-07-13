@@ -27,6 +27,11 @@
 namespace android {
 namespace hidl {
 
+struct Job {
+  std::string type;
+  std::string output_file_name;
+};
+
 class CppOptions final {
  public:
   enum e_out_type {IFOO, BNFOO, BPFOO, FOOSTUBS, FOOPROXY, VTS,
@@ -37,14 +42,13 @@ class CppOptions final {
   // Parses the command Line and returns a non-null pointer to an CppOptions
   // object on success.
   // Prints the usage statement on failure.
-  static std::unique_ptr<CppOptions> Parse(int argc, const char* const* argv);
+  static CppOptions *Parse(int argc, const char* const* argv);
 
   std::string InputFileName() const { return input_file_name_; }
-  std::string OutputFileName() const { return output_file_name_; }
 
   std::vector<std::string> ImportPaths() const { return import_paths_; }
+  std::vector<Job> OutputJobs() { return outputs_; }
   std::string DependencyFilePath() const { return dep_file_name_; }
-  std::string OutputType() const { return section_; }
   bool PrintStuff() const { return print_stuff_; }
   bool Verbose() const { return verbose_; }
 
@@ -54,9 +58,8 @@ class CppOptions final {
   bool print_stuff_ = false;
   bool verbose_ = false;
   std::string input_file_name_;
-  std::string section_;
+  std::vector<Job> outputs_;
   std::vector<std::string> import_paths_;
-  std::string output_file_name_;
   std::string dep_file_name_;
 
   FRIEND_TEST(CppOptionsTests, ParsesCompileCpp);

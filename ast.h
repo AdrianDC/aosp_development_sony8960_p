@@ -674,8 +674,7 @@ using TypeMap = std::map<string, TypeDecl*>;
 
 class Parser {
  public:
-  explicit Parser(const android::hidl::IoDelegate& io_delegate,
-                  std::string out_type, bool verbose_mode);
+  explicit Parser(const android::hidl::IoDelegate& io_delegate, bool verbose_mode);
   ~Parser();
 
   // Parse contents of file |filename|.
@@ -725,8 +724,7 @@ class Parser {
   int GetErrorCount() { return error_; }
 
   void Dump();
-  void Write();
-  void SetWriter(android::hidl::CodeWriterPtr writer);
+  void Write(std::string out_type, android::hidl::CodeWriterPtr writer);
   string TextByPrefix(string section, string prefix);
   string CallEnumList(string section);
   string CallbackDeclList(string section);
@@ -738,7 +736,7 @@ class Parser {
                           string& namespace_dots,
                           string& namespace_underscores);
   void WriteDepFileIfNeeded(
-          std::unique_ptr<android::hidl::CppOptions> options,
+          android::hidl::CppOptions &options,
           android::hidl::IoDelegate &io_delegate);
 
  private:
@@ -769,5 +767,6 @@ class Parser {
   std::vector<Thing *> things_;
   DISALLOW_COPY_AND_ASSIGN(Parser);
 };
+
 
 #endif // HIDL_HIDL_LANGUAGE_H_

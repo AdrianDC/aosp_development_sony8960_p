@@ -2,8 +2,10 @@
 // START file
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateAll.cpp
-#include <namespace_slashes/Ipackage_name.h>
-#include <namespace_slashes/Bppackage_name.h>
+//#include <namespace_slashes/Ipackage_name.h>
+//#include <namespace_slashes/Bppackage_name.h>
+#include <Ipackage_name.h>
+#include <Bppackage_name.h>
 #include <iostream>
 #include <stdio.h>
 using std::cout;
@@ -19,7 +21,8 @@ IMPLEMENT_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 }  // namespace namespace_name  //ALL namespace_close_line
 //END namespace_close_section
 
-#include <namespace_slashes/Bppackage_name.h>
+//#include <namespace_slashes/Bppackage_name.h>
+#include <Bppackage_name.h>
 #include <binder/Parcel.h>
 
 namespace_open_section
@@ -231,6 +234,12 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   }
   }
   // END param_write_string
+  // START param_write_handle
+  _aidl_ret_status = _aidl_data.writeNativeHandleNoDup(param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  // END param_write_handle
   // START write_fixup_string
   _aidl_ret_status = _aidl_data.writeEmbeddedBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
@@ -461,15 +470,21 @@ hidl_vec<base_type_name>//ALL describe_type_vec
     }
   }
   // END param_ret_read_string
+  // START param_ret_read_handle
+  param_name = _aidl_reply.readNativeHandleNoDup();
+  if (param_name == nullptr) {
+    goto _aidl_error;
+  }
+  // END param_ret_read_handle
   // START read_ret_fixup_string
-  _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
+  _aidl_ret_pointer = _aidl_reply.readEmbeddedBuffer(nullptr, parent_handle,
                        (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
   if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
   }
   // END read_ret_fixup_string
   // START read_ret_fixup_handle
-  _aidl_ret_pointer = _aidl_data.readEmbeddedNativeHandle(parent_handle,
+  _aidl_ret_pointer = _aidl_reply.readEmbeddedNativeHandle(parent_handle,
                        (size_t)((char *)&(param_name)-(char *)(base_pointer)));
   if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
@@ -478,7 +493,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // START read_ret_fixup_vec
   {
     uint64_t child_handle;
-    _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
+    _aidl_ret_pointer = _aidl_reply.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
      // Redefining a variable inside braces works like a static stack.
     uint64_t parent_handle = child_handle;
@@ -513,12 +528,15 @@ namespace_close_section
 auto param_name // ALL return_param_decl_default
 const Ipackage_name::type_desc & param_name // ALL return_param_decl_struct_type
 // END // hide
-#include <namespace_slashes/Ipackage_name.h>
-#include <namespace_slashes/Bppackage_name.h>
+//#include <namespace_slashes/Ipackage_name.h>
+//#include <namespace_slashes/Bppackage_name.h>
+#include <Ipackage_name.h>
+#include <Bppackage_name.h>
 
 
 #include <iostream>
-#include <namespace_slashes/Bnpackage_name.h>
+//#include <namespace_slashes/Bnpackage_name.h>
+#include <Bnpackage_name.h>
 #include <binder/Parcel.h>
 
 namespace_open_section
@@ -706,6 +724,12 @@ namespace_open_section
     }
   }
   // END param_read_string
+  // START param_read_handle
+  param_name = _aidl_data.readNativeHandleNoDup();
+  if (param_name == nullptr) {
+    break;
+  }
+  // END param_read_handle
   // START read_fixup_string
   _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(nullptr, parent_handle,
                        (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
@@ -893,6 +917,12 @@ param_name// ALL stub_param_decl_default
   }
   }
   // END param_ret_write_string
+  // START param_write_handle
+  _aidl_ret_status = _aidl_reply->writeNativeHandleNoDup(param_name);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  // END param_write_handle
   // START write_ret_fixup_string
   _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),

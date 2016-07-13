@@ -6,7 +6,8 @@
 #define HIDL_GENERATED_namespace_underscores_BN_header_guard_H_
 
 #include <hwbinder/IInterface.h>
-#include <namespace_slashes/Ipackage_name.h>
+//#include <namespace_slashes/Ipackage_name.h>
+#include <Ipackage_name.h>
 
 // START namespace_open_section
 namespace namespace_name {//ALL namespace_open_line

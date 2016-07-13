@@ -381,10 +381,6 @@ void ImportDecl::Dump()
 }
 
 void Thing::SetParser(Parser *ps) {ps_=ps;}
-void Parser::SetWriter(android::hidl::CodeWriterPtr writer)
-{
-  writer_ = std::move(writer);
-}
 
 void Header::Dump()
 {
@@ -487,9 +483,8 @@ string NamedType::SubtypeSuffix() const
 
 
 Parser::Parser(const IoDelegate& io_delegate,
-               string out_type, bool verbose_mode)
+               bool verbose_mode)
     : io_delegate_(io_delegate),
-      section_(out_type),
       verbose_mode_(verbose_mode)
 {
   yylex_init(&scanner_);
@@ -822,11 +817,10 @@ void Parser::Error(string &s) {
   error_++;
 }
 
-void Parser::WriteDepFileIfNeeded(
-    std::unique_ptr<android::hidl::CppOptions> options,
-    android::hidl::IoDelegate &io_delegate)
+void Parser::WriteDepFileIfNeeded(android::hidl::CppOptions &options,
+                                  android::hidl::IoDelegate &io_delegate)
 {
-  string dep_file_name = options->DependencyFilePath();
+  string dep_file_name = options.DependencyFilePath();
   if (dep_file_name.empty()) {
     return;  // nothing to do
   }
@@ -838,15 +832,11 @@ void Parser::WriteDepFileIfNeeded(
     return;
   }
 
-  vector<string> hidl_sources = {options->InputFileName()};
-  /*  for (const auto& import : imports) {
-    if (!import->GetFilename().empty()) {
-      hidl_sources.push_back(import->GetFilename());
-    }
-    }*/
+  vector<string> hidl_sources = {options.InputFileName()};
 
-  string output_file = options->OutputFileName();
   android::hidl::CodeWriter *writer = writerP.get();
+  auto & job = options.OutputJobs().back();
+  string output_file = job.output_file_name;
 
   // Encode that the output file depends on hidl input files.
   writer->Write("%s : \\\n", output_file.c_str());

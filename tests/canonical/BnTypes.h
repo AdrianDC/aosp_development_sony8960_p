@@ -4,7 +4,8 @@
 #define HIDL_GENERATED_android_hardware_tests_BN_Types_H_
 
 #include <hwbinder/IInterface.h>
-#include <android/hardware/tests/ITypes.h>
+//#include <android/hardware/tests/ITypes.h>
+#include <ITypes.h>
 
 namespace android {
 namespace hardware {

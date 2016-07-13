@@ -36,8 +36,9 @@ namespace hidl
 {
 namespace {
 
-unique_ptr<CppOptions> cpp_usage() {
-  cerr << "usage: hidl-cpp OPTIONS TYPE INPUT_FILE OUTPUT_FILE" << endl
+CppOptions *cpp_usage() {
+  cerr << "usage: hidl-gen OPTIONS TYPE INPUT_FILE OUTPUT_FILE" << endl
+       << "usage: hidl-gen OPTIONS all_cpps INPUT_FILE HEADER_DIR SRC_DIR" << endl
        << endl
        << "OPTIONS:" << endl
       //       << "   -I<DIR>   search path for import statements" << endl
@@ -47,6 +48,7 @@ unique_ptr<CppOptions> cpp_usage() {
        << endl
        << "TYPE:" << endl
        << "   all_cpp     Generate FooAll.cpp (combined proxy/stub)" << endl
+       << "   all_cpps    Generate FooAll.cpp, *.h" << endl
        << "   binder      Generate Binder .h file" << endl
        << "   bn_h        Generate BnFoo.h" << endl
        << "   bp_h        Generate BpFoo.h" << endl
@@ -60,13 +62,13 @@ unique_ptr<CppOptions> cpp_usage() {
        << "   a hidl interface file" << endl
        << "OUTPUT_FILE:" << endl
        << "   path to Write generated file" << endl;
-  return unique_ptr<CppOptions>(nullptr);
+  return nullptr;
 }
 
 }  // namespace
 
-unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
-  unique_ptr<CppOptions> options(new CppOptions());
+CppOptions *CppOptions::Parse(int argc, const char* const* argv) {
+  CppOptions *options(new CppOptions());
   int i = 1;
 
   // Parse flags, all of which start with '-'
@@ -98,20 +100,39 @@ unique_ptr<CppOptions> CppOptions::Parse(int argc, const char* const* argv) {
 
   // There are exactly three positional arguments.
   const int remaining_args = argc - i;
-  if (remaining_args != 3) {
+  if (remaining_args == 4 && !strcmp(argv[i], "all_cpps")) {
+    string type = argv[i++];
+    options->input_file_name_ = argv[i++];
+    string header_directory = argv[i++];
+    string source_file = argv[i++];
+    int slash_pos = options->input_file_name_.find_last_of('/');
+    string package_name = options->input_file_name_.substr(
+        slash_pos + 2,
+        options->input_file_name_.length() - slash_pos - 7);
+    options->outputs_.push_back(Job{"bn_h", header_directory+"/Bn"+package_name+".h"});
+    options->outputs_.push_back(Job{"bp_h", header_directory+"/Bp"+package_name+".h"});
+    options->outputs_.push_back(Job{"i_h", header_directory+"/I"+package_name+".h"});
+    options->outputs_.push_back(Job{"all_cpp", source_file});
+    printf("options: outputs size %ld\n", options->outputs_.size());
+    for (auto & job : options->OutputJobs()) {
+      printf("  options: job: %s, %s\n", job.type.c_str(), job.output_file_name.c_str());
+    }
+  } else if (remaining_args == 3) {
+    Job job;
+    job.type = argv[i++];
+    options->input_file_name_ = argv[i++];
+    job.output_file_name = argv[i++];
+    options->outputs_.push_back(job);
+    SnipMapMap::iterator smm_it = snippets_cpp.find(job.type);
+    if (smm_it == snippets_cpp.end()) {
+      std::cout << "File type " << job.type << " not found." << endl;
+      return cpp_usage();
+    }
+  } else {
     cerr << "Expected 3 positional arguments but got " << remaining_args << "." << endl;
     return cpp_usage();
   }
 
-  options->section_ = argv[i++];
-  options->input_file_name_ = argv[i++];
-  options->output_file_name_ = argv[i++];
-
-  SnipMapMap::iterator smm_it = snippets_cpp.find(options->section_);
-  if (smm_it == snippets_cpp.end()) {
-    std::cout << "File type " << options->section_ << " not found." << endl;
-    return cpp_usage();
-  }
   if (!EndsWith(options->input_file_name_, ".hidl")) {
     cerr << "Expected .hidl file for input but got " << options->input_file_name_ << endl;
     return cpp_usage();

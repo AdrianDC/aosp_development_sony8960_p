@@ -8,6 +8,7 @@
 #include <android-base/strings.h>
 using android::hidl::CppOptions;
 
+// TODO use std::stringstream foo; foo << "string"; foo.str() instead of +...+
 using std::cout;
 using std::endl;
 
@@ -815,8 +816,10 @@ void Parser::BuildNamespaceText(string section,
 }
 
 
-void Parser::Write()
+void Parser::Write(string out_type, android::hidl::CodeWriterPtr writer)
 {
+  section_ = out_type;
+  writer_ = std::move(writer);
   verbose_mode = verbose_mode_;
   if (!interface_) {
     Error("Cannot Write output; don't have interface.");

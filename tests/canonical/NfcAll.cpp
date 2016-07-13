@@ -1,7 +1,9 @@
 // AUTO_GENERATED FILE - DO NOT EDIT
 // see system/tools/hidl/templates/TemplateAll.cpp
-#include <android/hardware/nfc/INfc.h>
-#include <android/hardware/nfc/BpNfc.h>
+//#include <android/hardware/nfc/INfc.h>
+//#include <android/hardware/nfc/BpNfc.h>
+#include <INfc.h>
+#include <BpNfc.h>
 #include <iostream>
 #include <stdio.h>
 using std::cout;
@@ -19,7 +21,8 @@ IMPLEMENT_META_INTERFACE(Nfc, "android.hardware.nfc.INfc");
 }  // namespace android
 
 
-#include <android/hardware/nfc/BpNfc.h>
+//#include <android/hardware/nfc/BpNfc.h>
+#include <BpNfc.h>
 #include <binder/Parcel.h>
 
 namespace android {
@@ -367,12 +370,15 @@ _aidl_error:
 
 
 //
-#include <android/hardware/nfc/INfc.h>
-#include <android/hardware/nfc/BpNfc.h>
+//#include <android/hardware/nfc/INfc.h>
+//#include <android/hardware/nfc/BpNfc.h>
+#include <INfc.h>
+#include <BpNfc.h>
 
 
 #include <iostream>
-#include <android/hardware/nfc/BnNfc.h>
+//#include <android/hardware/nfc/BnNfc.h>
+#include <BnNfc.h>
 #include <binder/Parcel.h>
 
 namespace android {

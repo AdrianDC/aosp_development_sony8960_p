@@ -4,7 +4,8 @@
 #define HIDL_GENERATED_android_hardware_nfc_BN_Nfc_H_
 
 #include <hwbinder/IInterface.h>
-#include <android/hardware/nfc/INfc.h>
+//#include <android/hardware/nfc/INfc.h>
+#include <INfc.h>
 
 namespace android {
 namespace hardware {

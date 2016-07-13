@@ -27,25 +27,31 @@ int main(int argc, char** argv) {
   android::base::InitLogging(argv);
   LOG(DEBUG) << "hidl starting";
 
-  std::unique_ptr<CppOptions> options = CppOptions::Parse(argc, argv);
+  CppOptions *options = CppOptions::Parse(argc, argv);
   if (!options) {
     return 1;
   }
 
   android::hidl::IoDelegate io_delegate;
-  android::hidl::CodeWriterPtr writer = android::hidl::GetFileWriter(options->OutputFileName());
-  Parser p{io_delegate, options->OutputType(), options->Verbose()};
+  Parser p{io_delegate, options->Verbose()};
   Thing::SetParser(&p);
-  p.SetWriter(std::move(writer));
   p.ParseFile(options->InputFileName());
   if (options->PrintStuff()) {
     p.Dump();
   }
-  p.Write();
-  p.WriteDepFileIfNeeded(std::move(options), io_delegate);
-  if (p.GetErrorCount()) {
-    printf("Exit error count: %d\n", p.GetErrorCount());
+  p.WriteDepFileIfNeeded(*options, io_delegate);
+  for (auto & job : options->OutputJobs()) {
+    android::hidl::CodeWriterPtr writer = android::hidl::GetFileWriter(job.output_file_name);
+    printf("OutFileName %s\n", job.output_file_name.c_str());
+    p.Write(job.type, std::move(writer));
+    if (p.GetErrorCount()) {
+      printf("Exit error count: %d writing %s to %s\n",
+             p.GetErrorCount(),
+             job.type.c_str(),
+             job.output_file_name.c_str());
+      return p.GetErrorCount();
+    }
   }
-  return p.GetErrorCount();
-  //  return android::hidl::Compile_hidl_to_cpp(*options, io_delegate);
+  delete options;
+  return 0;
 }
