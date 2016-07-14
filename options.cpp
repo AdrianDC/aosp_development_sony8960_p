@@ -113,15 +113,13 @@ CppOptions *CppOptions::Parse(int argc, const char* const* argv) {
     options->outputs_.push_back(Job{"bp_h", header_directory+"/Bp"+package_name+".h"});
     options->outputs_.push_back(Job{"i_h", header_directory+"/I"+package_name+".h"});
     options->outputs_.push_back(Job{"all_cpp", source_file});
-    printf("options: outputs size %ld\n", options->outputs_.size());
-    for (auto & job : options->OutputJobs()) {
-      printf("  options: job: %s, %s\n", job.type.c_str(), job.output_file_name.c_str());
-    }
+    options->output_file_name_ = source_file;
   } else if (remaining_args == 3) {
     Job job;
     job.type = argv[i++];
     options->input_file_name_ = argv[i++];
     job.output_file_name = argv[i++];
+    options->output_file_name_ = job.output_file_name;
     options->outputs_.push_back(job);
     SnipMapMap::iterator smm_it = snippets_cpp.find(job.type);
     if (smm_it == snippets_cpp.end()) {

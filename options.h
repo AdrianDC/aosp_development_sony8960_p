@@ -48,6 +48,7 @@ class CppOptions final {
 
   std::vector<std::string> ImportPaths() const { return import_paths_; }
   std::vector<Job> OutputJobs() { return outputs_; }
+  std::string OutputFileName() { return output_file_name_; }
   std::string DependencyFilePath() const { return dep_file_name_; }
   bool PrintStuff() const { return print_stuff_; }
   bool Verbose() const { return verbose_; }
@@ -58,6 +59,7 @@ class CppOptions final {
   bool print_stuff_ = false;
   bool verbose_ = false;
   std::string input_file_name_;
+  std::string output_file_name_;
   std::vector<Job> outputs_;
   std::vector<std::string> import_paths_;
   std::string dep_file_name_;

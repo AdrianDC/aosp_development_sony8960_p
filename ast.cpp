@@ -835,8 +835,7 @@ void Parser::WriteDepFileIfNeeded(android::hidl::CppOptions &options,
   vector<string> hidl_sources = {options.InputFileName()};
 
   android::hidl::CodeWriter *writer = writerP.get();
-  auto & job = options.OutputJobs().back();
-  string output_file = job.output_file_name;
+  string output_file = options.OutputFileName();
 
   // Encode that the output file depends on hidl input files.
   writer->Write("%s : \\\n", output_file.c_str());
