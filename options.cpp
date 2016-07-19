@@ -112,6 +112,7 @@ CppOptions *CppOptions::Parse(int argc, const char* const* argv) {
     options->outputs_.push_back(Job{"bn_h", header_directory+"/Bn"+package_name+".h"});
     options->outputs_.push_back(Job{"bp_h", header_directory+"/Bp"+package_name+".h"});
     options->outputs_.push_back(Job{"i_h", header_directory+"/I"+package_name+".h"});
+    options->outputs_.push_back(Job{"vts", header_directory+"/"+package_name+".vts"});
     options->outputs_.push_back(Job{"all_cpp", source_file});
     options->output_file_name_ = source_file;
   } else if (remaining_args == 3) {
