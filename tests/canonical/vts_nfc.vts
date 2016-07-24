@@ -1,0 +1,144 @@
+// AUTO_GENERATED FILE - DO NOT EDIT
+// see system/tools/hidl/templates/Template.vts
+component_class: HAL_HIDL
+
+component_type_version: 1.0
+component_name: "INfc"
+
+import: "android.hardware.nfc.INfcClientCallback"
+
+
+attribute: {
+  name: "nfc_event_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_OPEN_CPLT_EVT"
+    value: 0
+    enumerator: "HAL_NFC_CLOSE_CPLT_EVT"
+    value: 1
+    enumerator: "HAL_NFC_POST_INIT_CPLT_EVT"
+    value: 2
+    enumerator: "HAL_NFC_PRE_DISCOVER_CPLT_EVT"
+    value: 3
+    enumerator: "HAL_NFC_REQUEST_CONTROL_EVT"
+    value: 4
+    enumerator: "HAL_NFC_RELEASE_CONTROL_EVT"
+    value: 5
+    enumerator: "HAL_NFC_ERROR_EVT"
+    value: 6
+
+  }
+}
+attribute: {
+  name: "nfc_status_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_STATUS_OK"
+    value: 0
+    enumerator: "HAL_NFC_STATUS_FAILED"
+    value: 1
+    enumerator: "HAL_NFC_STATUS_ERR_TRANSPORT"
+    value: 2
+    enumerator: "HAL_NFC_STATUS_ERR_CMD_TIMEOUT"
+    value: 3
+    enumerator: "HAL_NFC_STATUS_REFUSED"
+    value: 4
+
+  }
+}
+attribute: {
+  name: "nfc_data_t"
+  type: TYPE_STRUCT
+  struct_value: {
+    name: "data"
+    type: TYPE_VECTOR
+    vector_value: {  scalar_type: "uint8_t"  }
+
+  }
+}
+api: {
+  name: "open"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+  arg: {
+    type: TYPE_HIDL_CALLBACK
+    predefined_type: "INfcClientCallback"
+  }
+
+
+
+}
+api: {
+  name: "write"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+  arg: {
+    type: TYPE_STRUCT
+    predefined_type: "nfc_data_t"
+  }
+
+
+
+}
+api: {
+  name: "core_initialized"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+  arg: {
+    type: TYPE_VECTOR
+    vector_value: {  scalar_type: "uint8_t"  }
+  }
+
+
+
+}
+api: {
+  name: "pre_discover"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+
+
+
+}
+api: {
+  name: "close"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+
+
+
+}
+api: {
+  name: "control_granted"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+
+
+
+}
+api: {
+  name: "power_cycle"
+  return_type_hidl: {
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+  }
+
+
+
+}
+
+
+
+

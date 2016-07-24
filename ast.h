@@ -183,7 +183,19 @@ class Fields {
   string GenSemiList(string section, const FieldContext &context = FieldContext{"","","",0});
   string GenByType(string section, string prefix);
   string TextByPrefix(string section, string prefix, string name_prefix = "");
-  string GenVtsList(string section, string label);
+
+  // TODO(zhuoyao): move to TypedFields once split.
+  // Generate the list of typed field description required by vts.
+  // label: indicate whether the field is an input parameter or a return value.
+  //        Used by function type.
+  // snippet_name: the snippet that should be replaced.
+  string GenVtsTypedFieldList(string section, string label,
+                              string snippet_name);
+
+  // TODO(zhuoyao): move to EnumFields once split.
+  // Generate the list of enum field description required by vts.
+  string GenVtsEnumFieldList(string section);
+
   int Size() { return fields_.size(); }
   void Dump();
   bool HasPtrFixup();
@@ -218,6 +230,11 @@ class Type : public Thing {
   virtual const string Description(string section) const { return Generate(section); }
   virtual const string TypeSuffix(bool subtype) const { return subtype ? "UNUSED" : TypeName(); }
   virtual string TypeOfEnum(string /*section*/) { return "Error, not enum type"; }
+  // Return the type name required by vts.
+  virtual string VtsTypeName() const { return "TYPE_UNKNOW"; };
+  // Return the type description required by vts.
+  virtual string VtsTypeDesc(string section);
+
   bool HasFixup();
 
  private:
@@ -310,6 +327,7 @@ class VecType : public DerivedType {
   const string Description(string section) const;
   const string Generate(string prefix) const override;
   virtual bool HasPtrFixup() override { return true; }
+  string VtsTypeName() const override { return "TYPE_VECTOR"; }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(VecType);
@@ -361,6 +379,7 @@ class NamedType : public DerivedType {
   virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
   { return GetBase()->FixupText(section, context, prefix); }
   virtual string SubtypeSuffix() const override;
+  string VtsTypeName() const override { return base_->VtsTypeName(); }
 
  private:
   Element *name_;
@@ -380,6 +399,7 @@ class ScalarType : public Type {
   virtual string VtsType() const override { return name_->GetText(); }
   virtual string SubtypeSuffix() const override { return "_" + name_->GetText(); }
   virtual const string TypeSuffix(bool subtype) const override;
+  string VtsTypeName() const override { return "TYPE_SCALAR"; };
  private:
   Element *name_;
   DISALLOW_COPY_AND_ASSIGN(ScalarType);
@@ -395,6 +415,7 @@ class HandleType : public Type {
   virtual const string FixupText(string section, const FieldContext &context, string prefix) const override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return true; }
+  string VtsTypeName() const override { return "TYPE_HANDLE"; }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(HandleType);
@@ -436,6 +457,7 @@ class StringType : public Type {
   const string Generate(string section) const override;
   virtual bool HasPtrFixup() override { return true; }
   virtual bool HasFdFixup() override { return false; }
+  string VtsTypeName() const override { return "TYPE_STRING"; }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StringType);
@@ -473,6 +495,7 @@ class EnumDecl : public TypeDecl {
   void Dump() override;
   const string TypeName() const override { return "enum_decl"; }
   const Subs GetSubs(string section) const override;
+  string VtsTypeName() const override { return "TYPE_ENUM"; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(EnumDecl);
@@ -487,6 +510,7 @@ class StructDecl : public TypeDecl {
   const Subs GetSubsC(string section, const FieldContext &context) const override;
   virtual const string FixupText(string section, const FieldContext &context, string prefix) const override
   { return GetBase()->FixupText(section, context, prefix); }
+  string VtsTypeName() const override { return "TYPE_STRUCT"; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(StructDecl);
@@ -512,6 +536,7 @@ class ImportDecl : public TypeDecl {
   const string TypeName() const override { return "import_decl"; }
   const Subs GetSubs(string section) const override;
   const string Generate(string section) const override;
+  string VtsTypeName() const override { return "TYPE_HIDL_CALLBACK"; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(ImportDecl);

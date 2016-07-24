@@ -4,38 +4,43 @@ component_class: HAL_HIDL
 component_type: LIGHT
 
 component_type_version: 1.0
-
-original_data_structure_name: "ISampleLightsHalServiceWithVtsAnnotation"
-
-aggregate_type_name: "light_state_t"
-aggregate_type_definition: {
-  primitive_type: "uint32_t"
-  primitive_name: "color"
-
-  primitive_type: "int32_t"
-  primitive_name: "flashMode"
-
-  primitive_type: "int32_t"
-  primitive_name: "flashOnMs"
-
-  primitive_type: "int32_t"
-  primitive_name: "flashOffMs"
-
-  primitive_type: "int32_t"
-  primitive_name: "brightnessMode"
+component_name: "ISampleLightsHalServiceWithVtsAnnotation"
 
 
+
+attribute: {
+  name: "light_state_t"
+  type: TYPE_STRUCT
+  struct_value: {
+    name: "color"
+    type: TYPE_SCALAR
+    scalar_type: "uint32_t"
+    name: "flashMode"
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+    name: "flashOnMs"
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+    name: "flashOffMs"
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+    name: "brightnessMode"
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
+
+  }
 }
 api: {
   name: "setLight"
   return_type_hidl: {
-    primitive_type: "int32_t"
-
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
   }
   arg: {
-    aggregate_type: "light_state_t"
-
+    type: TYPE_STRUCT
+    predefined_type: "light_state_t"
   }
+
 
 
 }
@@ -48,78 +53,102 @@ aggregate_type_definition: {
   primitive_value: {
     int32_t: 0
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "int32_t"
   primitive_name: "LIGHT_FLASH_TIMED"
   primitive_value: {
     int32_t: 1
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "int32_t"
   primitive_name: "LIGHT_FLASH_HARDWARE"
   primitive_value: {
     int32_t: 2
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "int32_t"
   primitive_name: "BRIGHTNESS_MODE_USER"
   primitive_value: {
     int32_t: 0
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "int32_t"
   primitive_name: "BRIGHTNESS_MODE_SENSOR"
   primitive_value: {
     int32_t: 1
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_BACKLIGHT"
   primitive_value: {
     bytes: "backlight"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_KEYBOARD"
   primitive_value: {
     bytes: "keyboard"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_BUTTONS"
   primitive_value: {
     bytes: "buttons"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_BATTERY"
   primitive_value: {
     bytes: "battery"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_NOTIFICATIONS"
   primitive_value: {
     bytes: "notifications"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_ATTENTION"
   primitive_value: {
     bytes: "attention"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_BLUETOOTH"
   primitive_value: {
     bytes: "bluetooth"
   }
-
+}
+aggregate_type_name: "const"
+aggregate_type_definition: {
   primitive_type: "bytes"
   primitive_name: "LIGHT_ID_WIFI"
   primitive_value: {
     bytes: "wifi"
   }
-
-
 }
+
+
