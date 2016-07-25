@@ -33,7 +33,7 @@ struct hidl_string {
 class ITestService : public ::android::hidl::IInterface {
 public:
 
-DECLARE_META_INTERFACE(TestService);
+DECLARE_HWBINDER_META_INTERFACE(TestService);
 typedef struct {
 uint32_t int1;
 uint32_t int2;

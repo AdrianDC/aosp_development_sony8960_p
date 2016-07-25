@@ -34,7 +34,7 @@ struct hidl_string {
 class INfc : public ::android::hidl::IInterface {
 public:
 
-DECLARE_META_INTERFACE(Nfc);
+DECLARE_HWBINDER_META_INTERFACE(Nfc);
   enum class nfc_event_t : uint32_t {  HAL_NFC_OPEN_CPLT_EVT = 0,  HAL_NFC_CLOSE_CPLT_EVT = 1,  HAL_NFC_POST_INIT_CPLT_EVT = 2,  HAL_NFC_PRE_DISCOVER_CPLT_EVT = 3,  HAL_NFC_REQUEST_CONTROL_EVT = 4,  HAL_NFC_RELEASE_CONTROL_EVT = 5,  HAL_NFC_ERROR_EVT = 6 };
   const char* GetNameOf(nfc_event_t f) {
     static const char* names[] = {  "HAL_NFC_OPEN_CPLT_EVT" ,   "HAL_NFC_CLOSE_CPLT_EVT" ,   "HAL_NFC_POST_INIT_CPLT_EVT" ,   "HAL_NFC_PRE_DISCOVER_CPLT_EVT" ,   "HAL_NFC_REQUEST_CONTROL_EVT" ,   "HAL_NFC_RELEASE_CONTROL_EVT" ,   "HAL_NFC_ERROR_EVT"  };

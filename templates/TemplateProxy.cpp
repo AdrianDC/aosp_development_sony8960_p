@@ -9,7 +9,7 @@
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-IMPLEMENT_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
+IMPLEMENT_HWBINDER_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 
 // START namespace_close_section
 }  // namespace namespace_name  //ALL namespace_close_line

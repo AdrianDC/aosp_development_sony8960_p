@@ -14,7 +14,7 @@ namespace hardware {
 namespace nfc {
 
 
-IMPLEMENT_META_INTERFACE(Nfc, "android.hardware.nfc.INfc");
+IMPLEMENT_HWBINDER_META_INTERFACE(Nfc, "android.hardware.nfc.INfc");
 
 }  // namespace nfc
 }  // namespace hardware

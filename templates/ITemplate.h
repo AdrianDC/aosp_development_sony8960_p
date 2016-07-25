@@ -38,7 +38,7 @@ struct hidl_string {
 class Ipackage_name : public ::android::hidl::IInterface {
 public:
 
-DECLARE_META_INTERFACE(package_name);
+DECLARE_HWBINDER_META_INTERFACE(package_name);
   // START code_snips
 typedef struct { // START code_for_struct_decl
     int field_filler; // ALL struct_fields
