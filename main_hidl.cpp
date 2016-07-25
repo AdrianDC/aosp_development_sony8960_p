@@ -42,7 +42,6 @@ int main(int argc, char** argv) {
   p.WriteDepFileIfNeeded(*options, io_delegate);
   for (auto & job : options->OutputJobs()) {
     android::hidl::CodeWriterPtr writer = android::hidl::GetFileWriter(job.output_file_name);
-    printf("OutFileName %s\n", job.output_file_name.c_str());
     p.Write(job.type, std::move(writer));
     if (p.GetErrorCount()) {
       printf("Exit error count: %d writing %s to %s\n",

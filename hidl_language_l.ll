@@ -32,7 +32,7 @@ intvalue    [-+]?(0[0-7']*|[1-9][0-9']*|0[xX][0-9a-fA-F']+|0[bB][01']+)((l|L|ll|
 <LONG_COMMENT>\*+\/   { extra_text += yytext;
 		        yylval->element = new CommentElement(extra_text, "",
 		          yylloc->begin.line);
-		      	yylloc->step(); BEGIN(INITIAL); return yy::parser::token::COMMENT; }
+		      	yylloc->step(); BEGIN(INITIAL); /*return yy::parser::token::COMMENT;*/ }
 <LONG_COMMENT>\*+     { extra_text += yytext; }
 <LONG_COMMENT>\n+     { extra_text += yytext; yylloc->lines(yyleng); }
 <LONG_COMMENT>[^*\n]+ { extra_text += yytext; }
@@ -50,7 +50,7 @@ intvalue    [-+]?(0[0-7']*|[1-9][0-9']*|0[xX][0-9a-fA-F']+|0[bB][01']+)((l|L|ll|
 		            yylloc->begin.line);
 			yylloc->lines(1);
 		        yylloc->step();
-			return yy::parser::token::COMMENT; }
+			/*return yy::parser::token::COMMENT;*/ }
 
 \n+                   { yylloc->lines(yyleng); yylloc->step(); }
 {whitespace}          {}

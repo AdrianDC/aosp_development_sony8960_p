@@ -171,7 +171,6 @@ class Const : public Thing {
 class Field;
 class Type;
 
-// TODO - split Fields into TypedFields and EnumFields
 class Fields {
  public:
   void Add(Field *field) { fields_.push_back(field); }
