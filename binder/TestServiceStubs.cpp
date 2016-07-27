@@ -8,7 +8,7 @@ namespace hardware {
 namespace tests {
 
 
-IMPLEMENT_META_INTERFACE(TestService, "android.hardware.tests.ITestService");
+IMPLEMENT_HWBINDER_META_INTERFACE(TestService, "android.hardware.tests.ITestService");
 
 }  // namespace tests
 }  // namespace hardware
