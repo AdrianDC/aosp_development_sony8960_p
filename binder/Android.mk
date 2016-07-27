@@ -21,11 +21,11 @@ LOCAL_MODULE := hidl_test_service
 LOCAL_SRC_FILES := TestService.cpp TestServiceStubs.cpp
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_C_INCLUDES := system/libhwbinder/include
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := hidl_test_client
 LOCAL_SRC_FILES := TestClient.cpp TestServiceProxy.cpp
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_C_INCLUDES := system/libhwbinder/include
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
