@@ -62,6 +62,8 @@ class Tester(object):
     self.TestOutput("INfc.hidl", "INfc.h", "i_h")
     self.TestOutput("INfc.hidl", "BnNfc.h", "bn_h")
     self.TestOutput("INfc.hidl", "BpNfc.h", "bp_h")
+    self.TestOutput("INfc.hidl", "vts_nfc.vts", "vts")
+    self.TestOutput("INfcClientCallback.hidl", "vts_nfc_client_callback.vts", "vts")
     self.TestOutput("ITypes.hidl", "TypesAll.cpp", "all_cpp")
     self.TestOutput("ITypes.hidl", "ITypes.h", "i_h")
     self.TestOutput("ITypes.hidl", "BnTypes.h", "bn_h")

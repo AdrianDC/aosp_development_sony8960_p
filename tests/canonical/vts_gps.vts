@@ -4,28 +4,21 @@ component_class: HAL_HIDL
 component_type: GPS
 
 component_type_version: 1.0
+component_name: "ISampleGpsHalServiceWithVtsCallFlowAnnotation"
 
-original_data_structure_name: "ISampleGpsHalServiceWithVtsCallFlowAnnotation"
+
 
 api: {
   name: "start"
   return_type_hidl: {
-    primitive_type: "int32_t"
-
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
   }
   arg: {
-    primitive_type: "int32_t"
-    values: {
-      int32_t: 1
-    }
-    values: {
-      int32_t: 2
-    }
-    values: {
-      int32_t: 3
-    }
-
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
   }
+
 
   callflow: {
     entry: true
@@ -39,9 +32,10 @@ api: {
 api: {
   name: "stop"
   return_type_hidl: {
-    primitive_type: "int32_t"
-
+    type: TYPE_SCALAR
+    scalar_type: "int32_t"
   }
+
 
   callflow: {
 
@@ -54,6 +48,7 @@ api: {
 api: {
   name: "cleanup"
 
+
   callflow: {
 
     exit: true
@@ -65,7 +60,5 @@ api: {
 }
 
 
-aggregate_type_name: "const"
-aggregate_type_definition: {
 
-}
+

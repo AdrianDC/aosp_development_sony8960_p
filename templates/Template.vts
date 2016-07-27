@@ -5,73 +5,78 @@
 component_class: HAL_HIDL
 component_type: vts_ct_enum // ALL component_type_enum
 component_type_version: version_string
+component_name: "Ipackage_name"
 
-original_data_structure_name: "Ipackage_name"
+// START imports_section
+import: "namespace_dots.import_name" // ALL import_line
+// END imports_section
 
-//START code_snips
+// START code_snips
 // START code_for_function
 api: {
   name: "function_name"
   // START vts_args
   arg_or_ret_type: {
-    vts_type_type: "type_name"
-// START vts_values
-    values: {
-      type_name: the_value
-    }
-// END vts_values
+    type: vts_type_name
+    vts_type_description
   }
- // END vts_args
-// START vts_callflow
+  // END vts_args
+
+  // START vts_callflow
   callflow: {
     entry: true // ALL anno_entry
     exit: true // ALL anno_exit
     callflow_label: callflow_func_name // ALL anno_calls
   }
-// END vts_callflow
+  // END vts_callflow
 }
 // END code_for_function
 
 // START code_for_struct_decl
-aggregate_type_name: "struct_name"
-aggregate_type_definition: {
- // START struct_gen_fields
-  primitive_type: "field_type_vts" // START struct_field_scalar
-  primitive_name: "param_name"
-
- // END struct_field_scalar
-
-  primitive_type: "vec" // START struct_field_vec
-  primitive_name: "data"
-
- // END struct_field_vec
-
-  primitive_type: "bytes" // START struct_field_string
-  primitive_name: "param_name"
-
- // END struct_field_string
-
-  primitive_type: "handle" // START struct_field_handle
-  primitive_name: "param_name"
-
- // END struct_field_handle
-
- // END struct_gen_fields
+attribute: {
+  name: "struct_name"
+  type: vts_type_name
+  struct_value: {
+    // START vts_struct_field
+    name: "vts_field_name"
+    type: vts_type_name
+    vts_type_description
+    // END vts_struct_field
+  }
 }
 // END code_for_struct_decl
 
-  }// END code_snips
+// START code_for_enum_decl
+attribute: {
+  name: "enum_name"
+  type: vts_type_name
+  enum_value: {
+    // START vts_enum_field
+    enumerator: "vts_enum_name"
+    value: vts_enum_value
+    // END vts_enum_field
+  }
+}
+// END code_for_enum_decl
+}
+// END code_snips
 
+// START declarations
+// START declare_const
 aggregate_type_name: "const"
 aggregate_type_definition: {
-// START declarations
-  primitive_type: "const_vts_type"        // START declare_const
+  primitive_type: "const_vts_type"
   primitive_name: "const_name"
   primitive_value: {
     const_vts_type: const_value
   }
-
-        // END declare_const
-// END declarations
 }
+// END declare_const
+// END declarations
+
 // END file
+
+
+scalar_type: "base_type_name" // ALL vts_type_scalar
+predefined_type: "named_type_name"  // ALL vts_type_named_type
+vector_value: {  vts_base_type_description  }  // ALL vts_type_vec

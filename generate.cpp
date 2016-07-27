@@ -79,6 +79,21 @@ static string make_inline(const string in)
   return out;
 }
 
+// Remove the new line at the end of the input string.
+// TODO(zhuoyao): move to a utility class.
+static string trim(const string in)
+{
+  string out{in};
+  out.erase(out.find_last_not_of("\n") + 1);
+  return out;
+}
+
+string Type::VtsTypeDesc(string section)
+{
+  string output = Snip(section, "vts_type_" + TypeName(), GetSubs(section));
+  return trim(output);
+}
+
 const string Header::Generate(string section) const
 {
   Subs subs {};
@@ -175,7 +190,8 @@ const Subs Field::GetSubsC(string section, const FieldContext &context) const
 const Subs VecType::GetSubs(string section) const
 {
   Subs subs{{"vec_name", "myVecName"},
-    {"decl_base_type", GetBase()->Generate(section)}};
+    {"decl_base_type", GetBase()->Generate(section)},
+    {"vts_base_type_description", GetBase()->VtsTypeDesc(section) }};
   return subs;
 }
 
@@ -217,7 +233,7 @@ const Subs ArrayType::GetSubs(string section) const
 const Subs ScalarType::GetSubs(string section) const
 {
   Subs subs{{"field_type_vts", VtsType()},
-    {"base_type_name", name_->GetText()}};
+            {"base_type_name", name_->GetText()}};
   return subs;
 }
 
@@ -272,8 +288,8 @@ const Subs Function::GetSubs(string section) const
     {"param_decls", fields_->GenSemiList(section)},
     {"callback_invocation", callback_invocation},
     {"generates_variables", generates_->GenSemiList(section, FieldContext{"","","",0}.vp(CB_VAR_PREFIX))},
-    {"vts_args", generates_->GenVtsList(section, "return_type_hidl") +
-          fields_->GenVtsList(section, "arg")},
+    {"vts_args", generates_->GenVtsTypedFieldList(section, "return_type_hidl", "vts_args") +
+          fields_->GenVtsTypedFieldList(section, "arg", "vts_args")},
     {"vts_callflow", GenCallflow(section)},
   };
   return subs;
@@ -350,15 +366,28 @@ AnnotationValues *Annotation::GetValues(string key)
   return (*entries_)[key];
 }
 
-string Fields::GenVtsList(string section, string label)
+string Fields::GenVtsTypedFieldList(string section, string label,
+                                    string snippet_name)
 {
   string output;
-  for (auto & field : fields_) {
+  for (auto &field : fields_) {
     Subs subs{{"arg_or_ret_type", label},
-      {"type_name", field->GetType()->Generate(section)},
-      {"vts_type_type", field->GetType()->IsPrimitive() ? "primitive_type" : "aggregate_type"},
-      {"vts_values", field->GenVtsValues(section)}};
-    output += Snip(section, "vts_args", subs);
+              {"vts_field_name", field->NameText()},
+              {"vts_type_name", field->GetType()->VtsTypeName()},
+              {"vts_type_description", field->GetType()->VtsTypeDesc(section)}};
+    output += Snip(section, snippet_name, subs);
+  }
+  return output;
+}
+
+string Fields::GenVtsEnumFieldList(string section)
+{
+  string output;
+  for (auto &field : fields_) {
+    Subs subs{{"vts_enum_name", field->NameText()},
+              {"vts_enum_value",
+               field->GetValue() ? field->GetValue()->GetText() : ""}};
+    output += Snip(section, "vts_enum_field", subs);
   }
   return output;
 }
@@ -500,7 +529,6 @@ string Fields::GenByType(string section, string prefix)
   return output;
 }
 
-
 const string ArrayType::FixupText(string section, const FieldContext &context, string prefix) const
 {
   Type *base = GetBase();
@@ -609,6 +637,8 @@ const Subs StructDecl::GetSubsC(string section, const FieldContext &context) con
     {"fixup_ret_read_struct", GetBase()->FixupText(section, context, "read_ret_")},
     {"struct_type_description", make_inline(Description(section))},
     {"offset_calculator", "0 /* offset_calculator */"},
+    {"vts_type_name", VtsTypeName()},
+    {"vts_struct_field", base_->GetFields()->GenVtsTypedFieldList(section, "", "vts_struct_field")},
   };
   return subs;
 }
@@ -674,6 +704,8 @@ const Subs EnumDecl::GetSubs(string section) const
     {"enum_name", name_->GetText()},
     {"enum_base_type", base_->TypeOfEnum(section)},
     {"quoted_fields_of_enum", base_->GetFields()->GenCommaNameList(section, "", "enum_quoted_name_")},
+    {"vts_type_name", VtsTypeName()},
+    {"vts_enum_field", base_->GetFields()->GenVtsEnumFieldList(section)},
   };
   return subs;
 }
@@ -844,7 +876,8 @@ void Parser::Write(string out_type, android::hidl::CodeWriterPtr writer)
   string imports_section;
   for (auto & import : imports_) {
     Subs subs {{"import_name", import->back()->GetText()},
-      {"namespace_slashes", namespace_slashes}};
+      {"namespace_slashes", namespace_slashes},
+      {"namespace_dots", namespace_dots}};
     imports_section += Snip(section_, "import_line", subs);
   }
   Subs subs {

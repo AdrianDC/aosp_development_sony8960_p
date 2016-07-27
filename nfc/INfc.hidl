@@ -4,6 +4,7 @@ package android.hardware.nfc;
 
 import android.hardware.nfc.INfcClientCallback;
 
+@hal_type("NFC")
 interface INfc {
     enum nfc_event_t : uint32_t {
         HAL_NFC_OPEN_CPLT_EVT           = 0,
