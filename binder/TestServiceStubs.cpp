@@ -43,7 +43,7 @@ int32_t echo_me;
         if (((_aidl_ret_status) != (::android::OK))) {
           break;
         }
-        my_struct = (simple_t *)_aidl_data.readBuffer();
+        my_struct = (simple_t *)_aidl_data.readBuffer(nullptr);
 
         // Make the call into the server
         ::android::hidl::binder::Status _aidl_status(
