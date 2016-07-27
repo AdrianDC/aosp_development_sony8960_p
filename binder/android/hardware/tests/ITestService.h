@@ -25,7 +25,7 @@ struct hidl_vec {
   size_t count;
 };
 
-DECLARE_META_INTERFACE(TestService);
+DECLARE_HWBINDER_META_INTERFACE(TestService);
 typedef struct {
 uint32_t int1;
 uint32_t int2;

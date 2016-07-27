@@ -12,7 +12,7 @@ namespace hardware {
 namespace tests {
 
 
-IMPLEMENT_META_INTERFACE(Types, "android.hardware.tests.ITypes");
+IMPLEMENT_HWBINDER_META_INTERFACE(Types, "android.hardware.tests.ITypes");
 
 }  // namespace tests
 }  // namespace hardware
@@ -530,7 +530,7 @@ namespace hardware {
 namespace tests {
 
 
-IMPLEMENT_META_INTERFACE(Types, "android.hardware.tests.ITypes");
+IMPLEMENT_HWBINDER_META_INTERFACE(Types, "android.hardware.tests.ITypes");
 
 }  // namespace tests
 }  // namespace hardware
