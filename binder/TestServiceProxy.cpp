@@ -46,7 +46,7 @@ BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aid
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeBuffer((void *)my_struct->data.buffer, my_struct->data.count * sizeof(*my_struct->data.buffer), nullptr, buffer_handle, 8);
+  _aidl_ret_status = _aidl_data.writeEmbeddedBuffer((void *)my_struct->data.buffer, my_struct->data.count * sizeof(*my_struct->data.buffer), nullptr, buffer_handle, 8);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

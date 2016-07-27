@@ -8,7 +8,6 @@
 #include <hwbinder/IServiceManager.h>
 #include <hwbinder/ProcessState.h>
 #include <hwbinder/Status.h>
-#include <nativehelper/ScopedFd.h>
 #include <utils/Errors.h>
 #include <utils/Log.h>
 #include <utils/Looper.h>
