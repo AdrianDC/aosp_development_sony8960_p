@@ -14,6 +14,7 @@
 #include "hidl-gen_y.h"
 
 #include <stdio.h>
+#include <utils/String8.h>
 
 using namespace android;
 
@@ -38,12 +39,14 @@ int yyerror(AST *, const char *s) {
 %token<str> CONST
 %token<str> ENUM
 %token<str> EXTENDS
+%token<str> FQNAME
 %token<str> GENERATES
 %token<str> IDENTIFIER
 %token<str> IMPORT
 %token<str> INTEGER
 %token<str> INTERFACE
 %token<str> PACKAGE
+%token<type> SCALAR
 %token<str> STRUCT
 %token<str> STRING_LITERAL
 %token<str> TYPEDEF
@@ -51,10 +54,9 @@ int yyerror(AST *, const char *s) {
 %token<str> VEC
 %token<str> VERSION
 
-%token<type> TYPENAME
-
 %type<str> optIdentifier package
 %type<str> const_value
+%type<type> fqname
 
 %type<type> type opt_storage_type
 %type<type> enum_declaration
@@ -69,7 +71,6 @@ int yyerror(AST *, const char *s) {
 %type<typedVar> typed_var
 %type<method> method_declaration
 %type<compoundStyle> struct_or_union_keyword
-%type<stringVec> package_path
 
 %start program
 
@@ -99,29 +100,44 @@ version
       {
           ast->setVersion($2, $4);
       }
+    ;
+
+fqname
+    : FQNAME
+      {
+          $$ = ast->lookupType($1);
+          if ($$ == NULL) {
+              yyerror(ast,
+                      android::String8::format(
+                          "Failed to lookup type '%s'.", $1).string());
+              YYERROR;
+          }
+      }
+    | IDENTIFIER
+      {
+          $$ = ast->lookupType($1);
+          if ($$ == NULL) {
+              yyerror(ast,
+                      android::String8::format(
+                          "Failed to lookup type '%s'.", $1).string());
+              YYERROR;
+          }
+      }
+    | SCALAR
+    ;
 
 package
-    : PACKAGE package_path ';'
+    : PACKAGE FQNAME ';'
       {
-          ast->setPackage($2);
+          if (!ast->setPackage($2)) {
+              yyerror(ast, "Malformed package identifier.");
+              YYERROR;
+          }
       }
-
-package_path
-    : IDENTIFIER
-      {
-          $$ = new Vector<std::string>;
-          $$->push_back($1);
-      }
-    | package_path '.' IDENTIFIER
-      {
-          $$ = $1;
-          $$->push_back($3);
-      }
-    ;
 
 imports
     : /* empty */
-    | imports IMPORT package_path ';'
+    | imports IMPORT FQNAME ';'
       {
           ast->addImport($3);
       }
@@ -129,7 +145,7 @@ imports
 
 opt_extends
     : /* empty */ { $$ = NULL; }
-    | EXTENDS TYPENAME { $$ = $2; }
+    | EXTENDS fqname { $$ = $2; }
 
 body
     : INTERFACE IDENTIFIER opt_extends
@@ -186,7 +202,7 @@ const_value
     | STRING_LITERAL ;
 
 const_declaration
-    : CONST TYPENAME IDENTIFIER '=' const_value
+    : CONST fqname IDENTIFIER '=' const_value
       {
           Constant *constant = new Constant($3, $2, $5);
           ast->scope()->addConstant(constant);
@@ -288,7 +304,7 @@ field_declaration
 
 opt_storage_type
     : /* empty */ { $$ = NULL; }
-    | ':' TYPENAME { $$ = $2; }
+    | ':' fqname { $$ = $2; }
     ;
 
 opt_comma
@@ -345,9 +361,9 @@ enum_values
     ;
 
 type
-    : TYPENAME { $$ = $1; }
-    | TYPENAME '[' INTEGER ']' { $$ = new ArrayType($1, $3); }
-    | VEC '<' TYPENAME '>' { $$ = new VectorType($3); }
+    : fqname { $$ = $1; }
+    | fqname '[' INTEGER ']' { $$ = new ArrayType($1, $3); }
+    | VEC '<' fqname '>' { $$ = new VectorType($3); }
     | struct_or_union_declaration { $$ = $1; }
     | enum_declaration { $$ = $1; }
     ;

@@ -1,6 +1,7 @@
 #include "AST.h"
 
 #include "Formatter.h"
+#include "FQName.h"
 
 #include <stdio.h>
 
@@ -19,6 +20,14 @@ int main(int argc, const char *const argv[]) {
         delete ast;
         ast = NULL;
     }
+
+#if 0
+    FQName("a.b.c.d@2.3::foo").print();
+    FQName("a.b.c.d::foo").print();
+    FQName("@3.4::foo").print();
+    FQName("foo").print();
+    FQName("::foo").print();
+#endif
 
     return 0;
 }

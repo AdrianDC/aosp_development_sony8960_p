@@ -19,8 +19,8 @@ struct AST {
     static AST *Parse(const char *path);
 
     void setVersion(const char *major, const char *minor);
-    void setPackage(Vector<std::string> *packagePath);
-    void addImport(Vector<std::string> *importPath);
+    bool setPackage(const char *package);
+    bool addImport(const char *import);
 
     void enterScope(Scope *container);
     void leaveScope();
@@ -38,6 +38,9 @@ private:
 
     void *mScanner;
     Scope *mRootScope;
+
+    std::string mVersion;
+    std::string mPackage;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

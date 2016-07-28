@@ -5,6 +5,12 @@ E			[Ee][+-]?{D}+
 FS			(f|F|l|L)
 IS			(u|U|l|L)*
 
+COMPONENT               {L}({L}|{D})*
+DOT                     [.]
+PATH                    {COMPONENT}({DOT}{COMPONENT})*
+AT                      [@]
+VERSION                 {AT}{D}+{DOT}{D}+
+
 %{
 
 #include "AST.h"
@@ -30,7 +36,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
     do {                                                        \
         count(yyg);                                             \
         yylval->type = new ScalarType(ScalarType::kind);        \
-        return TYPENAME;                                        \
+        return SCALAR;                                        \
     } while (0)
 
 %}
@@ -71,8 +77,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "float"			{ SCALAR_TYPE(KIND_FLOAT); }
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
-"handle"		{ count(yyg); yylval->type = new HandleType; return TYPENAME; }
-"string"		{ count(yyg); yylval->type = new StringType; return TYPENAME; }
+"handle"		{ count(yyg); yylval->type = new HandleType; return SCALAR; }
+"string"		{ count(yyg); yylval->type = new StringType; return SCALAR; }
 
 "("			{ count(yyg); return('('); }
 ")"			{ count(yyg); return(')'); }
@@ -88,7 +94,10 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "."			{ count(yyg); return('.'); }
 "="			{ count(yyg); return('='); }
 
-{L}({L}|{D})*		{ count(yyg); return check_type(yyscanner, yyg); }
+{PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
+{VERSION}"::"{PATH}             { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
+{COMPONENT}({DOT}{COMPONENT})+  { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
+{COMPONENT}                     { count(yyg); yylval->str = strdup(yytext); return IDENTIFIER; }
 
 0[xX]{H}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
 0{D}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
@@ -137,21 +146,6 @@ void count(yyguts_t *yyg) {
             column++;
 
     ECHO;
-}
-
-int check_type(yyscan_t yyscanner, yyguts_t *yyg) {
-    AST *ast = yyextra;
-
-    Type *type = ast->lookupType(yytext);
-    if (type != NULL) {
-        yylval->type = new RefType(yytext, type);
-
-        return TYPENAME;
-    }
-
-    yylval->str = strdup(yytext);
-
-    return IDENTIFIER;
 }
 
 void parseFile(AST *ast, const char *path) {

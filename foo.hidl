@@ -1,0 +1,54 @@
+version 1.0;
+package android.hardware.sensors;
+
+interface foo extends bool {
+    const string aString = "foo";
+    const uint8_t aByte = 12;
+
+    enum blah {
+    };
+
+    struct bar {
+        //android.hardware.sensors@1.0::blah aBlah1;
+        //@2.3::bar aBar;
+        //foo::blah aBar;
+        blah aBlah;
+
+        int32_t[3] x;
+        string y;
+        vec<string> z2;
+
+        struct baz {
+            uint8_t x;
+
+        } joker;
+
+        union blah {
+            baz x;
+
+            enum floober {} y;
+
+            handle[10] z;
+            char[20] characters;
+
+            struct blah {} qqq;
+        };
+
+        opaque future;
+        vec<bool> theTruth;
+    };
+
+    enum baz {
+        FIRST_CASE,
+        SECOND_CASE = 10,
+    };
+
+    typedef baz goober;
+
+    struct anonymous {
+        goober[12] lotsOfGoobers;
+    };
+
+    someMethod() generates (float a, double b);
+    someOtherMethod(int32_t x);
+};

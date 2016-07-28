@@ -11,6 +11,7 @@ LOCAL_SRC_FILES :=              \
     Constant.cpp                \
     EnumType.cpp                \
     Formatter.cpp               \
+    FQName.cpp                  \
     HandleType.cpp              \
     hidl-gen_y.yy               \
     hidl-gen_l.ll               \

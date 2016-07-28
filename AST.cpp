@@ -1,6 +1,7 @@
 #include "AST.h"
 
 #include "Formatter.h"
+#include "FQName.h"
 #include "HandleType.h"
 #include "RefType.h"
 #include "Scope.h"
@@ -44,17 +45,35 @@ void AST::setScanner(void *scanner) {
     mScanner = scanner;
 }
 
-void AST::setVersion(const char *, const char *) {
+void AST::setVersion(const char *major, const char *minor) {
+    mVersion = "@";
+    mVersion.append(major);
+    mVersion.append(".");
+    mVersion.append(minor);
 }
 
-void AST::setPackage(Vector<std::string> *) {
+bool AST::setPackage(const char *package) {
+    FQName fqName(package);
+    CHECK(fqName.isValid());
+
+    if (!fqName.package().empty() || !fqName.version().empty()) {
+        return false;
+    }
+
+    mPackage = package;
+
+    return true;
 }
 
-void AST::addImport(Vector<std::string> *importPath) {
+bool AST::addImport(const char *import) {
+#if 0
     CHECK(!importPath->empty());
 
     std::string leaf = importPath->itemAt(importPath->size() - 1);
     scope()->addType(new RefType(leaf.c_str(), new HandleType));
+#endif
+
+    return true;
 }
 
 void AST::enterScope(Scope *container) {
@@ -71,13 +90,26 @@ Scope *AST::scope() {
 }
 
 Type *AST::lookupType(const char *name) {
-    for (size_t i = mScopePath.size(); i-- > 0;) {
-        Type *type = mScopePath[i]->lookupType(name);
+    LOG(INFO) << "lookupType " << name;
 
-        if (type != NULL) {
-            return type;
+    FQName fqName(name);
+    CHECK(fqName.isValid());
+
+    if (fqName.package().empty() && fqName.version().empty()) {
+        // This is just a plain identifier, resolve locally first if possible.
+
+        for (size_t i = mScopePath.size(); i-- > 0;) {
+            Type *type = mScopePath[i]->lookupType(name);
+
+            if (type != NULL) {
+                return new RefType(name, type);
+            }
         }
     }
+
+    fqName.applyDefaults(mPackage, mVersion);
+
+    LOG(INFO) << "lookupType now looking for " << fqName.debugString();
 
     return NULL;
 }
