@@ -176,7 +176,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
 
   // START param_write_struct_type
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
@@ -187,7 +187,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
 
   // START param_write_vec_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -198,7 +198,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END param_write_vec_all
   // START param_write_array_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -221,7 +221,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END array_fixup_loop
   // START param_write_string
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&param_name, sizeof(hidl_string), &parent_handle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -258,7 +258,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END write_fixup_handle
   // START write_fixup_vec
   {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)param_name.buffer;
     size_t size = sizeof(vec_base_type[param_name.count]);
     size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
@@ -268,7 +268,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
@@ -279,7 +279,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   array_fixup_loop
   // END write_fixup_array
   // START param_write_vec
-  uint64_t parent_handle;
+  size_t parent_handle;
   _aidl_data.writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
   write_vec_fixups
   // END param_write_vec
@@ -427,7 +427,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
 
   // START param_ret_read_struct_type
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     param_name = (struct_type_description*)_aidl_reply.readBuffer(&parent_handle);
     if ((param_name) == nullptr) {
       goto _aidl_error;
@@ -437,7 +437,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END param_ret_read_struct_type
   // START param_ret_read_vec_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     param_name = (hidl_vec<decl_base_type> *)_aidl_reply.readBuffer(&parent_handle);
     if ((param_name) == nullptr) {
@@ -448,7 +448,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END param_ret_read_vec_all
   // START param_ret_read_array_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     param_name = _aidl_reply.readBuffer(&parent_handle);
     if (param_name == nullptr) {
@@ -459,7 +459,7 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END param_ret_read_array_all
   // START param_ret_read_string
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     param_name = _aidl_reply.readBuffer(&parent_handle);
     if (param_name == nullptr) {
       goto _aidl_error;
@@ -492,11 +492,11 @@ hidl_vec<base_type_name>//ALL describe_type_vec
   // END read_ret_fixup_handle
   // START read_ret_fixup_vec
   {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_reply.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
     }
@@ -681,7 +681,7 @@ namespace_open_section
 
   // START param_read_struct_type
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     param_name = (struct_type_description*)_aidl_data.readBuffer(&parent_handle);
     if ((param_name) == nullptr) {
       break;
@@ -691,7 +691,7 @@ namespace_open_section
   // END param_read_struct_type
   // START param_read_vec_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     param_name = (hidl_vec<decl_base_type> *)_aidl_data.readBuffer(&parent_handle);
     if ((param_name) == nullptr) {
@@ -702,7 +702,7 @@ namespace_open_section
   // END param_read_vec_all
   // START param_read_array_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     param_name = _aidl_data.readBuffer(&parent_handle);
     if (param_name == nullptr) {
@@ -713,7 +713,7 @@ namespace_open_section
   // END param_read_array_all
   // START param_read_string
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     param_name = _aidl_data.readBuffer(&parent_handle);
     if (param_name == nullptr) {
       break;
@@ -746,11 +746,11 @@ namespace_open_section
   // END read_fixup_handle
   // START read_fixup_vec
   {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer)));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       break;
     }
@@ -875,14 +875,14 @@ param_name// ALL stub_param_decl_default
 
   // START param_ret_write_struct_type
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     fixup_ret_write_struct
   }
   // END param_ret_write_struct_type
   // START param_ret_write_array_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     fixup_write_array
@@ -890,7 +890,7 @@ param_name// ALL stub_param_decl_default
   // END param_ret_write_array_all
   // START param_ret_write_vec_all
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(param_name), &parent_handle);
     fixup_ret_write_vec
@@ -904,7 +904,7 @@ param_name// ALL stub_param_decl_default
   // END vec_ret_fixup_loop
   // START param_ret_write_string
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(hidl_string), &parent_handle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -935,7 +935,7 @@ param_name// ALL stub_param_decl_default
   // END write_ret_fixup_handle
   // START write_ret_fixup_vec
   {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)param_name.buffer;
     size_t size = sizeof(vec_base_type[param_name.count]);
     size_t off = (size_t)((char *)&(param_name.buffer)-(char *)(base_pointer));
@@ -945,7 +945,7 @@ param_name// ALL stub_param_decl_default
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     vec_ret_fixup_loop
   }
   // END write_ret_fixup_vec
@@ -953,7 +953,7 @@ param_name// ALL stub_param_decl_default
   array_fixup_loop
   // END write_ret_fixup_array
   // START param_ret_write_vec
-  uint64_t parent_handle;
+  size_t parent_handle;
   _aidl_reply->writeBuffer((void *)param_name.buffer, vec_size_expr, &parent_handle);
   write_ret_vec_fixups
   // END param_ret_write_vec
