@@ -20,7 +20,7 @@ using namespace android;
 extern int yylex(YYSTYPE *yylval_param, void *yyscanner);
 extern int column;
 
-int yyerror(AST *ast, const char *s) {
+int yyerror(AST *, const char *s) {
     fflush(stdout);
     printf("\n%*s\n%*s\n", column, "^", column, s);
 
@@ -69,6 +69,7 @@ int yyerror(AST *ast, const char *s) {
 %type<typedVar> typed_var
 %type<method> method_declaration
 %type<compoundStyle> struct_or_union_keyword
+%type<stringVec> package_path
 
 %start program
 
@@ -84,6 +85,7 @@ int yyerror(AST *ast, const char *s) {
     android::Vector<android::TypedVar *> *typedVars;
     android::Method *method;
     android::CompoundType::Style compoundStyle;
+    android::Vector<std::string> *stringVec;
 }
 
 %%
@@ -94,18 +96,35 @@ program
 
 version
     : VERSION INTEGER '.' INTEGER ';'
+      {
+          ast->setVersion($2, $4);
+      }
 
 package
     : PACKAGE package_path ';'
+      {
+          ast->setPackage($2);
+      }
 
 package_path
     : IDENTIFIER
+      {
+          $$ = new Vector<std::string>;
+          $$->push_back($1);
+      }
     | package_path '.' IDENTIFIER
+      {
+          $$ = $1;
+          $$->push_back($3);
+      }
     ;
 
 imports
     : /* empty */
     | imports IMPORT package_path ';'
+      {
+          ast->addImport($3);
+      }
     ;
 
 opt_extends
@@ -116,6 +135,11 @@ body
     : INTERFACE IDENTIFIER opt_extends
       {
           Interface *iface = new Interface($2, $3);
+
+          // Register interface immediately so it can be referenced inside
+          // definition.
+          ast->scope()->addType(iface);
+
           ast->enterScope(iface);
       }
       '{' interface_declarations '}' ';'
@@ -123,7 +147,6 @@ body
           Interface *iface = static_cast<Interface *>(ast->scope());
 
           ast->leaveScope();
-          ast->scope()->addType(iface);
       }
     | type_declarations
     ;

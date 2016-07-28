@@ -7,16 +7,18 @@
 using namespace android;
 
 int main(int argc, const char *const argv[]) {
-    AST *ast = AST::Parse(argv[1]);
+    for (int i = 1; i < argc; ++i) {
+        AST *ast = AST::Parse(argv[i]);
 
-    Formatter out;
+        Formatter out;
 
-    printf("========================================\n");
+        printf("========================================\n");
 
-    ast->dump(out);
+        ast->dump(out);
 
-    delete ast;
-    ast = NULL;
+        delete ast;
+        ast = NULL;
+    }
 
     return 0;
 }

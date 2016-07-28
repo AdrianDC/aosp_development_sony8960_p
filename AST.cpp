@@ -1,9 +1,11 @@
 #include "AST.h"
 
 #include "Formatter.h"
+#include "HandleType.h"
+#include "RefType.h"
 #include "Scope.h"
 
-#include <assert.h>
+#include <android-base/logging.h>
 #include <stdlib.h>
 
 extern void parseFile(android::AST *ast, const char *path);
@@ -17,13 +19,13 @@ AST::AST()
 }
 
 AST::~AST() {
-    assert(scope() == mRootScope);
+    CHECK(scope() == mRootScope);
     leaveScope();
 
     delete mRootScope;
     mRootScope = NULL;
 
-    assert(mScanner == NULL);
+    CHECK(mScanner == NULL);
 }
 
 // static
@@ -42,6 +44,19 @@ void AST::setScanner(void *scanner) {
     mScanner = scanner;
 }
 
+void AST::setVersion(const char *, const char *) {
+}
+
+void AST::setPackage(Vector<std::string> *) {
+}
+
+void AST::addImport(Vector<std::string> *importPath) {
+    CHECK(!importPath->empty());
+
+    std::string leaf = importPath->itemAt(importPath->size() - 1);
+    scope()->addType(new RefType(leaf.c_str(), new HandleType));
+}
+
 void AST::enterScope(Scope *container) {
     mScopePath.push_back(container);
 }
@@ -51,7 +66,7 @@ void AST::leaveScope() {
 }
 
 Scope *AST::scope() {
-    assert(!mScopePath.empty());
+    CHECK(!mScopePath.empty());
     return mScopePath.top();
 }
 
