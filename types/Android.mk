@@ -21,11 +21,11 @@ LOCAL_MODULE := hidl-types-service
 LOCAL_SRC_FILES := Server.cpp TypesAll.cpp hasher.cpp
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_C_INCLUDES := system/libhwbinder/include
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := hidl-types-client
 LOCAL_SRC_FILES := Client.cpp TypesAll.cpp hasher.cpp
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_C_INCLUDES := system/libhwbinder/include
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
