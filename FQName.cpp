@@ -9,9 +9,14 @@
 
 static const std::regex kRE1("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH ")");
 static const std::regex kRE2("(" RE_VERSION ")::(" RE_PATH ")");
-static const std::regex kRE3(RE_PATH);
+static const std::regex kRE3("(" RE_PATH ")(" RE_VERSION ")");
+static const std::regex kRE4(RE_PATH);
 
 namespace android {
+
+FQName::FQName()
+    : mValid(false) {
+}
 
 FQName::FQName(const std::string &s)
     : mValid(false) {
@@ -42,6 +47,11 @@ bool FQName::setTo(const std::string &s) {
         mVersion = match.str(1);
         mName = match.str(2);
     } else if (std::regex_match(s, match, kRE3)) {
+        CHECK_EQ(match.size(), 4u);
+
+        mPackage = match.str(1);
+        mVersion = match.str(3);
+    } else if (std::regex_match(s, match, kRE4)) {
         mName = match.str(0);
     } else {
         mValid = false;
@@ -80,13 +90,24 @@ std::string FQName::debugString() const {
     std::string out = "FQName(";
     out.append(mPackage);
     out.append(mVersion);
-    if (!mPackage.empty() || !mVersion.empty()) {
-        out.append("::");
+    if (!mName.empty()) {
+        if (!mPackage.empty() || !mVersion.empty()) {
+            out.append("::");
+        }
+        out.append(mName);
     }
-    out.append(mName);
     out.append(")");
 
     return out;
+}
+
+void FQName::print() const {
+    if (!mValid) {
+        LOG(INFO) << "INVALID";
+        return;
+    }
+
+    LOG(INFO) << debugString();
 }
 
 }  // namespace android

@@ -1,5 +1,4 @@
-version 1.0;
-package android.hardware.sensors;
+package android.hardware.sensors@1.2;
 
 interface foo extends bool {
     const string aString = "foo";
@@ -9,10 +8,10 @@ interface foo extends bool {
     };
 
     struct bar {
-        //android.hardware.sensors@1.0::blah aBlah1;
-        //@2.3::bar aBar;
-        //foo::blah aBar;
-        blah aBlah;
+        //android.hardware.sensors@1.2::blah aBlah1;
+        //@1.2::blah aBlah2;
+        //foo::blah aBlah3;
+        blah aBlah4;
 
         int32_t[3] x;
         string y;

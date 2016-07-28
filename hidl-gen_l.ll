@@ -61,7 +61,6 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "typedef"		{ count(yyg); return(TYPEDEF); }
 "union"			{ count(yyg); return(UNION); }
 "vec"			{ count(yyg); return(VEC); }
-"version"		{ count(yyg); return(VERSION); }
 
 "char"			{ SCALAR_TYPE(KIND_CHAR); }
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
@@ -96,6 +95,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 
 {PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
 {VERSION}"::"{PATH}             { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
+{PATH}{VERSION}                 { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
 {COMPONENT}({DOT}{COMPONENT})+  { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
 {COMPONENT}                     { count(yyg); yylval->str = strdup(yytext); return IDENTIFIER; }
 

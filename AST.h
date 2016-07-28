@@ -6,6 +6,8 @@
 #include <string>
 #include <utils/Vector.h>
 
+#include "FQName.h"
+
 namespace android {
 
 struct Formatter;
@@ -18,7 +20,6 @@ struct AST {
 
     static AST *Parse(const char *path);
 
-    void setVersion(const char *major, const char *minor);
     bool setPackage(const char *package);
     bool addImport(const char *import);
 
@@ -39,8 +40,7 @@ private:
     void *mScanner;
     Scope *mRootScope;
 
-    std::string mVersion;
-    std::string mPackage;
+    FQName mPackage;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

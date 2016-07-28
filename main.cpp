@@ -27,6 +27,7 @@ int main(int argc, const char *const argv[]) {
     FQName("@3.4::foo").print();
     FQName("foo").print();
     FQName("::foo").print();
+    FQName("some.package.somewhere@1.2").print();
 #endif
 
     return 0;

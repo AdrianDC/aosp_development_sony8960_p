@@ -52,7 +52,6 @@ int yyerror(AST *, const char *s) {
 %token<str> TYPEDEF
 %token<str> UNION
 %token<str> VEC
-%token<str> VERSION
 
 %type<str> optIdentifier package
 %type<str> const_value
@@ -92,14 +91,7 @@ int yyerror(AST *, const char *s) {
 %%
 
 program
-    : version package imports body
-    ;
-
-version
-    : VERSION INTEGER '.' INTEGER ';'
-      {
-          ast->setVersion($2, $4);
-      }
+    : package imports body
     ;
 
 fqname

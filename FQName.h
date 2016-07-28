@@ -8,6 +8,7 @@
 namespace android {
 
 struct FQName {
+    explicit FQName();
     explicit FQName(const std::string &s);
 
     bool isValid() const;
@@ -21,6 +22,7 @@ struct FQName {
     std::string version() const;
     std::string name() const;
 
+    void print() const;
     std::string debugString() const;
 
 private:
