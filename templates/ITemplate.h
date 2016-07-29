@@ -39,7 +39,13 @@ class Ipackage_name : public ::android::hidl::IInterface {
 public:
 
 DECLARE_HWBINDER_META_INTERFACE(package_name);
+
   // START code_snips
+
+  //START code_for_const
+// constexpr const_name = const_value;
+  //END code_for_const
+
 typedef struct { // START code_for_struct_decl
     int field_filler; // ALL struct_fields
 } struct_name;

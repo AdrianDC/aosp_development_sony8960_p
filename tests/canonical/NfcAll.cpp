@@ -89,14 +89,14 @@ _aidl_error:
     goto _aidl_error;
   }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&data, sizeof(data), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
       // struct fixup write_
   {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)data.data.buffer;
     size_t size = sizeof(uint8_t[data.data.count]);
     size_t off = (size_t)((char *)&(data.data.buffer)-(char *)(&data));
@@ -106,7 +106,7 @@ _aidl_error:
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
@@ -154,14 +154,14 @@ _aidl_error:
     goto _aidl_error;
   }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&data, sizeof(data), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
       {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)data.buffer;
     size_t size = sizeof(uint8_t[data.count]);
     size_t off = (size_t)((char *)&(data.buffer)-(char *)(&data));
@@ -171,7 +171,7 @@ _aidl_error:
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
@@ -438,18 +438,18 @@ namespace nfc {
           break;
         }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     data = (INfc::nfc_data_t *)_aidl_data.readBuffer(&parent_handle);
     if ((data) == nullptr) {
       break;
     }
       // struct fixup read_
   {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&((*data).data.buffer)-(char *)(&(*data))));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       break;
     }
@@ -492,18 +492,18 @@ namespace nfc {
           break;
         }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
 
     data = (hidl_vec<uint8_t> *)_aidl_data.readBuffer(&parent_handle);
     if ((data) == nullptr) {
       break;
     }
       {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&((*data).buffer)-(char *)(&(*data))));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       break;
     }

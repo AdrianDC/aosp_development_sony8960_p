@@ -1,0 +1,22 @@
+version 1.0;
+package android.hardware.tests;
+
+@hal_type("LIGHT")
+
+interface IExpression {
+
+  const SIMPLE_EXPRESSION = 4;
+  const BOOLEAN_EXPRESSION = 1 == 7 && !((3 != 4 || (2 < 3 <= 3 > 4)) >= 0);
+  const BITWISE_EXPRESSION = ~42 & (1 << 3 | 16 >> 2) ^ 7;
+  const ARITHMETIC_EXPRESSION = 2 + 3 - 4 * -7 / (6 % 3);
+  const MESSY_EXPRESSION = 2   + (-3&4   / 7);
+
+  struct expressionist_t {
+    uint8_t[1 << 10] buffer;
+    vec<vec<uint8_t> > expmap;
+  };
+
+  @param(name = "mask", normal = 1 << 5)
+  setExpression(expressionist_t state, int32_t mask) generates (int32_t ret);
+};
+

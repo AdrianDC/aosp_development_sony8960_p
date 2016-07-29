@@ -50,7 +50,7 @@ BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
     goto _aidl_error;
   }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&my_struct, sizeof(my_struct), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
@@ -341,7 +341,7 @@ _aidl_error:
     goto _aidl_error;
   }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_data.writeBuffer((void *)&s, sizeof(s), &parent_handle);
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
@@ -356,7 +356,7 @@ _aidl_error:
     goto _aidl_error;
   }
   {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)s.s1v2.buffer;
     size_t size = sizeof(ITypes::s1s
 [s.s1v2.count]);
@@ -367,7 +367,7 @@ _aidl_error:
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (((_aidl_ret_status) != (::android::OK))) {
       goto _aidl_error;
     }
@@ -400,7 +400,7 @@ _aidl_error:
     return _aidl_status;
   }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _cb_s = (ITypes::s0 *)_aidl_reply.readBuffer(&parent_handle);
     if ((_cb_s) == nullptr) {
       goto _aidl_error;
@@ -413,11 +413,11 @@ _aidl_error:
       goto _aidl_error;
   }
   {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_reply.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&((*_cb_s).s1v2.buffer)-(char *)(&(*_cb_s))));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       goto _aidl_error;
     }
@@ -602,7 +602,7 @@ int32_t echo_me;
           break;
         }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     my_struct = (ITypes::simple_t *)_aidl_data.readBuffer(&parent_handle);
     if ((my_struct) == nullptr) {
       break;
@@ -857,7 +857,7 @@ char i;
           break;
         }
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     s = (ITypes::s0 *)_aidl_data.readBuffer(&parent_handle);
     if ((s) == nullptr) {
       break;
@@ -870,11 +870,11 @@ char i;
       break;
   }
   {
-    uint64_t child_handle;
+    size_t child_handle;
     _aidl_ret_pointer = _aidl_data.readEmbeddedBuffer(&child_handle, parent_handle,
                              (size_t)((char *)&((*s).s1v2.buffer)-(char *)(&(*s))));
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
     if (_aidl_ret_pointer == nullptr) {
       break;
     }
@@ -901,7 +901,7 @@ char i;
                              ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
   {
-    uint64_t parent_handle;
+    size_t parent_handle;
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&s, sizeof(s), &parent_handle);
       // struct fixup write_ret_
   // struct fixup write_ret_
@@ -910,7 +910,7 @@ char i;
                        nullptr, parent_handle,
                        (size_t)((char *)&(s.s1m1.str1.buffer)-(char *)(&s)));
   {
-    uint64_t child_handle;
+    size_t child_handle;
     void *bufp = (void *)s.s1v2.buffer;
     size_t size = sizeof(ITypes::s1s
 [s.s1v2.count]);
@@ -921,7 +921,7 @@ char i;
                                               parent_handle,
                                               off /* offset_calculator */);
      // Redefining a variable inside braces works like a static stack.
-    uint64_t parent_handle = child_handle;
+    size_t parent_handle = child_handle;
         for (size_t i1 = 0; i1 < s.s1v2.count; i1++) {
       /* fixup_write_vec */
         // struct fixup write_ret_

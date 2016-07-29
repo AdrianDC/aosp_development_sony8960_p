@@ -34,6 +34,7 @@ class ITypes : public ::android::hidl::IInterface {
 public:
 
 DECLARE_HWBINDER_META_INTERFACE(Types);
+
 typedef struct {
 uint32_t int1;
 uint32_t int2;

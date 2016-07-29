@@ -103,7 +103,7 @@ ErrorElement::ErrorElement(const string& text, const string& comments, int line)
 
 void Element::Dump()
 {
-  cout << "Element(" << ElementTypename() << "): " << text_ << endl;
+  cout << "Element(" << ElementTypename() << "): " << GetText() << endl;
 }
 
 bool NameElement::HasScalarValue() const {
@@ -134,6 +134,41 @@ long Element::GetIntegerValue() const
 }
 void Element::AddDottedElement(Element *element) {
   CHECK(false); // TODO
+}
+
+BinaryExpression::BinaryExpression(Element *lhs, Element *rhs, const string& text, const string& comments, int Line)
+    : Element(text, comments, Line),
+      lhs_(lhs),
+      rhs_(rhs)
+{
+}
+BinaryExpression::BinaryExpression(Element *lhs, Element *rhs, const string& text, int Line)
+    : Element(text, Line),
+      lhs_(lhs),
+      rhs_(rhs)
+{
+}
+
+UnaryExpression::UnaryExpression(Element *rhs, const string& text, const string& comments, int Line)
+    : Element(text, comments, Line),
+      rhs_(rhs)
+{
+}
+UnaryExpression::UnaryExpression(Element *rhs, const string& text, int Line)
+    : Element(text, Line),
+      rhs_(rhs)
+{
+}
+
+ParenthesizedExpression::ParenthesizedExpression(Element *parenthesized, const string& text, const string& comments, int Line)
+    : Element(text, comments, Line),
+      parenthesized_(parenthesized)
+{
+}
+ParenthesizedExpression::ParenthesizedExpression(Element *parenthesized, const string& text, int Line)
+    : Element(text, Line),
+      parenthesized_(parenthesized)
+{
 }
 
 CompoundType::CompoundType(Fields *fields)
@@ -548,7 +583,7 @@ void Parser::SetInterface(Annotations *annotations, Element *name) {
   if (interface_) {
     Error(name->Line(), "Only one interface per file please!");
   }
-  name->SetText(name->GetText().substr(1, string::npos));
+  name->SetTokenText(name->GetTokenText().substr(1, string::npos));
   interface_ = name;
   interface_annotations_ = annotations;
 }

@@ -35,7 +35,20 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
     std::vector<std::string *> *strings;
 }
 
-%token '(' ')' ',' '@' '=' '[' ']' '<' '>' '.' '{' '}' ';'
+%token '(' ')' ',' '@' '=' '[' ']' '.' '{' '}' ';'
+
+%left OR
+%left AND
+%left '|'
+%left '^'
+%left '&'
+%left EQ NE
+%left '<' LE '>' GE
+%left RSHIFT LSHIFT
+%left '+' '-'
+%left '*' '/' '%'
+%right '~' '!' UMINUS UPLUS
+
 %token CONST STRUCT UNION ENUM TYPEDEF VERSION INTERFACE
 %token PACKAGE GENERATES IMPORT REF VEC ON SELECTS
 %token INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64
@@ -57,7 +70,7 @@ int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 %type<annotation_value> annotation_value
 %type<annotation_values> annotation_values
 %type<boolean> oneway
-%type<element> scalar_value const_value
+%type<element> scalar_value scalar_expr const_expr
 %type<elements> id_list namespace_list
 %type<field> disc_union_field enum_field var_decl
 %type<fields> enum_fields disc_union_fields var_decls_semi func_args
@@ -115,17 +128,66 @@ struct_decl
   { ps->AddStruct(new StructDecl($2, new StructType($4))); }
 
 const_decl
- : CONST IDENTIFIER '=' const_value ';'
+ : CONST IDENTIFIER '=' const_expr ';'
   { ps->AddConst(new Const($2, $4)); }
+
+const_expr
+ : scalar_expr {}
+ | C_STR        {}
+
+scalar_expr
+ : scalar_value {}
+ | scalar_expr OR scalar_expr
+  { $$ = new BinaryExpression($1, $3, "||", $1->Line()); }
+ | scalar_expr AND scalar_expr
+  { $$ = new BinaryExpression($1, $3, "&&", $1->Line()); }
+ | scalar_expr '|' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "|", $1->Line()); }
+ | scalar_expr '^' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "^", $1->Line()); }
+ | scalar_expr '&' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "&", $1->Line()); }
+ | scalar_expr EQ scalar_expr
+  { $$ = new BinaryExpression($1, $3, "==", $1->Line()); }
+ | scalar_expr NE scalar_expr
+  { $$ = new BinaryExpression($1, $3, "!=", $1->Line()); }
+ | scalar_expr '<' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "<", $1->Line()); }
+ | scalar_expr LE scalar_expr
+  { $$ = new BinaryExpression($1, $3, "<=", $1->Line()); }
+ | scalar_expr '>' scalar_expr
+  { $$ = new BinaryExpression($1, $3, ">", $1->Line()); }
+ | scalar_expr GE scalar_expr
+  { $$ = new BinaryExpression($1, $3, ">=", $1->Line()); }
+ | scalar_expr RSHIFT scalar_expr
+  { $$ = new BinaryExpression($1, $3, ">>", $1->Line()); }
+ | scalar_expr LSHIFT scalar_expr
+  { $$ = new BinaryExpression($1, $3, "<<", $1->Line()); }
+ | scalar_expr '+' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "+", $1->Line()); }
+ | scalar_expr '-' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "-", $1->Line()); }
+ | scalar_expr '*' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "*", $1->Line()); }
+ | scalar_expr '/' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "/", $1->Line()); }
+ | scalar_expr '%' scalar_expr
+  { $$ = new BinaryExpression($1, $3, "%", $1->Line()); }
+ | '(' scalar_expr ')'
+  { $$ = new ParenthesizedExpression($2, "()", $2->Line()); }
+ | '~' scalar_expr
+  { $$ = new UnaryExpression($2, "~", $2->Line()); }
+ | '!' scalar_expr
+  { $$ = new UnaryExpression($2, "!", $2->Line()); }
+ | '+' scalar_expr %prec UMINUS
+  { $$ = new UnaryExpression($2, "+", $2->Line()); }
+ | '-' scalar_expr %prec UPLUS
+  { $$ = new UnaryExpression($2, "-", $2->Line()); }
 
 scalar_value
  : C_CHAR   {}
  | INTVALUE {}
  | IDENTIFIER   {}
-
-const_value
- : scalar_value {}
- | C_STR        {}
 
 enum_decl
  : ENUM IDENTIFIER ':' scalar_type '{' enum_fields '}' ';'
@@ -199,7 +261,7 @@ enum_fields
 enum_field
  : IDENTIFIER
   { $$ = new EnumField($1); }
- | IDENTIFIER '=' scalar_value
+ | IDENTIFIER '=' scalar_expr
   { $$ = new EnumValueField($1, $3); }
 
 annotations
@@ -236,7 +298,7 @@ annotation_values
   { $$->push_back($3); }
 
 annotation_value
- : const_value
+ : const_expr
   { $$ = new AnnotationValue($1); }
  | annotation
   { $$ = new AnnotationValue($1); }
@@ -261,7 +323,7 @@ one_word_type
 
 any_type
  : one_word_type {}
- | any_type '[' scalar_value ']'
+ | any_type '[' scalar_expr ']'
   { $$=new ArrayType($1, $3); }
  | struct_type {}
  | union_type {}

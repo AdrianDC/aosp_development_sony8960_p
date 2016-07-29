@@ -35,8 +35,9 @@ class Thing {
  public:
   Thing();
   Thing(string text);
-  const string& GetText() const { return text_; }
-  void SetText(string text) { text_ = text; }
+  virtual const string GetText() const { return text_; }
+  const string& GetTokenText() const { return text_; }
+  void SetTokenText(string text) { text_ = text; }
   const char *c_str() const { return text_.c_str(); }
   const string& GetComments() const { return comments_; }
   virtual const string TypeName() const = 0;
@@ -150,6 +151,62 @@ class ErrorElement : public Element {
   DISALLOW_COPY_AND_ASSIGN(ErrorElement);
 };
 
+class BinaryExpression : public Element {
+ public:
+  BinaryExpression(Element *lhs, Element *rhs, const string& text, const string& comments, int Line);
+  BinaryExpression(Element *lhs, Element *rhs, const string& text, int Line);
+  const Element *GetLeftHandSide() const { return lhs_; }
+  const Element *GetRightHandSide() const { return rhs_; }
+  const string& GetOperation() const { return GetTokenText(); }
+  virtual const string GetText() const override {
+    return lhs_->GetText() + " " + GetOperation() + " " + rhs_->GetText();
+  }
+  virtual const string ElementTypename() const override { return "binary_expression"; }
+  virtual bool HasIntegerValue() const { return lhs_->HasIntegerValue() && rhs_->HasIntegerValue(); }
+  virtual bool HasScalarValue() const { return lhs_->HasScalarValue() && rhs_->HasScalarValue(); }
+
+ private:
+  Element *lhs_;
+  Element *rhs_;
+
+  DISALLOW_COPY_AND_ASSIGN(BinaryExpression);
+};
+
+class UnaryExpression : public Element {
+ public:
+  UnaryExpression(Element *rhs, const string& text, const string& comments, int Line);
+  UnaryExpression(Element *rhs, const string& text, int Line);
+  const string& GetOperation() const { return GetTokenText(); }
+  virtual const string GetText() const override {
+    return GetOperation() + rhs_->GetText();
+  }
+  virtual const string ElementTypename() const override { return "unary_expression"; }
+  virtual bool HasIntegerValue() const { return rhs_->HasIntegerValue(); }
+  virtual bool HasScalarValue() const { return rhs_->HasScalarValue(); }
+
+ private:
+  Element *rhs_;
+
+  DISALLOW_COPY_AND_ASSIGN(UnaryExpression);
+};
+
+class ParenthesizedExpression : public Element {
+ public:
+  ParenthesizedExpression(Element *parenthesized, const string& text, const string& comments, int Line);
+  ParenthesizedExpression(Element *parenthesized, const string& text, int Line);
+  const Element *GetParenthesized() const { return parenthesized_; }
+  virtual const string GetText() const override {
+    return "(" + GetParenthesized()->GetText() + ")";
+  }
+  virtual const string ElementTypename() const override { return "parenthesized_expression"; }
+  virtual bool HasIntegerValue() const { return parenthesized_->HasIntegerValue(); }
+  virtual bool HasScalarValue() const { return parenthesized_->HasScalarValue(); }
+
+ private:
+  Element *parenthesized_;
+
+  DISALLOW_COPY_AND_ASSIGN(ParenthesizedExpression);
+};
 
 class Const : public Thing {
  public:

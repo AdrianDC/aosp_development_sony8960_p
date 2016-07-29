@@ -58,6 +58,8 @@ class Tester(object):
     self.TestOutput("ITestService.hidl", "TestServiceProxy.cpp", "proxy_cpp")
     self.TestOutput("ITestService.hidl", "TestServiceStubs.cpp", "stubs_cpp")
     self.TestOutput("IEverything.hidl", "Everything.json", "json")
+    self.TestOutput("IExpression.hidl", "Expression_all.cpp", "all_cpp")
+    self.TestOutput("IExpression.hidl", "Expression_i.h", "i_h")
     self.TestOutput("INfc.hidl", "NfcAll.cpp", "all_cpp")
     self.TestOutput("INfc.hidl", "INfc.h", "i_h")
     self.TestOutput("INfc.hidl", "BnNfc.h", "bn_h")
