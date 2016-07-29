@@ -8,9 +8,9 @@ interface foo extends bool {
     };
 
     struct bar {
-        //android.hardware.sensors@1.2::blah aBlah1;
-        //@1.2::blah aBlah2;
-        //foo::blah aBlah3;
+        //android.hardware.sensors@1.2::foo.blah aBlah1;
+        //@1.2::foo.blah aBlah2;
+        //foo.blah aBlah3;
         blah aBlah4;
 
         int32_t[3] x;
@@ -37,9 +37,10 @@ interface foo extends bool {
         vec<bool> theTruth;
     };
 
-    enum baz {
+    enum baz : int8_t {
         FIRST_CASE,
         SECOND_CASE = 10,
+        THIRD_CASE = FIRST_CASE,
     };
 
     typedef baz goober;
