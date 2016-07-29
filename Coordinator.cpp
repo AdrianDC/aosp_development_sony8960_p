@@ -9,7 +9,10 @@ extern android::status_t parseFile(android::AST *ast, const char *path);
 
 namespace android {
 
-Coordinator::Coordinator() {}
+Coordinator::Coordinator(const std::string &interfacesPath)
+    : mInterfacesPath(interfacesPath) {
+}
+
 Coordinator::~Coordinator() {}
 
 AST *Coordinator::parse(const FQName &fqName) {
@@ -25,7 +28,7 @@ AST *Coordinator::parse(const FQName &fqName) {
     // Add this to the cache immediately, so we can discover circular imports.
     mCache.add(fqName, NULL);
 
-    const std::string packagePath = GetPackagePath(fqName);
+    const std::string packagePath = getPackagePath(fqName);
 
     if (fqName.name() != "types") {
         // Any interface file implicitly imports its package's types.hal.
@@ -95,8 +98,7 @@ AST *Coordinator::parse(const FQName &fqName) {
     return ast;
 }
 
-// static
-std::string Coordinator::GetPackagePath(const FQName &fqName) {
+std::string Coordinator::getPackagePath(const FQName &fqName) const {
     CHECK(!fqName.package().empty());
     CHECK(!fqName.version().empty());
     const char *const kPrefix = "android.hardware.";
@@ -104,8 +106,7 @@ std::string Coordinator::GetPackagePath(const FQName &fqName) {
 
     const std::string packageSuffix = fqName.package().substr(strlen(kPrefix));
 
-    std::string packagePath =
-        "/Volumes/Source/nyc-mr1-dev-lego/hardware/interfaces/";
+    std::string packagePath = mInterfacesPath;
 
     size_t startPos = 0;
     size_t dotPos;

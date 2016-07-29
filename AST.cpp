@@ -67,7 +67,7 @@ bool AST::addImport(const char *import) {
     // LOG(INFO) << "importing " << fqName.string();
 
     if (fqName.name().empty()) {
-        const std::string packagePath = Coordinator::GetPackagePath(fqName);
+        const std::string packagePath = mCoordinator->getPackagePath(fqName);
         DIR *dir = opendir(packagePath.c_str());
 
         if (dir == NULL) {

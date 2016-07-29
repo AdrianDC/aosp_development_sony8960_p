@@ -9,7 +9,16 @@
 using namespace android;
 
 int main(int argc, const char *const argv[]) {
-    Coordinator coordinator;
+    const char *TOP = getenv("TOP");
+    if (TOP == NULL) {
+        LOG(ERROR) << "Your environment does not define $TOP.";
+        return 1;
+    }
+
+    std::string interfacesPath = TOP;
+    interfacesPath.append("/hardware/interfaces/");
+
+    Coordinator coordinator(interfacesPath);
 
     for (int i = 1; i < argc; ++i) {
         FQName fqName(argv[i]);

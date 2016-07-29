@@ -13,16 +13,17 @@ struct FQName;
 struct Type;
 
 struct Coordinator {
-    Coordinator();
+    Coordinator(const std::string &interfacesPath);
     ~Coordinator();
 
     AST *parse(const FQName &fqName);
 
     Type *lookupType(const FQName &fqName) const;
 
-    static std::string GetPackagePath(const FQName &fqName);
+    std::string getPackagePath(const FQName &fqName) const;
 
 private:
+    std::string mInterfacesPath;
     KeyedVector<FQName, AST *> mCache;
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
