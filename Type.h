@@ -13,6 +13,7 @@ struct Type {
     virtual ~Type();
 
     virtual void dump(Formatter &out) const = 0;
+    virtual bool isScope() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Type);

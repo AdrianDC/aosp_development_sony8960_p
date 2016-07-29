@@ -1,5 +1,6 @@
 #include "AST.h"
 
+#include "Coordinator.h"
 #include "Formatter.h"
 #include "FQName.h"
 #include "HandleType.h"
@@ -9,12 +10,11 @@
 #include <android-base/logging.h>
 #include <stdlib.h>
 
-extern void parseFile(android::AST *ast, const char *path);
-
 namespace android {
 
-AST::AST()
-    : mScanner(NULL),
+AST::AST(Coordinator *coordinator)
+    : mCoordinator(coordinator),
+      mScanner(NULL),
       mRootScope(new Scope("root")) {
     enterScope(mRootScope);
 }
@@ -27,14 +27,8 @@ AST::~AST() {
     mRootScope = NULL;
 
     CHECK(mScanner == NULL);
-}
 
-// static
-AST *AST::Parse(const char *path) {
-    AST *ast = new AST;
-    parseFile(ast, path);
-
-    return ast;
+    // Ownership of "coordinator" was NOT transferred.
 }
 
 void *AST::scanner() {
@@ -58,13 +52,26 @@ bool AST::setPackage(const char *package) {
     return true;
 }
 
-bool AST::addImport(const char * /* import */) {
-#if 0
-    CHECK(!importPath->empty());
+bool AST::addImport(const char *import) {
+    FQName fqName(import);
+    CHECK(fqName.isValid());
 
-    std::string leaf = importPath->itemAt(importPath->size() - 1);
-    scope()->addType(new RefType(leaf.c_str(), new HandleType));
-#endif
+    fqName.applyDefaults(mPackage.package(), mPackage.version());
+
+    LOG(INFO) << "importing " << fqName.debugString();
+    const std::string packagePath = Coordinator::GetPackagePath(fqName);
+
+    if (fqName.name().empty()) {
+        // TODO: Import the whole package.
+        CHECK(!"Should not be here");
+        return false;
+    }
+
+    std::string path = packagePath;
+    path.append(fqName.name());
+    path.append(".hal");
+
+    AST *importAST = mCoordinator->parse(path.c_str());
 
     return true;
 }
@@ -82,7 +89,7 @@ Scope *AST::scope() {
     return mScopePath.top();
 }
 
-Type *AST::lookupType(const char *name) {
+Type *AST::lookupType(const char *name) const {
     FQName fqName(name);
     CHECK(fqName.isValid());
 
@@ -105,9 +112,42 @@ Type *AST::lookupType(const char *name) {
 
     fqName.applyDefaults(mPackage.package(), mPackage.version());
 
-    LOG(INFO) << "lookupType now looking for " << fqName.debugString();
+    // LOG(INFO) << "lookupType now looking for " << fqName.debugString();
 
-    return NULL;
+    return mCoordinator->lookupType(fqName);
+}
+
+Type *AST::lookupTypeInternal(const std::string &namePath) const {
+    Scope *scope = mRootScope;
+
+    size_t startPos = 0;
+    for (;;) {
+        size_t dotPos = namePath.find('.', startPos);
+
+        std::string component;
+        if (dotPos == std::string::npos) {
+            component = namePath.substr(startPos);
+        } else {
+            component = namePath.substr(startPos, dotPos - startPos);
+        }
+
+        Type *type = scope->lookupType(component.c_str());
+
+        if (type == NULL) {
+            return NULL;
+        }
+
+        if (dotPos == std::string::npos) {
+            return type;
+        }
+
+        if (!type->isScope()) {
+            return NULL;
+        }
+
+        scope = static_cast<Scope *>(type);
+        startPos = dotPos + 1;
+    }
 }
 
 void AST::dump(Formatter &out) const {

@@ -9,6 +9,7 @@ LOCAL_SRC_FILES :=              \
     ArrayType.cpp               \
     CompoundType.cpp            \
     Constant.cpp                \
+    Coordinator.cpp             \
     EnumType.cpp                \
     Formatter.cpp               \
     FQName.cpp                  \

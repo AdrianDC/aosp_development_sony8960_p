@@ -1,5 +1,5 @@
 #include "AST.h"
-
+#include "Coordinator.h"
 #include "Formatter.h"
 #include "FQName.h"
 
@@ -8,8 +8,10 @@
 using namespace android;
 
 int main(int argc, const char *const argv[]) {
+    Coordinator coordinator;
+
     for (int i = 1; i < argc; ++i) {
-        AST *ast = AST::Parse(argv[i]);
+        AST *ast = coordinator.parse(argv[i]);
 
         Formatter out;
 

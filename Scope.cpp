@@ -59,5 +59,9 @@ void Scope::dump(Formatter &out) const {
     }
 }
 
+bool Scope::isScope() const {
+    return true;
+}
+
 }  // namespace android
 

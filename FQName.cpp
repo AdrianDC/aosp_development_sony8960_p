@@ -87,7 +87,7 @@ void FQName::applyDefaults(
 std::string FQName::debugString() const {
     CHECK(mValid);
 
-    std::string out = "FQName(";
+    std::string out;
     out.append(mPackage);
     out.append(mVersion);
     if (!mName.empty()) {
@@ -96,7 +96,6 @@ std::string FQName::debugString() const {
         }
         out.append(mName);
     }
-    out.append(")");
 
     return out;
 }

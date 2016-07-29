@@ -133,6 +133,10 @@ imports
       {
           ast->addImport($3);
       }
+    | imports IMPORT IDENTIFIER ';'
+      {
+          ast->addImport($3);
+      }
     ;
 
 opt_extends
