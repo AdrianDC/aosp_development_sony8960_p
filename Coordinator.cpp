@@ -18,6 +18,8 @@ Coordinator::~Coordinator() {}
 AST *Coordinator::parse(const FQName &fqName) {
     CHECK(fqName.isFullyQualified());
 
+    // LOG(INFO) << "parsing " << fqName.string();
+
     ssize_t index = mCache.indexOfKey(fqName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
@@ -46,6 +48,8 @@ AST *Coordinator::parse(const FQName &fqName) {
     status_t err = parseFile(ast, path.c_str());
 
     if (err != OK) {
+        // LOG(ERROR) << "parsing '" << path << "' FAILED.";
+
         delete ast;
         ast = NULL;
 
@@ -145,6 +149,8 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
     ssize_t index = mCache.indexOfKey(ifaceName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
+        CHECK(ast != NULL);
+
         Type *type = ast->lookupTypeInternal(fqName.name());
 
         if (type != NULL) {
@@ -156,10 +162,13 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
     index = mCache.indexOfKey(typesName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
-        Type *type = ast->lookupTypeInternal(fqName.name());
+        if (ast != NULL) {
+            // ast could be NULL if types.hal didn't exist, which is valid.
+            Type *type = ast->lookupTypeInternal(fqName.name());
 
-        if (type != NULL) {
-            return new RefType(fqName.string().c_str(), type);
+            if (type != NULL) {
+                return new RefType(fqName.string().c_str(), type);
+            }
         }
     }
 
