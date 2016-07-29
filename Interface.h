@@ -16,11 +16,11 @@ struct Interface : public Scope {
     void addMethod(Method *method);
 
     void dump(Formatter &out) const override;
+    bool isInterface() const override;
 
     const Type *superType() const;
 
 private:
-    std::string mName;
     Type *mSuperType;
     Vector<Method *> mMethods;
 

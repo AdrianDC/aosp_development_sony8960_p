@@ -19,10 +19,12 @@ struct AST {
     AST(Coordinator *coordinator);
     ~AST();
 
-    static AST *Parse(const char *path);
-
     bool setPackage(const char *package);
     bool addImport(const char *import);
+
+    // package and version really.
+    FQName package() const;
+    bool isInterface(std::string *ifaceName) const;
 
     void enterScope(Scope *container);
     void leaveScope();

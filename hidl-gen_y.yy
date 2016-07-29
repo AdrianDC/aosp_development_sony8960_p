@@ -186,7 +186,7 @@ interface_declarations
     ;
 
 type_declarations
-    : type_declaration
+    : /* empty */
     | type_declarations type_declaration
     ;
 

@@ -50,6 +50,14 @@ bool AST::setPackage(const char *package) {
     return true;
 }
 
+FQName AST::package() const {
+    return mPackage;
+}
+
+bool AST::isInterface(std::string *ifaceName) const {
+    return mRootScope->containsSingleInterface(ifaceName);
+}
+
 bool AST::addImport(const char *import) {
     FQName fqName(import);
     CHECK(fqName.isValid());

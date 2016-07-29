@@ -9,5 +9,9 @@ bool Type::isScope() const {
     return false;
 }
 
+bool Type::isInterface() const {
+    return false;
+}
+
 }  // namespace android
 

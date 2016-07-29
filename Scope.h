@@ -21,6 +21,7 @@ struct Scope : public NamedType {
 
     void dump(Formatter &out) const override;
     bool isScope() const override;
+    bool containsSingleInterface(std::string *ifaceName) const;
 
 private:
     Vector<Type *> mTypes;

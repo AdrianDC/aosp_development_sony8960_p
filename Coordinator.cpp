@@ -49,6 +49,47 @@ AST *Coordinator::parse(const FQName &fqName) {
         return NULL;
     }
 
+    if (ast->package().package() != fqName.package()
+            || ast->package().version() != fqName.version()) {
+        LOG(ERROR)
+            << "File at '" << path << "' does not match expected package "
+            << "and/or version.";
+
+        err = UNKNOWN_ERROR;
+    } else {
+        std::string ifaceName;
+        if (ast->isInterface(&ifaceName)) {
+            if (fqName.name() == "types") {
+                LOG(ERROR)
+                    << "File at '" << path << "' declares an interface '"
+                    << ifaceName
+                    << "' instead of the expected types common to the package.";
+
+                err = UNKNOWN_ERROR;
+            } else if (ifaceName != fqName.name()) {
+                LOG(ERROR)
+                    << "File at '" << path << "' does not declare interface type '"
+                    << fqName.name()
+                    << "'.";
+
+                err = UNKNOWN_ERROR;
+            }
+        } else if (fqName.name() != "types") {
+            LOG(ERROR)
+                << "File at '" << path << "' declares types rather than the "
+                << "expected interface type '" << fqName.name() << "'.";
+
+            err = UNKNOWN_ERROR;
+        }
+    }
+
+    if (err != OK) {
+        delete ast;
+        ast = NULL;
+
+        return NULL;
+    }
+
     mCache.add(fqName, ast);
 
     return ast;

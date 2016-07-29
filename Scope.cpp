@@ -2,6 +2,7 @@
 
 #include "Constant.h"
 #include "Formatter.h"
+#include "Interface.h"
 
 namespace android {
 
@@ -61,6 +62,15 @@ void Scope::dump(Formatter &out) const {
 
 bool Scope::isScope() const {
     return true;
+}
+
+bool Scope::containsSingleInterface(std::string *ifaceName) const {
+    if (mTypes.size() == 1 && mTypes[0]->isInterface()) {
+        *ifaceName = static_cast<Interface *>(mTypes[0])->name();
+        return true;
+    }
+
+    return false;
 }
 
 }  // namespace android

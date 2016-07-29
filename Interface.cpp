@@ -42,5 +42,9 @@ void Interface::dump(Formatter &out) const {
     out << "};\n\n";
 }
 
+bool Interface::isInterface() const {
+    return true;
+}
+
 }  // namespace android
 
