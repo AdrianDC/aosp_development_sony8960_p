@@ -92,6 +92,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 ","			{ count(yyg); return(','); }
 "."			{ count(yyg); return('.'); }
 "="			{ count(yyg); return('='); }
+"+"			{ count(yyg); return('+'); }
 
 {PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
 {VERSION}"::"{PATH}             { count(yyg); yylval->str = strdup(yytext); return FQNAME; }

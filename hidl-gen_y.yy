@@ -349,6 +349,12 @@ enum_value
     : IDENTIFIER { $$ = new EnumValue($1); }
     | IDENTIFIER '=' INTEGER { $$ = new EnumValue($1, $3); }
     | IDENTIFIER '=' IDENTIFIER { $$ = new EnumValue($1, $3); }
+    | IDENTIFIER '=' IDENTIFIER '+' INTEGER
+      {
+          $$ = new EnumValue(
+                  $1, strdup(
+                      android::String8::format("%s + %s", $3, $5).string()));
+      }
     ;
 
 enum_values
