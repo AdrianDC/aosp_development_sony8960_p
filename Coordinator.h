@@ -16,14 +16,14 @@ struct Coordinator {
     Coordinator();
     ~Coordinator();
 
-    AST *parse(const char *path);
+    AST *parse(const FQName &fqName);
 
     Type *lookupType(const FQName &fqName) const;
 
     static std::string GetPackagePath(const FQName &fqName);
 
 private:
-    KeyedVector<std::string, AST *> mCache;
+    KeyedVector<FQName, AST *> mCache;
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
 };

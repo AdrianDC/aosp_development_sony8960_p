@@ -11,6 +11,10 @@ struct FQName {
     explicit FQName();
     explicit FQName(const std::string &s);
 
+    FQName(const std::string &package,
+           const std::string &version,
+           const std::string &name);
+
     bool isValid() const;
     bool setTo(const std::string &s);
 
@@ -22,16 +26,18 @@ struct FQName {
     std::string version() const;
     std::string name() const;
 
+    bool isFullyQualified() const;
+
     void print() const;
-    std::string debugString() const;
+    std::string string() const;
+
+    bool operator<(const FQName &other) const;
 
 private:
     bool mValid;
     std::string mPackage;
     std::string mVersion;
     std::string mName;
-
-    DISALLOW_COPY_AND_ASSIGN(FQName);
 };
 
 }  // namespace android

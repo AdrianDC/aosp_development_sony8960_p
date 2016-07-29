@@ -5,27 +5,51 @@
 
 #include <android-base/logging.h>
 
-extern void parseFile(android::AST *ast, const char *path);
+extern android::status_t parseFile(android::AST *ast, const char *path);
 
 namespace android {
 
 Coordinator::Coordinator() {}
 Coordinator::~Coordinator() {}
 
-AST *Coordinator::parse(const char *path) {
-    ssize_t index = mCache.indexOfKey(path);
+AST *Coordinator::parse(const FQName &fqName) {
+    CHECK(fqName.isFullyQualified());
+
+    ssize_t index = mCache.indexOfKey(fqName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
 
         return ast;
     }
 
-    mCache.add(path, NULL);
+    // Add this to the cache immediately, so we can discover circular imports.
+    mCache.add(fqName, NULL);
+
+    const std::string packagePath = GetPackagePath(fqName);
+
+    if (fqName.name() != "types") {
+        // Any interface file implicitly imports its package's types.hal.
+        FQName typesName(fqName.package(), fqName.version(), "types");
+        (void)parse(typesName);
+
+        // fall through.
+    }
+
+    std::string path = packagePath;
+    path.append(fqName.name());
+    path.append(".hal");
 
     AST *ast = new AST(this);
-    parseFile(ast, path);
+    status_t err = parseFile(ast, path.c_str());
 
-    mCache.add(path, ast);
+    if (err != OK) {
+        delete ast;
+        ast = NULL;
+
+        return NULL;
+    }
+
+    mCache.add(fqName, ast);
 
     return ast;
 }
@@ -63,11 +87,7 @@ std::string Coordinator::GetPackagePath(const FQName &fqName) {
 
 Type *Coordinator::lookupType(const FQName &fqName) const {
     // Fully qualified.
-    CHECK(!fqName.package().empty());
-    CHECK(!fqName.version().empty());
-    CHECK(!fqName.name().empty());
-
-    const std::string packagePath = GetPackagePath(fqName);
+    CHECK(fqName.isFullyQualified());
 
     std::string topType;
     size_t dotPos = fqName.name().find('.');
@@ -77,30 +97,27 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
         topType = fqName.name().substr(0, dotPos);
     }
 
-    std::string path = packagePath;
-    path.append(topType);
-    path.append(".hal");
-
-    ssize_t index = mCache.indexOfKey(path);
+    // Assuming {topType} is the name of an interface type, let's see if the
+    // associated {topType}.hal file was imported.
+    FQName ifaceName(fqName.package(), fqName.version(), topType);
+    ssize_t index = mCache.indexOfKey(ifaceName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
         Type *type = ast->lookupTypeInternal(fqName.name());
 
         if (type != NULL) {
-            return new RefType(fqName.debugString().c_str(), type);
+            return new RefType(fqName.string().c_str(), type);
         }
     }
 
-    path = packagePath;
-    path.append("Types.hal");
-
-    index = mCache.indexOfKey(path);
+    FQName typesName(fqName.package(), fqName.version(), "types");
+    index = mCache.indexOfKey(typesName);
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
         Type *type = ast->lookupTypeInternal(fqName.name());
 
         if (type != NULL) {
-            return new RefType(fqName.debugString().c_str(), type);
+            return new RefType(fqName.string().c_str(), type);
         }
     }
 

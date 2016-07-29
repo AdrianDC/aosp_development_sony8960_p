@@ -9,6 +9,7 @@
 
 #include <android-base/logging.h>
 #include <stdlib.h>
+#include <sys/dir.h>
 
 namespace android {
 
@@ -20,9 +21,6 @@ AST::AST(Coordinator *coordinator)
 }
 
 AST::~AST() {
-    CHECK(scope() == mRootScope);
-    leaveScope();
-
     delete mRootScope;
     mRootScope = NULL;
 
@@ -58,20 +56,66 @@ bool AST::addImport(const char *import) {
 
     fqName.applyDefaults(mPackage.package(), mPackage.version());
 
-    LOG(INFO) << "importing " << fqName.debugString();
-    const std::string packagePath = Coordinator::GetPackagePath(fqName);
+    // LOG(INFO) << "importing " << fqName.string();
 
     if (fqName.name().empty()) {
-        // TODO: Import the whole package.
-        CHECK(!"Should not be here");
-        return false;
+        const std::string packagePath = Coordinator::GetPackagePath(fqName);
+        DIR *dir = opendir(packagePath.c_str());
+
+        if (dir == NULL) {
+            return false;
+        }
+
+        // Enumerate all regular files ending in ".hal" in the package directory
+        // and attempt to import all of them.
+
+        Vector<std::string> fileNames;
+
+        struct dirent *ent;
+        while ((ent = readdir(dir)) != NULL) {
+            if (ent->d_type != DT_REG) {
+                continue;
+            }
+
+            if (ent->d_namlen < 4
+                    || strcmp(ent->d_name + ent->d_namlen - 4, ".hal")) {
+                continue;
+            }
+
+            fileNames.push_back(std::string(ent->d_name, ent->d_namlen - 4));
+        }
+
+        closedir(dir);
+        dir = NULL;
+
+        for (size_t i = 0; i < fileNames.size(); ++i) {
+            FQName subFQName(
+                    fqName.package() + fqName.version() + "::" + fileNames[i]);
+
+            if (!subFQName.isValid()) {
+                LOG(WARNING)
+                    << "Whole-package import encountered invalid filename '"
+                    << fileNames[i]
+                    << "' in package "
+                    << fqName.package()
+                    << fqName.version();
+
+                continue;
+            }
+
+            if (mCoordinator->parse(subFQName) == NULL) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    std::string path = packagePath;
-    path.append(fqName.name());
-    path.append(".hal");
+    AST *importAST = mCoordinator->parse(fqName);
 
-    AST *importAST = mCoordinator->parse(path.c_str());
+    if (importAST == NULL) {
+        return false;
+    }
 
     return true;
 }
@@ -112,7 +156,7 @@ Type *AST::lookupType(const char *name) const {
 
     fqName.applyDefaults(mPackage.package(), mPackage.version());
 
-    // LOG(INFO) << "lookupType now looking for " << fqName.debugString();
+    // LOG(INFO) << "lookupType now looking for " << fqName.string();
 
     return mCoordinator->lookupType(fqName);
 }

@@ -131,11 +131,23 @@ imports
     : /* empty */
     | imports IMPORT FQNAME ';'
       {
-          ast->addImport($3);
+          if (!ast->addImport($3)) {
+              yyerror(ast,
+                      android::String8::format(
+                          "Unable to import '%s'.", $3));
+
+              YYERROR;
+          }
       }
     | imports IMPORT IDENTIFIER ';'
       {
-          ast->addImport($3);
+          if (!ast->addImport($3)) {
+              yyerror(ast,
+                      android::String8::format(
+                          "Unable to import '%s'.", $3));
+
+              YYERROR;
+          }
       }
     ;
 

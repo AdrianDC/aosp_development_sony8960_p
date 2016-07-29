@@ -148,8 +148,12 @@ void count(yyguts_t *yyg) {
     ECHO;
 }
 
-void parseFile(AST *ast, const char *path) {
+status_t parseFile(AST *ast, const char *path) {
     FILE *file = fopen(path, "rb");
+
+    if (file == NULL) {
+        return -errno;
+    }
 
     yyscan_t scanner;
     yylex_init_extra(ast, &scanner);
@@ -157,11 +161,16 @@ void parseFile(AST *ast, const char *path) {
 
     yyset_in(file, scanner);
     int res = yyparse(ast);
-    assert(res == 0);
 
     yylex_destroy(scanner);
     ast->setScanner(NULL);
 
     fclose(file);
     file = NULL;
+
+    if (res != 0) {
+        return UNKNOWN_ERROR;
+    }
+
+    return OK;
 }

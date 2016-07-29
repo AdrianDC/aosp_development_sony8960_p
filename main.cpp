@@ -3,6 +3,7 @@
 #include "Formatter.h"
 #include "FQName.h"
 
+#include <android-base/logging.h>
 #include <stdio.h>
 
 using namespace android;
@@ -11,7 +12,14 @@ int main(int argc, const char *const argv[]) {
     Coordinator coordinator;
 
     for (int i = 1; i < argc; ++i) {
-        AST *ast = coordinator.parse(argv[i]);
+        FQName fqName(argv[i]);
+        CHECK(fqName.isValid() && fqName.isFullyQualified());
+
+        AST *ast = coordinator.parse(fqName);
+
+        if (ast == NULL) {
+            continue;
+        }
 
         Formatter out;
 
@@ -22,15 +30,6 @@ int main(int argc, const char *const argv[]) {
         delete ast;
         ast = NULL;
     }
-
-#if 0
-    FQName("a.b.c.d@2.3::foo").print();
-    FQName("a.b.c.d::foo").print();
-    FQName("@3.4::foo").print();
-    FQName("foo").print();
-    FQName("::foo").print();
-    FQName("some.package.somewhere@1.2").print();
-#endif
 
     return 0;
 }

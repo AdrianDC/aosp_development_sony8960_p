@@ -23,8 +23,22 @@ FQName::FQName(const std::string &s)
     setTo(s);
 }
 
+FQName::FQName(
+        const std::string &package,
+        const std::string &version,
+        const std::string &name)
+    : mValid(true),
+      mPackage(package),
+      mVersion(version),
+      mName(name) {
+}
+
 bool FQName::isValid() const {
     return mValid;
+}
+
+bool FQName::isFullyQualified() const {
+    return !mPackage.empty() && !mVersion.empty() && !mName.empty();
 }
 
 bool FQName::setTo(const std::string &s) {
@@ -84,7 +98,7 @@ void FQName::applyDefaults(
     }
 }
 
-std::string FQName::debugString() const {
+std::string FQName::string() const {
     CHECK(mValid);
 
     std::string out;
@@ -106,7 +120,11 @@ void FQName::print() const {
         return;
     }
 
-    LOG(INFO) << debugString();
+    LOG(INFO) << string();
+}
+
+bool FQName::operator<(const FQName &other) const {
+    return string() < other.string();
 }
 
 }  // namespace android
