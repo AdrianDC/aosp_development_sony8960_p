@@ -5,13 +5,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "io_delegate.h"
 #include "logging.h"
 #include "options.h"
 
-//#include <android-base/macros.h>
-//#include <android-base/strings.h>
-
-#include <io_delegate.h>
 using std::string;
 using std::vector;
 using std::pair;
@@ -750,104 +747,5 @@ class Function : public Thing {
   bool oneway_;
   DISALLOW_COPY_AND_ASSIGN(Function);
 };
-
-using TypeMap = std::map<string, TypeDecl*>;
-
-class Parser {
- public:
-  explicit Parser(const android::hidl::IoDelegate& io_delegate, bool verbose_mode);
-  ~Parser();
-
-  // Parse contents of file |filename|.
-  bool ParseFile(const string& filename);
-
-  bool FoundNoErrors() const { return error_ == 0; }
-  const string& FileName() const { return filename_; }
-  void* Scanner() const { return scanner_; }
-
-  std::vector<string> Package() const;
-
-  void AddComment(const string& comment);
-
-  void SetInterface(Annotations *annotations, Element *name);
-  Element *GetInterface() { return interface_; }
-  string GetPackageName() const { return interface_->GetText(); }
-
-  void SetVersion(int major, int minor);
-
-  void SetNamespace(std::vector<Element *>* names);
-
-  void AddImport(const std::vector<Element *>* names);
-
-  void AddFunction(Function *function);
-
-  void AddStruct(StructDecl *structure);
-
-  void AddConst(Const *constant);
-
-  void AddComment(Element *comment);
-
-  void AddUnion(UnionDecl *type);
-
-  void AddEnum(EnumDecl *en);
-
-  void AddTypedef(TypedefDecl* type);
-
-  bool IsTypeDeclared(Element *name);
-
-  TypeDecl *GetDeclaredType(Element *name); // nullptr if not found
-
-  void Error(const char *format, ...);
-
-  void Error(int Line, const char *format, ...);
-
-  void Error(string &s);
-  int GetErrorCount() { return error_; }
-
-  void Dump();
-  void Write(std::string out_type, android::hidl::CodeWriterPtr writer);
-  string TextByPrefix(string section, string prefix);
-  string CallEnumList(string section);
-  string CallbackDeclList(string section);
-  void BuildNamespaceText(string section,
-                          std::vector<Element *>*namespace_,
-                          string& namespace_open,
-                          string& namespace_close,
-                          string& namespace_slashes,
-                          string& namespace_dots,
-                          string& namespace_underscores);
-  void WriteDepFileIfNeeded(
-          android::hidl::CppOptions &options,
-          android::hidl::IoDelegate &io_delegate);
-
- private:
-  void AddThing(Thing *thing);
-  void RegisterType(TypeDecl *decl);
-  void RegisterConstant(const Element *name, const Element *value);
-  void Validate(); // Will call Error() if any are found
-  void VaError(const char *format, va_list args);
-
-  const android::hidl::IoDelegate& io_delegate_;
-  std::string section_;
-  bool verbose_mode_;
-  int error_ = 0;
-  string filename_;
-  void* scanner_ = nullptr;
-  android::hidl::CodeWriterPtr writer_;
-  std::unique_ptr<string> raw_buffer_;
-  YY_BUFFER_STATE buffer_;
-  bool version_set_ = false;
-  int version_major_, version_minor_;
-  std::vector<Element *>* namespace_ = nullptr;
-  Element *interface_ = nullptr;
-  Annotations *interface_annotations_ = nullptr;
-  TypeMap types_;
-  std::map<string, const Element*> consts_;
-  Fields vars_;
-  std::vector<const std::vector<Element *>*> imports_;
-  std::vector<Thing *> things_;
-  DISALLOW_COPY_AND_ASSIGN(Parser);
-};
-
 
 #endif // HIDL_HIDL_LANGUAGE_H_

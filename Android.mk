@@ -48,12 +48,14 @@ LOCAL_STATIC_LIBRARIES := $(hidl_static_libraries)
 LOCAL_SRC_FILES := \
     code_writer.cpp \
     generate.cpp \
+    parser.cpp \
     ast.cpp \
     hidl_language_l.ll \
     hidl_language_y.yy \
     io_delegate.cpp \
     line_reader.cpp \
     options.cpp \
+    generator_utility.cpp \
 
 include $(BUILD_HOST_STATIC_LIBRARY)
 

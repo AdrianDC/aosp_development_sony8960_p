@@ -20,6 +20,7 @@
 #include "io_delegate.h"
 #include "logging.h"
 #include "options.h"
+#include "parser.h"
 
 using android::hidl::CppOptions;
 
