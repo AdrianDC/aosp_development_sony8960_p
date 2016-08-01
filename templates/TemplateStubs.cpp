@@ -24,7 +24,7 @@ IMPLEMENT_HWBINDER_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 
 namespace_open_section
 
-::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   switch (_aidl_code) {
 // START code_snips
@@ -171,7 +171,7 @@ namespace_open_section
   // END param_read_struct_type
 // END param_read_snips
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              function_name(stub_arguments));
 
         // START // Hide callback_code
@@ -180,7 +180,7 @@ param_name// ALL stub_param_decl_default
         [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
 // START param_ret_write_snips
 
@@ -295,12 +295,12 @@ param_name// ALL stub_param_decl_default
 // END code_snips
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace android {
-namespace hidl {
+namespace hardware {
 
 struct GrantorDescriptor {
   uint32_t flags;
@@ -71,7 +71,7 @@ inline const sp<NativeHandle> MQDescriptor::getHandle() const {
 
 inline const std::vector<GrantorDescriptor> MQDescriptor::getGrantors() const {
   return mGrantors;
-}
-}  // namespace hidl
+} // namespace hardware
+} // namespace android
 }  // namespace android
 #endif  // FMSGQ_DESCRIPTOR_H

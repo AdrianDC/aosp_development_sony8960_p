@@ -23,14 +23,14 @@ namespace hardware {
 namespace tests {
 
 
-BpTestService::BpTestService(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+BpTestService::BpTestService(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<ITestService>(_aidl_impl){
 }
-::android::hidl::binder::Status BpTestService::echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct , ITestService::echoInteger_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTestService::echoInteger(int32_t echo_me, const ITestService::simple_t* my_struct , ITestService::echoInteger_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -72,11 +72,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTestService::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITestService::shareBufferWithRef_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTestService::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITestService::shareBufferWithRef_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());

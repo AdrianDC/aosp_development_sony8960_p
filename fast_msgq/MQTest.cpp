@@ -39,7 +39,7 @@ class MQTests : public ::testing::Test {
     ASSERT_TRUE(ashmemFd >= 0);
     native_handle_t* mq_handle = native_handle_create(1, 0);
     ASSERT_TRUE(mq_handle != nullptr);
-    std::vector<android::hidl::GrantorDescriptor> Grantors(
+    std::vector<android::hardware::GrantorDescriptor> Grantors(
         MINIMUM_GRANTOR_COUNT);
     /*
      * The native handle will contain the fds to be
@@ -51,18 +51,18 @@ class MQTests : public ::testing::Test {
      * Create Grantor Descriptors for read, write pointers and the data
      * buffer.
      */
-    Grantors[android::hidl::READPTRPOS] = {0, 0, 0, sizeof(mq_position_t)};
-    Grantors[android::hidl::WRITEPTRPOS] = {0, 0, sizeof(mq_position_t),
+    Grantors[android::hardware::READPTRPOS] = {0, 0, 0, sizeof(mq_position_t)};
+    Grantors[android::hardware::WRITEPTRPOS] = {0, 0, sizeof(mq_position_t),
                                             sizeof(mq_position_t)};
-    Grantors[android::hidl::DATAPTRPOS] = {0, 0, 2 * sizeof(mq_position_t),
+    Grantors[android::hardware::DATAPTRPOS] = {0, 0, 2 * sizeof(mq_position_t),
                                            queue_size};
-    android::hidl::MQDescriptor mydesc(Grantors, mq_handle, 0, sizeof(uint8_t));
-    fmsgq = new android::hidl::MessageQueue<uint8_t>(mydesc);
+    android::hardware::MQDescriptor mydesc(Grantors, mq_handle, 0, sizeof(uint8_t));
+    fmsgq = new android::hardware::MessageQueue<uint8_t>(mydesc);
     ASSERT_TRUE(fmsgq != nullptr);
     ASSERT_TRUE(fmsgq->isValid());
   }
 
-  android::hidl::MessageQueue<uint8_t>* fmsgq;
+  android::hardware::MessageQueue<uint8_t>* fmsgq;
 };
 
 /*

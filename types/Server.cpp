@@ -24,16 +24,16 @@ using android::sp;
 using android::String16;
 
 // libhwbinder:
-using android::hidl::BnInterface;
-using android::hidl::defaultServiceManager;
-using android::hidl::IInterface;
-using android::hidl::IPCThreadState;
-using android::hidl::Parcel;
-using android::hidl::ProcessState;
-using android::hidl::binder::Status;
-using android::hidl::hidl_version;
-using android::hidl::make_hidl_version;
-using android::hidl::from_ref;
+using android::hardware::BnInterface;
+using android::hardware::defaultServiceManager;
+using android::hardware::IInterface;
+using android::hardware::IPCThreadState;
+using android::hardware::Parcel;
+using android::hardware::ProcessState;
+using android::hardware::Status;
+using android::hardware::hidl_version;
+using android::hardware::make_hidl_version;
+using android::hardware::from_ref;
 
 // Standard library
 using std::cerr;
@@ -169,7 +169,7 @@ int Run() {
     ALOGE("Failed to add binder FD to Looper");
     return -1;
   }
-  hidl_version version = android::hidl::make_hidl_version(4,1);
+  hidl_version version = android::hardware::make_hidl_version(4,1);
   defaultServiceManager()->addService(service->getInterfaceDescriptor(),
                                       service, version);
 

@@ -30,14 +30,14 @@ namespace hardware {
 namespace nfc {
 
 
-BpNfc::BpNfc(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+BpNfc::BpNfc(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<INfc>(_aidl_impl){
 }
-::android::hidl::binder::Status BpNfc::open(sp<INfcClientCallback> clientCallback , INfc::open_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::open(sp<INfcClientCallback> clientCallback , INfc::open_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -76,11 +76,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::write(const INfc::nfc_data_t& data , INfc::write_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::write(const INfc::nfc_data_t& data , INfc::write_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -141,11 +141,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::core_initialized(const hidl_vec<uint8_t> &data , INfc::core_initialized_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::core_initialized(const hidl_vec<uint8_t> &data , INfc::core_initialized_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -206,11 +206,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::pre_discover(INfc::pre_discover_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::pre_discover(INfc::pre_discover_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -245,11 +245,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::close(INfc::close_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::close(INfc::close_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -284,11 +284,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::control_granted(INfc::control_granted_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::control_granted(INfc::control_granted_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -323,11 +323,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpNfc::power_cycle(INfc::power_cycle_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpNfc::power_cycle(INfc::power_cycle_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_retval;
 
@@ -386,7 +386,7 @@ namespace hardware {
 namespace nfc {
 
 
-::android::status_t BnNfc::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t BnNfc::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   switch (_aidl_code) {
@@ -405,11 +405,11 @@ namespace nfc {
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              open(clientCallback ,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -459,11 +459,11 @@ namespace nfc {
   }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              write(*data ,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -513,11 +513,11 @@ namespace nfc {
   }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              core_initialized(*data ,          [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -546,11 +546,11 @@ namespace nfc {
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              pre_discover(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -579,11 +579,11 @@ namespace nfc {
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              close(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -612,11 +612,11 @@ namespace nfc {
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              control_granted(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -645,11 +645,11 @@ namespace nfc {
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              power_cycle(        [&](auto retval ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(retval);
 
@@ -671,12 +671,12 @@ namespace nfc {
 
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

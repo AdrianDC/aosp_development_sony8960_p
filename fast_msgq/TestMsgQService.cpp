@@ -22,16 +22,16 @@ using android::sp;
 using android::String16;
 
 // libhwbinder:
-using android::hidl::BnInterface;
-using android::hidl::defaultServiceManager;
-using android::hidl::IInterface;
-using android::hidl::IPCThreadState;
-using android::hidl::Parcel;
-using android::hidl::ProcessState;
-using android::hidl::binder::Status;
-using android::hidl::hidl_version;
-using android::hidl::make_hidl_version;
-using android::hidl::from_ref;
+using android::hardware::BnInterface;
+using android::hardware::defaultServiceManager;
+using android::hardware::IInterface;
+using android::hardware::IPCThreadState;
+using android::hardware::Parcel;
+using android::hardware::ProcessState;
+using android::hardware::Status;
+using android::hardware::hidl_version;
+using android::hardware::make_hidl_version;
+using android::hardware::from_ref;
 
 // Standard library
 using std::cerr;
@@ -109,7 +109,7 @@ class TestMsgQ : public BnTestMsgQ {
       return Status::fromExceptionCode(Status::EX_ILLEGAL_STATE);
     }
 
-    std::vector<android::hidl::GrantorDescriptor> Grantors(
+    std::vector<android::hardware::GrantorDescriptor> Grantors(
         MINIMUM_GRANTOR_COUNT);
 
     mq_handle->data[0] = ashmemFd;
@@ -117,26 +117,26 @@ class TestMsgQ : public BnTestMsgQ {
     /*
      * Create Grantor Descriptors for read, write pointers and the data buffer.
      */
-    Grantors[android::hidl::READPTRPOS] = {0, 0, 0,
+    Grantors[android::hardware::READPTRPOS] = {0, 0, 0,
                                            sizeof(ringbuffer_position_t)};
-    Grantors[android::hidl::WRITEPTRPOS] = {0, 0, sizeof(ringbuffer_position_t),
+    Grantors[android::hardware::WRITEPTRPOS] = {0, 0, sizeof(ringbuffer_position_t),
                                             sizeof(ringbuffer_position_t)};
-    Grantors[android::hidl::DATAPTRPOS] = {
+    Grantors[android::hardware::DATAPTRPOS] = {
         0, 0, 2 * sizeof(ringbuffer_position_t), eventQueueDataSize};
 
-    android::hidl::MQDescriptor mydesc(Grantors, mq_handle, 0,
+    android::hardware::MQDescriptor mydesc(Grantors, mq_handle, 0,
                                        sizeof(uint16_t));
     if (fmsg_queue) {
       delete fmsg_queue;
     }
-    fmsg_queue = new android::hidl::MessageQueue<uint16_t>(mydesc);
+    fmsg_queue = new android::hardware::MessageQueue<uint16_t>(mydesc);
     ITestMsgQ::WireMQDescriptor* wmsgq_desc = CreateWireMQDescriptor(mydesc);
     callback(*wmsgq_desc);
     delete[] wmsgq_desc->grantors.buffer;
     delete wmsgq_desc;
     return Status::ok();
   }
-  android::hidl::MessageQueue<uint16_t>* fmsg_queue;
+  android::hardware::MessageQueue<uint16_t>* fmsg_queue;
 
  private:
   /*
@@ -154,9 +154,9 @@ class TestMsgQ : public BnTestMsgQ {
    * Create WireMQDescriptor from MQDescriptor.
    */
   ITestMsgQ::WireMQDescriptor* CreateWireMQDescriptor(
-      android::hidl::MQDescriptor& rb_desc) {
+      android::hardware::MQDescriptor& rb_desc) {
     ITestMsgQ::WireMQDescriptor* wmq_desc = new ITestMsgQ::WireMQDescriptor;
-    const vector<android::hidl::GrantorDescriptor>& vec_gd =
+    const vector<android::hardware::GrantorDescriptor>& vec_gd =
         rb_desc.getGrantors();
     wmq_desc->grantors.count = vec_gd.size();
     wmq_desc->grantors.buffer =
@@ -188,7 +188,7 @@ int Run() {
     ALOGE("Failed to add binder FD to Looper");
     return -1;
   }
-  hidl_version version = android::hidl::make_hidl_version(4, 0);
+  hidl_version version = android::hardware::make_hidl_version(4, 0);
   defaultServiceManager()->addService(service->getInterfaceDescriptor(),
                                       service, version);
 

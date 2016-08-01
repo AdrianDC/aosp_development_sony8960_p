@@ -30,11 +30,11 @@ using android::status_t;
 using android::String16;
 
 // libbinder:
-using android::hidl::getService;
-using android::hidl::hidl_version;
-using android::hidl::make_hidl_version;
-using android::hidl::gen_ref;
-using android::hidl::from_ref;
+using android::hardware::getService;
+using android::hardware::hidl_version;
+using android::hardware::make_hidl_version;
+using android::hardware::gen_ref;
+using android::hardware::from_ref;
 
 // generated
 using android::hardware::tests::ITestService;

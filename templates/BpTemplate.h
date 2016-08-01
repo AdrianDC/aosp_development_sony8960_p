@@ -16,9 +16,9 @@
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-class Bppackage_name : public ::android::hidl::BpInterface<Ipackage_name> {
+class Bppackage_name : public ::android::hardware::BpInterface<Ipackage_name> {
 public:
-explicit Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
+explicit Bppackage_name(const ::android::sp<::android::hardware::IBinder>& _aidl_impl);
 virtual ~Bppackage_name() = default;
   // START declarations
 /*
@@ -27,7 +27,7 @@ sp<import_name> param_name // ALL param_decl_import
 const hidl_vec<decl_base_type> &param_name // ALL param_decl_vec
 const Ipackage_name::struct_name &param_name // ALL param_decl_struct_type
 */
-::android::hidl::binder::Status function_name(params_and_callback) override; // ALL declare_function
+::android::hardware::Status function_name(params_and_callback) override; // ALL declare_function
   // END declarations
 };  // class Bppackage_name
 

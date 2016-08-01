@@ -23,14 +23,14 @@ namespace hardware {
 namespace tests {
 
 
-BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+BpTypes::BpTypes(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<ITypes>(_aidl_impl){
 }
-::android::hidl::binder::Status BpTypes::echoInteger(int32_t echo_me, const ITypes::simple_t* my_struct , ITypes::echoInteger_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoInteger(int32_t echo_me, const ITypes::simple_t* my_struct , ITypes::echoInteger_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -72,11 +72,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
    _cb_a;
  _cb_b;
  _cb_c;
@@ -186,11 +186,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   uint8_t _cb_a;
 int8_t _cb_b;
 uint16_t _cb_c;
@@ -300,11 +300,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoStruct(const ITypes::s0* s , ITypes::echoStruct_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoStruct(const ITypes::s0* s , ITypes::echoStruct_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   s0 *_cb_s; ;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -339,11 +339,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   int32_t _cb_ret;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -381,11 +381,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::getHash(ITypes::getHash_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::getHash(ITypes::getHash_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   uint64_t _cb_hash;
 
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -419,11 +419,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::quit() {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::quit() {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {

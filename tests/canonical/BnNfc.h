@@ -12,9 +12,9 @@ namespace hardware {
 namespace nfc {
 
 
-class BnNfc : public ::android::hidl::BnInterface<INfc> {
+class BnNfc : public ::android::hardware::BnInterface<INfc> {
 public:
-  ::android::status_t onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
+  ::android::status_t onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
 };  // class BnNfc
 
 }  // namespace nfc

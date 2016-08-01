@@ -13,9 +13,9 @@
 namespace namespace_name {//ALL namespace_open_line
 //END namespace_open_section
 
-class Bnpackage_name : public ::android::hidl::BnInterface<Ipackage_name> {
+class Bnpackage_name : public ::android::hardware::BnInterface<Ipackage_name> {
 public:
-  ::android::status_t onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
+  ::android::status_t onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags = 0, TransactCallback _callback = nullptr) override;
 };  // class Bnpackage_name
 
 // START namespace_close_section

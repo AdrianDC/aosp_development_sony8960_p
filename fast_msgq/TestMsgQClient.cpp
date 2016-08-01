@@ -34,11 +34,11 @@ using android::status_t;
 using android::String16;
 
 // libbinder:
-using android::hidl::getService;
-using android::hidl::hidl_version;
-using android::hidl::make_hidl_version;
-using android::hidl::gen_ref;
-using android::hidl::from_ref;
+using android::hardware::getService;
+using android::hardware::hidl_version;
+using android::hardware::make_hidl_version;
+using android::hardware::gen_ref;
+using android::hardware::from_ref;
 
 // generated
 using android::hardware::tests::ITestMsgQ;
@@ -92,10 +92,10 @@ class MQTestClient : public ::testing::Test {
     numMessagesMax = fmsg_queue->getQuantumCount();
   }
   sp<ITestMsgQ> service;
-  android::hidl::MessageQueue<uint16_t>* fmsg_queue;
+  android::hardware::MessageQueue<uint16_t>* fmsg_queue;
 
  private:
-  void create_mq_from_wiremqdesc(android::hidl::MessageQueue<uint16_t>** rbIn,
+  void create_mq_from_wiremqdesc(android::hardware::MessageQueue<uint16_t>** rbIn,
                                  const ITestMsgQ::WireMQDescriptor* wmq_desc) {
     /*
      * Create a copy of the native handle from the WireMQDescriptor.
@@ -112,25 +112,25 @@ class MQTestClient : public ::testing::Test {
     /*
      * Create the vector of GrantorDescriptors.
      */
-    std::vector<android::hidl::GrantorDescriptor> Grantors(
+    std::vector<android::hardware::GrantorDescriptor> Grantors(
         MINIMUM_GRANTOR_COUNT);
-    Grantors[android::hidl::READPTRPOS] = {
-        0, wmq_desc->grantors.buffer[android::hidl::READPTRPOS].shm.fdIndex,
-        wmq_desc->grantors.buffer[android::hidl::READPTRPOS].shm.offset,
-        wmq_desc->grantors.buffer[android::hidl::READPTRPOS].shm.extent};
-    Grantors[android::hidl::WRITEPTRPOS] = {
-        0, wmq_desc->grantors.buffer[android::hidl::WRITEPTRPOS].shm.fdIndex,
-        wmq_desc->grantors.buffer[android::hidl::WRITEPTRPOS].shm.offset,
-        wmq_desc->grantors.buffer[android::hidl::WRITEPTRPOS].shm.extent};
+    Grantors[android::hardware::READPTRPOS] = {
+        0, wmq_desc->grantors.buffer[android::hardware::READPTRPOS].shm.fdIndex,
+        wmq_desc->grantors.buffer[android::hardware::READPTRPOS].shm.offset,
+        wmq_desc->grantors.buffer[android::hardware::READPTRPOS].shm.extent};
+    Grantors[android::hardware::WRITEPTRPOS] = {
+        0, wmq_desc->grantors.buffer[android::hardware::WRITEPTRPOS].shm.fdIndex,
+        wmq_desc->grantors.buffer[android::hardware::WRITEPTRPOS].shm.offset,
+        wmq_desc->grantors.buffer[android::hardware::WRITEPTRPOS].shm.extent};
 
-    Grantors[android::hidl::DATAPTRPOS] = {
-        0, wmq_desc->grantors.buffer[android::hidl::DATAPTRPOS].shm.fdIndex,
-        wmq_desc->grantors.buffer[android::hidl::DATAPTRPOS].shm.offset,
-        wmq_desc->grantors.buffer[android::hidl::DATAPTRPOS].shm.extent};
+    Grantors[android::hardware::DATAPTRPOS] = {
+        0, wmq_desc->grantors.buffer[android::hardware::DATAPTRPOS].shm.fdIndex,
+        wmq_desc->grantors.buffer[android::hardware::DATAPTRPOS].shm.offset,
+        wmq_desc->grantors.buffer[android::hardware::DATAPTRPOS].shm.extent};
 
-    android::hidl::MQDescriptor mq_desc(Grantors, mq_handle, 0,
+    android::hardware::MQDescriptor mq_desc(Grantors, mq_handle, 0,
                                         sizeof(uint16_t));
-    *rbIn = new android::hidl::MessageQueue<uint16_t>(mq_desc);
+    *rbIn = new android::hardware::MessageQueue<uint16_t>(mq_desc);
   }
 };
 

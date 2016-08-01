@@ -35,7 +35,7 @@ struct hidl_string {
 };
 #endif // HIDL_TYPES
 
-class Ipackage_name : public ::android::hidl::IInterface {
+class Ipackage_name : public ::android::hardware::IInterface {
 public:
 
 DECLARE_HWBINDER_META_INTERFACE(package_name);
@@ -85,13 +85,13 @@ hidl_vec<base_type_name>//ALL describe_type_vec
 
   // START declarations
   // START declare_function
-  virtual ::android::hidl::binder::Status function_name(params_and_callback) = 0;
+  virtual ::android::hardware::Status function_name(params_and_callback) = 0;
   // END declare_function
   "param_name" // ALL enum_quoted_name_default
   // END declarations
 enum Call {
   // START call_enum_list
-  call_enum_name = ::android::hidl::IBinder::FIRST_CALL_TRANSACTION + 0, // ALL first_call_enum
+  call_enum_name = ::android::hardware::IBinder::FIRST_CALL_TRANSACTION + 0, // ALL first_call_enum
   // END call_enum_list
 };
 };  // class Ipackage_name

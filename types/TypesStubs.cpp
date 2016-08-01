@@ -24,7 +24,7 @@ namespace hardware {
 namespace tests {
 
 
-::android::status_t BnTypes::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t BnTypes::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   switch (_aidl_code) {
     case Call::ECHOINTEGER:
@@ -44,11 +44,11 @@ int32_t echo_me;
         my_struct = (ITypes::simple_t *)_aidl_data.readBuffer();
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoInteger(echo_me , *my_struct ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(ret);
 
@@ -122,11 +122,11 @@ int32_t echo_me;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoEnum(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
         _aidl_ret_status = _aidl_reply->writeByte((int8_t)a);
         if (((_aidl_ret_status) != (::android::OK))) {
@@ -235,11 +235,11 @@ char i;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoScalar(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeByte((int8_t)a);
                              _aidl_reply->writeByte(b);
@@ -278,11 +278,11 @@ char i;
         s = (ITypes::s0 *)_aidl_data.readBuffer();
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoStruct(*s ,          [&](auto s ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              std::cout << "Struct type passed to cb" << std::endl;
 
@@ -313,11 +313,11 @@ hidl_ref<lots_of_data> buffer;
         buffer = _aidl_data.readFileDescriptor();
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              shareBufferWithRef(buffer ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(ret);
 
@@ -346,11 +346,11 @@ hidl_ref<lots_of_data> buffer;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              getHash(        [&](auto hash ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeUint64(hash);
 
@@ -379,7 +379,7 @@ hidl_ref<lots_of_data> buffer;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              quit());
 
 //
@@ -390,12 +390,12 @@ hidl_ref<lots_of_data> buffer;
 
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

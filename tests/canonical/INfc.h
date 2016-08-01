@@ -31,7 +31,7 @@ struct hidl_string {
 };
 #endif // HIDL_TYPES
 
-class INfc : public ::android::hidl::IInterface {
+class INfc : public ::android::hardware::IInterface {
 public:
 
 DECLARE_HWBINDER_META_INTERFACE(Nfc);
@@ -65,16 +65,16 @@ hidl_vec<uint8_t> data ;
   using power_cycle_cb = std::function<void(int32_t retval)>;
 
 
-  virtual ::android::hidl::binder::Status open(sp<INfcClientCallback> clientCallback , open_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status write(const INfc::nfc_data_t &data , write_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status core_initialized(const hidl_vec<uint8_t> &data , core_initialized_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status pre_discover(pre_discover_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status close(close_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status control_granted(control_granted_cb _cb = nullptr ) = 0;
-  virtual ::android::hidl::binder::Status power_cycle(power_cycle_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status open(sp<INfcClientCallback> clientCallback , open_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status write(const INfc::nfc_data_t &data , write_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status core_initialized(const hidl_vec<uint8_t> &data , core_initialized_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status pre_discover(pre_discover_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status close(close_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status control_granted(control_granted_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status power_cycle(power_cycle_cb _cb = nullptr ) = 0;
 
 enum Call {
-  OPEN = ::android::hidl::IBinder::FIRST_CALL_TRANSACTION + 0,
+  OPEN = ::android::hardware::IBinder::FIRST_CALL_TRANSACTION + 0,
 
   WRITE,   CORE_INITIALIZED,   PRE_DISCOVER,   CLOSE,   CONTROL_GRANTED,   POWER_CYCLE, 
 };

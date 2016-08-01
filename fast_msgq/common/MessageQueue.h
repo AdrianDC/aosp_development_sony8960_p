@@ -23,7 +23,7 @@
 #define MINIMUM_GRANTOR_COUNT 3
 
 namespace android {
-namespace hidl {
+namespace hardware {
 
 template <typename T>
 struct MessageQueue {
@@ -237,6 +237,6 @@ template <typename T>
 bool MessageQueue<T>::isValid() const {
   return mRing != nullptr && mReadPtr != nullptr && mWritePtr != nullptr;
 }
-}  // namespace hidl
+}  // namespace hardware
 }  // namespace android
 #endif  // HIDL_MQ_H

@@ -30,14 +30,14 @@ namespace hardware {
 namespace tests {
 
 
-BpExpression::BpExpression(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<IExpression>(_aidl_impl){
 }
-::android::hidl::binder::Status BpExpression::setExpression(const IExpression::expressionist_t& state , int32_t mask, IExpression::setExpression_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpExpression::setExpression(const IExpression::expressionist_t& state , int32_t mask, IExpression::setExpression_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_ret;
 
@@ -150,7 +150,7 @@ namespace hardware {
 namespace tests {
 
 
-::android::status_t BnExpression::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t BnExpression::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   switch (_aidl_code) {
@@ -207,11 +207,11 @@ int32_t mask;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              setExpression(*state , mask ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(ret);
 
@@ -233,12 +233,12 @@ int32_t mask;
 
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

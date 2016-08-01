@@ -27,7 +27,7 @@ IMPLEMENT_HWBINDER_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 
 namespace_open_section
 
-Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+Bppackage_name::Bppackage_name(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<Ipackage_name>(_aidl_impl){
 }
 // START code_snips
@@ -40,11 +40,11 @@ Ipackage_name::the_type_name//ALL describe_named_type
 hidl_vec<base_type_name>//ALL describe_type_vec
 */
 // START code_for_function
-::android::hidl::binder::Status Bppackage_name::function_name(params_and_callback) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status Bppackage_name::function_name(params_and_callback) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   generates_variables
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -541,7 +541,7 @@ const Ipackage_name::type_desc & param_name // ALL return_param_decl_struct_type
 
 namespace_open_section
 
-::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t Bnpackage_name::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   switch (_aidl_code) {
@@ -766,7 +766,7 @@ namespace_open_section
 // END param_read_ref_all
 // END param_read_snips
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              function_name(stub_arguments));
 
         // START // Hide callback_code
@@ -778,7 +778,7 @@ param_name// ALL stub_param_decl_default
         [&](return_params_stubs) {  // START callback_code
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
 // START param_ret_write_snips
 
@@ -976,12 +976,12 @@ param_name// ALL stub_param_decl_default
 // END code2_snips
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

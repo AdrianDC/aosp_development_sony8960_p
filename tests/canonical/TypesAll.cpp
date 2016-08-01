@@ -30,14 +30,14 @@ namespace hardware {
 namespace tests {
 
 
-BpTypes::BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+BpTypes::BpTypes(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<ITypes>(_aidl_impl){
 }
-::android::hidl::binder::Status BpTypes::echoInteger(int32_t echo_me, const ITypes::simple_t& my_struct , ITypes::echoInteger_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoInteger(int32_t echo_me, const ITypes::simple_t& my_struct , ITypes::echoInteger_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_ret;
 
@@ -89,11 +89,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   ITypes::eu8
  _cb_a;
@@ -213,11 +213,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   uint8_t _cb_a;
 int8_t _cb_b;
@@ -328,11 +328,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::echoStruct(const ITypes::s0& s , ITypes::echoStruct_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::echoStruct(const ITypes::s0& s , ITypes::echoStruct_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
     ITypes::s0 *_cb_s ;
 
@@ -446,11 +446,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   int32_t _cb_ret;
 
@@ -489,11 +489,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::getHash(ITypes::getHash_cb _cb ) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::getHash(ITypes::getHash_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   uint64_t _cb_hash;
 
@@ -528,11 +528,11 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
-::android::hidl::binder::Status BpTypes::quit() {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status BpTypes::quit() {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
@@ -583,7 +583,7 @@ namespace hardware {
 namespace tests {
 
 
-::android::status_t BnTypes::onTransact(uint32_t _aidl_code, const ::android::hidl::Parcel& _aidl_data, ::android::hidl::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
+::android::status_t BnTypes::onTransact(uint32_t _aidl_code, const ::android::hardware::Parcel& _aidl_data, ::android::hardware::Parcel* _aidl_reply, uint32_t _aidl_flags, TransactCallback _cb) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
   switch (_aidl_code) {
@@ -616,11 +616,11 @@ int32_t echo_me;
   }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoInteger(echo_me , *my_struct ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(ret);
 
@@ -703,11 +703,11 @@ ITypes::ec
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoEnum(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
         _aidl_ret_status = _aidl_reply->writeByte((int8_t)a);
         if (((_aidl_ret_status) != (::android::OK))) {
@@ -816,11 +816,11 @@ char i;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoScalar(a , b , c , d , e , f , g , h , i ,          [&](auto a , auto b , auto c , auto d , auto e , auto f , auto g , auto h , auto i ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeByte((int8_t)a);
                              _aidl_reply->writeByte(b);
@@ -894,11 +894,11 @@ char i;
   }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              echoStruct(*s ,          [&](const ITypes::s0 & s ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
   {
     size_t parent_handle;
@@ -963,11 +963,11 @@ hidl_ref<lots_of_data> buffer;
         buffer = _aidl_data.readFileDescriptor();
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              shareBufferWithRef(buffer ,          [&](auto ret ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeInt32(ret);
 
@@ -996,11 +996,11 @@ hidl_ref<lots_of_data> buffer;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              getHash(        [&](auto hash ) {
                              callback_called = true;
                              // Write "OK" to parcel
-                             ::android::hidl::binder::Status::ok().writeToParcel(_aidl_reply);
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
                              // Serialize
                              _aidl_reply->writeUint64(hash);
 
@@ -1029,7 +1029,7 @@ hidl_ref<lots_of_data> buffer;
         }
 
         // Make the call into the server
-        ::android::hidl::binder::Status _aidl_status(
+        ::android::hardware::Status _aidl_status(
              quit());
 
 //
@@ -1040,12 +1040,12 @@ hidl_ref<lots_of_data> buffer;
 
     default:
       {
-        _aidl_ret_status = ::android::hidl::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+        _aidl_ret_status = ::android::hardware::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
       }
       break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::hidl::binder::Status::fromExceptionCode(::android::hidl::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
+    _aidl_ret_status = ::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }

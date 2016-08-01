@@ -14,7 +14,7 @@ namespace hardware {
 
 class BpMath : public hidl::BpInterface<IMath> {
 public:
-  explicit BpMath(const ::android::sp<::android::hidl::IBinder>& _aidl_impl) : BpInterface(_aidl_impl) {}
+  explicit BpMath(const ::android::sp<::android::hardware::IBinder>& _aidl_impl) : BpInterface(_aidl_impl) {}
   virtual ~BpMath() = default;
   virtual status_t sayHi( );
   virtual status_t doCalc(int32_t i , std::function<void(int32_t sum, int32_t product)> callback = nullptr);

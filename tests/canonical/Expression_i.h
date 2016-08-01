@@ -30,7 +30,7 @@ struct hidl_string {
 };
 #endif // HIDL_TYPES
 
-class IExpression : public ::android::hidl::IInterface {
+class IExpression : public ::android::hardware::IInterface {
 public:
 
 DECLARE_HWBINDER_META_INTERFACE(Expression);
@@ -50,10 +50,10 @@ hidl_vec<hidl_vec<uint8_t> > expmap ;
   using setExpression_cb = std::function<void(int32_t ret)>;
 
 
-  virtual ::android::hidl::binder::Status setExpression(const IExpression::expressionist_t &state , int32_t mask, setExpression_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status setExpression(const IExpression::expressionist_t &state , int32_t mask, setExpression_cb _cb = nullptr ) = 0;
 
 enum Call {
-  SETEXPRESSION = ::android::hidl::IBinder::FIRST_CALL_TRANSACTION + 0,
+  SETEXPRESSION = ::android::hardware::IBinder::FIRST_CALL_TRANSACTION + 0,
 
 
 };

@@ -14,17 +14,17 @@ namespace hardware {
 namespace tests {
 
 
-class BpTypes : public ::android::hidl::BpInterface<ITypes> {
+class BpTypes : public ::android::hardware::BpInterface<ITypes> {
 public:
-explicit BpTypes(const ::android::sp<::android::hidl::IBinder>& _aidl_impl);
+explicit BpTypes(const ::android::sp<::android::hardware::IBinder>& _aidl_impl);
 virtual ~BpTypes() = default;
-::android::hidl::binder::Status echoInteger(int32_t echo_me, const ITypes::simple_t &my_struct , ITypes::echoInteger_cb _cb ) override;
-::android::hidl::binder::Status echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) override;
-::android::hidl::binder::Status echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) override;
-::android::hidl::binder::Status echoStruct(const ITypes::s0 &s , ITypes::echoStruct_cb _cb ) override;
-::android::hidl::binder::Status shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) override;
-::android::hidl::binder::Status getHash(ITypes::getHash_cb _cb ) override;
-::android::hidl::binder::Status quit() override;
+::android::hardware::Status echoInteger(int32_t echo_me, const ITypes::simple_t &my_struct , ITypes::echoInteger_cb _cb ) override;
+::android::hardware::Status echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, ITypes::echoEnum_cb _cb ) override;
+::android::hardware::Status echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, ITypes::echoScalar_cb _cb ) override;
+::android::hardware::Status echoStruct(const ITypes::s0 &s , ITypes::echoStruct_cb _cb ) override;
+::android::hardware::Status shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) override;
+::android::hardware::Status getHash(ITypes::getHash_cb _cb ) override;
+::android::hardware::Status quit() override;
 
 };  // class BpTypes
 

@@ -20,7 +20,7 @@ IMPLEMENT_HWBINDER_META_INTERFACE(package_name, "namespace_dots.Ipackage_name");
 
 namespace_open_section
 
-Bppackage_name::Bppackage_name(const ::android::sp<::android::hidl::IBinder>& _aidl_impl)
+Bppackage_name::Bppackage_name(const ::android::sp<::android::hardware::IBinder>& _aidl_impl)
     : BpInterface<Ipackage_name>(_aidl_impl){
 }
 // START code_snips
@@ -32,11 +32,11 @@ struct_name *param_name; // ALL field_decl_struct_type
 
 */
 // START code_for_function
-::android::hidl::binder::Status Bppackage_name::function_name(params_and_callback) {
-  ::android::hidl::Parcel _aidl_data;
-  ::android::hidl::Parcel _aidl_reply;
+::android::hardware::Status Bppackage_name::function_name(params_and_callback) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::hidl::binder::Status _aidl_status;
+  ::android::hardware::Status _aidl_status;
   generates_variables
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {

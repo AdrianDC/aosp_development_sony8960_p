@@ -17,7 +17,7 @@
 #include "MessageQueueDesc.h"
 
 namespace android {
-namespace hidl {
+namespace hardware {
 
 MQDescriptor::MQDescriptor(const std::vector<GrantorDescriptor>& grantors,
                            native_handle_t* nhandle, int32_t flags, size_t size)
@@ -54,5 +54,5 @@ void MQDescriptor::unmapGrantorDescr(void* address, uint32_t grantor_idx) {
       (uint8_t*)address - (mGrantors[grantor_idx].offset - mapOffset);
   if (baseAddress) munmap(baseAddress, mapLength);
 }
-}  // namespace hidl
+}  // namespace hardware 
 }  // namespace android
