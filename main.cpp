@@ -5,10 +5,50 @@
 
 #include <android-base/logging.h>
 #include <stdio.h>
+#include <unistd.h>
 
 using namespace android;
 
-int main(int argc, const char *const argv[]) {
+static void usage(const char *me) {
+    fprintf(stderr, "usage: %s -o output-path fqname ...\n", me);
+}
+
+int main(int argc, char **argv) {
+    std::string outputDir;
+
+    int res;
+    while ((res = getopt(argc, argv, "ho:")) >= 0) {
+        switch (res) {
+            case 'o':
+            {
+                outputDir = optarg;
+                break;
+            }
+
+            case '?':
+            case 'h':
+            default:
+            {
+                usage(argv[0]);
+                exit(1);
+                break;
+            }
+        }
+    }
+
+    argc -= optind;
+    argv += optind;
+
+    if (outputDir.empty()) {
+        usage(argv[0]);
+        exit(1);
+    } else {
+        const size_t len = outputDir.size();
+        if (outputDir[len - 1] != '/') {
+            outputDir += "/";
+        }
+    }
+
     const char *TOP = getenv("TOP");
     if (TOP == NULL) {
         LOG(ERROR) << "Your environment does not define $TOP.";
@@ -33,7 +73,7 @@ int main(int argc, const char *const argv[]) {
 
         ast->dump(out);
 
-        ast->generateCpp();
+        ast->generateCpp(outputDir);
 
         delete ast;
         ast = NULL;

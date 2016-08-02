@@ -66,19 +66,19 @@ static std::string upcase(const std::string in) {
     return out;
 }
 
-status_t AST::generateCpp() const {
-    status_t err = generateInterfaceHeader();
+status_t AST::generateCpp(const std::string &outputPath) const {
+    status_t err = generateInterfaceHeader(outputPath);
 
     if (err == OK) {
-        err = generateStubHeader();
+        err = generateStubHeader(outputPath);
     }
 
     if (err == OK) {
-        err = generateProxyHeader();
+        err = generateProxyHeader(outputPath);
     }
 
     if (err == OK) {
-        err = generateAllSource();
+        err = generateAllSource(outputPath);
     }
 
     return err;
@@ -148,11 +148,12 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
-status_t AST::generateInterfaceHeader() const {
+status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     const std::string packagePath =
         mCoordinator->getPackagePath(mPackage, true /* relative */);
 
-    std::string path = "/tmp/android/hardware/";
+    std::string path = outputPath;
+    path.append("android/hardware/");
     path.append(packagePath);
 
     std::string ifaceName;
@@ -287,7 +288,7 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope->emitTypeDeclarations(out);
 }
 
-status_t AST::generateStubHeader() const {
+status_t AST::generateStubHeader(const std::string &outputPath) const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
         // types.hal does not get a stub header.
@@ -300,7 +301,8 @@ status_t AST::generateStubHeader() const {
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);
 
-    std::string path = "/tmp/android/hardware/";
+    std::string path = outputPath;
+    path.append("android/hardware/");
     path.append(packagePath);
     path.append("Bn");
     path.append(baseName);
@@ -364,7 +366,7 @@ status_t AST::generateStubHeader() const {
     return OK;
 }
 
-status_t AST::generateProxyHeader() const {
+status_t AST::generateProxyHeader(const std::string &outputPath) const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
         // types.hal does not get a proxy header.
@@ -377,7 +379,8 @@ status_t AST::generateProxyHeader() const {
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);
 
-    std::string path = "/tmp/android/hardware/";
+    std::string path = outputPath;
+    path.append("android/hardware/");
     path.append(packagePath);
     path.append("Bp");
     path.append(baseName);
@@ -456,11 +459,12 @@ status_t AST::generateProxyHeader() const {
     return OK;
 }
 
-status_t AST::generateAllSource() const {
+status_t AST::generateAllSource(const std::string &outputPath) const {
     const std::string packagePath =
         mCoordinator->getPackagePath(mPackage, true /* relative */);
 
-    std::string path = "/tmp/android/hardware/";
+    std::string path = outputPath;
+    path.append("android/hardware/");
     path.append(packagePath);
 
     std::string ifaceName;

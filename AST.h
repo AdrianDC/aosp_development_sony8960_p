@@ -47,7 +47,7 @@ struct AST {
 
     void dump(Formatter &out) const;
 
-    status_t generateCpp() const;
+    status_t generateCpp(const std::string &outputPath) const;
 
 private:
     Coordinator *mCoordinator;
@@ -66,10 +66,10 @@ private:
     std::string makeHeaderGuard(const std::string &baseName) const;
     void enterLeaveNamespace(Formatter &out, bool enter) const;
 
-    status_t generateInterfaceHeader() const;
-    status_t generateStubHeader() const;
-    status_t generateProxyHeader() const;
-    status_t generateAllSource() const;
+    status_t generateInterfaceHeader(const std::string &outputPath) const;
+    status_t generateStubHeader(const std::string &outputPath) const;
+    status_t generateProxyHeader(const std::string &outputPath) const;
+    status_t generateAllSource(const std::string &outputPath) const;
 
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;

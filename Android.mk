@@ -40,3 +40,6 @@ LOCAL_STATIC_LIBRARIES :=       \
 LOCAL_CFLAGS := -O0 -g
 
 include $(BUILD_HOST_EXECUTABLE)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
+
