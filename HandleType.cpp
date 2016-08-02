@@ -6,10 +6,6 @@ namespace android {
 
 HandleType::HandleType() {}
 
-void HandleType::dump(Formatter &out) const {
-    out << "handle";
-}
-
 std::string HandleType::getCppType(StorageMode mode, std::string *extra) const {
     extra->clear();
 

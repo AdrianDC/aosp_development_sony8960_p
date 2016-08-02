@@ -21,7 +21,6 @@ struct Scope : public NamedType {
 
     bool addConstant(Constant *constant);
 
-    void dump(Formatter &out) const override;
     bool isScope() const override;
 
     // Returns the single interface or NULL.

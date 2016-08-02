@@ -14,8 +14,6 @@ struct Type;
 struct TypedVar {
     TypedVar(const char *name, Type *type);
 
-    void dump(Formatter &out) const;
-
     std::string name() const;
     const Type &type() const;
 
@@ -30,8 +28,6 @@ struct Method {
     Method(const char *name,
            std::vector<TypedVar *> *args,
            std::vector<TypedVar *> *results = NULL);
-
-    void dump(Formatter &out) const;
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;

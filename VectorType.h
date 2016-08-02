@@ -9,8 +9,6 @@ namespace android {
 struct VectorType : public Type {
     VectorType(Type *elementType);
 
-    void dump(Formatter &out) const override;
-
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(

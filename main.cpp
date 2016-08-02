@@ -1,6 +1,5 @@
 #include "AST.h"
 #include "Coordinator.h"
-#include "Formatter.h"
 #include "FQName.h"
 
 #include <android-base/logging.h>
@@ -70,12 +69,6 @@ int main(int argc, char **argv) {
 
         AST *ast = coordinator.parse(fqName);
         CHECK(ast != NULL);
-
-        Formatter out;
-
-        printf("========================================\n");
-
-        ast->dump(out);
 
         ast->generateCpp(outputDir);
 

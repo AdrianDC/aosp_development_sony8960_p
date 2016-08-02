@@ -46,20 +46,6 @@ Type *Scope::lookupType(const char *name) const {
     return NULL;
 }
 
-void Scope::dump(Formatter &out) const {
-    for (size_t i = 0; i < mConstants.size(); ++i) {
-        mConstants.valueAt(i)->dump(out);
-    }
-
-    if (mConstants.size() > 0) {
-        out << "\n";
-    }
-
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        mTypes[i]->dump(out);
-    }
-}
-
 bool Scope::isScope() const {
     return true;
 }

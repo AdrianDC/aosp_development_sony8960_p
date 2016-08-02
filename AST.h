@@ -46,8 +46,6 @@ struct AST {
     // absolute.
     Type *lookupTypeInternal(const std::string &namePath) const;
 
-    void dump(Formatter &out) const;
-
     status_t generateCpp(const std::string &outputPath) const;
 
 private:

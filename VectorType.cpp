@@ -10,12 +10,6 @@ VectorType::VectorType(Type *elementType)
     : mElementType(elementType) {
 }
 
-void VectorType::dump(Formatter &out) const {
-    out<< "vec<";
-    mElementType->dump(out);
-    out << ">";
-}
-
 std::string VectorType::getCppType(StorageMode mode, std::string *extra) const {
     const std::string base =
         "::android::hidl::hidl_vec<"

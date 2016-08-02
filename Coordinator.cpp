@@ -158,7 +158,7 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
         Type *type = ast->lookupTypeInternal(fqName.name());
 
         if (type != NULL) {
-            return new RefType(fqName.string().c_str(), type);
+            return new RefType(type);
         }
     }
 
@@ -171,7 +171,7 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
             Type *type = ast->lookupTypeInternal(fqName.name());
 
             if (type != NULL) {
-                return new RefType(fqName.string().c_str(), type);
+                return new RefType(type);
             }
         }
     }

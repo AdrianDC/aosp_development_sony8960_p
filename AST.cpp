@@ -157,7 +157,7 @@ Type *AST::lookupType(const char *name) {
             Type *type = mScopePath[i]->lookupType(name);
 
             if (type != NULL) {
-                return new RefType(name, type);
+                return new RefType(type);
             }
         }
     }
@@ -206,10 +206,6 @@ Type *AST::lookupTypeInternal(const std::string &namePath) const {
         scope = static_cast<Scope *>(type);
         startPos = dotPos + 1;
     }
-}
-
-void AST::dump(Formatter &out) const {
-    mRootScope->dump(out);
 }
 
 }  // namespace android;

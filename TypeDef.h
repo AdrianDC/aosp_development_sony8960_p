@@ -9,8 +9,6 @@ namespace android {
 struct TypeDef : public NamedType {
     TypeDef(const char *name, Type *type);
 
-    void dump(Formatter &out) const override;
-
     const ScalarType *resolveToScalarType() const override;
 
     const Type *referencedType() const;

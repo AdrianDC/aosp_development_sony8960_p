@@ -9,12 +9,6 @@ CompoundField::CompoundField(const char *name, Type *type)
       mType(type) {
 }
 
-void CompoundField::dump(Formatter &out) const {
-    mType->dump(out);
-
-    out << " " << mName << ";";
-}
-
 std::string CompoundField::name() const {
     return mName;
 }
@@ -31,26 +25,6 @@ CompoundType::CompoundType(Style style, const char *name)
 
 void CompoundType::setFields(std::vector<CompoundField *> *fields) {
     mFields = fields;
-}
-
-void CompoundType::dump(Formatter &out) const {
-    out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
-        << " "
-        << name()
-        << " {\n";
-
-    out.indent();
-
-    Scope::dump(out);
-
-    for (size_t i = 0; i < mFields->size(); ++i) {
-        (*mFields)[i]->dump(out);
-        out << "\n";
-    }
-
-    out.unindent();
-
-    out << "};\n\n";
 }
 
 std::string CompoundType::getCppType(

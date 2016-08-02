@@ -17,12 +17,6 @@ const Type *TypeDef::referencedType() const {
     return mReferencedType;
 }
 
-void TypeDef::dump(Formatter &out) const {
-    out << "typedef ";
-    mReferencedType->dump(out);
-    out << " " << name() << ";\n\n";
-}
-
 std::string TypeDef::getCppType(StorageMode mode, std::string *extra) const {
     return mReferencedType->getCppType(mode, extra);
 }

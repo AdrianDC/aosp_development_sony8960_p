@@ -23,11 +23,5 @@ std::string Constant::value() const {
     return mValue;
 }
 
-void Constant::dump(Formatter &out) const {
-    out << "const ";
-    mType->dump(out);
-    out << " " << mName << " = " << mValue << ";\n";
-}
-
 }  // namespace android
 

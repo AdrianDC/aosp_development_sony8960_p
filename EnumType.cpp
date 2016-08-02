@@ -12,16 +12,6 @@ EnumValue::EnumValue(const char *name, const char *value)
       mValue(value) {
 }
 
-void EnumValue::dump(Formatter &out) const {
-    out << mName;
-
-    if (mValue) {
-        out << " = " << mValue;
-    }
-
-    out << ",";
-}
-
 std::string EnumValue::name() const {
     return mName;
 }
@@ -38,28 +28,6 @@ EnumType::EnumType(
               storageType != NULL
                 ? storageType
                 : new ScalarType(ScalarType::KIND_INT32)) {
-}
-
-void EnumType::dump(Formatter &out) const {
-    out << "enum " << name() << " ";
-
-    if (mStorageType) {
-        out << ": ";
-        mStorageType->dump(out);
-        out << " ";
-    }
-
-    out << "{\n";
-    out.indent();
-
-    for (size_t i = 0; i < mValues->size(); ++i) {
-        (*mValues)[i]->dump(out);
-        out << "\n";
-    }
-
-    out.unindent();
-
-    out << "};\n\n";
 }
 
 const ScalarType *EnumType::resolveToScalarType() const {

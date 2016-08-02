@@ -4,9 +4,8 @@
 
 namespace android {
 
-RefType::RefType(const char *name, Type *type)
-    : NamedType(name),
-      mReferencedType(type) {
+RefType::RefType(Type *type)
+    : mReferencedType(type) {
 }
 
 const ScalarType *RefType::resolveToScalarType() const {
@@ -15,10 +14,6 @@ const ScalarType *RefType::resolveToScalarType() const {
 
 const Type *RefType::referencedType() const {
     return mReferencedType;
-}
-
-void RefType::dump(Formatter &out) const {
-    out << name();
 }
 
 std::string RefType::getCppType(StorageMode mode, std::string *extra) const {

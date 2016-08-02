@@ -11,11 +11,6 @@ ArrayType::ArrayType(Type *elementType, const char *dimension)
       mDimension(dimension) {
 }
 
-void ArrayType::dump(Formatter &out) const {
-    mElementType->dump(out);
-    out << "[" << mDimension << "]";
-}
-
 std::string ArrayType::getCppType(StorageMode mode, std::string *extra) const {
     const std::string base = mElementType->getCppType(extra);
 

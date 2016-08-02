@@ -11,8 +11,6 @@ namespace android {
 struct ArrayType : public Type {
     ArrayType(Type *elementType, const char *dimension);
 
-    void dump(Formatter &out) const override;
-
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(

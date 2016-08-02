@@ -6,10 +6,6 @@ namespace android {
 
 StringType::StringType() {}
 
-void StringType::dump(Formatter &out) const {
-    out << "string";
-}
-
 std::string StringType::getCppType(StorageMode mode, std::string *extra) const {
     extra->clear();
 

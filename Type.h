@@ -15,7 +15,6 @@ struct Type {
     Type();
     virtual ~Type();
 
-    virtual void dump(Formatter &out) const = 0;
     virtual bool isScope() const;
     virtual bool isInterface() const;
     virtual const ScalarType *resolveToScalarType() const;

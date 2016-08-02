@@ -2,14 +2,12 @@
 
 #define REF_TYPE_H_
 
-#include "NamedType.h"
+#include "Type.h"
 
 namespace android {
 
-struct RefType : public NamedType {
-    RefType(const char *name, Type *type);
-
-    void dump(Formatter &out) const override;
+struct RefType : public Type {
+    RefType(Type *type);
 
     const ScalarType *resolveToScalarType() const override;
 

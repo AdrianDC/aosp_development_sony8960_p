@@ -11,8 +11,6 @@ namespace android {
 struct EnumValue {
     EnumValue(const char *name, const char *value = NULL);
 
-    void dump(Formatter &out) const;
-
     std::string name() const;
     const char *value() const;
 
@@ -27,8 +25,6 @@ struct EnumType : public NamedType {
     EnumType(const char *name,
              std::vector<EnumValue *> *values,
              Type *storageType = NULL);
-
-    void dump(Formatter &out) const override;
 
     const ScalarType *resolveToScalarType() const override;
 

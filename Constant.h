@@ -17,8 +17,6 @@ struct Constant {
     const Type *type() const;
     std::string value() const;
 
-    void dump(Formatter &out) const;
-
 private:
     std::string mName;
     Type *mType;

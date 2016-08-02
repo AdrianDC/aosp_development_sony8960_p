@@ -11,8 +11,6 @@ namespace android {
 struct CompoundField {
     CompoundField(const char *name, Type *type);
 
-    void dump(Formatter &out) const;
-
     std::string name() const;
     const Type &type() const;
 
@@ -32,8 +30,6 @@ struct CompoundType : public Scope {
     CompoundType(Style style, const char *name);
 
     void setFields(std::vector<CompoundField *> *fields);
-
-    void dump(Formatter &out) const override;
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 

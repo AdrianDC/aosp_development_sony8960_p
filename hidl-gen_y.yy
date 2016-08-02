@@ -284,7 +284,7 @@ struct_or_union_declaration
           ast->leaveScope();
           ast->scope()->addType(container);
 
-          $$ = new RefType(container->name().c_str(), container);
+          $$ = new RefType(container);
       }
     ;
 
@@ -334,14 +334,14 @@ enum_declaration
           EnumType *enumType = new EnumType(NULL /* name */, $3);
           ast->scope()->addType(enumType);
 
-          $$ = new RefType(enumType->name().c_str(), enumType);
+          $$ = new RefType(enumType);
       }
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($2, $5, $3);
           ast->scope()->addType(enumType);
 
-          $$ = new RefType(enumType->name().c_str(), enumType);
+          $$ = new RefType(enumType);
       }
     ;
 

@@ -10,12 +10,6 @@ TypedVar::TypedVar(const char *name, Type *type)
       mType(type) {
 }
 
-void TypedVar::dump(Formatter &out) const {
-    mType->dump(out);
-    out << " ";
-    out << mName;
-}
-
 std::string TypedVar::name() const {
     return mName;
 }
@@ -32,36 +26,6 @@ Method::Method(
     : mName(name),
       mArgs(args),
       mResults(results) {
-}
-
-void Method::dump(Formatter &out) const {
-    out << mName << "(";
-
-    for (size_t i = 0; i < mArgs->size(); ++i) {
-        if (i > 0) {
-            out << ", ";
-        }
-
-        (*mArgs)[i]->dump(out);
-    }
-
-    out << ")";
-
-    if (mResults != NULL) {
-        out << " generates (";
-
-        for (size_t i = 0; i < mResults->size(); ++i) {
-            if (i > 0) {
-                out << ", ";
-            }
-
-            (*mResults)[i]->dump(out);
-        }
-
-        out << ")";
-    }
-
-    out << ";";
 }
 
 std::string Method::name() const {
