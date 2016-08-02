@@ -1,12 +1,12 @@
-../../../../out/host/linux-x86/bin/hidl-gen i_h ITypes.hidl android/hardware/tests/ITypes.h
+../../../../out/host/linux-x86/bin/hidl-gen i_h ITypes.hal android/hardware/tests/ITypes.h
 if [ $? -ne 0 ]; 
 then exit 1
 else
-../../../../out/host/linux-x86/bin/hidl-gen all_cpp ITypes.hidl TypesAll.cpp
-../../../../out/host/linux-x86/bin/hidl-gen proxy_cpp ITypes.hidl TypesProxy.cpp
-../../../../out/host/linux-x86/bin/hidl-gen stubs_cpp ITypes.hidl TypesStubs.cpp
-../../../../out/host/linux-x86/bin/hidl-gen bp_h ITypes.hidl android/hardware/tests/BpTypes.h
-../../../../out/host/linux-x86/bin/hidl-gen bn_h ITypes.hidl android/hardware/tests/BnTypes.h
+../../../../out/host/linux-x86/bin/hidl-gen all_cpp ITypes.hal TypesAll.cpp
+../../../../out/host/linux-x86/bin/hidl-gen proxy_cpp ITypes.hal TypesProxy.cpp
+../../../../out/host/linux-x86/bin/hidl-gen stubs_cpp ITypes.hal TypesStubs.cpp
+../../../../out/host/linux-x86/bin/hidl-gen bp_h ITypes.hal android/hardware/tests/BpTypes.h
+../../../../out/host/linux-x86/bin/hidl-gen bn_h ITypes.hal android/hardware/tests/BnTypes.h
 
 my=$PWD
 top=$(cd ../../../..;pwd)

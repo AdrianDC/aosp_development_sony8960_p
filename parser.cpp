@@ -335,7 +335,7 @@ void Parser::WriteDepFileIfNeeded(android::hidl::CppOptions &options,
   writer->Write("  %s", Join(hidl_sources, " \\\n  ").c_str());
   writer->Write("\n\n");
 
-  // Output "<input_hidl_file>: " so make won't fail if the input .hidl file
+  // Output "<input_hidl_file>: " so make won't fail if the input .hal file
   // has been deleted, moved or renamed in incremental build.
   for (const auto &src : hidl_sources) {
     writer->Write("%s :\n", src.c_str());

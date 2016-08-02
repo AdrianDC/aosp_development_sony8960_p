@@ -132,8 +132,8 @@ CppOptions *CppOptions::Parse(int argc, const char* const* argv) {
     return cpp_usage();
   }
 
-  if (!EndsWith(options->input_file_name_, ".hidl")) {
-    cerr << "Expected .hidl file for input but got " << options->input_file_name_ << endl;
+  if (!EndsWith(options->input_file_name_, ".hal")) {
+    cerr << "Expected .hal file for input but got " << options->input_file_name_ << endl;
     return cpp_usage();
   }
 

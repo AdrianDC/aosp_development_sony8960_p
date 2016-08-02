@@ -38,38 +38,38 @@ class Tester(object):
     self.last_return = 0  # Exit code from last command
     self.last_out_path = ""  # Last output file generated
     self.last_out_text = ""  # Last output file's text
-    self.last_hidl_name = ""  # Last .hidl file processed
+    self.last_hidl_name = ""  # Last .hal file processed
     self.last_out_type = ""  # last file-type parameter
 
   def RunTests(self):
     """Runs all the tests."""
-    self.ProcessFile("IBadType.hidl", "foo", "bn_h")
+    self.ProcessFile("IBadType.hal", "foo", "bn_h")
     self.Test(self.last_return != 0)
     self.Test(Has(self.last_stdout, "int48_t"))
-    self.ProcessFile("ITest.hidl", "foo", "bn_h")
+    self.ProcessFile("ITest.hal", "foo", "bn_h")
     self.Test(self.last_return == 0)
-    self.TestOutput("vts_gps.hidl", "vts_gps.vts", "vts")
+    self.TestOutput("vts_gps.hal", "vts_gps.vts", "vts")
      # , True)  # echoes stdout from hidl-gen, for debugging
-    self.TestOutput("vts_lights.hidl", "vts_lights.vts", "vts")
-    self.TestOutput("vts_lights_hal.hidl", "vts_lights_hal.vts", "vts")
-    self.TestOutput("ITestService.hidl", "ITestService.h", "i_h")
-    self.TestOutput("ITestService.hidl", "BnTestService.h", "bn_h")
-    self.TestOutput("ITestService.hidl", "BpTestService.h", "bp_h")
-    self.TestOutput("ITestService.hidl", "TestServiceProxy.cpp", "proxy_cpp")
-    self.TestOutput("ITestService.hidl", "TestServiceStubs.cpp", "stubs_cpp")
-    self.TestOutput("IEverything.hidl", "Everything.json", "json")
-    self.TestOutput("IExpression.hidl", "Expression_all.cpp", "all_cpp")
-    self.TestOutput("IExpression.hidl", "Expression_i.h", "i_h")
-    self.TestOutput("INfc.hidl", "NfcAll.cpp", "all_cpp")
-    self.TestOutput("INfc.hidl", "INfc.h", "i_h")
-    self.TestOutput("INfc.hidl", "BnNfc.h", "bn_h")
-    self.TestOutput("INfc.hidl", "BpNfc.h", "bp_h")
-    self.TestOutput("INfc.hidl", "vts_nfc.vts", "vts")
-    self.TestOutput("INfcClientCallback.hidl", "vts_nfc_client_callback.vts", "vts")
-    self.TestOutput("ITypes.hidl", "TypesAll.cpp", "all_cpp")
-    self.TestOutput("ITypes.hidl", "ITypes.h", "i_h")
-    self.TestOutput("ITypes.hidl", "BnTypes.h", "bn_h")
-    self.TestOutput("ITypes.hidl", "BpTypes.h", "bp_h")
+    self.TestOutput("vts_lights.hal", "vts_lights.vts", "vts")
+    self.TestOutput("vts_lights_hal.hal", "vts_lights_hal.vts", "vts")
+    self.TestOutput("ITestService.hal", "ITestService.h", "i_h")
+    self.TestOutput("ITestService.hal", "BnTestService.h", "bn_h")
+    self.TestOutput("ITestService.hal", "BpTestService.h", "bp_h")
+    self.TestOutput("ITestService.hal", "TestServiceProxy.cpp", "proxy_cpp")
+    self.TestOutput("ITestService.hal", "TestServiceStubs.cpp", "stubs_cpp")
+    self.TestOutput("IEverything.hal", "Everything.json", "json")
+    self.TestOutput("IExpression.hal", "Expression_all.cpp", "all_cpp")
+    self.TestOutput("IExpression.hal", "Expression_i.h", "i_h")
+    self.TestOutput("INfc.hal", "NfcAll.cpp", "all_cpp")
+    self.TestOutput("INfc.hal", "INfc.h", "i_h")
+    self.TestOutput("INfc.hal", "BnNfc.h", "bn_h")
+    self.TestOutput("INfc.hal", "BpNfc.h", "bp_h")
+    self.TestOutput("INfc.hal", "vts_nfc.vts", "vts")
+    self.TestOutput("INfcClientCallback.hal", "vts_nfc_client_callback.vts", "vts")
+    self.TestOutput("ITypes.hal", "TypesAll.cpp", "all_cpp")
+    self.TestOutput("ITypes.hal", "ITypes.h", "i_h")
+    self.TestOutput("ITypes.hal", "BnTypes.h", "bn_h")
+    self.TestOutput("ITypes.hal", "BpTypes.h", "bp_h")
 
   def RunCommand(self, command):
     """Runs a unix command and stashes the result."""

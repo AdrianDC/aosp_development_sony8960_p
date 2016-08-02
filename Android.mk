@@ -170,8 +170,8 @@ LOCAL_HIDL_INCLUDES := \
     system/tools/hidl/tests/ \
     frameworks/native/hidl/binder
 LOCAL_SRC_FILES := \
-    tests/android/hidl/tests/ITestService.hidl \
-    tests/android/hidl/tests/INamedCallback.hidl \
+    tests/android/hidl/tests/ITestService.hal \
+    tests/android/hidl/tests/INamedCallback.hal \
     tests/simple_parcelable.cpp
 #include $(BUILD_SHARED_LIBRARY)
 # TODO re-enable tests
@@ -222,8 +222,8 @@ LOCAL_CERTIFICATE := platform
 LOCAL_MANIFEST_FILE := tests/java_app/AndroidManifest.xml
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/tests/java_app/resources
 LOCAL_SRC_FILES := \
-    tests/android/hidl/tests/ITestService.hidl \
-    tests/android/hidl/tests/INamedCallback.hidl \
+    tests/android/hidl/tests/ITestService.hal \
+    tests/android/hidl/tests/INamedCallback.hal \
     tests/java_app/src/android/hidl/tests/SimpleParcelable.java \
     tests/java_app/src/android/hidl/tests/TestServiceClient.java
 LOCAL_HIDL_INCLUDES := \

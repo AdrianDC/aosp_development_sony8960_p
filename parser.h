@@ -31,7 +31,7 @@ using TypeMap = std::map<string, TypeDecl*>;
 struct yy_buffer_state;
 typedef yy_buffer_state* YY_BUFFER_STATE;
 
-// Parser is the core part of hidl-gen. It reads from an input .hidl file
+// Parser is the core part of hidl-gen. It reads from an input .hal file
 // and generates the internal ast (Abstract syntax tree) defined in ast.h.
 // It is also responsible for generating the required output of hidl-gen (e.g.
 // .h, .cpp, .vts etc.).

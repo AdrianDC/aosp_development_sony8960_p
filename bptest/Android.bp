@@ -2,13 +2,13 @@ hidl_output {
      name: "ifoo",
      output_name: "ITestService.h",
      output_type: "i_h",
-     srcs: ["ITestService.hidl"],
+     srcs: ["ITestService.hal"],
 }
 hidl_output {
      name: "fooproxy",
      output_name: "TestServiceProxy.cpp",
      output_type: "proxy_cpp",
-     srcs: ["ITestService.hidl"],
+     srcs: ["ITestService.hal"],
 }
 
 cc_binary {

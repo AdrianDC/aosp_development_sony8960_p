@@ -21,7 +21,7 @@ LOCAL_MODULE := mq_test_service
 LOCAL_SRC_FILES := \
     common/MessageQueueDesc.cpp \
     TestMsgQService.cpp \
-    ITestMsgQ.hidl
+    ITestMsgQ.hal
 
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_C_INCLUDES := system/libhwbinder/include
@@ -32,7 +32,7 @@ LOCAL_REQUIRED_MODULES := libgtest
 LOCAL_SRC_FILES := common/MessageQueueDesc.cpp \
                    TestMsgQClient.cpp \
                    test_main.cpp \
-                   ITestMsgQ.hidl
+                   ITestMsgQ.hal
 
 LOCAL_SHARED_LIBRARIES := libhwbinder libbase libcutils libutils
 LOCAL_STATIC_LIBRARIES := libgtest
