@@ -13,6 +13,27 @@ struct RefType : public NamedType {
 
     const Type *referencedType() const;
 
+    std::string getCppType(StorageMode mode, std::string *extra) const override;
+
+    void emitReaderWriter(
+            Formatter &out,
+            const std::string &name,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const override;
+
+    void emitReaderWriterEmbedded(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &parentName,
+            const std::string &offsetText) const override;
+
 private:
     Type *mReferencedType;
 

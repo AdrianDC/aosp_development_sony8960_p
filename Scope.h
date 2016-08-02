@@ -10,6 +10,8 @@
 namespace android {
 
 struct Constant;
+struct Formatter;
+struct Interface;
 
 struct Scope : public NamedType {
     Scope(const char *name);
@@ -21,7 +23,16 @@ struct Scope : public NamedType {
 
     void dump(Formatter &out) const override;
     bool isScope() const override;
+
+    // Returns the single interface or NULL.
+    Interface *getInterface() const;
+
     bool containsSingleInterface(std::string *ifaceName) const;
+
+    status_t emitTypeDeclarations(Formatter &out) const override;
+
+    status_t emitTypeDefinitions(
+            Formatter &out, const std::string prefix) const override;
 
 private:
     Vector<Type *> mTypes;

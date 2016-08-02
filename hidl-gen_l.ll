@@ -110,7 +110,7 @@ L?\"(\\.|[^\\"])*\"	{ count(yyg); yylval->str = strdup(yytext); return(STRING_LI
 
 %%
 
-int yywrap(yyscan_t scanner) {
+int yywrap(yyscan_t) {
     return 1;
 }
 

@@ -4,7 +4,7 @@
 
 #include <android-base/macros.h>
 #include <string>
-#include <utils/Vector.h>
+#include <vector>
 
 namespace android {
 
@@ -16,6 +16,9 @@ struct TypedVar {
 
     void dump(Formatter &out) const;
 
+    std::string name() const;
+    const Type &type() const;
+
 private:
     std::string mName;
     Type *mType;
@@ -25,15 +28,21 @@ private:
 
 struct Method {
     Method(const char *name,
-           Vector<TypedVar *> *args,
-           Vector<TypedVar *> *results = NULL);
+           std::vector<TypedVar *> *args,
+           std::vector<TypedVar *> *results = NULL);
 
     void dump(Formatter &out) const;
 
+    std::string name() const;
+    const std::vector<TypedVar *> &args() const;
+    const std::vector<TypedVar *> &results() const;
+
+    static std::string GetSignature(const std::vector<TypedVar *> &args);
+
 private:
     std::string mName;
-    Vector<TypedVar *> *mArgs;
-    Vector<TypedVar *> *mResults;
+    std::vector<TypedVar *> *mArgs;
+    std::vector<TypedVar *> *mResults;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };

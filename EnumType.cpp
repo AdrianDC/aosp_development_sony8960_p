@@ -1,6 +1,7 @@
 #include "EnumType.h"
 
 #include "Formatter.h"
+#include "ScalarType.h"
 
 namespace android {
 
@@ -19,11 +20,22 @@ void EnumValue::dump(Formatter &out) const {
     out << ",";
 }
 
+std::string EnumValue::name() const {
+    return mName;
+}
+
+const char *EnumValue::value() const {
+    return mValue;
+}
+
 EnumType::EnumType(
-        const char *name, Vector<EnumValue *> *values, Type *storageType)
+        const char *name, std::vector<EnumValue *> *values, Type *storageType)
     : NamedType(name),
       mValues(values),
-      mStorageType(storageType) {
+      mStorageType(
+              storageType != NULL
+                ? storageType
+                : new ScalarType(ScalarType::KIND_INT32)) {
 }
 
 void EnumType::dump(Formatter &out) const {
@@ -39,13 +51,58 @@ void EnumType::dump(Formatter &out) const {
     out.indent();
 
     for (size_t i = 0; i < mValues->size(); ++i) {
-        mValues->itemAt(i)->dump(out);
+        (*mValues)[i]->dump(out);
         out << "\n";
     }
 
     out.unindent();
 
     out << "};\n\n";
+}
+
+std::string EnumType::getCppType(StorageMode, std::string *extra) const {
+    extra->clear();
+
+    return name();
+}
+
+void EnumType::emitReaderWriter(
+        Formatter &out,
+        const std::string &name,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode) const {
+    mStorageType->emitReaderWriter(
+            out, name, parcelObj, parcelObjIsPointer, isReader, mode);
+}
+
+status_t EnumType::emitTypeDeclarations(Formatter &out) const {
+    std::string extra;
+
+    out << "enum class "
+        << name()
+        << " : "
+        << mStorageType->getCppType(&extra)
+        << " {\n";
+
+    out.indent();
+
+    for (const auto &entry : *mValues) {
+        out << entry->name();
+
+        const char *value = entry->value();
+        if (value != NULL) {
+            out << " = " << value;
+        }
+
+        out << ",\n";
+    }
+
+    out.unindent();
+    out << "};\n\n";
+
+    return OK;
 }
 
 }  // namespace android

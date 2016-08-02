@@ -25,16 +25,15 @@ int main(int argc, const char *const argv[]) {
         CHECK(fqName.isValid() && fqName.isFullyQualified());
 
         AST *ast = coordinator.parse(fqName);
-
-        if (ast == NULL) {
-            continue;
-        }
+        CHECK(ast != NULL);
 
         Formatter out;
 
         printf("========================================\n");
 
         ast->dump(out);
+
+        ast->generateCpp();
 
         delete ast;
         ast = NULL;

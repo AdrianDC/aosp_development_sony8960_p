@@ -6,9 +6,17 @@ using std::string;
 
 namespace android {
 
-Formatter::Formatter()
-    : mIndentDepth(0),
+Formatter::Formatter(FILE *file)
+    : mFile(file == NULL ? stdout : file),
+      mIndentDepth(0),
       mAtStartOfLine(true) {
+}
+
+Formatter::~Formatter() {
+    if (mFile != stdout) {
+        fclose(mFile);
+    }
+    mFile = NULL;
 }
 
 void Formatter::indent() {
@@ -28,23 +36,23 @@ Formatter &Formatter::operator<<(const string &out) {
 
         if (pos == string::npos) {
             if (mAtStartOfLine) {
-                printf("%*s", (int)(2 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
                 mAtStartOfLine = false;
             }
 
-            printf("%s", out.substr(start).c_str());
+            fprintf(mFile, "%s", out.substr(start).c_str());
             break;
         }
 
         if (pos == start) {
-            printf("\n");
+            fprintf(mFile, "\n");
             mAtStartOfLine = true;
         } else if (pos > start) {
             if (mAtStartOfLine) {
-                printf("%*s", (int)(2 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
             }
 
-            printf("%s", out.substr(start, pos - start + 1).c_str());
+            fprintf(mFile, "%s", out.substr(start, pos - start + 1).c_str());
 
             mAtStartOfLine = true;
         }

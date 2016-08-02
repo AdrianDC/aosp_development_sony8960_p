@@ -7,12 +7,14 @@
 #include <utils/Vector.h>
 
 #include "FQName.h"
+#include "Type.h"
 
 namespace android {
 
 struct Coordinator;
 struct Formatter;
-struct Type;
+struct Method;
+struct TypedVar;
 struct Scope;
 
 struct AST {
@@ -45,6 +47,8 @@ struct AST {
 
     void dump(Formatter &out) const;
 
+    status_t generateCpp() const;
+
 private:
     Coordinator *mCoordinator;
     Vector<Scope *> mScopePath;
@@ -53,6 +57,41 @@ private:
     Scope *mRootScope;
 
     FQName mPackage;
+
+    void getPackageComponents(std::vector<std::string> *components) const;
+
+    void getPackageAndVersionComponents(
+            std::vector<std::string> *components, bool cpp_compatible) const;
+
+    std::string makeHeaderGuard(const std::string &baseName) const;
+    void enterLeaveNamespace(Formatter &out, bool enter) const;
+
+    status_t generateInterfaceHeader() const;
+    status_t generateStubHeader() const;
+    status_t generateProxyHeader() const;
+    status_t generateAllSource() const;
+
+    status_t generateTypeSource(
+            Formatter &out, const std::string &ifaceName) const;
+
+    status_t generateProxySource(
+            Formatter &out, const std::string &baseName) const;
+
+    status_t generateStubSource(
+            Formatter &out, const std::string &baseName) const;
+
+    status_t generateStubSourceForMethod(
+            Formatter &out, const Method *method) const;
+
+    void emitCppReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            const TypedVar *arg,
+            bool isReader,
+            Type::ErrorMode mode) const;
+
+    status_t emitTypeDeclarations(Formatter &out) const;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

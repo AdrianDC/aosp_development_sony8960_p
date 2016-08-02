@@ -78,11 +78,11 @@ int yyerror(AST *, const char *s) {
     android::Type *type;
     android::CompoundType *compoundType;
     android::CompoundField *field;
-    android::Vector<android::CompoundField *> *fields;
+    std::vector<android::CompoundField *> *fields;
     android::EnumValue *enumValue;
-    android::Vector<android::EnumValue *> *enumValues;
+    std::vector<android::EnumValue *> *enumValues;
     android::TypedVar *typedVar;
-    android::Vector<android::TypedVar *> *typedVars;
+    std::vector<android::TypedVar *> *typedVars;
     android::Method *method;
     android::CompoundType::Style compoundStyle;
     android::Vector<std::string> *stringVec;
@@ -220,7 +220,7 @@ const_declaration
 method_declaration
     : IDENTIFIER '(' typed_vars ')' ';'
       {
-          $$ = new Method($1, $3);
+          $$ = new Method($1, $3, new std::vector<TypedVar *>);
       }
     | IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' ';'
       {
@@ -231,11 +231,11 @@ method_declaration
 typed_vars
     : /* empty */
       {
-          $$ = new Vector<TypedVar *>;
+          $$ = new std::vector<TypedVar *>;
       }
     | typed_var
       {
-          $$ = new Vector<TypedVar *>;
+          $$ = new std::vector<TypedVar *>;
           $$->push_back($1);
       }
     | typed_vars ',' typed_var
@@ -293,7 +293,7 @@ struct_or_union_body
     ;
 
 field_declarations
-    : /* empty */ { $$ = new Vector<CompoundField *>; }
+    : /* empty */ { $$ = new std::vector<CompoundField *>; }
     | field_declarations field_declaration
       {
           $$ = $1;
@@ -360,11 +360,11 @@ enum_value
 enum_values
     : /* empty */
       {
-          $$ = new Vector<EnumValue *>;
+          $$ = new std::vector<EnumValue *>;
       }
     | enum_value
       {
-          $$ = new Vector<EnumValue *>;
+          $$ = new std::vector<EnumValue *>;
           $$->push_back($1);
       }
     | enum_values ',' enum_value

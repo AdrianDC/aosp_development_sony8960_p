@@ -13,6 +13,7 @@ LOCAL_SRC_FILES :=              \
     EnumType.cpp                \
     Formatter.cpp               \
     FQName.cpp                  \
+    generateCpp.cpp             \
     HandleType.cpp              \
     hidl-gen_y.yy               \
     hidl-gen_l.ll               \
@@ -35,5 +36,7 @@ LOCAL_SHARED_LIBRARIES :=       \
 
 LOCAL_STATIC_LIBRARIES :=       \
     libutils                    \
+
+LOCAL_CFLAGS := -O0 -g
 
 include $(BUILD_HOST_EXECUTABLE)

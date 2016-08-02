@@ -20,7 +20,8 @@ struct Coordinator {
 
     Type *lookupType(const FQName &fqName) const;
 
-    std::string getPackagePath(const FQName &fqName) const;
+    std::string getPackagePath(
+            const FQName &fqName, bool relative = false) const;
 
 private:
     std::string mInterfacesPath;

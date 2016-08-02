@@ -102,7 +102,8 @@ AST *Coordinator::parse(const FQName &fqName) {
     return ast;
 }
 
-std::string Coordinator::getPackagePath(const FQName &fqName) const {
+std::string Coordinator::getPackagePath(
+        const FQName &fqName, bool relative) const {
     CHECK(!fqName.package().empty());
     CHECK(!fqName.version().empty());
     const char *const kPrefix = "android.hardware.";
@@ -110,7 +111,10 @@ std::string Coordinator::getPackagePath(const FQName &fqName) const {
 
     const std::string packageSuffix = fqName.package().substr(strlen(kPrefix));
 
-    std::string packagePath = mInterfacesPath;
+    std::string packagePath;
+    if (!relative) {
+        packagePath = mInterfacesPath;
+    }
 
     size_t startPos = 0;
     size_t dotPos;

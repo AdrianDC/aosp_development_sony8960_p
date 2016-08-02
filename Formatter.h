@@ -24,7 +24,9 @@
 namespace android {
 
 struct Formatter {
-    Formatter();
+    // Assumes ownership of file. Directed to stdout if file == NULL.
+    Formatter(FILE *file = NULL);
+    ~Formatter();
 
     void indent();
     void unindent();
@@ -33,6 +35,7 @@ struct Formatter {
     Formatter &operator<<(size_t n);
 
 private:
+    FILE *mFile;
     size_t mIndentDepth;
     bool mAtStartOfLine;
 

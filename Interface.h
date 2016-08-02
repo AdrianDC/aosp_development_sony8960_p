@@ -4,7 +4,7 @@
 
 #include "Scope.h"
 
-#include <utils/Vector.h>
+#include <vector>
 
 namespace android {
 
@@ -20,9 +20,21 @@ struct Interface : public Scope {
 
     const Type *superType() const;
 
+    const std::vector<Method *> &methods() const;
+
+    std::string getCppType(StorageMode mode, std::string *extra) const override;
+
+    void emitReaderWriter(
+            Formatter &out,
+            const std::string &name,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const override;
+
 private:
     Type *mSuperType;
-    Vector<Method *> mMethods;
+    std::vector<Method *> mMethods;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };

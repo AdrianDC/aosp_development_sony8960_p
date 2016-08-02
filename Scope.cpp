@@ -64,13 +64,48 @@ bool Scope::isScope() const {
     return true;
 }
 
-bool Scope::containsSingleInterface(std::string *ifaceName) const {
+Interface *Scope::getInterface() const {
     if (mTypes.size() == 1 && mTypes[0]->isInterface()) {
-        *ifaceName = static_cast<Interface *>(mTypes[0])->name();
+        return static_cast<Interface *>(mTypes[0]);
+    }
+
+    return NULL;
+}
+
+bool Scope::containsSingleInterface(std::string *ifaceName) const {
+    Interface *iface = getInterface();
+
+    if (iface != NULL) {
+        *ifaceName = iface->name();
         return true;
     }
 
     return false;
+}
+
+status_t Scope::emitTypeDeclarations(Formatter &out) const {
+    for (size_t i = 0; i < mTypes.size(); ++i) {
+        status_t err = mTypes[i]->emitTypeDeclarations(out);
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
+}
+
+status_t Scope::emitTypeDefinitions(
+        Formatter &out, const std::string prefix) const {
+    for (size_t i = 0; i < mTypes.size(); ++i) {
+        status_t err = mTypes[i]->emitTypeDefinitions(out, prefix);
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
 }
 
 }  // namespace android
