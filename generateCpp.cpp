@@ -84,16 +84,21 @@ status_t AST::generateCpp(const std::string &outputPath) const {
     return err;
 }
 
-void AST::getPackageComponents(
-        std::vector<std::string> *components) const {
-    SplitString(mPackage.package(), '.', components);
+// static
+void AST::GetPackageComponents(
+        const FQName &fqName,
+        std::vector<std::string> *components) {
+    SplitString(fqName.package(), '.', components);
 }
 
-void AST::getPackageAndVersionComponents(
-        std::vector<std::string> *components, bool cpp_compatible) const {
-    getPackageComponents(components);
+// static
+void AST::GetPackageAndVersionComponents(
+        const FQName &fqName,
+        std::vector<std::string> *components,
+        bool cpp_compatible) {
+    GetPackageComponents(fqName, components);
 
-    const std::string packageVersion = mPackage.version();
+    const std::string packageVersion = fqName.version();
     CHECK(packageVersion[0] == '@');
 
     if (!cpp_compatible) {
@@ -110,6 +115,16 @@ void AST::getPackageAndVersionComponents(
     versionString.append(packageVersion.substr(dotPos + 1));
 
     components->push_back(versionString);
+}
+
+void AST::getPackageComponents(
+        std::vector<std::string> *components) const {
+    GetPackageComponents(mPackage, components);
+}
+
+void AST::getPackageAndVersionComponents(
+        std::vector<std::string> *components, bool cpp_compatible) const {
+    GetPackageAndVersionComponents(mPackage, components, cpp_compatible);
 }
 
 std::string AST::makeHeaderGuard(const std::string &baseName) const {
@@ -179,6 +194,25 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
+    for (const auto &item : mImportedNames) {
+        out << "#include <";
+
+        std::vector<std::string> components;
+        GetPackageAndVersionComponents(
+                item, &components, false /* cpp_compatible */);
+
+        for (const auto &component : components) {
+            out << component << "/";
+        }
+
+        out << item.name()
+            << ".h>\n";
+    }
+
+    if (!mImportedNames.empty()) {
+        out << "\n";
+    }
+
     out << "#include <hwbinder/HidlSupport.h>\n";
 
     if (isInterface) {
@@ -199,7 +233,10 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         out.indent();
 
-        out << "DECLARE_HWBINDER_META_INTERFACE(" << ifaceName << ");\n\n";
+        // cut off the leading 'I'.
+        const std::string baseName = ifaceName.substr(1);
+
+        out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
     }
 
     status_t err = emitTypeDeclarations(out);

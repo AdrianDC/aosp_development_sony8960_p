@@ -141,7 +141,7 @@ Scope *AST::scope() {
     return mScopePath.top();
 }
 
-Type *AST::lookupType(const char *name) const {
+Type *AST::lookupType(const char *name) {
     FQName fqName(name);
     CHECK(fqName.isValid());
 
@@ -166,7 +166,13 @@ Type *AST::lookupType(const char *name) const {
 
     // LOG(INFO) << "lookupType now looking for " << fqName.string();
 
-    return mCoordinator->lookupType(fqName);
+    Type *resultType = mCoordinator->lookupType(fqName);
+
+    if (resultType) {
+        mImportedNames.insert(fqName);
+    }
+
+    return resultType;
 }
 
 Type *AST::lookupTypeInternal(const std::string &namePath) const {

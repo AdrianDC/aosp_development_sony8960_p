@@ -274,7 +274,7 @@ void CompoundType::emitStructReaderWriter(
                 "parcel",
                 !isReader /* parcelObjIsPointer */,
                 isReader,
-                ErrorMode_Goto,
+                ErrorMode_Return,
                 "parentHandle",
                 "parentOffset + offsetof(" + name() + ", " + field->name() + ")");
     }

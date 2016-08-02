@@ -16,6 +16,10 @@ void ScalarType::dump(Formatter &out) const {
     out << kName[mKind];
 }
 
+const ScalarType *ScalarType::resolveToScalarType() const {
+    return this;
+}
+
 std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
     static const char *const kName[] = {
         "char",
@@ -45,6 +49,24 @@ void ScalarType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
+    emitReaderWriterWithCast(
+            out,
+            name,
+            parcelObj,
+            parcelObjIsPointer,
+            isReader,
+            mode,
+            false /* needsCast */);
+}
+
+void ScalarType::emitReaderWriterWithCast(
+        Formatter &out,
+        const std::string &name,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode,
+        bool needsCast) const {
     static const char *const kSuffix[] = {
         "Uint8",
         "Uint8",
@@ -69,6 +91,14 @@ void ScalarType::emitReaderWriter(
         << (isReader ? "read" : "write")
         << kSuffix[mKind]
         << "(";
+
+    if (needsCast) {
+        std::string extra;
+
+        out << "("
+            << Type::getCppType(&extra)
+            << (isReader ? " *)" : ")");
+    }
 
     if (isReader) {
         out << "&";

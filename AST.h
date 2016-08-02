@@ -3,6 +3,7 @@
 #define AST_H_
 
 #include <android-base/macros.h>
+#include <set>
 #include <string>
 #include <utils/Vector.h>
 
@@ -38,7 +39,7 @@ struct AST {
     // Look up a type by FQName, "pure" names, i.e. those without package
     // or version are first looked up in the current scope chain.
     // After that lookup proceeds to imports.
-    Type *lookupType(const char *name) const;
+    Type *lookupType(const char *name);
 
     // Takes dot-separated path components to a type possibly inside this AST.
     // Name resolution goes from root scope downwards, i.e. the path must be
@@ -57,6 +58,16 @@ private:
     Scope *mRootScope;
 
     FQName mPackage;
+
+    std::set<FQName> mImportedNames;
+
+    static void GetPackageComponents(
+            const FQName &fqName, std::vector<std::string> *components);
+
+    static void GetPackageAndVersionComponents(
+            const FQName &fqName,
+            std::vector<std::string> *components,
+            bool cpp_compatible);
 
     void getPackageComponents(std::vector<std::string> *components) const;
 

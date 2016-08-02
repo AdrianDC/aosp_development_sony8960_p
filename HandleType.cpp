@@ -121,8 +121,11 @@ void HandleType::emitReaderWriterEmbedded(
         out.indent();
         out.indent();
 
-        out << name
-            << (nameIsPointer ? "->" : ".")
+        const std::string nameDeref =
+            nameIsPointer ? ("(*" + name + ")") : name;
+
+        out << nameDeref
+            << "->"
             << "handle(),\n"
             << parentName
             << ",\n"

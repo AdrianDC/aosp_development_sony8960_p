@@ -16,6 +16,8 @@ static void usage(const char *me) {
 int main(int argc, char **argv) {
     std::string outputDir;
 
+    const char *me = argv[0];
+
     int res;
     while ((res = getopt(argc, argv, "ho:")) >= 0) {
         switch (res) {
@@ -29,7 +31,7 @@ int main(int argc, char **argv) {
             case 'h':
             default:
             {
-                usage(argv[0]);
+                usage(me);
                 exit(1);
                 break;
             }
@@ -39,8 +41,10 @@ int main(int argc, char **argv) {
     argc -= optind;
     argv += optind;
 
+    // Valid options are now in argv[0] .. argv[argc - 1].
+
     if (outputDir.empty()) {
-        usage(argv[0]);
+        usage(me);
         exit(1);
     } else {
         const size_t len = outputDir.size();
@@ -60,7 +64,7 @@ int main(int argc, char **argv) {
 
     Coordinator coordinator(interfacesPath);
 
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
         CHECK(fqName.isValid() && fqName.isFullyQualified());
 

@@ -11,6 +11,8 @@ struct TypeDef : public NamedType {
 
     void dump(Formatter &out) const override;
 
+    const ScalarType *resolveToScalarType() const override;
+
     const Type *referencedType() const;
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;

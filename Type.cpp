@@ -17,6 +17,10 @@ bool Type::isInterface() const {
     return false;
 }
 
+const ScalarType *Type::resolveToScalarType() const {
+    return NULL;
+}
+
 std::string Type::getCppType(StorageMode, std::string *) const {
     CHECK(!"Should not be here");
     return std::string();
@@ -64,6 +68,12 @@ void Type::handleError(Formatter &out, ErrorMode mode) const {
             out << "if (_aidl_err != ::android::OK) { break; }\n\n";
             break;
         }
+
+        case ErrorMode_Return:
+        {
+            out << "if (_aidl_err != ::android::OK) { return _aidl_err; }\n\n";
+            break;
+        }
     }
 }
 
@@ -74,14 +84,22 @@ void Type::handleError2(Formatter &out, ErrorMode mode) const {
             out << "goto _aidl_error;\n";
             break;
         }
+
         case ErrorMode_Break:
         {
             out << "break;\n";
             break;
         }
+
         case ErrorMode_Ignore:
         {
             out << "/* ignoring _aidl_error! */";
+            break;
+        }
+
+        case ErrorMode_Return:
+        {
+            out << "return _aidl_err;\n";
             break;
         }
     }

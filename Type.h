@@ -9,6 +9,7 @@
 namespace android {
 
 struct Formatter;
+struct ScalarType;
 
 struct Type {
     Type();
@@ -17,6 +18,7 @@ struct Type {
     virtual void dump(Formatter &out) const = 0;
     virtual bool isScope() const;
     virtual bool isInterface() const;
+    virtual const ScalarType *resolveToScalarType() const;
 
     enum StorageMode {
         StorageMode_Stack,
@@ -36,6 +38,7 @@ struct Type {
         ErrorMode_Ignore,
         ErrorMode_Goto,
         ErrorMode_Break,
+        ErrorMode_Return,
     };
     virtual void emitReaderWriter(
             Formatter &out,

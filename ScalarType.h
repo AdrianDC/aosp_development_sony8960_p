@@ -27,6 +27,8 @@ struct ScalarType : public Type {
 
     void dump(Formatter &out) const override;
 
+    const ScalarType *resolveToScalarType() const override;
+
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(
@@ -36,6 +38,15 @@ struct ScalarType : public Type {
             bool parcelObjIsPointer,
             bool isReader,
             ErrorMode mode) const override;
+
+    void emitReaderWriterWithCast(
+            Formatter &out,
+            const std::string &name,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            bool needsCast) const;
 
 private:
     Kind mKind;

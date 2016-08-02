@@ -30,6 +30,8 @@ struct EnumType : public NamedType {
 
     void dump(Formatter &out) const override;
 
+    const ScalarType *resolveToScalarType() const override;
+
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(

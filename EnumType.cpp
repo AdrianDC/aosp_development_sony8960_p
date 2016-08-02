@@ -3,6 +3,8 @@
 #include "Formatter.h"
 #include "ScalarType.h"
 
+#include <android-base/logging.h>
+
 namespace android {
 
 EnumValue::EnumValue(const char *name, const char *value)
@@ -60,6 +62,10 @@ void EnumType::dump(Formatter &out) const {
     out << "};\n\n";
 }
 
+const ScalarType *EnumType::resolveToScalarType() const {
+    return mStorageType->resolveToScalarType();
+}
+
 std::string EnumType::getCppType(StorageMode, std::string *extra) const {
     extra->clear();
 
@@ -73,17 +79,29 @@ void EnumType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
-    mStorageType->emitReaderWriter(
-            out, name, parcelObj, parcelObjIsPointer, isReader, mode);
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != NULL);
+
+    scalarType->emitReaderWriterWithCast(
+            out,
+            name,
+            parcelObj,
+            parcelObjIsPointer,
+            isReader,
+            mode,
+            true /* needsCast */);
 }
 
 status_t EnumType::emitTypeDeclarations(Formatter &out) const {
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != NULL);
+
     std::string extra;
 
     out << "enum class "
         << name()
         << " : "
-        << mStorageType->getCppType(&extra)
+        << ((Type *)scalarType)->getCppType(&extra)
         << " {\n";
 
     out.indent();

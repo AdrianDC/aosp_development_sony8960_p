@@ -9,6 +9,10 @@ RefType::RefType(const char *name, Type *type)
       mReferencedType(type) {
 }
 
+const ScalarType *RefType::resolveToScalarType() const {
+    return mReferencedType->resolveToScalarType();
+}
+
 const Type *RefType::referencedType() const {
     return mReferencedType;
 }

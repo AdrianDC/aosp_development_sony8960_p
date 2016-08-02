@@ -9,6 +9,10 @@ TypeDef::TypeDef(const char *name, Type *type)
       mReferencedType(type) {
 }
 
+const ScalarType *TypeDef::resolveToScalarType() const {
+    return mReferencedType->resolveToScalarType();
+}
+
 const Type *TypeDef::referencedType() const {
     return mReferencedType;
 }
