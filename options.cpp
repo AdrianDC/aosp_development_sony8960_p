@@ -108,7 +108,7 @@ CppOptions *CppOptions::Parse(int argc, const char* const* argv) {
     int slash_pos = options->input_file_name_.find_last_of('/');
     string package_name = options->input_file_name_.substr(
         slash_pos + 2,
-        options->input_file_name_.length() - slash_pos - 7);
+        options->input_file_name_.length() - slash_pos - 6);
     options->outputs_.push_back(Job{"bn_h", header_directory+"/Bn"+package_name+".h"});
     options->outputs_.push_back(Job{"bp_h", header_directory+"/Bp"+package_name+".h"});
     options->outputs_.push_back(Job{"i_h", header_directory+"/I"+package_name+".h"});
