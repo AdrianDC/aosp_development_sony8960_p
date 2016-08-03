@@ -8,18 +8,7 @@
 
 namespace android {
 
-struct CompoundField {
-    CompoundField(const char *name, Type *type);
-
-    std::string name() const;
-    const Type &type() const;
-
-private:
-    std::string mName;
-    Type *mType;
-
-    DISALLOW_COPY_AND_ASSIGN(CompoundField);
-};
+struct CompoundField;
 
 struct CompoundType : public Scope {
     enum Style {
@@ -27,7 +16,7 @@ struct CompoundType : public Scope {
         STYLE_UNION,
     };
 
-    CompoundType(Style style, const char *name);
+    CompoundType(Style style);
 
     void setFields(std::vector<CompoundField *> *fields);
 
@@ -68,6 +57,19 @@ private:
             Formatter &out, const std::string &prefix, bool isReader) const;
 
     DISALLOW_COPY_AND_ASSIGN(CompoundType);
+};
+
+struct CompoundField {
+    CompoundField(const char *name, Type *type);
+
+    std::string name() const;
+    const Type &type() const;
+
+private:
+    std::string mName;
+    Type *mType;
+
+    DISALLOW_COPY_AND_ASSIGN(CompoundField);
 };
 
 }  // namespace android

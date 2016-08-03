@@ -7,23 +7,9 @@
 
 namespace android {
 
-EnumValue::EnumValue(const char *name, const char *value)
-    : mName(name),
-      mValue(value) {
-}
-
-std::string EnumValue::name() const {
-    return mName;
-}
-
-const char *EnumValue::value() const {
-    return mValue;
-}
-
 EnumType::EnumType(
-        const char *name, std::vector<EnumValue *> *values, Type *storageType)
-    : NamedType(name),
-      mValues(values),
+        std::vector<EnumValue *> *values, Type *storageType)
+    : mValues(values),
       mStorageType(
               storageType != NULL
                 ? storageType
@@ -89,6 +75,21 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     out << "};\n\n";
 
     return OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+EnumValue::EnumValue(const char *name, const char *value)
+    : mName(name),
+      mValue(value) {
+}
+
+std::string EnumValue::name() const {
+    return mName;
+}
+
+const char *EnumValue::value() const {
+    return mValue;
 }
 
 }  // namespace android

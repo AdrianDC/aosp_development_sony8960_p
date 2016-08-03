@@ -4,22 +4,8 @@
 
 namespace android {
 
-CompoundField::CompoundField(const char *name, Type *type)
-    : mName(name),
-      mType(type) {
-}
-
-std::string CompoundField::name() const {
-    return mName;
-}
-
-const Type &CompoundField::type() const {
-    return *mType;
-}
-
-CompoundType::CompoundType(Style style, const char *name)
-    : Scope(name),
-      mStyle(style),
+CompoundType::CompoundType(Style style)
+    : mStyle(style),
       mFields(NULL) {
 }
 
@@ -278,6 +264,21 @@ bool CompoundType::needsEmbeddedReadWrite() const {
 
 bool CompoundType::resultNeedsDeref() const {
     return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CompoundField::CompoundField(const char *name, Type *type)
+    : mName(name),
+      mType(type) {
+}
+
+std::string CompoundField::name() const {
+    return mName;
+}
+
+const Type &CompoundField::type() const {
+    return *mType;
 }
 
 }  // namespace android

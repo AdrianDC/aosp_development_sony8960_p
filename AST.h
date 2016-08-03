@@ -15,6 +15,7 @@ namespace android {
 struct Coordinator;
 struct Formatter;
 struct Method;
+struct NamedType;
 struct TypedVar;
 struct Scope;
 
@@ -32,6 +33,7 @@ struct AST {
     void enterScope(Scope *container);
     void leaveScope();
     Scope *scope();
+    void addScopedType(const char *localName, NamedType *type);
 
     void *scanner();
     void setScanner(void *scanner);

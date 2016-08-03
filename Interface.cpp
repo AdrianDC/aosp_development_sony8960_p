@@ -5,9 +5,8 @@
 
 namespace android {
 
-Interface::Interface(const char *name, Type *super)
-    : Scope(name),
-      mSuperType(super) {
+Interface::Interface(Type *super)
+    : mSuperType(super) {
 }
 
 void Interface::addMethod(Method *method) {
@@ -28,7 +27,7 @@ const std::vector<Method *> &Interface::methods() const {
 
 std::string Interface::getCppType(StorageMode mode, std::string *extra) const {
     extra->clear();
-    const std::string base = "::android::sp<" + name() + ">";
+    const std::string base = "::android::sp<" + fullName() + ">";
 
     switch (mode) {
         case StorageMode_Stack:

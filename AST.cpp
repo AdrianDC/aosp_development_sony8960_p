@@ -16,7 +16,7 @@ namespace android {
 AST::AST(Coordinator *coordinator)
     : mCoordinator(coordinator),
       mScanner(NULL),
-      mRootScope(new Scope("root")) {
+      mRootScope(new Scope) {
     enterScope(mRootScope);
 }
 
@@ -139,6 +139,24 @@ void AST::leaveScope() {
 Scope *AST::scope() {
     CHECK(!mScopePath.empty());
     return mScopePath.top();
+}
+
+void AST::addScopedType(const char *localName, NamedType *type) {
+    // LOG(INFO) << "adding scoped type '" << localName << "'";
+
+    std::string path;
+    for (size_t i = 1; i < mScopePath.size(); ++i) {
+        path.append(mScopePath[i]->name());
+        path.append(".");
+    }
+    path.append(localName);
+
+    type->setLocalName(localName);
+
+    FQName fqName(mPackage.package(), mPackage.version(), path);
+    type->setFullName(fqName);
+
+    scope()->addType(localName, type);
 }
 
 Type *AST::lookupType(const char *name) {

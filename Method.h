@@ -10,19 +10,7 @@ namespace android {
 
 struct Formatter;
 struct Type;
-
-struct TypedVar {
-    TypedVar(const char *name, Type *type);
-
-    std::string name() const;
-    const Type &type() const;
-
-private:
-    std::string mName;
-    Type *mType;
-
-    DISALLOW_COPY_AND_ASSIGN(TypedVar);
-};
+struct TypedVar;
 
 struct Method {
     Method(const char *name,
@@ -41,6 +29,19 @@ private:
     std::vector<TypedVar *> *mResults;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
+};
+
+struct TypedVar {
+    TypedVar(const char *name, Type *type);
+
+    std::string name() const;
+    const Type &type() const;
+
+private:
+    std::string mName;
+    Type *mType;
+
+    DISALLOW_COPY_AND_ASSIGN(TypedVar);
 };
 
 }  // namespace android

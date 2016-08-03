@@ -14,9 +14,9 @@ struct Formatter;
 struct Interface;
 
 struct Scope : public NamedType {
-    Scope(const char *name);
+    Scope();
 
-    bool addType(NamedType *type);
+    bool addType(const char *localName, NamedType *type);
     Type *lookupType(const char *name) const;
 
     bool addConstant(Constant *constant);

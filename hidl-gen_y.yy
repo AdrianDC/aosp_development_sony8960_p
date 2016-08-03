@@ -158,11 +158,11 @@ opt_extends
 body
     : INTERFACE IDENTIFIER opt_extends
       {
-          Interface *iface = new Interface($2, $3);
+          Interface *iface = new Interface($3);
 
           // Register interface immediately so it can be referenced inside
           // definition.
-          ast->scope()->addType(iface);
+          ast->addScopedType($2, iface);
 
           ast->enterScope(iface);
       }
@@ -200,8 +200,8 @@ type_declaration
 typedef_declaration
     : TYPEDEF type IDENTIFIER
       {
-          TypeDef *def = new TypeDef($3, $2);
-          ast->scope()->addType(def);
+          TypeDef *def = new TypeDef($2);
+          ast->addScopedType($3, def);
       }
     ;
 
@@ -257,7 +257,7 @@ struct_or_union_keyword
 named_struct_or_union_declaration
     : struct_or_union_keyword IDENTIFIER
       {
-          CompoundType *container = new CompoundType($1, $2);
+          CompoundType *container = new CompoundType($1);
           ast->enterScope(container);
       }
       struct_or_union_body
@@ -266,14 +266,14 @@ named_struct_or_union_declaration
 
           container->setFields($4);
           ast->leaveScope();
-          ast->scope()->addType(container);
+          ast->addScopedType($2, container);
       }
     ;
 
 struct_or_union_declaration
     : struct_or_union_keyword optIdentifier
       {
-          CompoundType *container = new CompoundType($1, $2);
+          CompoundType *container = new CompoundType($1);
           ast->enterScope(container);
       }
       struct_or_union_body
@@ -282,7 +282,7 @@ struct_or_union_declaration
 
           container->setFields($4);
           ast->leaveScope();
-          ast->scope()->addType(container);
+          ast->addScopedType($2, container);
 
           $$ = new RefType(container);
       }
@@ -323,23 +323,23 @@ opt_comma
 named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType($2, $5, $3);
-          ast->scope()->addType(enumType);
+          EnumType *enumType = new EnumType($5, $3);
+          ast->addScopedType($2, enumType);
       }
     ;
 
 enum_declaration
     : ENUM '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType(NULL /* name */, $3);
-          ast->scope()->addType(enumType);
+          EnumType *enumType = new EnumType($3);
+          ast->addScopedType(NULL /* localName */, enumType);
 
           $$ = new RefType(enumType);
       }
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType($2, $5, $3);
-          ast->scope()->addType(enumType);
+          EnumType *enumType = new EnumType($5, $3);
+          ast->addScopedType($2, enumType);
 
           $$ = new RefType(enumType);
       }

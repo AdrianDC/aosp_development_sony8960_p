@@ -11,7 +11,7 @@ namespace android {
 struct Method;
 
 struct Interface : public Scope {
-    Interface(const char *name, Type *super);
+    Interface(Type *super);
 
     void addMethod(Method *method);
 

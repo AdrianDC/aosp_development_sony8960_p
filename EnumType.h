@@ -8,22 +8,10 @@
 
 namespace android {
 
-struct EnumValue {
-    EnumValue(const char *name, const char *value = NULL);
-
-    std::string name() const;
-    const char *value() const;
-
-private:
-    std::string mName;
-    const char *mValue;
-
-    DISALLOW_COPY_AND_ASSIGN(EnumValue);
-};
+struct EnumValue;
 
 struct EnumType : public NamedType {
-    EnumType(const char *name,
-             std::vector<EnumValue *> *values,
+    EnumType(std::vector<EnumValue *> *values,
              Type *storageType = NULL);
 
     const ScalarType *resolveToScalarType() const override;
@@ -45,6 +33,19 @@ private:
     Type *mStorageType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
+};
+
+struct EnumValue {
+    EnumValue(const char *name, const char *value = NULL);
+
+    std::string name() const;
+    const char *value() const;
+
+private:
+    std::string mName;
+    const char *mValue;
+
+    DISALLOW_COPY_AND_ASSIGN(EnumValue);
 };
 
 }  // namespace android

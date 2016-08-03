@@ -2,12 +2,22 @@
 
 namespace android {
 
-NamedType::NamedType(const char *name)
-    : mName(name) {
+NamedType::NamedType() {}
+
+void NamedType::setLocalName(const std::string &localName) {
+    mLocalName = localName;
+}
+
+void NamedType::setFullName(const FQName &fullName) {
+    mFullName = fullName;
 }
 
 std::string NamedType::name() const {
-    return mName;
+    return mLocalName;
+}
+
+std::string NamedType::fullName() const {
+    return mLocalName; // XXX mFullName.string();
 }
 
 }  // namespace android

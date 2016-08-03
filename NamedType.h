@@ -4,17 +4,24 @@
 
 #include "Type.h"
 
+#include "FQName.h"
+
 #include <string>
 
 namespace android {
 
 struct NamedType : public Type {
-    NamedType(const char *name);
+    NamedType();
+
+    void setLocalName(const std::string &localName);
+    void setFullName(const FQName &fullName);
 
     std::string name() const;
+    std::string fullName() const;
 
 private:
-    std::string mName;
+    std::string mLocalName;
+    FQName mFullName;
 
     DISALLOW_COPY_AND_ASSIGN(NamedType);
 };

@@ -5,20 +5,6 @@
 
 namespace android {
 
-TypedVar::TypedVar(const char *name, Type *type)
-    : mName(name),
-      mType(type) {
-}
-
-std::string TypedVar::name() const {
-    return mName;
-}
-
-const Type &TypedVar::type() const {
-    return *mType;
-}
-
-
 Method::Method(
         const char *name,
         std::vector<TypedVar *> *args,
@@ -59,6 +45,21 @@ std::string Method::GetSignature(const std::vector<TypedVar *> &args) {
     }
 
     return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TypedVar::TypedVar(const char *name, Type *type)
+    : mName(name),
+      mType(type) {
+}
+
+std::string TypedVar::name() const {
+    return mName;
+}
+
+const Type &TypedVar::type() const {
+    return *mType;
 }
 
 }  // namespace android

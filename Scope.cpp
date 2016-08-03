@@ -6,20 +6,16 @@
 
 namespace android {
 
-Scope::Scope(const char *name)
-    : NamedType(name) {
-}
+Scope::Scope() {}
 
-bool Scope::addType(NamedType *type) {
-    std::string name = type->name();
-
-    if (mTypeIndexByName.indexOfKey(name) >= 0) {
+bool Scope::addType(const char *localName, NamedType *type) {
+    if (mTypeIndexByName.indexOfKey(localName) >= 0) {
         return false;
     }
 
     size_t index = mTypes.size();
     mTypes.push_back(type);
-    mTypeIndexByName.add(name, index);
+    mTypeIndexByName.add(localName, index);
 
     return true;
 }
