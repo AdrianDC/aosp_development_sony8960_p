@@ -146,7 +146,7 @@ void AST::addScopedType(const char *localName, NamedType *type) {
 
     std::string path;
     for (size_t i = 1; i < mScopePath.size(); ++i) {
-        path.append(mScopePath[i]->name());
+        path.append(mScopePath[i]->localName());
         path.append(".");
     }
     path.append(localName);
@@ -159,7 +159,7 @@ void AST::addScopedType(const char *localName, NamedType *type) {
     scope()->addType(localName, type);
 }
 
-Type *AST::lookupType(const char *name) {
+RefType *AST::lookupType(const char *name) {
     FQName fqName(name);
     CHECK(fqName.isValid());
 
@@ -184,10 +184,16 @@ Type *AST::lookupType(const char *name) {
 
     // LOG(INFO) << "lookupType now looking for " << fqName.string();
 
-    Type *resultType = mCoordinator->lookupType(fqName);
+    RefType *resultType = mCoordinator->lookupType(fqName);
 
     if (resultType) {
-        mImportedNames.insert(fqName);
+        if (!resultType->referencedType()->isInterface()) {
+            // Non-interface types are declared in the associated types header.
+            FQName typesName(fqName.package(), fqName.version(), "types");
+            mImportedNames.insert(typesName);
+        } else {
+            mImportedNames.insert(fqName);
+        }
     }
 
     return resultType;

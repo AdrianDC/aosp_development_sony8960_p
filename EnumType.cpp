@@ -23,7 +23,7 @@ const ScalarType *EnumType::resolveToScalarType() const {
 std::string EnumType::getCppType(StorageMode, std::string *extra) const {
     extra->clear();
 
-    return name();
+    return fullName();
 }
 
 void EnumType::emitReaderWriter(
@@ -53,7 +53,7 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     std::string extra;
 
     out << "enum class "
-        << name()
+        << localName()
         << " : "
         << ((Type *)scalarType)->getCppType(&extra)
         << " {\n";

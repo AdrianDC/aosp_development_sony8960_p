@@ -4,6 +4,7 @@
 
 #include <android-base/macros.h>
 #include <string>
+#include <vector>
 
 namespace android {
 
@@ -32,6 +33,20 @@ struct FQName {
     std::string string() const;
 
     bool operator<(const FQName &other) const;
+
+    // Returns an absolute C++ namespace prefix, i.e.
+    // ::android::hardware::Foo.
+    std::string cppNamespace() const;
+
+    // Returns a fully qualified absolute C++ type name, i.e.
+    // ::android::hardware::Foo::bar::baz.
+    std::string cppName() const;
+
+    void getPackageComponents(std::vector<std::string> *components) const;
+
+    void getPackageAndVersionComponents(
+            std::vector<std::string> *components,
+            bool cpp_compatible) const;
 
 private:
     bool mValid;

@@ -58,7 +58,7 @@ bool Scope::containsSingleInterface(std::string *ifaceName) const {
     Interface *iface = getInterface();
 
     if (iface != NULL) {
-        *ifaceName = iface->name();
+        *ifaceName = iface->localName();
         return true;
     }
 

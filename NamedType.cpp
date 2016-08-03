@@ -12,12 +12,12 @@ void NamedType::setFullName(const FQName &fullName) {
     mFullName = fullName;
 }
 
-std::string NamedType::name() const {
+std::string NamedType::localName() const {
     return mLocalName;
 }
 
 std::string NamedType::fullName() const {
-    return mLocalName; // XXX mFullName.string();
+    return mFullName.cppName();
 }
 
 }  // namespace android

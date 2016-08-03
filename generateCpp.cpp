@@ -40,22 +40,6 @@ static bool MakeParentHierarchy(const std::string &path) {
     return true;
 }
 
-static void SplitString(
-        const std::string &s, char c, std::vector<std::string> *components) {
-    components->clear();
-
-    size_t startPos = 0;
-    size_t matchPos;
-    while ((matchPos = s.find(c, startPos)) != std::string::npos) {
-        components->push_back(s.substr(startPos, matchPos - startPos));
-        startPos = matchPos + 1;
-    }
-
-    if (startPos + 1 < s.length()) {
-        components->push_back(s.substr(startPos));
-    }
-}
-
 static std::string upcase(const std::string in) {
     std::string out{in};
 
@@ -84,47 +68,14 @@ status_t AST::generateCpp(const std::string &outputPath) const {
     return err;
 }
 
-// static
-void AST::GetPackageComponents(
-        const FQName &fqName,
-        std::vector<std::string> *components) {
-    SplitString(fqName.package(), '.', components);
-}
-
-// static
-void AST::GetPackageAndVersionComponents(
-        const FQName &fqName,
-        std::vector<std::string> *components,
-        bool cpp_compatible) {
-    GetPackageComponents(fqName, components);
-
-    const std::string packageVersion = fqName.version();
-    CHECK(packageVersion[0] == '@');
-
-    if (!cpp_compatible) {
-        components->push_back(packageVersion.substr(1));
-        return;
-    }
-
-    const size_t dotPos = packageVersion.find('.');
-
-    // Form "Vmajor_minor".
-    std::string versionString = "V";
-    versionString.append(packageVersion.substr(1, dotPos - 1));
-    versionString.append("_");
-    versionString.append(packageVersion.substr(dotPos + 1));
-
-    components->push_back(versionString);
-}
-
 void AST::getPackageComponents(
         std::vector<std::string> *components) const {
-    GetPackageComponents(mPackage, components);
+    mPackage.getPackageComponents(components);
 }
 
 void AST::getPackageAndVersionComponents(
         std::vector<std::string> *components, bool cpp_compatible) const {
-    GetPackageAndVersionComponents(mPackage, components, cpp_compatible);
+    mPackage.getPackageAndVersionComponents(components, cpp_compatible);
 }
 
 std::string AST::makeHeaderGuard(const std::string &baseName) const {
@@ -154,7 +105,11 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
         for (const auto &component : packageComponents) {
             out << "namespace " << component << " {\n";
         }
+
+        out.setNamespace(mPackage.cppNamespace());
     } else {
+        out.setNamespace(std::string());
+
         for (auto it = packageComponents.rbegin();
                 it != packageComponents.rend();
                 ++it) {
@@ -198,8 +153,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "#include <";
 
         std::vector<std::string> components;
-        GetPackageAndVersionComponents(
-                item, &components, false /* cpp_compatible */);
+        item.getPackageAndVersionComponents(
+                &components, false /* cpp_compatible */);
 
         for (const auto &component : components) {
             out << component << "/";

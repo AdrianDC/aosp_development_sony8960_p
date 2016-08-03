@@ -127,5 +127,87 @@ bool FQName::operator<(const FQName &other) const {
     return string() < other.string();
 }
 
+static void SplitString(
+        const std::string &s, char c, std::vector<std::string> *components) {
+    components->clear();
+
+    size_t startPos = 0;
+    size_t matchPos;
+    while ((matchPos = s.find(c, startPos)) != std::string::npos) {
+        components->push_back(s.substr(startPos, matchPos - startPos));
+        startPos = matchPos + 1;
+    }
+
+    if (startPos + 1 < s.length()) {
+        components->push_back(s.substr(startPos));
+    }
+}
+
+static std::string JoinStrings(
+        const std::vector<std::string> &components,
+        const std::string &separator) {
+    std::string out;
+    bool first = true;
+    for (const auto &component : components) {
+        if (!first) {
+            out += separator;
+        }
+        out += component;
+
+        first = false;
+    }
+
+    return out;
+}
+
+std::string FQName::cppNamespace() const {
+    std::vector<std::string> components;
+    getPackageAndVersionComponents(&components, true /* cpp_compatible */);
+
+    std::string out = "::";
+    out += JoinStrings(components, "::");
+
+    return out;
+}
+
+std::string FQName::cppName() const {
+    std::string out = cppNamespace();
+
+    std::vector<std::string> components;
+    SplitString(name(), '.', &components);
+    out += "::";
+    out += JoinStrings(components, "::");
+
+    return out;
+}
+
+void FQName::getPackageComponents(std::vector<std::string> *components) const {
+    SplitString(package(), '.', components);
+}
+
+void FQName::getPackageAndVersionComponents(
+        std::vector<std::string> *components,
+        bool cpp_compatible) const {
+    getPackageComponents(components);
+
+    const std::string packageVersion = version();
+    CHECK(packageVersion[0] == '@');
+
+    if (!cpp_compatible) {
+        components->push_back(packageVersion.substr(1));
+        return;
+    }
+
+    const size_t dotPos = packageVersion.find('.');
+
+    // Form "Vmajor_minor".
+    std::string versionString = "V";
+    versionString.append(packageVersion.substr(1, dotPos - 1));
+    versionString.append("_");
+    versionString.append(packageVersion.substr(dotPos + 1));
+
+    components->push_back(versionString);
+}
+
 }  // namespace android
 

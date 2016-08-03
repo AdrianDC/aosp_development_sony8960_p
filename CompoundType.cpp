@@ -16,7 +16,7 @@ void CompoundType::setFields(std::vector<CompoundField *> *fields) {
 std::string CompoundType::getCppType(
         StorageMode mode, std::string *extra) const {
     extra->clear();
-    const std::string base = name();
+    const std::string base = fullName();
 
     switch (mode) {
         case StorageMode_Stack:
@@ -47,7 +47,7 @@ void CompoundType::emitReaderWriter(
     if (isReader) {
         out << name
             << " = (const "
-            << this->name()
+            << fullName()
             << " *)"
             << parcelObjDeref
             << "readBuffer("
@@ -116,14 +116,14 @@ void CompoundType::emitReaderWriterEmbedded(
             mode,
             parentName,
             offsetText,
-            this->name(),
+            fullName(),
             "" /* childName */);
 }
 
 status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
         << " "
-        << name()
+        << localName()
         << " {\n";
 
     out.indent();
@@ -173,7 +173,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
 
 status_t CompoundType::emitTypeDefinitions(
         Formatter &out, const std::string prefix) const {
-    status_t err = Scope::emitTypeDefinitions(out, prefix + "::" + name());
+    status_t err = Scope::emitTypeDefinitions(out, prefix + "::" + localName());
 
     if (err != OK) {
         return err;
@@ -193,7 +193,7 @@ void CompoundType::emitStructReaderWriter(
         Formatter &out, const std::string &prefix, bool isReader) const {
     out << "::android::status_t "
               << (prefix.empty() ? "" : (prefix + "::"))
-              << name()
+              << localName()
               << (isReader ? "::readEmbeddedFromParcel"
                            : "::writeEmbeddedToParcel")
               << "(\n";
@@ -236,7 +236,11 @@ void CompoundType::emitStructReaderWriter(
                 isReader,
                 ErrorMode_Return,
                 "parentHandle",
-                "parentOffset + offsetof(" + name() + ", " + field->name() + ")");
+                "parentOffset + offsetof("
+                    + fullName()
+                    + ", "
+                    + field->name()
+                    + ")");
     }
 
     out.unindent();

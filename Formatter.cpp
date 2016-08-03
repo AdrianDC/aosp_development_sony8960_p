@@ -40,7 +40,7 @@ Formatter &Formatter::operator<<(const string &out) {
                 mAtStartOfLine = false;
             }
 
-            fprintf(mFile, "%s", out.substr(start).c_str());
+            output(out.substr(start));
             break;
         }
 
@@ -52,7 +52,7 @@ Formatter &Formatter::operator<<(const string &out) {
                 fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
             }
 
-            fprintf(mFile, "%s", out.substr(start, pos - start + 1).c_str());
+            output(out.substr(start, pos - start + 1));
 
             mAtStartOfLine = true;
         }
@@ -65,6 +65,39 @@ Formatter &Formatter::operator<<(const string &out) {
 
 Formatter &Formatter::operator<<(size_t n) {
     return (*this) << std::to_string(n);
+}
+
+void Formatter::setNamespace(const std::string &space) {
+    mSpace = space;
+    if (!mSpace.empty()) {
+        // The intent is for this to strip out all local namespace prefixes,
+        // so that a type "::android::hardware::Foo::bar::baz"
+        // is reduced to the equivalent "bar::baz" in the scope of the namespace
+        // "::android::hardware::Foo".
+        mSpace += "::";
+    }
+}
+
+void Formatter::output(const std::string &text) const {
+    const size_t spaceLength = mSpace.size();
+    if (spaceLength > 0) {
+        // Remove all occurences of "mSpace" and output the filtered result.
+        size_t matchPos = text.find(mSpace);
+        if (matchPos != std::string::npos) {
+            std::string newText = text.substr(0, matchPos);
+            size_t startPos = matchPos + spaceLength;
+            while ((matchPos = text.find(mSpace, startPos))
+                    != std::string::npos) {
+                newText.append(text.substr(startPos, matchPos - startPos));
+                startPos = matchPos + spaceLength;
+            }
+            newText.append(text.substr(startPos));
+            fprintf(mFile, "%s", newText.c_str());
+            return;
+        }
+    }
+
+    fprintf(mFile, "%s", text.c_str());
 }
 
 }  // namespace android

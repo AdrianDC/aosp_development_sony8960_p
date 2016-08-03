@@ -10,7 +10,7 @@ namespace android {
 
 struct AST;
 struct FQName;
-struct Type;
+struct RefType;
 
 struct Coordinator {
     Coordinator(const std::string &interfacesPath);
@@ -18,7 +18,7 @@ struct Coordinator {
 
     AST *parse(const FQName &fqName);
 
-    Type *lookupType(const FQName &fqName) const;
+    RefType *lookupType(const FQName &fqName) const;
 
     std::string getPackagePath(
             const FQName &fqName, bool relative = false) const;

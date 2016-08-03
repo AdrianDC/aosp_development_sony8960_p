@@ -135,7 +135,7 @@ std::string Coordinator::getPackagePath(
     return packagePath;
 }
 
-Type *Coordinator::lookupType(const FQName &fqName) const {
+RefType *Coordinator::lookupType(const FQName &fqName) const {
     // Fully qualified.
     CHECK(fqName.isFullyQualified());
 

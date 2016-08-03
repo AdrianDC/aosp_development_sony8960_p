@@ -34,10 +34,17 @@ struct Formatter {
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
 
+    // Any substrings matching "space" will be stripped out of the output.
+    void setNamespace(const std::string &space);
+
 private:
     FILE *mFile;
     size_t mIndentDepth;
     bool mAtStartOfLine;
+
+    std::string mSpace;
+
+    void output(const std::string &text) const;
 
     DISALLOW_COPY_AND_ASSIGN(Formatter);
 };

@@ -65,7 +65,7 @@ void Interface::emitReaderWriter(
 
         out << name
             << " = "
-            << this->name()
+            << fullName()
             << "::asInterface("
             << binderName
             << ");\n";
@@ -73,7 +73,7 @@ void Interface::emitReaderWriter(
         out << "_aidl_err = ";
         out << parcelObjDeref
             << "writeStrongBinder("
-            << this->name()
+            << fullName()
             << "::asBinder("
             << name
             << "));\n";
