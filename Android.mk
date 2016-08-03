@@ -20,7 +20,6 @@ LOCAL_SRC_FILES :=              \
     Interface.cpp               \
     Method.cpp                  \
     NamedType.cpp               \
-    RefType.cpp                 \
     ScalarType.cpp              \
     Scope.cpp                   \
     StringType.cpp              \

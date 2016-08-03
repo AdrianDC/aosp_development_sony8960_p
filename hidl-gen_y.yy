@@ -7,7 +7,6 @@
 #include "EnumType.h"
 #include "Interface.h"
 #include "Method.h"
-#include "RefType.h"
 #include "TypeDef.h"
 #include "VectorType.h"
 
@@ -298,7 +297,7 @@ struct_or_union_declaration
               YYERROR;
           }
 
-          $$ = new RefType(container);
+          $$ = container->ref();
       }
     ;
 
@@ -352,7 +351,7 @@ enum_declaration
               YYERROR;
           }
 
-          $$ = new RefType(enumType);
+          $$ = enumType->ref();
       }
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
@@ -361,7 +360,7 @@ enum_declaration
               YYERROR;
           }
 
-          $$ = new RefType(enumType);
+          $$ = enumType->ref();
       }
     ;
 

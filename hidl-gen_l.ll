@@ -18,7 +18,6 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "EnumType.h"
 #include "HandleType.h"
 #include "Method.h"
-#include "RefType.h"
 #include "ScalarType.h"
 #include "StringType.h"
 

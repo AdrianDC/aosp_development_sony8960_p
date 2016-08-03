@@ -4,7 +4,6 @@
 #include "Formatter.h"
 #include "FQName.h"
 #include "HandleType.h"
-#include "RefType.h"
 #include "Scope.h"
 
 #include <android-base/logging.h>
@@ -168,7 +167,7 @@ bool AST::addScopedType(const char *localName, NamedType *type) {
     return true;
 }
 
-RefType *AST::lookupType(const char *name) {
+Type *AST::lookupType(const char *name) {
     FQName fqName(name);
     CHECK(fqName.isValid());
 
@@ -184,7 +183,7 @@ RefType *AST::lookupType(const char *name) {
             Type *type = mScopePath[i]->lookupType(name);
 
             if (type != NULL) {
-                return new RefType(type);
+                return type->ref();
             }
         }
     }
@@ -193,10 +192,10 @@ RefType *AST::lookupType(const char *name) {
 
     // LOG(INFO) << "lookupType now looking for " << fqName.string();
 
-    RefType *resultType = mCoordinator->lookupType(fqName);
+    Type *resultType = mCoordinator->lookupType(fqName);
 
     if (resultType) {
-        if (!resultType->referencedType()->isInterface()) {
+        if (!resultType->isInterface()) {
             // Non-interface types are declared in the associated types header.
             FQName typesName(fqName.package(), fqName.version(), "types");
             mImportedNames.insert(typesName);

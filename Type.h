@@ -15,6 +15,8 @@ struct Type {
     Type();
     virtual ~Type();
 
+    Type *ref() { return this; }
+
     virtual bool isScope() const;
     virtual bool isInterface() const;
     virtual const ScalarType *resolveToScalarType() const;

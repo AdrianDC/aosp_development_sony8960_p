@@ -1,7 +1,6 @@
 #include "Coordinator.h"
 
 #include "AST.h"
-#include "RefType.h"
 
 #include <android-base/logging.h>
 
@@ -135,7 +134,7 @@ std::string Coordinator::getPackagePath(
     return packagePath;
 }
 
-RefType *Coordinator::lookupType(const FQName &fqName) const {
+Type *Coordinator::lookupType(const FQName &fqName) const {
     // Fully qualified.
     CHECK(fqName.isFullyQualified());
 
@@ -158,7 +157,7 @@ RefType *Coordinator::lookupType(const FQName &fqName) const {
         Type *type = ast->lookupTypeInternal(fqName.name());
 
         if (type != NULL) {
-            return new RefType(type);
+            return type->ref();
         }
     }
 
@@ -171,7 +170,7 @@ RefType *Coordinator::lookupType(const FQName &fqName) const {
             Type *type = ast->lookupTypeInternal(fqName.name());
 
             if (type != NULL) {
-                return new RefType(type);
+                return type->ref();
             }
         }
     }

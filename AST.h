@@ -17,7 +17,6 @@ struct Formatter;
 struct Method;
 struct NamedType;
 struct TypedVar;
-struct RefType;
 struct Scope;
 
 struct AST {
@@ -44,7 +43,7 @@ struct AST {
     // Look up a type by FQName, "pure" names, i.e. those without package
     // or version are first looked up in the current scope chain.
     // After that lookup proceeds to imports.
-    RefType *lookupType(const char *name);
+    Type *lookupType(const char *name);
 
     // Takes dot-separated path components to a type possibly inside this AST.
     // Name resolution goes from root scope downwards, i.e. the path must be
