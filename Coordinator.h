@@ -3,6 +3,7 @@
 #define COORDINATOR_H_
 
 #include <android-base/macros.h>
+#include <functional>
 #include <string>
 #include <utils/KeyedVector.h>
 
@@ -22,6 +23,10 @@ struct Coordinator {
 
     std::string getPackagePath(
             const FQName &fqName, bool relative = false) const;
+
+    // Iterate over all cached ASTs and abort if any callback returns an error.
+    using for_each_cb = std::function<status_t(const AST *ast)>;
+    status_t forEachAST(for_each_cb cb) const;
 
 private:
     std::string mInterfacesPath;

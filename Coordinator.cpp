@@ -179,5 +179,17 @@ RefType *Coordinator::lookupType(const FQName &fqName) const {
     return NULL;
 }
 
+status_t Coordinator::forEachAST(for_each_cb cb) const {
+    for (size_t i = 0; i < mCache.size(); ++i) {
+        status_t err = cb(mCache.valueAt(i));
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
+}
+
 }  // namespace android
 

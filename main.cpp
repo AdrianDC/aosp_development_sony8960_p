@@ -68,13 +68,22 @@ int main(int argc, char **argv) {
         CHECK(fqName.isValid() && fqName.isFullyQualified());
 
         AST *ast = coordinator.parse(fqName);
-        CHECK(ast != NULL);
 
-        ast->generateCpp(outputDir);
+        if (ast == NULL) {
+            fprintf(stderr,
+                    "Could not parse %s. Aborting.\n",
+                    fqName.string().c_str());
 
-        delete ast;
-        ast = NULL;
+            exit(1);
+        }
     }
 
-    return 0;
+    // Now that we've found the transitive hull of all necessary interfaces
+    // and types to process, go ahead and do the work.
+    status_t err = coordinator.forEachAST(
+            [&](const AST *ast) {
+                return ast->generateCpp(outputDir);
+            });
+
+    return (err == OK) ? 0 : 1;
 }
