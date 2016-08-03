@@ -85,12 +85,16 @@ bool AST::addImport(const char *import) {
                 continue;
             }
 
-            if (ent->d_namlen < 4
-                    || strcmp(ent->d_name + ent->d_namlen - 4, ".hal")) {
+            const auto suffix = ".hal";
+            const auto suffix_len = std::strlen(suffix);
+            const auto d_namelen = strlen(ent->d_name);
+
+            if (d_namelen < suffix_len
+                    || strcmp(ent->d_name + d_namelen - suffix_len, suffix)) {
                 continue;
             }
 
-            fileNames.push_back(std::string(ent->d_name, ent->d_namlen - 4));
+            fileNames.push_back(std::string(ent->d_name, d_namelen - suffix_len));
         }
 
         closedir(dir);
