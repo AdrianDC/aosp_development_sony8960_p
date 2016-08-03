@@ -180,7 +180,14 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
 
 status_t Coordinator::forEachAST(for_each_cb cb) const {
     for (size_t i = 0; i < mCache.size(); ++i) {
-        status_t err = cb(mCache.valueAt(i));
+        const AST *ast = mCache.valueAt(i);
+
+        if (!ast) {
+            // This could happen for an interface's "types.hal" AST.
+            continue;
+        }
+
+        status_t err = cb(ast);
 
         if (err != OK) {
             return err;

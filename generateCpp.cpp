@@ -184,7 +184,18 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     if (isInterface) {
         out << "struct "
             << ifaceName
-            << " : public ::android::hidl::IInterface {\n";
+            << " : public ";
+
+        const Interface *iface = mRootScope->getInterface();
+        const Interface *superType = iface->superType();
+
+        if (superType != NULL) {
+            out << superType->fullName();
+        } else {
+            out << "::android::hidl::IInterface";
+        }
+
+        out << " {\n";
 
         out.indent();
 
@@ -202,6 +213,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
     if (isInterface) {
         const Interface *iface = mRootScope->getInterface();
+        const Interface *superType = iface->superType();
 
         out << "enum Call {\n";
         out.indent();
@@ -211,12 +223,21 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             out << upcase(method->name());
 
             if (first) {
-                out << " = ::android::hidl::IBinder::FIRST_CALL_TRANSACTION";
+                out << " = ";
+                if (superType != NULL) {
+                    out << superType->fullName()
+                        << "::Call::CallCount";
+                } else {
+                    out << "::android::hidl::IBinder::FIRST_CALL_TRANSACTION";
+                }
+
                 first = false;
             }
 
             out << ",\n";
         }
+
+        out << "CallCount\n";
 
         out.unindent();
         out << "};\n\n";
@@ -421,23 +442,39 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     const Interface *iface = mRootScope->getInterface();
 
-    for (const auto &method : iface->methods()) {
-        const bool returnsValue = !method->results().empty();
+    std::vector<const Interface *> chain;
+    while (iface != NULL) {
+        chain.push_back(iface);
+        iface = iface->superType();
+    }
 
-        out << "::android::hidl::binder::Status "
-            << method->name()
-            << "("
-            << Method::GetSignature(method->args());
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const Interface *superInterface = *it;
 
-        if (returnsValue) {
-            if (!method->args().empty()) {
-                out << ", ";
+        out << "// Methods from "
+            << superInterface->fullName()
+            << " follow.\n";
+
+        for (const auto &method : superInterface->methods()) {
+            const bool returnsValue = !method->results().empty();
+
+            out << "::android::hidl::binder::Status "
+                << method->name()
+                << "("
+                << Method::GetSignature(method->args());
+
+            if (returnsValue) {
+                if (!method->args().empty()) {
+                    out << ", ";
+                }
+
+                out << method->name() << "_cb _aidl_cb";
             }
 
-            out << method->name() << "_cb _aidl_cb";
+            out << ") override;\n";
         }
 
-        out << ") override;\n";
+        out << "\n";
     }
 
     out.unindent();
@@ -579,103 +616,114 @@ status_t AST::generateProxySource(
 
     const Interface *iface = mRootScope->getInterface();
 
-    for (const auto &method : iface->methods()) {
-        const bool returnsValue = !method->results().empty();
+    std::vector<const Interface *> chain;
+    while (iface != NULL) {
+        chain.push_back(iface);
+        iface = iface->superType();
+    }
 
-        out << "::android::hidl::binder::Status "
-            << klassName
-            << "::"
-            << method->name()
-            << "("
-            << Method::GetSignature(method->args());
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const Interface *superInterface = *it;
 
-        if (returnsValue) {
-            if (!method->args().empty()) {
-                out << ", ";
-            }
+        for (const auto &method : superInterface->methods()) {
+            const bool returnsValue = !method->results().empty();
 
-            out << method->name() << "_cb _aidl_cb";
-        }
+            out << "::android::hidl::binder::Status "
+                << klassName
+                << "::"
+                << method->name()
+                << "("
+                << Method::GetSignature(method->args());
 
-        out << ") {\n";
-
-        out.indent();
-
-        out << "::android::hidl::Parcel _aidl_data;\n";
-        out << "::android::hidl::Parcel _aidl_reply;\n";
-        out << "::android::status_t _aidl_err;\n\n";
-        out << "::android::hidl::binder::Status _aidl_status;\n";
-
-        out << "_aidl_err = _aidl_data.writeInterfaceToken("
-               "getInterfaceDescriptor());\n";
-
-        out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
-
-        for (const auto &arg : method->args()) {
-            emitCppReaderWriter(
-                    out,
-                    "_aidl_data",
-                    false /* parcelObjIsPointer */,
-                    arg,
-                    false /* reader */,
-                    Type::ErrorMode_Goto);
-        }
-
-        out << "_aidl_err = remote()->transact(I"
-                  << baseName
-                  << "::"
-                  << upcase(method->name())
-                  << ", _aidl_data, &_aidl_reply);\n";
-
-        out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
-
-        out << "_aidl_err = _aidl_status.readFromParcel(_aidl_reply);\n";
-        out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
-
-        out << "if (!_aidl_status.isOk()) { return _aidl_status; }\n\n";
-
-        for (const auto &arg : method->results()) {
-            emitCppReaderWriter(
-                    out,
-                    "_aidl_reply",
-                    false /* parcelObjIsPointer */,
-                    arg,
-                    true /* reader */,
-                    Type::ErrorMode_Goto);
-        }
-
-        if (returnsValue) {
-            out << "if (_aidl_cb != nullptr) {\n";
-            out.indent();
-            out << "_aidl_cb(";
-
-            bool first = true;
-            for (const auto &arg : method->results()) {
-                if (!first) {
+            if (returnsValue) {
+                if (!method->args().empty()) {
                     out << ", ";
                 }
 
-                if (arg->type().resultNeedsDeref()) {
-                    out << "*";
-                }
-                out << arg->name();
-
-                first = false;
+                out << method->name() << "_cb _aidl_cb";
             }
 
-            out << ");\n";
+            out << ") {\n";
+
+            out.indent();
+
+            out << "::android::hidl::Parcel _aidl_data;\n";
+            out << "::android::hidl::Parcel _aidl_reply;\n";
+            out << "::android::status_t _aidl_err;\n\n";
+            out << "::android::hidl::binder::Status _aidl_status;\n";
+
+            out << "_aidl_err = _aidl_data.writeInterfaceToken("
+                << superInterface->fullName()
+                << "::getInterfaceDescriptor());\n";
+
+            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+
+            for (const auto &arg : method->args()) {
+                emitCppReaderWriter(
+                        out,
+                        "_aidl_data",
+                        false /* parcelObjIsPointer */,
+                        arg,
+                        false /* reader */,
+                        Type::ErrorMode_Goto);
+            }
+
+            out << "_aidl_err = remote()->transact(I"
+                      << baseName
+                      << "::"
+                      << upcase(method->name())
+                      << ", _aidl_data, &_aidl_reply);\n";
+
+            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+
+            out << "_aidl_err = _aidl_status.readFromParcel(_aidl_reply);\n";
+            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+
+            out << "if (!_aidl_status.isOk()) { return _aidl_status; }\n\n";
+
+            for (const auto &arg : method->results()) {
+                emitCppReaderWriter(
+                        out,
+                        "_aidl_reply",
+                        false /* parcelObjIsPointer */,
+                        arg,
+                        true /* reader */,
+                        Type::ErrorMode_Goto);
+            }
+
+            if (returnsValue) {
+                out << "if (_aidl_cb != nullptr) {\n";
+                out.indent();
+                out << "_aidl_cb(";
+
+                bool first = true;
+                for (const auto &arg : method->results()) {
+                    if (!first) {
+                        out << ", ";
+                    }
+
+                    if (arg->type().resultNeedsDeref()) {
+                        out << "*";
+                    }
+                    out << arg->name();
+
+                    first = false;
+                }
+
+                out << ");\n";
+                out.unindent();
+                out << "}\n\n";
+            }
+
+            out.unindent();
+            out << "_aidl_error:\n";
+            out.indent();
+            out << "_aidl_status.setFromStatusT(_aidl_err);\n"
+                      << "return _aidl_status;\n";
+
             out.unindent();
             out << "}\n\n";
         }
-
-        out.unindent();
-        out << "_aidl_error:\n";
-        out.indent();
-        out << "_aidl_status.setFromStatusT(_aidl_err);\n"
-                  << "return _aidl_status;\n";
-
-        out.unindent();
-        out << "}\n\n";
     }
 
     return OK;
@@ -713,18 +761,34 @@ status_t AST::generateStubSource(
 
     const Interface *iface = mRootScope->getInterface();
 
-    for (const auto &method : iface->methods()) {
-        out << "case Call::" << upcase(method->name()) << ":\n{\n";
-        out.indent();
+    std::vector<const Interface *> chain;
+    while (iface != NULL) {
+        chain.push_back(iface);
+        iface = iface->superType();
+    }
 
-        status_t err = generateStubSourceForMethod(out, method);
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const Interface *superInterface = *it;
 
-        if (err != OK) {
-            return err;
+        for (const auto &method : superInterface->methods()) {
+            out << "case "
+                << superInterface->fullName()
+                << "::Call::"
+                << upcase(method->name())
+                << ":\n{\n";
+
+            out.indent();
+
+            status_t err =
+                generateStubSourceForMethod(out, superInterface, method);
+
+            if (err != OK) {
+                return err;
+            }
+
+            out.unindent();
+            out << "}\n\n";
         }
-
-        out.unindent();
-        out << "}\n\n";
     }
 
     out << "default:\n{\n";
@@ -775,8 +839,11 @@ status_t AST::generateStubSource(
 }
 
 status_t AST::generateStubSourceForMethod(
-        Formatter &out, const Method *method) const {
-    out << "if (!_aidl_data.checkInterface(this)) {\n";
+        Formatter &out, const Interface *iface, const Method *method) const {
+    out << "if (!_aidl_data.enforceInterface("
+        << iface->fullName()
+        << "::getInterfaceDescriptor())) {\n";
+
     out.indent();
     out << "_aidl_err = ::android::BAD_TYPE;\n";
     out << "break;\n";

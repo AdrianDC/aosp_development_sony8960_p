@@ -14,6 +14,7 @@ namespace android {
 
 struct Coordinator;
 struct Formatter;
+struct Interface;
 struct Method;
 struct NamedType;
 struct TypedVar;
@@ -86,7 +87,7 @@ private:
             Formatter &out, const std::string &baseName) const;
 
     status_t generateStubSourceForMethod(
-            Formatter &out, const Method *method) const;
+            Formatter &out, const Interface *iface, const Method *method) const;
 
     void emitCppReaderWriter(
             Formatter &out,

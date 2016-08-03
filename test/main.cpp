@@ -2,6 +2,7 @@
 
 #include <android/hardware/foo/1.0/BnFoo.h>
 #include <android/hardware/foo/1.0/BnFooCallback.h>
+#include <android/hardware/bar/1.0/BnBar.h>
 
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/IServiceManager.h>
@@ -10,8 +11,10 @@
 
 using ::android::hardware::foo::V1_0::BnFoo;
 using ::android::hardware::foo::V1_0::BnFooCallback;
+using ::android::hardware::bar::V1_0::BnBar;
 using ::android::hardware::foo::V1_0::IFoo;
 using ::android::hardware::foo::V1_0::IFooCallback;
+using ::android::hardware::bar::V1_0::IBar;
 using ::android::hidl::binder::Status;
 using ::android::hidl::hidl_vec;
 using ::android::hidl::hidl_string;
@@ -29,7 +32,7 @@ Status FooCallback::heyItsMe(
     return Status::ok();
 }
 
-struct Foo : public BnFoo {
+struct Bar : public BnBar {
     Status doThis(float param) override;
 
     Status doThatAndReturnSomething(
@@ -69,39 +72,41 @@ struct Foo : public BnFoo {
     Status haveAStringVec(
             const hidl_vec<hidl_string> &vector,
             haveAStringVec_cb _cb) override;
+
+    Status thisIsNew() override;
 };
 
-Status Foo::doThis(float param) {
-    ALOGI("Foo::doThis(%.2f)", param);
+Status Bar::doThis(float param) {
+    ALOGI("Bar::doThis(%.2f)", param);
 
     return Status::ok();
 }
 
-Status Foo::doThatAndReturnSomething(
+Status Bar::doThatAndReturnSomething(
         int64_t param, doThatAndReturnSomething_cb _cb) {
-    ALOGI("Foo::doThatAndReturnSomething(%ld)", param);
+    ALOGI("Bar::doThatAndReturnSomething(%ld)", param);
 
     _cb(666);
 
     return Status::ok();
 }
 
-Status Foo::doQuiteABit(
+Status Bar::doQuiteABit(
         int32_t a,
         int64_t b,
         float c,
         double d,
         doQuiteABit_cb _cb) {
-    ALOGI("Foo::doQuiteABit(%d, %ld, %.2f, %.2f)", a, b, c, d);
+    ALOGI("Bar::doQuiteABit(%d, %ld, %.2f, %.2f)", a, b, c, d);
 
     _cb(666.5);
 
     return Status::ok();
 }
 
-Status Foo::doSomethingElse(
+Status Bar::doSomethingElse(
         const int32_t param[15], doSomethingElse_cb _cb) {
-    ALOGI("Foo::doSomethingElse(...)");
+    ALOGI("Bar::doSomethingElse(...)");
 
     int32_t result[32] = { 0 };
     for (size_t i = 0; i < 15; ++i) {
@@ -116,9 +121,9 @@ Status Foo::doSomethingElse(
     return Status::ok();
 }
 
-Status Foo::doStuffAndReturnAString(
+Status Bar::doStuffAndReturnAString(
         doStuffAndReturnAString_cb _cb) {
-    ALOGI("Foo::doStuffAndReturnAString");
+    ALOGI("Bar::doStuffAndReturnAString");
 
     hidl_string s;
     s = "Hello, world";
@@ -128,9 +133,9 @@ Status Foo::doStuffAndReturnAString(
     return Status::ok();
 }
 
-Status Foo::mapThisVector(
+Status Bar::mapThisVector(
         const hidl_vec<int32_t> &param, mapThisVector_cb _cb) {
-    ALOGI("Foo::mapThisVector");
+    ALOGI("Bar::mapThisVector");
 
     hidl_vec<int32_t> out;
     out.count = param.count;
@@ -146,9 +151,9 @@ Status Foo::mapThisVector(
     return Status::ok();
 }
 
-Status Foo::callMe(
+Status Bar::callMe(
         const sp<IFooCallback> &cb) {
-    ALOGI("Foo::callMe %p", cb.get());
+    ALOGI("Bar::callMe %p", cb.get());
 
     if (cb != NULL) {
         sp<IFooCallback> my_cb = new FooCallback;
@@ -158,19 +163,37 @@ Status Foo::callMe(
     return Status::ok();
 }
 
-Status Foo::useAnEnum(
+Status Bar::useAnEnum(
         SomeEnum param, useAnEnum_cb _cb) {
-    ALOGI("Foo::useAnEnum %d", (int)param);
+    ALOGI("Bar::useAnEnum %d", (int)param);
 
     _cb(SomeEnum::goober);
 
     return Status::ok();
 }
 
-Status Foo::haveSomeStrings(
+Status Bar::hmmm(const hidl_vec<Goober>& param) {
+    ALOGI("Bar::hmmm &param = %p", &param);
+
+    return Status::ok();
+}
+
+Status Bar::runningOutOfNames(const Goober &g) {
+    ALOGI("Bar::runningOutOfNames g=%p", &g);
+
+    return Status::ok();
+}
+
+Status Bar::aGooberArray(const Goober lots[20]) {
+    ALOGI("Bar::aGooberArray lots = %p", lots);
+
+    return Status::ok();
+}
+
+Status Bar::haveSomeStrings(
         const hidl_string array[3],
         haveSomeStrings_cb _cb) {
-    ALOGI("Foo::haveSomeStrings([\"%s\", \"%s\", \"%s\"])",
+    ALOGI("Bar::haveSomeStrings([\"%s\", \"%s\", \"%s\"])",
           array[0].c_str(),
           array[1].c_str(),
           array[2].c_str());
@@ -184,10 +207,10 @@ Status Foo::haveSomeStrings(
     return Status::ok();
 }
 
-Status Foo::haveAStringVec(
+Status Bar::haveAStringVec(
         const hidl_vec<hidl_string> &vector,
         haveAStringVec_cb _cb) {
-    ALOGI("Foo::haveAStringVec([\"%s\", \"%s\", \"%s\"])",
+    ALOGI("Bar::haveAStringVec([\"%s\", \"%s\", \"%s\"])",
           vector[0].c_str(),
           vector[1].c_str(),
           vector[2].c_str());
@@ -203,20 +226,8 @@ Status Foo::haveAStringVec(
     return Status::ok();
 }
 
-Status Foo::hmmm(const hidl_vec<Goober>& param) {
-    ALOGI("Foo::hmmm &param = %p", &param);
-
-    return Status::ok();
-}
-
-Status Foo::runningOutOfNames(const Goober &g) {
-    ALOGI("Foo::runningOutOfNames g=%p", &g);
-
-    return Status::ok();
-}
-
-Status Foo::aGooberArray(const Goober lots[20]) {
-    ALOGI("Foo::aGooberArray lots = %p", lots);
+Status Bar::thisIsNew() {
+    ALOGI("Bar::thisIsNew");
 
     return Status::ok();
 }
@@ -328,6 +339,14 @@ static void client() {
     stringVecParam[2] = "disaster";
     foo->haveAStringVec(stringVecParam);
     ALOGI("haveAStringVec returned.");
+
+    // Now the tricky part, get access to the derived interface.
+
+    sp<IBar> bar = IBar::asInterface(service);
+    CHECK(bar != NULL);
+
+    bar->thisIsNew();
+    ALOGI("thisIsNew returned.");
 }
 
 int main() {
@@ -343,10 +362,10 @@ int main() {
         return 0;
     }
 
-    sp<Foo> foo = new Foo;
+    sp<Bar> bar = new Bar;
 
     const hidl_version kVersion = make_hidl_version(1, 0);
-    defaultServiceManager()->addService(String16("foo"), foo, kVersion);
+    defaultServiceManager()->addService(String16("foo"), bar, kVersion);
 
     ProcessState::self()->setThreadPoolMaxThreadCount(0);
     ProcessState::self()->startThreadPool();

@@ -12,9 +12,10 @@ intermediates:= $(local-generated-sources-dir)
 GEN := \
     $(intermediates)/android/hardware/foo/1.0/FooAll.cpp                \
     $(intermediates)/android/hardware/foo/1.0/FooCallbackAll.cpp        \
+    $(intermediates)/android/hardware/bar/1.0/BarAll.cpp                \
 
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
-$(GEN): PRIVATE_CUSTOM_TOOL = nuhidl-gen -o $(PRIVATE_OUTPUT_DIR) android.hardware.foo@1.0::IFoo
+$(GEN): PRIVATE_CUSTOM_TOOL = nuhidl-gen -o $(PRIVATE_OUTPUT_DIR) android.hardware.foo@1.0::IFoo android.hardware.bar@1.0::IBar
 $(GEN):
 	$(transform-generated-source)
 

@@ -11,13 +11,13 @@ namespace android {
 struct Method;
 
 struct Interface : public Scope {
-    Interface(Type *super);
+    Interface(Interface *super);
 
     void addMethod(Method *method);
 
     bool isInterface() const override;
 
-    const Type *superType() const;
+    const Interface *superType() const;
 
     const std::vector<Method *> &methods() const;
 
@@ -32,7 +32,7 @@ struct Interface : public Scope {
             ErrorMode mode) const override;
 
 private:
-    Type *mSuperType;
+    Interface *mSuperType;
     std::vector<Method *> mMethods;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);

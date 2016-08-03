@@ -157,7 +157,13 @@ opt_extends
 body
     : INTERFACE IDENTIFIER opt_extends
       {
-          Interface *iface = new Interface($3);
+          if ($3 != NULL && !$3->isInterface()) {
+              fprintf(stderr, "You can only extend interfaces.\n");
+              YYERROR;
+          }
+
+          // XXX What if $3 was a typedef _pointing_ to an interface...
+          Interface *iface = new Interface(static_cast<Interface *>($3));
 
           // Register interface immediately so it can be referenced inside
           // definition.

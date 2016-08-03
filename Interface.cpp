@@ -5,7 +5,7 @@
 
 namespace android {
 
-Interface::Interface(Type *super)
+Interface::Interface(Interface *super)
     : mSuperType(super) {
 }
 
@@ -13,7 +13,7 @@ void Interface::addMethod(Method *method) {
     mMethods.push_back(method);
 }
 
-const Type *Interface::superType() const {
+const Interface *Interface::superType() const {
     return mSuperType;
 }
 
