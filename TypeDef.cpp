@@ -58,5 +58,13 @@ void TypeDef::emitReaderWriterEmbedded(
             offsetText);
 }
 
+bool TypeDef::needsEmbeddedReadWrite() const {
+    return mReferencedType->needsEmbeddedReadWrite();
+}
+
+bool TypeDef::resultNeedsDeref() const {
+    return mReferencedType->resultNeedsDeref();
+}
+
 }  // namespace android
 

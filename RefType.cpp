@@ -57,5 +57,13 @@ void RefType::emitReaderWriterEmbedded(
             offsetText);
 }
 
+bool RefType::needsEmbeddedReadWrite() const {
+    return mReferencedType->needsEmbeddedReadWrite();
+}
+
+bool RefType::resultNeedsDeref() const {
+    return mReferencedType->resultNeedsDeref();
+}
+
 }  // namespace android
 

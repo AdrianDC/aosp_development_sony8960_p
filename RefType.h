@@ -36,6 +36,9 @@ struct RefType : public Type {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    bool needsEmbeddedReadWrite() const override;
+    bool resultNeedsDeref() const override;
+
 private:
     Type *mReferencedType;
 
