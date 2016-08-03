@@ -162,7 +162,9 @@ body
 
           // Register interface immediately so it can be referenced inside
           // definition.
-          ast->addScopedType($2, iface);
+          if (!ast->addScopedType($2, iface)) {
+              YYERROR;
+          }
 
           ast->enterScope(iface);
       }
@@ -201,7 +203,9 @@ typedef_declaration
     : TYPEDEF type IDENTIFIER
       {
           TypeDef *def = new TypeDef($2);
-          ast->addScopedType($3, def);
+          if (!ast->addScopedType($3, def)) {
+              YYERROR;
+          }
       }
     ;
 
@@ -264,9 +268,14 @@ named_struct_or_union_declaration
       {
           CompoundType *container = static_cast<CompoundType *>(ast->scope());
 
-          container->setFields($4);
+          if (!container->setFields($4)) {
+              YYERROR;
+          }
+
           ast->leaveScope();
-          ast->addScopedType($2, container);
+          if (!ast->addScopedType($2, container)) {
+              YYERROR;
+          }
       }
     ;
 
@@ -280,9 +289,14 @@ struct_or_union_declaration
       {
           CompoundType *container = static_cast<CompoundType *>(ast->scope());
 
-          container->setFields($4);
+          if (!container->setFields($4)) {
+              YYERROR;
+          }
+
           ast->leaveScope();
-          ast->addScopedType($2, container);
+          if (!ast->addScopedType($2, container)) {
+              YYERROR;
+          }
 
           $$ = new RefType(container);
       }
@@ -324,7 +338,9 @@ named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($5, $3);
-          ast->addScopedType($2, enumType);
+          if (!ast->addScopedType($2, enumType)) {
+              YYERROR;
+          }
       }
     ;
 
@@ -332,14 +348,18 @@ enum_declaration
     : ENUM '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($3);
-          ast->addScopedType(NULL /* localName */, enumType);
+          if (!ast->addScopedType(NULL /* localName */, enumType)) {
+              YYERROR;
+          }
 
           $$ = new RefType(enumType);
       }
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($5, $3);
-          ast->addScopedType($2, enumType);
+          if (!ast->addScopedType($2, enumType)) {
+              YYERROR;
+          }
 
           $$ = new RefType(enumType);
       }

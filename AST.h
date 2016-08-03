@@ -34,7 +34,9 @@ struct AST {
     void enterScope(Scope *container);
     void leaveScope();
     Scope *scope();
-    void addScopedType(const char *localName, NamedType *type);
+
+    // Returns true iff successful.
+    bool addScopedType(const char *localName, NamedType *type);
 
     void *scanner();
     void setScanner(void *scanner);

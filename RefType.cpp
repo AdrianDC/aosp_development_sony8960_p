@@ -16,6 +16,10 @@ const Type *RefType::referencedType() const {
     return mReferencedType;
 }
 
+bool RefType::isInterface() const {
+    return mReferencedType->isInterface();
+}
+
 std::string RefType::getCppType(StorageMode mode, std::string *extra) const {
     return mReferencedType->getCppType(mode, extra);
 }

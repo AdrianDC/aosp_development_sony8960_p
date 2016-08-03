@@ -2,6 +2,8 @@
 
 #include "Formatter.h"
 
+#include <android-base/logging.h>
+
 namespace android {
 
 CompoundType::CompoundType(Style style)
@@ -9,8 +11,34 @@ CompoundType::CompoundType(Style style)
       mFields(NULL) {
 }
 
-void CompoundType::setFields(std::vector<CompoundField *> *fields) {
+bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
     mFields = fields;
+
+    for (const auto &field : *fields) {
+        const Type &type = field->type();
+
+        if (mStyle == STYLE_UNION) {
+            if (type.needsEmbeddedReadWrite()) {
+                // Can't have those in a union.
+
+                fprintf(stderr,
+                        "Unions must not contain any types that need fixup.\n");
+
+                return false;
+            }
+        } else {
+            CHECK_EQ(mStyle, STYLE_STRUCT);
+
+            if (type.isInterface()) {
+                fprintf(stderr,
+                        "Structs must not contain references to interfaces.\n");
+
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 std::string CompoundType::getCppType(

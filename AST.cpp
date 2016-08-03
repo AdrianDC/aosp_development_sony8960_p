@@ -141,8 +141,13 @@ Scope *AST::scope() {
     return mScopePath.top();
 }
 
-void AST::addScopedType(const char *localName, NamedType *type) {
+bool AST::addScopedType(const char *localName, NamedType *type) {
     // LOG(INFO) << "adding scoped type '" << localName << "'";
+
+    bool success = scope()->addType(localName, type);
+    if (!success) {
+        return false;
+    }
 
     std::string path;
     for (size_t i = 1; i < mScopePath.size(); ++i) {
@@ -156,7 +161,7 @@ void AST::addScopedType(const char *localName, NamedType *type) {
     FQName fqName(mPackage.package(), mPackage.version(), path);
     type->setFullName(fqName);
 
-    scope()->addType(localName, type);
+    return true;
 }
 
 RefType *AST::lookupType(const char *name) {

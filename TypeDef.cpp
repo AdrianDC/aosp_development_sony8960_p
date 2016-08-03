@@ -17,6 +17,10 @@ const Type *TypeDef::referencedType() const {
     return mReferencedType;
 }
 
+bool TypeDef::isInterface() const {
+    return mReferencedType->isInterface();
+}
+
 std::string TypeDef::getCppType(StorageMode mode, std::string *extra) const {
     return mReferencedType->getCppType(mode, extra);
 }

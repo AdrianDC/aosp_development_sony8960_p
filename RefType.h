@@ -13,6 +13,8 @@ struct RefType : public Type {
 
     const Type *referencedType() const;
 
+    bool isInterface() const override;
+
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(

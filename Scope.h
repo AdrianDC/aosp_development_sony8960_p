@@ -17,6 +17,7 @@ struct Scope : public NamedType {
     Scope();
 
     bool addType(const char *localName, NamedType *type);
+
     Type *lookupType(const char *name) const;
 
     bool addConstant(Constant *constant);
