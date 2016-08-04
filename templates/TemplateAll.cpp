@@ -869,7 +869,8 @@ param_name// ALL stub_param_decl_default
 // START param_ret_write_import
         _aidl_ret_status = _aidl_reply->writeStrongBinder(IInterface::asBinder(param_name));
   if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
+    // TODO(maco): Log/report all errors. See b/30476330
+    return;
   }
 // END param_ret_write_import
 
@@ -907,22 +908,25 @@ param_name// ALL stub_param_decl_default
     size_t parent_handle;
     _aidl_ret_status = _aidl_reply->writeBuffer((void *)&param_name, sizeof(hidl_string), &parent_handle);
   if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
+    // TODO(maco): Log/report all errors. See b/30476330
+    return;
   }
   _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),
                                             nullptr, parent_handle, 0);
   if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
+    // TODO(maco): Log/report all errors. See b/30476330
+    return;
   }
   }
   // END param_ret_write_string
-  // START param_write_handle
+  // START param_ret_write_handle
   _aidl_ret_status = _aidl_reply->writeNativeHandleNoDup(param_name);
   if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
+    // TODO(maco): Log/report all errors. See b/30476330
+    return;
   }
-  // END param_write_handle
+  // END param_ret_write_handle
   // START write_ret_fixup_string
   _aidl_ret_status = _aidl_reply->writeEmbeddedBuffer((void *)param_name.buffer,
                        (param_name.length < 0 ? strlen(param_name.buffer)+1 : param_name.length),

@@ -15,7 +15,8 @@
 #include <utils/Looper.h>
 #include <utils/StrongPointer.h>
 
-#include <android/hardware/tests/BnTypes.h>
+#include <BnTypes.h>
+#include <ISmallTest.h>
 // libutils:
 using android::Looper;
 using android::LooperCallback;
@@ -74,6 +75,30 @@ class Types : public BnTypes {
     callback(echo_me);
     return Status::ok();
   }
+
+  // Proves we can receive an interface through HwBinder from the client,
+  // call one of its functions successfully, and echo the interface back
+  // to the client.
+  virtual Status echoInterface(sp<android::hardware::tests::ISmallTest> cb_t,
+                               ITypes::echoInterface_cb callback) {
+    // cb_t should be a viable HwBinder object implementing IC
+    bool all_is_happy = false;
+    cb_t->echoNumber(42,  [&](const uint32_t should_be_42) {
+          if (should_be_42 == 42) {
+            all_is_happy = true;
+          } else {
+            // TODO(cphoenix): Printf's aren't the right way to deal with errors
+            printf("Bad value %d received in server-side callback test\n",
+                   should_be_42);
+          }
+        });
+    if (!all_is_happy) {
+      printf("Error in server-side callbackTest (check if callback was called)\n");
+    }
+    callback(cb_t);
+    return Status::ok();
+  }
+
   virtual Status shareBufferWithRef(int buffer, ITypes::shareBufferWithRef_cb callback) {
     // Map back to struct lots_of_data
     ITypes::lots_of_data* dataPtr;
@@ -150,7 +175,7 @@ class Types : public BnTypes {
 };
 
 int Run() {
-  android::sp<Types> service = new Types;
+  android::sp<Types::Types> service = new Types::Types;
   //cout << "Service started." << endl;
   //fflush(stdout);
 

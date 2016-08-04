@@ -22,7 +22,9 @@
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 
-#include "android/hardware/tests/ITypes.h"
+#include "ITypes.h"
+#include "ISmallTest.h"
+#include "BnSmallTest.h"
 
 using std::string;
 // libutils:
@@ -306,6 +308,50 @@ void nestedTest(sp<ITypes> service)
     });
 }
 
+// This implementation of BnSmallTest is used to verify that interfaces
+// can be passed around as parameters.
+class CallbackTester : public android::hardware::tests::BnSmallTest {
+ public:
+  CallbackTester() {}
+  virtual ~CallbackTester() = default;
+
+  virtual android::hardware::Status echoNumber(
+      uint32_t some_number,
+      ISmallTest::echoNumber_cb the_callback) {
+    // Simply echo the given number back to the caller.
+    the_callback(some_number);
+    return android::hardware::Status::ok();
+  }
+};
+
+// Passes a CallbackTester object to the server, gets it back,
+// and verifies that it works.
+void RunCallbackTest(sp<ITypes> service)
+{
+  android::sp<CallbackTester> call_server = new CallbackTester;
+
+  bool all_is_happy = false;
+  service->echoInterface(
+      call_server,
+      [&](android::sp<android::hardware::tests::ISmallTest> cb) {
+        // cb should be a working CallbackTester object. Here we
+        // verify that it works, echoing the given integer.
+        cb->echoNumber(42, [&](const uint32_t should_be_42) {
+          if (should_be_42 == 42) {
+            all_is_happy = true;
+          } else {
+            // TODO(cphoenix): Printf's aren't the right way to deal with errors
+            printf("Bad value %d received in client callback test\n",
+                   should_be_42);
+          }
+        });
+    });
+  if (!all_is_happy) {
+    printf("Error in callbackTest (check if callback was called)\n");
+  }
+}
+
+
 int main(int /* argc */, char * argv []) {
   cout << "    Running tests" << endl;
   android::base::InitLogging(argv, android::base::StderrLogger);
@@ -332,6 +378,8 @@ int main(int /* argc */, char * argv []) {
   scalarTestMin(service);
   scalarTestMax(service);
   nestedTest(service);
+  RunCallbackTest(service);
   service->quit();
+  cout << "    Tests completed" << endl;
   return 0;
 }

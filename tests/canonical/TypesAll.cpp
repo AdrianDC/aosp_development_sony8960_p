@@ -446,6 +446,49 @@ _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
   return _aidl_status;
 }
+::android::hardware::Status BpTypes::echoInterface(sp<ISmallTest> cb_t , ITypes::echoInterface_cb _cb ) {
+  ::android::hardware::Parcel _aidl_data;
+  ::android::hardware::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::hardware::Status _aidl_status;
+  const void *_aidl_ret_pointer; // For checking if all the nested buffers are OK
+    sp<ISmallTest> _cb_cb_t ;
+
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinder(IInterface::asBinder(cb_t));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+
+  _aidl_ret_status = remote()->transact(ITypes::ECHOINTERFACE, _aidl_data, &_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readStrongBinder(&_cb_cb_t);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+
+
+  // Invoke callback to client
+  if (_cb != nullptr)
+  _cb(_cb_cb_t );
+
+
+_aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
 ::android::hardware::Status BpTypes::shareBufferWithRef(hidl_ref<lots_of_data> buffer, ITypes::shareBufferWithRef_cb _cb ) {
   ::android::hardware::Parcel _aidl_data;
   ::android::hardware::Parcel _aidl_reply;
@@ -934,6 +977,48 @@ char i;
 
   }
 
+  }
+
+                            // Callback
+                             _cb(*_aidl_reply);
+                           }
+));
+
+//
+
+        if (!callback_called) {
+          // Callback not called, the call must have returned an error
+          // TODO set something like ERR_NO_CALLBACK if the call retuned OK
+          _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+        }
+
+        break;
+      }
+    case Call::ECHOINTERFACE:
+      {
+  sp<ISmallTest> cb_t ;
+
+        bool callback_called;
+        if (!(_aidl_data.checkInterface(this))) {
+          _aidl_ret_status = ::android::BAD_TYPE;
+          break;
+        }
+        _aidl_ret_status = _aidl_data.readStrongBinder(&cb_t);
+        if (((_aidl_ret_status) != (::android::OK))) {
+          break;
+        }
+
+        // Make the call into the server
+        ::android::hardware::Status _aidl_status(
+             echoInterface(cb_t ,          [&](auto cb_t ) {
+                             callback_called = true;
+                             // Write "OK" to parcel
+                             ::android::hardware::Status::ok().writeToParcel(_aidl_reply);
+                             // Serialize
+        _aidl_ret_status = _aidl_reply->writeStrongBinder(IInterface::asBinder(cb_t));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    // TODO(maco): Log/report all errors. See b/30476330
+    return;
   }
 
                             // Callback

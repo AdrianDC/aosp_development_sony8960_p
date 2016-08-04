@@ -8,6 +8,7 @@
 #include <hwbinder/Status.h>
 #include <cstdint>
 #include <utils/StrongPointer.h>
+#include <ISmallTest.h>
 
 namespace android {
 namespace hardware {
@@ -178,6 +179,7 @@ uint32_t flags;
   using echoEnum_cb = std::function<void(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i)>;
   using echoScalar_cb = std::function<void(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i)>;
   using echoStruct_cb = std::function<void(const ITypes::s0 &s )>;
+  using echoInterface_cb = std::function<void(sp<ISmallTest> cb_t )>;
   using shareBufferWithRef_cb = std::function<void(int32_t ret)>;
   using getHash_cb = std::function<void(uint64_t hash)>;
   using quit_cb = std::function<void()>;
@@ -187,6 +189,7 @@ uint32_t flags;
   virtual ::android::hardware::Status echoEnum(eu8 a, es8 b, eu16 c, es16 d, eu32 e, es32 f, eu64 g, es64 h, ec i, echoEnum_cb _cb = nullptr ) = 0;
   virtual ::android::hardware::Status echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i, echoScalar_cb _cb = nullptr ) = 0;
   virtual ::android::hardware::Status echoStruct(const ITypes::s0 &s , echoStruct_cb _cb = nullptr ) = 0;
+  virtual ::android::hardware::Status echoInterface(sp<ISmallTest> cb_t , echoInterface_cb _cb = nullptr ) = 0;
   virtual ::android::hardware::Status shareBufferWithRef(hidl_ref<lots_of_data> buffer, shareBufferWithRef_cb _cb = nullptr ) = 0;
   virtual ::android::hardware::Status getHash(getHash_cb _cb = nullptr ) = 0;
   virtual ::android::hardware::Status quit() = 0;
@@ -194,7 +197,7 @@ uint32_t flags;
 enum Call {
   ECHOINTEGER = ::android::hardware::IBinder::FIRST_CALL_TRANSACTION + 0,
 
-  ECHOENUM,   ECHOSCALAR,   ECHOSTRUCT,   SHAREBUFFERWITHREF,   GETHASH,   QUIT, 
+  ECHOENUM,   ECHOSCALAR,   ECHOSTRUCT,   ECHOINTERFACE,   SHAREBUFFERWITHREF,   GETHASH,   QUIT, 
 };
 };  // class ITypes
 

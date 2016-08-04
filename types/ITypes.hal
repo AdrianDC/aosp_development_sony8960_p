@@ -1,6 +1,8 @@
 version 1.0;
 package android.hardware.tests;
 
+import ISmallTest;
+
 interface ITypes {
 
   struct simple_t {
@@ -73,6 +75,11 @@ interface ITypes {
   echoScalar(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i)
     generates(uint8_t a, int8_t b, uint16_t c, int16_t d, uint32_t e, int32_t f, uint64_t g, int64_t h, char i);
   echoStruct(s0 s) generates (s0 s);
+
+  // EchoInterface passes an ISmalltest to the server and back,
+  // and verifies that its functions can be called on the server side.
+  echoInterface(ISmallTest cb_t) generates (ISmallTest cb_t);
+
   // Use of ref<T> is deprecated.
   shareBufferWithRef(ref<lots_of_data> buffer) generates (int32_t ret);
   getHash() generates (uint64_t hash);

@@ -1,0 +1,9 @@
+version 1.0;
+package android.hardware.tests;
+
+// Interface contains one function that echoes an integer.
+// Useful only for testing.
+
+interface ISmallTest {
+  echoNumber(uint32_t i) generates (uint32_t i);
+};
