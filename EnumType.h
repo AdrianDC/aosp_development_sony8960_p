@@ -14,7 +14,12 @@ struct EnumType : public NamedType {
     EnumType(std::vector<EnumValue *> *values,
              Type *storageType = NULL);
 
+    const Type *storageType() const;
+    const std::vector<EnumValue *> &values() const;
+
     const ScalarType *resolveToScalarType() const override;
+
+    bool isEnum() const override;
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 

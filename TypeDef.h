@@ -11,30 +11,11 @@ struct TypeDef : public NamedType {
 
     const ScalarType *resolveToScalarType() const override;
 
-    const Type *referencedType() const;
+    Type *referencedType() const;
 
     bool isInterface() const override;
-
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
-
-    void emitReaderWriter(
-            Formatter &out,
-            const std::string &name,
-            const std::string &parcelObj,
-            bool parcelObjIsPointer,
-            bool isReader,
-            ErrorMode mode) const override;
-
-    void emitReaderWriterEmbedded(
-            Formatter &out,
-            const std::string &name,
-            bool nameIsPointer,
-            const std::string &parcelObj,
-            bool parcelObjIsPointer,
-            bool isReader,
-            ErrorMode mode,
-            const std::string &parentName,
-            const std::string &offsetText) const override;
+    bool isEnum() const override;
+    bool isTypeDef() const override;
 
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;

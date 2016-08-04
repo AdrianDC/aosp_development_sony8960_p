@@ -12,6 +12,11 @@ const ScalarType *ScalarType::resolveToScalarType() const {
     return this;
 }
 
+bool ScalarType::isValidEnumStorageType() const {
+    // Only integer types.
+    return mKind >= KIND_INT8 && mKind <= KIND_UINT64;
+}
+
 std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
     static const char *const kName[] = {
         "char",

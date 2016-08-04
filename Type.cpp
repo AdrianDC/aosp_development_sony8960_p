@@ -1,6 +1,7 @@
 #include "Type.h"
 
 #include "Formatter.h"
+#include "ScalarType.h"
 
 #include <android-base/logging.h>
 
@@ -17,8 +18,26 @@ bool Type::isInterface() const {
     return false;
 }
 
+bool Type::isEnum() const {
+    return false;
+}
+
+bool Type::isTypeDef() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
+}
+
+bool Type::isValidEnumStorageType() const {
+    const ScalarType *scalarType = resolveToScalarType();
+
+    if (scalarType == NULL) {
+        return false;
+    }
+
+    return scalarType->isValidEnumStorageType();
 }
 
 std::string Type::getCppType(StorageMode, std::string *) const {

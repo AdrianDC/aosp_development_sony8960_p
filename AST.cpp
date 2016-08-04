@@ -5,6 +5,7 @@
 #include "FQName.h"
 #include "HandleType.h"
 #include "Scope.h"
+#include "TypeDef.h"
 
 #include <android-base/logging.h>
 #include <stdlib.h>
@@ -183,6 +184,11 @@ Type *AST::lookupType(const char *name) {
             Type *type = mScopePath[i]->lookupType(name);
 
             if (type != NULL) {
+                // Resolve typeDefs to the target type.
+                while (type->isTypeDef()) {
+                    type = static_cast<TypeDef *>(type)->referencedType();
+                }
+
                 return type->ref();
             }
         }
@@ -228,6 +234,11 @@ Type *AST::lookupTypeInternal(const std::string &namePath) const {
         }
 
         if (dotPos == std::string::npos) {
+            // Resolve typeDefs to the target type.
+            while (type->isTypeDef()) {
+                type = static_cast<TypeDef *>(type)->referencedType();
+            }
+
             return type;
         }
 

@@ -2,6 +2,8 @@
 
 #include "Formatter.h"
 
+#include <android-base/logging.h>
+
 namespace android {
 
 TypeDef::TypeDef(Type *type)
@@ -10,60 +12,36 @@ TypeDef::TypeDef(Type *type)
 }
 
 const ScalarType *TypeDef::resolveToScalarType() const {
-    return mReferencedType->resolveToScalarType();
+    CHECK(!"Should not be here");
+    return NULL;
 }
 
-const Type *TypeDef::referencedType() const {
+Type *TypeDef::referencedType() const {
     return mReferencedType;
 }
 
 bool TypeDef::isInterface() const {
-    return mReferencedType->isInterface();
+    CHECK(!"Should not be here");
+    return false;
 }
 
-std::string TypeDef::getCppType(StorageMode mode, std::string *extra) const {
-    return mReferencedType->getCppType(mode, extra);
+bool TypeDef::isEnum() const {
+    CHECK(!"Should not be here");
+    return false;
 }
 
-void TypeDef::emitReaderWriter(
-        Formatter &out,
-        const std::string &name,
-        const std::string &parcelObj,
-        bool parcelObjIsPointer,
-        bool isReader,
-        ErrorMode mode) const {
-    mReferencedType->emitReaderWriter(
-            out, name, parcelObj, parcelObjIsPointer, isReader, mode);
-}
-
-void TypeDef::emitReaderWriterEmbedded(
-        Formatter &out,
-        const std::string &name,
-        bool nameIsPointer,
-        const std::string &parcelObj,
-        bool parcelObjIsPointer,
-        bool isReader,
-        ErrorMode mode,
-        const std::string &parentName,
-        const std::string &offsetText) const {
-    mReferencedType->emitReaderWriterEmbedded(
-            out,
-            name,
-            nameIsPointer,
-            parcelObj,
-            parcelObjIsPointer,
-            isReader,
-            mode,
-            parentName,
-            offsetText);
+bool TypeDef::isTypeDef() const {
+    return true;
 }
 
 bool TypeDef::needsEmbeddedReadWrite() const {
-    return mReferencedType->needsEmbeddedReadWrite();
+    CHECK(!"Should not be here");
+    return false;
 }
 
 bool TypeDef::resultNeedsDeref() const {
-    return mReferencedType->resultNeedsDeref();
+    CHECK(!"Should not be here");
+    return false;
 }
 
 }  // namespace android

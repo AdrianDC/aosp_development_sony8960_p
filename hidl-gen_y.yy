@@ -162,7 +162,6 @@ body
               YYERROR;
           }
 
-          // XXX What if $3 was a typedef _pointing_ to an interface...
           Interface *iface = new Interface(static_cast<Interface *>($3));
 
           // Register interface immediately so it can be referenced inside
@@ -331,7 +330,15 @@ field_declaration
 
 opt_storage_type
     : /* empty */ { $$ = NULL; }
-    | ':' fqname { $$ = $2; }
+    | ':' fqname
+      {
+          $$ = $2;
+
+          if ($$ != NULL && !$$->isValidEnumStorageType()) {
+              fprintf(stderr, "Invalid enum storage type specified.\n");
+              YYABORT;
+          }
+      }
     ;
 
 opt_comma

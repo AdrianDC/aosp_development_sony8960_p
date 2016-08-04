@@ -19,7 +19,12 @@ struct Type {
 
     virtual bool isScope() const;
     virtual bool isInterface() const;
+    virtual bool isEnum() const;
+    virtual bool isTypeDef() const;
+
     virtual const ScalarType *resolveToScalarType() const;
+
+    bool isValidEnumStorageType() const;
 
     enum StorageMode {
         StorageMode_Stack,

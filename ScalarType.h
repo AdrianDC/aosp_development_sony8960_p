@@ -27,6 +27,8 @@ struct ScalarType : public Type {
 
     const ScalarType *resolveToScalarType() const override;
 
+    bool isValidEnumStorageType() const;
+
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     void emitReaderWriter(

@@ -16,8 +16,20 @@ EnumType::EnumType(
                 : new ScalarType(ScalarType::KIND_INT32)) {
 }
 
+const Type *EnumType::storageType() const {
+    return mStorageType;
+}
+
+const std::vector<EnumValue *> &EnumType::values() const {
+    return *mValues;
+}
+
 const ScalarType *EnumType::resolveToScalarType() const {
     return mStorageType->resolveToScalarType();
+}
+
+bool EnumType::isEnum() const {
+    return true;
 }
 
 std::string EnumType::getCppType(StorageMode, std::string *extra) const {
@@ -60,15 +72,32 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
 
     out.indent();
 
-    for (const auto &entry : *mValues) {
-        out << entry->name();
+    std::vector<const EnumType *> chain;
+    const EnumType *type = this;
+    for (;;) {
+        chain.push_back(type);
 
-        const char *value = entry->value();
-        if (value != NULL) {
-            out << " = " << value;
+        const Type *superType = type->storageType();
+        if (superType == NULL || !superType->isEnum()) {
+            break;
         }
 
-        out << ",\n";
+        type = static_cast<const EnumType *>(superType);
+    }
+
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const auto &type = *it;
+
+        for (const auto &entry : type->values()) {
+            out << entry->name();
+
+            const char *value = entry->value();
+            if (value != NULL) {
+                out << " = " << value;
+            }
+
+            out << ",\n";
+        }
     }
 
     out.unindent();
