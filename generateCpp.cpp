@@ -192,7 +192,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         if (superType != NULL) {
             out << superType->fullName();
         } else {
-            out << "::android::hidl::IInterface";
+            out << "::android::hardware::IInterface";
         }
 
         out << " {\n";
@@ -228,7 +228,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                     out << superType->fullName()
                         << "::Call::CallCount";
                 } else {
-                    out << "::android::hidl::IBinder::FIRST_CALL_TRANSACTION";
+                    out << "::android::hardware::IBinder::FIRST_CALL_TRANSACTION";
                 }
 
                 first = false;
@@ -266,7 +266,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
 
-            out << "virtual ::android::hidl::binder::Status "
+            out << "virtual ::android::hardware::Status "
                 << method->name()
                 << "("
                 << Method::GetSignature(method->args());
@@ -351,7 +351,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "struct "
         << "Bn"
         << baseName
-        << " : public ::android::hidl::BnInterface<"
+        << " : public ::android::hardware::BnInterface<"
         << ifaceName
         << "> {\n";
 
@@ -361,8 +361,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out.indent();
     out.indent();
     out << "uint32_t _aidl_code,\n";
-    out << "const ::android::hidl::Parcel &_aidl_data,\n";
-    out << "::android::hidl::Parcel *_aidl_reply,\n";
+    out << "const ::android::hardware::Parcel &_aidl_data,\n";
+    out << "::android::hardware::Parcel *_aidl_reply,\n";
     out << "uint32_t _aidl_flags = 0,\n";
     out << "TransactCallback _aidl_cb = nullptr) override;\n";
     out.unindent();
@@ -429,7 +429,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     out << "struct "
         << "Bp"
         << baseName
-        << " : public ::android::hidl::BpInterface<"
+        << " : public ::android::hardware::BpInterface<"
         << ifaceName
         << "> {\n";
 
@@ -437,7 +437,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     out << "explicit Bp"
         << baseName
-        << "(const ::android::sp<::android::hidl::IBinder> &_aidl_impl);"
+        << "(const ::android::sp<::android::hardware::IBinder> &_aidl_impl);"
         << "\n\n";
 
     const Interface *iface = mRootScope->getInterface();
@@ -458,7 +458,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         for (const auto &method : superInterface->methods()) {
             const bool returnsValue = !method->results().empty();
 
-            out << "::android::hidl::binder::Status "
+            out << "::android::hardware::Status "
                 << method->name()
                 << "("
                 << Method::GetSignature(method->args());
@@ -600,7 +600,7 @@ status_t AST::generateProxySource(
     out << klassName
         << "::"
         << klassName
-        << "(const ::android::sp<::android::hidl::IBinder> &_aidl_impl)\n";
+        << "(const ::android::sp<::android::hardware::IBinder> &_aidl_impl)\n";
 
     out.indent();
     out.indent();
@@ -628,7 +628,7 @@ status_t AST::generateProxySource(
         for (const auto &method : superInterface->methods()) {
             const bool returnsValue = !method->results().empty();
 
-            out << "::android::hidl::binder::Status "
+            out << "::android::hardware::Status "
                 << klassName
                 << "::"
                 << method->name()
@@ -647,10 +647,10 @@ status_t AST::generateProxySource(
 
             out.indent();
 
-            out << "::android::hidl::Parcel _aidl_data;\n";
-            out << "::android::hidl::Parcel _aidl_reply;\n";
+            out << "::android::hardware::Parcel _aidl_data;\n";
+            out << "::android::hardware::Parcel _aidl_reply;\n";
             out << "::android::status_t _aidl_err;\n\n";
-            out << "::android::hidl::binder::Status _aidl_status;\n";
+            out << "::android::hardware::Status _aidl_status;\n";
 
             out << "_aidl_err = _aidl_data.writeInterfaceToken("
                 << superInterface->fullName()
@@ -747,8 +747,8 @@ status_t AST::generateStubSource(
     out.indent();
 
     out << "uint32_t _aidl_code,\n"
-        << "const ::android::hidl::Parcel &_aidl_data,\n"
-        << "::android::hidl::Parcel *_aidl_reply,\n"
+        << "const ::android::hardware::Parcel &_aidl_data,\n"
+        << "::android::hardware::Parcel *_aidl_reply,\n"
         << "uint32_t _aidl_flags,\n"
         << "TransactCallback _aidl_cb) {\n";
 
@@ -794,7 +794,7 @@ status_t AST::generateStubSource(
     out << "default:\n{\n";
     out.indent();
 
-    out << "return ::android::hidl::BnInterface<I"
+    out << "return ::android::hardware::BnInterface<I"
         << baseName
         << ">::onTransact(\n";
 
@@ -815,10 +815,10 @@ status_t AST::generateStubSource(
 
     out << "if (_aidl_err == ::android::UNEXPECTED_NULL) {\n";
     out.indent();
-    out << "_aidl_err = ::android::hidl::binder::Status::fromExceptionCode(\n";
+    out << "_aidl_err = ::android::hardware::Status::fromExceptionCode(\n";
     out.indent();
     out.indent();
-    out << "::android::hidl::binder::Status::EX_NULL_POINTER)\n";
+    out << "::android::hardware::Status::EX_NULL_POINTER)\n";
     out.indent();
     out.indent();
     out << ".writeToParcel(_aidl_reply);\n";
@@ -866,7 +866,7 @@ status_t AST::generateStubSourceForMethod(
         out << "bool _aidl_callbackCalled = false;\n\n";
     }
 
-    out << "::android::hidl::binder::Status _aidl_status(\n";
+    out << "::android::hardware::Status _aidl_status(\n";
     out.indent();
     out.indent();
     out << method->name() << "(";
@@ -908,7 +908,7 @@ status_t AST::generateStubSourceForMethod(
         out.indent();
         out << "_aidl_callbackCalled = true;\n\n";
 
-        out << "::android::hidl::binder::Status::ok()"
+        out << "::android::hardware::Status::ok()"
                   << ".writeToParcel(_aidl_reply);\n\n";
 
         for (const auto &arg : method->results()) {

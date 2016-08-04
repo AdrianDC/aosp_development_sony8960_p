@@ -52,7 +52,7 @@ void Interface::emitReaderWriter(
     if (isReader) {
         const std::string binderName = "_aidl_" + name + "_binder";
 
-        out << "::android::sp<::android::hidl::IBinder> "
+        out << "::android::sp<::android::hardware::IBinder> "
             << binderName << ";\n";
 
         out << "_aidl_err = ";

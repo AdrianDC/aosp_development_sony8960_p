@@ -9,7 +9,7 @@ StringType::StringType() {}
 std::string StringType::getCppType(StorageMode mode, std::string *extra) const {
     extra->clear();
 
-    const std::string base = "::android::hidl::hidl_string";
+    const std::string base = "::android::hardware::hidl_string";
 
     switch (mode) {
         case StorageMode_Stack:
@@ -38,7 +38,7 @@ void StringType::emitReaderWriter(
 
     if (isReader) {
         out << name
-            << " = (const ::android::hidl::hidl_string *)"
+            << " = (const ::android::hardware::hidl_string *)"
             << parcelObjDeref
             << "readBuffer("
             << "&"
@@ -102,7 +102,7 @@ void StringType::emitReaderWriterEmbedded(
             mode,
             parentName,
             offsetText,
-            "::android::hidl::hidl_string",
+            "::android::hardware::hidl_string",
             "" /* childName */);
 }
 

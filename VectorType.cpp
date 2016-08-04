@@ -12,7 +12,7 @@ VectorType::VectorType(Type *elementType)
 
 std::string VectorType::getCppType(StorageMode mode, std::string *extra) const {
     const std::string base =
-        "::android::hidl::hidl_vec<"
+        "::android::hardware::hidl_vec<"
         + mElementType->getCppType(extra)
         + ">";
 
@@ -49,7 +49,7 @@ void VectorType::emitReaderWriter(
 
     if (isReader) {
         out << name
-            << " = (const ::android::hidl::hidl_vec<"
+            << " = (const ::android::hardware::hidl_vec<"
             << baseType
             << "> *)"
             << parcelObjDeref

@@ -15,9 +15,9 @@ using ::android::hardware::bar::V1_0::BnBar;
 using ::android::hardware::foo::V1_0::IFoo;
 using ::android::hardware::foo::V1_0::IFooCallback;
 using ::android::hardware::bar::V1_0::IBar;
-using ::android::hidl::binder::Status;
-using ::android::hidl::hidl_vec;
-using ::android::hidl::hidl_string;
+using ::android::hardware::Status;
+using ::android::hardware::hidl_vec;
+using ::android::hardware::hidl_string;
 using ::android::sp;
 
 struct FooCallback : public BnFooCallback {
@@ -251,7 +251,7 @@ static std::string vecToString(const hidl_vec<int32_t> &vec) {
 }
 
 static void client() {
-    using namespace android::hidl;
+    using namespace android::hardware;
     using android::String16;
 
     const hidl_version kVersion = make_hidl_version(1, 0);
@@ -350,7 +350,7 @@ static void client() {
 }
 
 int main() {
-    using namespace android::hidl;
+    using namespace android::hardware;
     using android::String16;
 
     if (fork() == 0) {

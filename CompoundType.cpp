@@ -173,7 +173,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
         out.indent();
         out.indent();
 
-        out << "const ::android::hidl::Parcel &parcel,\n"
+        out << "const ::android::hardware::Parcel &parcel,\n"
                   << "size_t parentHandle,\n"
                   << "size_t parentOffset);\n\n";
 
@@ -185,7 +185,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
         out.indent();
         out.indent();
 
-        out << "::android::hidl::Parcel *parcel,\n"
+        out << "::android::hardware::Parcel *parcel,\n"
                   << "size_t parentHandle,\n"
                   << "size_t parentOffset) const;\n";
 
@@ -230,9 +230,9 @@ void CompoundType::emitStructReaderWriter(
     out.indent();
 
     if (isReader) {
-        out << "const ::android::hidl::Parcel &parcel,\n";
+        out << "const ::android::hardware::Parcel &parcel,\n";
     } else {
-        out << "::android::hidl::Parcel *parcel,\n";
+        out << "::android::hardware::Parcel *parcel,\n";
     }
 
     out << "size_t parentHandle,\n"
