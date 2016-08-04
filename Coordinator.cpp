@@ -3,16 +3,23 @@
 #include "AST.h"
 
 #include <android-base/logging.h>
+#include <iterator>
 
 extern android::status_t parseFile(android::AST *ast, const char *path);
 
 namespace android {
 
-Coordinator::Coordinator(const std::string &interfacesPath)
-    : mInterfacesPath(interfacesPath) {
+Coordinator::Coordinator(
+        const std::vector<std::string> &packageRootPaths,
+        const std::vector<std::string> &packageRoots)
+    : mPackageRootPaths(packageRootPaths),
+      mPackageRoots(packageRoots) {
+    // empty
 }
 
-Coordinator::~Coordinator() {}
+Coordinator::~Coordinator() {
+    // empty
+}
 
 AST *Coordinator::parse(const FQName &fqName) {
     CHECK(fqName.isFullyQualified());
@@ -29,8 +36,6 @@ AST *Coordinator::parse(const FQName &fqName) {
     // Add this to the cache immediately, so we can discover circular imports.
     mCache.add(fqName, NULL);
 
-    const std::string packagePath = getPackagePath(fqName);
-
     if (fqName.name() != "types") {
         // Any interface file implicitly imports its package's types.hal.
         FQName typesName(fqName.package(), fqName.version(), "types");
@@ -39,7 +44,8 @@ AST *Coordinator::parse(const FQName &fqName) {
         // fall through.
     }
 
-    std::string path = packagePath;
+    std::string path = getPackagePath(fqName);
+
     path.append(fqName.name());
     path.append(".hal");
 
@@ -101,18 +107,60 @@ AST *Coordinator::parse(const FQName &fqName) {
     return ast;
 }
 
-std::string Coordinator::getPackagePath(
-        const FQName &fqName, bool relative) const {
+std::vector<std::string>::const_iterator
+Coordinator::findPackageRoot(const FQName &fqName) const {
     CHECK(!fqName.package().empty());
     CHECK(!fqName.version().empty());
-    const char *const kPrefix = "android.hardware.";
-    CHECK_EQ(fqName.package().find(kPrefix), 0u);
 
-    const std::string packageSuffix = fqName.package().substr(strlen(kPrefix));
+    // Find the right package prefix and path for this FQName.  For
+    // example, if FQName is "android.hardware.nfc@1.0::INfc", and the
+    // prefix:root is set to [ "android.hardware:hardware/interfaces",
+    // "vendor.qcom.hardware:vendor/qcom"], then we will identify the
+    // prefix "android.hardware" and the package root
+    // "hardware/interfaces".
+
+    // TODO: This now returns on the first match.  Throw an error if
+    // there are multiple hits.
+    auto it = mPackageRoots.begin();
+    for (; it != mPackageRoots.end(); it++) {
+        if (fqName.package().find(*it) != std::string::npos) {
+            break;
+        }
+    }
+    CHECK(it != mPackageRoots.end());
+
+    return it;
+}
+
+std::string Coordinator::getPackageRoot(const FQName &fqName) const {
+    auto it = findPackageRoot(fqName);
+    auto prefix = *it;
+    return prefix;
+}
+
+std::string Coordinator::getPackagePath(
+        const FQName &fqName, bool relative) const {
+
+    auto it = findPackageRoot(fqName);
+    auto prefix = *it;
+    auto root = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
+
+    // Make sure the prefix ends on a '.' and the root path on a '/'
+    if ((*--prefix.end()) != '.') {
+        prefix += '.';
+    }
+
+    if ((*--root.end()) != '/') {
+        root += '/';
+    }
+
+    // Given FQName of "android.hardware.nfc@1.0::IFoo" and a prefix
+    // "android.hardware.", the suffix is "nfc@1.0::IFoo".
+    const std::string packageSuffix = fqName.package().substr(prefix.length());
 
     std::string packagePath;
     if (!relative) {
-        packagePath = mInterfacesPath;
+        packagePath = root;
     }
 
     size_t startPos = 0;

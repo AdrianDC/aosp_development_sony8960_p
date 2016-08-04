@@ -6,7 +6,9 @@
 #include "Method.h"
 #include "Scope.h"
 
+#include <algorithm>
 #include <android-base/logging.h>
+#include <string>
 #include <sys/stat.h>
 #include <vector>
 
@@ -118,13 +120,26 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
+// Given an FQName of "android.hardware.nfc@1.0::INfc", return
+// "android/hardware/".
+static std::string ConvertPackageRootToPath(
+        const Coordinator *coordinator, const FQName &fqName) {
+    std::string packageRoot = coordinator->getPackageRoot(fqName);
+
+    if (*(packageRoot.end()--) != '.') {
+        packageRoot += '.';
+    }
+
+    std::replace(packageRoot.begin(), packageRoot.end(), '.', '/');
+
+    return packageRoot; // now converted to a path
+}
+
 status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
-    const std::string packagePath =
-        mCoordinator->getPackagePath(mPackage, true /* relative */);
 
     std::string path = outputPath;
-    path.append("android/hardware/");
-    path.append(packagePath);
+    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
 
     std::string ifaceName;
     bool isInterface = true;
@@ -308,15 +323,12 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const std::string packagePath =
-        mCoordinator->getPackagePath(mPackage, true /* relative */);
-
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);
 
     std::string path = outputPath;
-    path.append("android/hardware/");
-    path.append(packagePath);
+    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append("Bn");
     path.append(baseName);
     path.append(".h");
@@ -386,15 +398,12 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const std::string packagePath =
-        mCoordinator->getPackagePath(mPackage, true /* relative */);
-
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);
 
     std::string path = outputPath;
-    path.append("android/hardware/");
-    path.append(packagePath);
+    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append("Bp");
     path.append(baseName);
     path.append(".h");
@@ -489,12 +498,10 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 }
 
 status_t AST::generateAllSource(const std::string &outputPath) const {
-    const std::string packagePath =
-        mCoordinator->getPackagePath(mPackage, true /* relative */);
 
     std::string path = outputPath;
-    path.append("android/hardware/");
-    path.append(packagePath);
+    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
 
     std::string ifaceName;
     std::string baseName;
