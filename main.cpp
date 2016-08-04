@@ -3,6 +3,7 @@
 #include "FQName.h"
 
 #include <android-base/logging.h>
+#include <set>
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
@@ -18,6 +19,9 @@ static void usage(const char *me) {
     fprintf(stderr, "         -o output path\n");
 
     fprintf(stderr,
+            "         -A auto-generate code for dependencies as well\n");
+
+    fprintf(stderr,
             "         -r package:path root "
             "(e.g., android.hardware:hardware/interfaces)\n");
 }
@@ -26,15 +30,22 @@ int main(int argc, char **argv) {
     std::string outputDir;
     std::vector<std::string> packageRootPaths;
     std::vector<std::string> packageRoots;
+    bool transitiveEmit = false;
 
     const char *me = argv[0];
 
     int res;
-    while ((res = getopt(argc, argv, "ho:r:")) >= 0) {
+    while ((res = getopt(argc, argv, "Aho:r:")) >= 0) {
         switch (res) {
             case 'o':
             {
                 outputDir = optarg;
+                break;
+            }
+
+            case 'A':
+            {
+                transitiveEmit = true;
                 break;
             }
 
@@ -93,6 +104,8 @@ int main(int argc, char **argv) {
 
     Coordinator coordinator(packageRootPaths, packageRoots);
 
+    std::set<AST *> topLevelASTs;
+
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
         CHECK(fqName.isValid() && fqName.isFullyQualified());
@@ -106,13 +119,21 @@ int main(int argc, char **argv) {
 
             exit(1);
         }
+
+        topLevelASTs.insert(ast);
     }
 
     // Now that we've found the transitive hull of all necessary interfaces
     // and types to process, go ahead and do the work.
     status_t err = coordinator.forEachAST(
-            [&](const AST *ast) {
-                return ast->generateCpp(outputDir);
+            [&](const AST *ast) -> status_t {
+                    if (transitiveEmit
+                            || (topLevelASTs.find(const_cast<AST *>(ast)) !=
+                                    topLevelASTs.end())) {
+                        return ast->generateCpp(outputDir);
+                    }
+
+                    return OK;
             });
 
     return (err == OK) ? 0 : 1;
