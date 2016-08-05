@@ -131,13 +131,13 @@ void VectorType::emitReaderWriterEmbedded(
 
     out << "for (size_t _aidl_index = 0; _aidl_index < "
         << nameDeref
-        << "count; ++_aidl_index) {\n";
+        << "size(); ++_aidl_index) {\n";
 
     out.indent();
 
     mElementType->emitReaderWriterEmbedded(
             out,
-            nameDeref + "buffer[_aidl_index]",
+            (nameIsPointer ? "(*" + name + ")" : name) + "[_aidl_index]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
