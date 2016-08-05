@@ -4,6 +4,8 @@
 
 #include <android-base/logging.h>
 #include <iterator>
+#include <sys/dir.h>
+#include <sys/stat.h>
 
 extern android::status_t parseFile(android::AST *ast, const char *path);
 
@@ -226,23 +228,115 @@ Type *Coordinator::lookupType(const FQName &fqName) const {
     return NULL;
 }
 
-status_t Coordinator::forEachAST(for_each_cb cb) const {
-    for (size_t i = 0; i < mCache.size(); ++i) {
-        const AST *ast = mCache.valueAt(i);
+status_t Coordinator::getPackageInterfaceFiles(
+        const FQName &package,
+        std::vector<std::string> *fileNames) const {
+    fileNames->clear();
 
-        if (!ast) {
-            // This could happen for an interface's "types.hal" AST.
+    const std::string packagePath = getPackagePath(package);
+
+    DIR *dir = opendir(packagePath.c_str());
+
+    if (dir == NULL) {
+        return -errno;
+    }
+
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (ent->d_type != DT_REG) {
             continue;
         }
 
-        status_t err = cb(ast);
+        const auto suffix = ".hal";
+        const auto suffix_len = std::strlen(suffix);
+        const auto d_namelen = strlen(ent->d_name);
 
-        if (err != OK) {
-            return err;
+        if (d_namelen < suffix_len
+                || strcmp(ent->d_name + d_namelen - suffix_len, suffix)) {
+            continue;
         }
+
+        fileNames->push_back(std::string(ent->d_name, d_namelen - suffix_len));
+    }
+
+    closedir(dir);
+    dir = NULL;
+
+    return OK;
+}
+
+status_t Coordinator::getPackageInterfaces(
+        const FQName &package,
+        std::vector<FQName> *packageInterfaces) const {
+    packageInterfaces->clear();
+
+    std::vector<std::string> fileNames;
+    status_t err = getPackageInterfaceFiles(package, &fileNames);
+
+    if (err != OK) {
+        return err;
+    }
+
+    for (const auto &fileName : fileNames) {
+        FQName subFQName(
+                package.package() + package.version() + "::" + fileName);
+
+        if (!subFQName.isValid()) {
+            LOG(WARNING)
+                << "Whole-package import encountered invalid filename '"
+                << fileName
+                << "' in package "
+                << package.package()
+                << package.version();
+
+            continue;
+        }
+
+        packageInterfaces->push_back(subFQName);
     }
 
     return OK;
+}
+
+std::string Coordinator::convertPackageRootToPath(const FQName &fqName) const {
+    std::string packageRoot = getPackageRoot(fqName);
+
+    if (*(packageRoot.end()--) != '.') {
+        packageRoot += '.';
+    }
+
+    std::replace(packageRoot.begin(), packageRoot.end(), '.', '/');
+
+    return packageRoot; // now converted to a path
+}
+
+// static
+bool Coordinator::MakeParentHierarchy(const std::string &path) {
+    static const mode_t kMode = 0755;
+
+    size_t start = 1;  // Ignore leading '/'
+    size_t slashPos;
+    while ((slashPos = path.find("/", start)) != std::string::npos) {
+        std::string partial = path.substr(0, slashPos);
+
+        struct stat st;
+        if (stat(partial.c_str(), &st) < 0) {
+            if (errno != ENOENT) {
+                return false;
+            }
+
+            int res = mkdir(partial.c_str(), kMode);
+            if (res < 0) {
+                return false;
+            }
+        } else if (!S_ISDIR(st.st_mode)) {
+            return false;
+        }
+
+        start = slashPos + 1;
+    }
+
+    return true;
 }
 
 }  // namespace android

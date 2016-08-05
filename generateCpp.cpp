@@ -9,38 +9,9 @@
 #include <algorithm>
 #include <android-base/logging.h>
 #include <string>
-#include <sys/stat.h>
 #include <vector>
 
 namespace android {
-
-static bool MakeParentHierarchy(const std::string &path) {
-    static const mode_t kMode = 0755;
-
-    size_t start = 1;  // Ignore leading '/'
-    size_t slashPos;
-    while ((slashPos = path.find("/", start)) != std::string::npos) {
-        std::string partial = path.substr(0, slashPos);
-
-        struct stat st;
-        if (stat(partial.c_str(), &st) < 0) {
-            if (errno != ENOENT) {
-                return false;
-            }
-
-            int res = mkdir(partial.c_str(), kMode);
-            if (res < 0) {
-                return false;
-            }
-        } else if (!S_ISDIR(st.st_mode)) {
-            return false;
-        }
-
-        start = slashPos + 1;
-    }
-
-    return true;
-}
 
 static std::string upcase(const std::string in) {
     std::string out{in};
@@ -120,25 +91,10 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
-// Given an FQName of "android.hardware.nfc@1.0::INfc", return
-// "android/hardware/".
-static std::string ConvertPackageRootToPath(
-        const Coordinator *coordinator, const FQName &fqName) {
-    std::string packageRoot = coordinator->getPackageRoot(fqName);
-
-    if (*(packageRoot.end()--) != '.') {
-        packageRoot += '.';
-    }
-
-    std::replace(packageRoot.begin(), packageRoot.end(), '.', '/');
-
-    return packageRoot; // now converted to a path
-}
-
 status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
     std::string path = outputPath;
-    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
 
     std::string ifaceName;
@@ -150,7 +106,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     path.append(ifaceName);
     path.append(".h");
 
-    CHECK(MakeParentHierarchy(path));
+    CHECK(Coordinator::MakeParentHierarchy(path));
     FILE *file = fopen(path.c_str(), "w");
 
     if (file == NULL) {
@@ -327,13 +283,13 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     const std::string baseName = ifaceName.substr(1);
 
     std::string path = outputPath;
-    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append("Bn");
     path.append(baseName);
     path.append(".h");
 
-    CHECK(MakeParentHierarchy(path));
+    CHECK(Coordinator::MakeParentHierarchy(path));
     FILE *file = fopen(path.c_str(), "w");
 
     if (file == NULL) {
@@ -402,13 +358,13 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     const std::string baseName = ifaceName.substr(1);
 
     std::string path = outputPath;
-    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append("Bp");
     path.append(baseName);
     path.append(".h");
 
-    CHECK(MakeParentHierarchy(path));
+    CHECK(Coordinator::MakeParentHierarchy(path));
     FILE *file = fopen(path.c_str(), "w");
 
     if (file == NULL) {
@@ -500,7 +456,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 status_t AST::generateAllSource(const std::string &outputPath) const {
 
     std::string path = outputPath;
-    path.append(ConvertPackageRootToPath(mCoordinator, mPackage));
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
 
     std::string ifaceName;
@@ -522,7 +478,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     path.append(".cpp");
 
-    CHECK(MakeParentHierarchy(path));
+    CHECK(Coordinator::MakeParentHierarchy(path));
     FILE *file = fopen(path.c_str(), "w");
 
     if (file == NULL) {

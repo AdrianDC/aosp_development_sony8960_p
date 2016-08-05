@@ -41,9 +41,19 @@ struct Coordinator {
 
     std::string getPackageRoot(const FQName &fqName) const;
 
-    // Iterate over all cached ASTs and abort if any callback returns an error.
-    using for_each_cb = std::function<status_t(const AST *ast)>;
-    status_t forEachAST(for_each_cb cb) const;
+    // Given an FQName of "android.hardware.nfc@1.0::INfc", return
+    // "android/hardware/".
+    std::string convertPackageRootToPath(const FQName &fqName) const;
+
+    status_t getPackageInterfaceFiles(
+            const FQName &package,
+            std::vector<std::string> *fileNames) const;
+
+    status_t getPackageInterfaces(
+            const FQName &package,
+            std::vector<FQName> *packageInterfaces) const;
+
+    static bool MakeParentHierarchy(const std::string &path);
 
 private:
     // A list of top-level directories (mPackageRootPaths)

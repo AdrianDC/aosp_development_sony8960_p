@@ -33,6 +33,7 @@ struct FQName {
     std::string string() const;
 
     bool operator<(const FQName &other) const;
+    bool operator==(const FQName &other) const;
 
     // Returns an absolute C++ namespace prefix, i.e.
     // ::android::hardware::Foo.
@@ -47,6 +48,10 @@ struct FQName {
     void getPackageAndVersionComponents(
             std::vector<std::string> *components,
             bool cpp_compatible) const;
+
+    static std::string JoinStrings(
+            const std::vector<std::string> &components,
+            const std::string &separator);
 
 private:
     bool mValid;

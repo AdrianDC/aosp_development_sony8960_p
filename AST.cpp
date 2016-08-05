@@ -9,7 +9,6 @@
 
 #include <android-base/logging.h>
 #include <stdlib.h>
-#include <sys/dir.h>
 
 namespace android {
 
@@ -67,54 +66,16 @@ bool AST::addImport(const char *import) {
     // LOG(INFO) << "importing " << fqName.string();
 
     if (fqName.name().empty()) {
-        const std::string packagePath = mCoordinator->getPackagePath(fqName);
-        DIR *dir = opendir(packagePath.c_str());
+        std::vector<FQName> packageInterfaces;
 
-        if (dir == NULL) {
+        status_t err =
+            mCoordinator->getPackageInterfaces(fqName, &packageInterfaces);
+
+        if (err != OK) {
             return false;
         }
 
-        // Enumerate all regular files ending in ".hal" in the package directory
-        // and attempt to import all of them.
-
-        Vector<std::string> fileNames;
-
-        struct dirent *ent;
-        while ((ent = readdir(dir)) != NULL) {
-            if (ent->d_type != DT_REG) {
-                continue;
-            }
-
-            const auto suffix = ".hal";
-            const auto suffix_len = std::strlen(suffix);
-            const auto d_namelen = strlen(ent->d_name);
-
-            if (d_namelen < suffix_len
-                    || strcmp(ent->d_name + d_namelen - suffix_len, suffix)) {
-                continue;
-            }
-
-            fileNames.push_back(std::string(ent->d_name, d_namelen - suffix_len));
-        }
-
-        closedir(dir);
-        dir = NULL;
-
-        for (size_t i = 0; i < fileNames.size(); ++i) {
-            FQName subFQName(
-                    fqName.package() + fqName.version() + "::" + fileNames[i]);
-
-            if (!subFQName.isValid()) {
-                LOG(WARNING)
-                    << "Whole-package import encountered invalid filename '"
-                    << fileNames[i]
-                    << "' in package "
-                    << fqName.package()
-                    << fqName.version();
-
-                continue;
-            }
-
+        for (const auto &subFQName : packageInterfaces) {
             if (mCoordinator->parse(subFQName) == NULL) {
                 return false;
             }
@@ -248,6 +209,19 @@ Type *AST::lookupTypeInternal(const std::string &namePath) const {
 
         scope = static_cast<Scope *>(type);
         startPos = dotPos + 1;
+    }
+}
+
+void AST::addImportedPackages(std::set<FQName> *importSet) const {
+    for (const auto &fqName : mImportedNames) {
+        FQName packageName(fqName.package(), fqName.version(), "");
+
+        if (packageName == mPackage) {
+            // We only care about external imports, not our own package.
+            continue;
+        }
+
+        importSet->insert(packageName);
     }
 }
 

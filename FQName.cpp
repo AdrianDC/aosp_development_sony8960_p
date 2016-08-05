@@ -127,6 +127,10 @@ bool FQName::operator<(const FQName &other) const {
     return string() < other.string();
 }
 
+bool FQName::operator==(const FQName &other) const {
+    return string() == other.string();
+}
+
 static void SplitString(
         const std::string &s, char c, std::vector<std::string> *components) {
     components->clear();
@@ -143,7 +147,8 @@ static void SplitString(
     }
 }
 
-static std::string JoinStrings(
+// static
+std::string FQName::JoinStrings(
         const std::vector<std::string> &components,
         const std::string &separator) {
     std::string out;

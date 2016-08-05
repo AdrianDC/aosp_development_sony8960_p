@@ -1,5 +1,6 @@
 #include "AST.h"
 #include "Coordinator.h"
+#include "Formatter.h"
 #include "FQName.h"
 
 #include <android-base/logging.h>
@@ -12,26 +13,173 @@ using namespace android;
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s -o output-path (-r interface-root)+ fqname+\n",
+            "usage: %s -o output-path [-m] (-r interface-root)+ fqname+\n",
             me);
 
     fprintf(stderr, "         -o output path\n");
+    fprintf(stderr, "         -m generate makefile instead of sources\n");
 
     fprintf(stderr,
             "         -r package:path root "
             "(e.g., android.hardware:hardware/interfaces)\n");
 }
 
+static std::string makeLibraryName(const FQName &packageFQName) {
+    std::vector<std::string> components;
+    packageFQName.getPackageAndVersionComponents(
+            &components, true /* cpp_compatible */);
+
+    const std::string libraryName =
+        "lib_" + FQName::JoinStrings(components, "_");
+
+    return libraryName;
+}
+
+static status_t generateMakefileOrSourcesForPackage(
+        Coordinator *coordinator,
+        const std::string &outputDir,
+        bool createMakefile,
+        const FQName &packageFQName) {
+    std::vector<FQName> packageInterfaces;
+
+    status_t err =
+        coordinator->getPackageInterfaces(packageFQName, &packageInterfaces);
+
+    if (err != OK) {
+        return err;
+    }
+
+    std::set<FQName> importedPackages;
+    for (const auto &fqName : packageInterfaces) {
+        AST *ast = coordinator->parse(fqName);
+
+        if (ast == NULL) {
+            fprintf(stderr,
+                    "Could not parse %s. Aborting.\n",
+                    fqName.string().c_str());
+
+            return UNKNOWN_ERROR;
+        }
+
+        if (!createMakefile) {
+            status_t err = ast->generateCpp(outputDir);
+
+            if (err != OK) {
+                return err;
+            }
+        } else {
+            ast->addImportedPackages(&importedPackages);
+        }
+    }
+
+    if (!createMakefile) {
+        return OK;
+    }
+
+    std::string path =
+        coordinator->getPackagePath(packageFQName, false /* relative */);
+
+    path.append("Android.mk");
+
+    CHECK(Coordinator::MakeParentHierarchy(path));
+    FILE *file = fopen(path.c_str(), "w");
+
+    if (file == NULL) {
+        return -errno;
+    }
+
+    const std::string libraryName = makeLibraryName(packageFQName);
+
+    Formatter out(file);
+
+    out << "LOCAL_PATH := $(call my-dir)\n"
+        << "include $(CLEAR_VARS)\n\n"
+        << "LOCAL_MODULE := "
+        << libraryName
+        << "\n"
+        << "LOCAL_MODULE_CLASS := SHARED_LIBRARIES\n\n"
+        << "intermediates := $(local-generated-sources-dir)\n\n"
+        << "GEN := \\\n";
+
+    out.indent();
+    for (const auto &fqName : packageInterfaces) {
+        out << "$(intermediates)/"
+            << coordinator->convertPackageRootToPath(packageFQName)
+            << coordinator->getPackagePath(packageFQName, true /* relative */);
+
+        if (fqName.name() == "types") {
+            out << "types.cpp";
+        } else {
+            out << fqName.name().substr(1) << "All.cpp";
+        }
+
+        out << " \\\n";
+    }
+
+    out.unindent();
+
+    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)\n\n"
+        << "$(GEN): PRIVATE_CUSTOM_TOOL = \\\n";
+
+    out.indent();
+
+    out << "nuhidl-gen -o $(PRIVATE_OUTPUT_DIR) "
+        << packageFQName.string()
+        << "\n";
+
+    out.unindent();
+
+    out << "\n$(GEN): ";
+
+    bool first = true;
+    for (const auto &fqName : packageInterfaces) {
+        if (!first) {
+            out << " ";
+        }
+
+        out << "$(LOCAL_PATH)/" << fqName.name() << ".hal";
+
+        first = false;
+    }
+    out << "\n\t$(transform-generated-source)\n\n";
+
+    out << "LOCAL_GENERATED_SOURCES += $(GEN)\n\n"
+        << "LOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)\n\n"
+        << "LOCAL_SHARED_LIBRARIES := \\\n";
+
+    out.indent();
+    out << "libhwbinder \\\n"
+        << "libutils \\\n";
+
+    for (const auto &importedPackage : importedPackages) {
+        out << makeLibraryName(importedPackage) << " \\\n";
+    }
+
+    out.unindent();
+
+    out << "\n"
+        << "include $(BUILD_SHARED_LIBRARY)\n";
+
+    return OK;
+}
+
 int main(int argc, char **argv) {
     std::string outputDir;
     std::vector<std::string> packageRootPaths;
     std::vector<std::string> packageRoots;
+    bool createMakefile = false;
 
     const char *me = argv[0];
 
     int res;
-    while ((res = getopt(argc, argv, "ho:r:")) >= 0) {
+    while ((res = getopt(argc, argv, "hmo:r:")) >= 0) {
         switch (res) {
+            case 'm':
+            {
+                createMakefile = true;
+                break;
+            }
+
             case 'o':
             {
                 outputDir = optarg;
@@ -81,7 +229,9 @@ int main(int argc, char **argv) {
 
     // Valid options are now in argv[0] .. argv[argc - 1].
 
-    if (outputDir.empty()) {
+    if (createMakefile) {
+        outputDir.clear();  // Unused.
+    } else if (outputDir.empty()) {
         usage(me);
         exit(1);
     } else {
@@ -95,25 +245,25 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
-        CHECK(fqName.isValid() && fqName.isFullyQualified());
 
-        AST *ast = coordinator.parse(fqName);
-
-        if (ast == NULL) {
+        if (!fqName.isValid()
+                || fqName.package().empty()
+                || fqName.version().empty()
+                || !fqName.name().empty()) {
             fprintf(stderr,
-                    "Could not parse %s. Aborting.\n",
-                    fqName.string().c_str());
+                    "Each fqname argument should specify a valid package.\n");
 
             exit(1);
         }
+
+        status_t err =
+            generateMakefileOrSourcesForPackage(
+                    &coordinator, outputDir, createMakefile, fqName);
+
+        if (err != OK) {
+            break;
+        }
     }
 
-    // Now that we've found the transitive hull of all necessary interfaces
-    // and types to process, go ahead and do the work.
-    status_t err = coordinator.forEachAST(
-            [&](const AST *ast) {
-                return ast->generateCpp(outputDir);
-            });
-
-    return (err == OK) ? 0 : 1;
+    return 0;
 }
