@@ -1,7 +1,0 @@
-version 1.0;
-package android.hardware.passthrough;
-
-interface IPassthrough {
-  sayHi();
-  doCalc(int32_t i) generates(int32_t sum, int32_t product);
-};
