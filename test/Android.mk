@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := nuhidl_test
+LOCAL_MODULE := hidl_test
 LOCAL_MODULE_CLASS := EXECUTABLES
 
 LOCAL_SRC_FILES :=                                  \
@@ -15,7 +15,7 @@ GEN := \
     $(intermediates)/android/hardware/bar/1.0/BarAll.cpp                \
 
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
-$(GEN): PRIVATE_CUSTOM_TOOL = nuhidl-gen -o $(PRIVATE_OUTPUT_DIR) android.hardware.foo@1.0::IFoo android.hardware.bar@1.0::IBar
+$(GEN): PRIVATE_CUSTOM_TOOL = hidl_gen -o $(PRIVATE_OUTPUT_DIR) android.hardware.foo@1.0::IFoo android.hardware.bar@1.0::IBar
 $(GEN):
 	$(transform-generated-source)
 

@@ -36,6 +36,7 @@ static std::string makeLibraryName(const FQName &packageFQName) {
 }
 
 static status_t generateMakefileOrSourcesForPackage(
+        const char *hidl_gen,
         Coordinator *coordinator,
         const std::string &outputDir,
         bool createMakefile,
@@ -123,7 +124,7 @@ static status_t generateMakefileOrSourcesForPackage(
 
     out.indent();
 
-    out << "nuhidl-gen -o $(PRIVATE_OUTPUT_DIR) "
+    out << hidl_gen << " -o $(PRIVATE_OUTPUT_DIR) "
         << packageFQName.string()
         << "\n";
 
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
         }
 
         status_t err =
-            generateMakefileOrSourcesForPackage(
+            generateMakefileOrSourcesForPackage(me,
                     &coordinator, outputDir, createMakefile, fqName);
 
         if (err != OK) {
