@@ -25,14 +25,7 @@ static void usage(const char *me) {
 }
 
 static std::string makeLibraryName(const FQName &packageFQName) {
-    std::vector<std::string> components;
-    packageFQName.getPackageAndVersionComponents(
-            &components, true /* cpp_compatible */);
-
-    const std::string libraryName =
-        "lib_" + FQName::JoinStrings(components, "_");
-
-    return libraryName;
+    return packageFQName.string();
 }
 
 static status_t generateMakefileOrSourcesForPackage(
