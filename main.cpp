@@ -4,6 +4,7 @@
 #include "FQName.h"
 
 #include <android-base/logging.h>
+#include <set>
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
@@ -11,33 +12,93 @@
 
 using namespace android;
 
-static void usage(const char *me) {
-    fprintf(stderr,
-            "usage: %s -o output-path [-m] (-r interface-root)+ fqname+\n",
-            me);
+struct OutputHandler {
+    std::string mKey;
+    bool mNeedsOutputDir;
+    enum ValRes {
+        FAILED,
+        PASS_PACKAGE,
+        PASS_FULL
+    };
+    ValRes (*validate)(const FQName &);
+    status_t (*generate)(const FQName &fqName,
+                         const char *hidl_gen,
+                         Coordinator *coordinator,
+                         const std::string &outputDir);
+};
 
-    fprintf(stderr, "         -o output path\n");
-    fprintf(stderr, "         -m generate makefile instead of sources\n");
+static status_t generateSourcesForFile(
+        const FQName &fqName,
+        const char *,
+        Coordinator *coordinator,
+        const std::string &outputDir) {
 
-    fprintf(stderr,
-            "         -r package:path root "
-            "(e.g., android.hardware:hardware/interfaces)\n");
+    CHECK(fqName.isFullyQualified());
+
+    AST *ast = coordinator->parse(fqName);
+
+    if (ast == NULL) {
+        fprintf(stderr,
+                "Could not parse %s. Aborting.\n",
+                fqName.string().c_str());
+
+        return UNKNOWN_ERROR;
+    }
+
+    status_t err = ast->generateCpp(outputDir);
+
+    return err;
+}
+
+static status_t generateSourcesForPackage(
+        const FQName &packageFQName,
+        const char *hidl_gen,
+        Coordinator *coordinator,
+        const std::string &outputDir) {
+
+    CHECK(packageFQName.isValid() &&
+          !packageFQName.isFullyQualified() &&
+          packageFQName.name().empty());
+
+    std::vector<FQName> packageInterfaces;
+
+    status_t err =
+        coordinator->appendPackageInterfacesToSet(packageFQName,
+                                                  &packageInterfaces);
+
+    if (err != OK) {
+        return err;
+    }
+
+    for (const auto &fqName : packageInterfaces) {
+        err = generateSourcesForFile(fqName, hidl_gen, coordinator, outputDir);
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
 }
 
 static std::string makeLibraryName(const FQName &packageFQName) {
     return packageFQName.string();
 }
 
-static status_t generateMakefileOrSourcesForPackage(
+static status_t generateMakefileForPackage(
+        const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator,
-        const std::string &outputDir,
-        bool createMakefile,
-        const FQName &packageFQName) {
+        const std::string &) {
+
+    CHECK(packageFQName.isValid() &&
+          !packageFQName.isFullyQualified() &&
+          packageFQName.name().empty());
+
     std::vector<FQName> packageInterfaces;
 
     status_t err =
-        coordinator->getPackageInterfaces(packageFQName, &packageInterfaces);
+        coordinator->appendPackageInterfacesToSet(packageFQName,
+                                                  &packageInterfaces);
 
     if (err != OK) {
         return err;
@@ -55,19 +116,7 @@ static status_t generateMakefileOrSourcesForPackage(
             return UNKNOWN_ERROR;
         }
 
-        if (!createMakefile) {
-            status_t err = ast->generateCpp(outputDir);
-
-            if (err != OK) {
-                return err;
-            }
-        } else {
-            ast->addImportedPackages(&importedPackages);
-        }
-    }
-
-    if (!createMakefile) {
-        return OK;
+        ast->getImportedPackages(&importedPackages);
     }
 
     std::string path =
@@ -93,87 +142,160 @@ static status_t generateMakefileOrSourcesForPackage(
         << "\n"
         << "LOCAL_MODULE_CLASS := SHARED_LIBRARIES\n\n"
         << "intermediates := $(local-generated-sources-dir)\n\n"
-        << "GEN := \\\n";
+        << "HIDL := $(HOST_OUT_EXECUTABLES)/"
+        << hidl_gen << "$(HOST_EXECUTABLE_SUFFIX)";
 
-    out.indent();
     for (const auto &fqName : packageInterfaces) {
-        out << "$(intermediates)/"
+
+        out << "\n"
+            << "\n#"
+            << "\n# Build " << fqName.name() << ".hal"
+            << "\n#";
+        out << "\nGEN := $(intermediates)/"
             << coordinator->convertPackageRootToPath(packageFQName)
             << coordinator->getPackagePath(packageFQName, true /* relative */);
-
         if (fqName.name() == "types") {
             out << "types.cpp";
         } else {
             out << fqName.name().substr(1) << "All.cpp";
         }
 
-        out << " \\\n";
+        out << "\n$(GEN): $(HIDL)";
+        out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
+        out << "\n$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/"
+            << fqName.name() << ".hal";
+        out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
+            << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
+        out.indent();
+        out.indent();
+        out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
+            << "\n-Lc++ -r"
+            << coordinator->getPackageRoot(packageFQName) << ":"
+            << coordinator->getPackageRootPath(packageFQName) << "\\";
+        out << "\n"
+            << packageFQName.string()
+            << "::$(patsubst %.hal,%,$(notdir $(PRIVATE_DEPS)))"
+            << "\n";
+        out.unindent();
+        out.unindent();
+
+        out << "\n$(GEN): $(LOCAL_PATH)/" << fqName.name() << ".hal";
+        out << "\n\t$(transform-generated-source)";
+        out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
     }
-
-    out.unindent();
-
-    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)\n\n"
-        << "$(GEN): PRIVATE_CUSTOM_TOOL = \\\n";
-
-    out.indent();
-
-    out << hidl_gen << " -o $(PRIVATE_OUTPUT_DIR) "
-        << packageFQName.string()
-        << "\n";
-
-    out.unindent();
-
-    out << "\n$(GEN): ";
-
-    bool first = true;
-    for (const auto &fqName : packageInterfaces) {
-        if (!first) {
-            out << " ";
-        }
-
-        out << "$(LOCAL_PATH)/" << fqName.name() << ".hal";
-
-        first = false;
-    }
-    out << "\n\t$(transform-generated-source)\n\n";
-
-    out << "LOCAL_GENERATED_SOURCES += $(GEN)\n\n"
-        << "LOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)\n\n"
-        << "LOCAL_SHARED_LIBRARIES := \\\n";
-
-    out.indent();
-    out << "libhwbinder \\\n"
-        << "libutils \\\n";
-
-    for (const auto &importedPackage : importedPackages) {
-        out << makeLibraryName(importedPackage) << " \\\n";
-    }
-
-    out.unindent();
 
     out << "\n"
-        << "include $(BUILD_SHARED_LIBRARY)\n";
+        << "\nLOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)"
+        << "\nLOCAL_SHARED_LIBRARIES := \\";
+    out.indent();
+    out << "\nlibhwbinder \\"
+        << "\nlibutils \\";
+
+    for (const auto &importedPackage : importedPackages) {
+        out << "\n" << makeLibraryName(importedPackage) << " \\";
+    }
+    out << "\n";
+    out.unindent();
+
+    out << "\ninclude $(BUILD_SHARED_LIBRARY)\n";
 
     return OK;
+}
+
+OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
+    if (fqName.package().empty()) {
+        fprintf(stderr, "Expecting package name\n");
+        return OutputHandler::FAILED;
+    }
+
+    if (fqName.version().empty()) {
+        fprintf(stderr, "Expecting package version\n");
+        return OutputHandler::FAILED;
+    }
+
+    if (!fqName.name().empty()) {
+        fprintf(stderr,
+                "Expecting only package name and version.\n");
+        return OutputHandler::FAILED;
+    }
+
+    return OutputHandler::PASS_PACKAGE;
+}
+
+OutputHandler::ValRes validateForCpp(const FQName &fqName) {
+    if (fqName.package().empty()) {
+        fprintf(stderr, "Expecting package name\n");
+        return OutputHandler::FAILED;
+    }
+
+    if (fqName.version().empty()) {
+        fprintf(stderr, "Expecting package version\n");
+        return OutputHandler::FAILED;
+    }
+
+    return fqName.name().empty() ?
+        OutputHandler::PASS_PACKAGE :
+        OutputHandler::PASS_FULL;
+}
+
+static std::vector<OutputHandler> formats = {
+    {"c++",
+     true,
+     validateForCpp,
+     [](const FQName &fqName,
+        const char *hidl_gen, Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            if (fqName.isFullyQualified()) {
+                return generateSourcesForFile(fqName,
+                                              hidl_gen,
+                                              coordinator,
+                                              outputDir);
+            }
+            else {
+                return generateSourcesForPackage(fqName,
+                                                 hidl_gen,
+                                                 coordinator,
+                                                 outputDir);
+            }
+        }
+    },
+
+    {"makefile",
+     false,
+     validateForMakefile,
+     generateMakefileForPackage,
+    },
+};
+
+static void usage(const char *me) {
+    fprintf(stderr,
+            "usage: %s -o output-path -L <language> (-r interface-root)+ fqname+\n",
+            me);
+
+    fprintf(stderr, "         -o output path\n");
+
+    fprintf(stderr, "         -L <language> (one of");
+    for (auto &e : formats) {
+        fprintf(stderr, " %s", e.mKey.c_str());
+    }
+    fprintf(stderr, ")\n");
+
+    fprintf(stderr,
+            "         -r package:path root "
+            "(e.g., android.hardware:hardware/interfaces)\n");
 }
 
 int main(int argc, char **argv) {
     std::string outputDir;
     std::vector<std::string> packageRootPaths;
     std::vector<std::string> packageRoots;
-    bool createMakefile = false;
 
     const char *me = argv[0];
+    OutputHandler *outputFormat = nullptr;
 
     int res;
-    while ((res = getopt(argc, argv, "hmo:r:")) >= 0) {
+    while ((res = getopt(argc, argv, "ho:r:L:")) >= 0) {
         switch (res) {
-            case 'm':
-            {
-                createMakefile = true;
-                break;
-            }
-
             case 'o':
             {
                 outputDir = optarg;
@@ -193,6 +315,19 @@ int main(int argc, char **argv) {
                 break;
             }
 
+            case 'L':
+            {
+                CHECK(outputFormat == nullptr); // only one -L option
+                for (auto &e : formats) {
+                    if (e.mKey == optarg) {
+                        outputFormat = &e;
+                        break;
+                    }
+                }
+                CHECK(outputFormat != nullptr);
+                break;
+            }
+
             case '?':
             case 'h':
             default:
@@ -202,6 +337,11 @@ int main(int argc, char **argv) {
                 break;
             }
         }
+    }
+
+    if (outputFormat == nullptr) {
+        usage(me);
+        exit(1);
     }
 
     argc -= optind;
@@ -223,7 +363,7 @@ int main(int argc, char **argv) {
 
     // Valid options are now in argv[0] .. argv[argc - 1].
 
-    if (createMakefile) {
+    if (!outputFormat->mNeedsOutputDir) {
         outputDir.clear();  // Unused.
     } else if (outputDir.empty()) {
         usage(me);
@@ -240,19 +380,19 @@ int main(int argc, char **argv) {
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
 
-        if (!fqName.isValid()
-                || fqName.package().empty()
-                || fqName.version().empty()
-                || !fqName.name().empty()) {
+        if (!fqName.isValid()) {
             fprintf(stderr,
-                    "Each fqname argument should specify a valid package.\n");
+                    "Invalid fully-qualified name.\n");
+            exit(1);
+        }
 
+        OutputHandler::ValRes valid = outputFormat->validate(fqName);
+        if (valid == OutputHandler::FAILED) {
             exit(1);
         }
 
         status_t err =
-            generateMakefileOrSourcesForPackage(me,
-                    &coordinator, outputDir, createMakefile, fqName);
+            outputFormat->generate(fqName, me, &coordinator, outputDir);
 
         if (err != OK) {
             break;

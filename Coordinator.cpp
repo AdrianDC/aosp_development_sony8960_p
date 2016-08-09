@@ -140,6 +140,12 @@ std::string Coordinator::getPackageRoot(const FQName &fqName) const {
     return prefix;
 }
 
+std::string Coordinator::getPackageRootPath(const FQName &fqName) const {
+    auto it = findPackageRoot(fqName);
+    auto root = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
+    return root;
+}
+
 std::string Coordinator::getPackagePath(
         const FQName &fqName, bool relative) const {
 
@@ -265,7 +271,7 @@ status_t Coordinator::getPackageInterfaceFiles(
     return OK;
 }
 
-status_t Coordinator::getPackageInterfaces(
+status_t Coordinator::appendPackageInterfacesToSet(
         const FQName &package,
         std::vector<FQName> *packageInterfaces) const {
     packageInterfaces->clear();

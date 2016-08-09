@@ -29,17 +29,25 @@ struct Coordinator {
     // "vendor/<something>/interfaces"], package roots of
     // ["android.hardware", "vendor.<something>.hardware"], and a
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackagePath()
-    // will return "harware/interfaces/nfc/V1_0".
+    // will return "hardware/interfaces/nfc/V1_0".
 
     std::string getPackagePath(
             const FQName &fqName, bool relative = false) const;
 
     // Given package roots of ["android.hardware",
     // "vendor.<something>.hardware"] and a FQName of
-    // "android.hardware.nfc@1.0::INfc, the getPackageRoot() will
+    // "android.hardware.nfc@1.0::INfc, then getPackageRoot() will
     // return "android.hardware".
 
     std::string getPackageRoot(const FQName &fqName) const;
+
+    // Given package-root paths of ["hardware/interfaces",
+    // "vendor/<something>/interfaces"], package roots of
+    // ["android.hardware", "vendor.<something>.hardware"], and a
+    // FQName of "android.hardware.nfc@1.0::INfc, then getPackageRootPath()
+    // will return "hardware/interfaces".
+
+    std::string getPackageRootPath(const FQName &fqName) const;
 
     // Given an FQName of "android.hardware.nfc@1.0::INfc", return
     // "android/hardware/".
@@ -49,7 +57,7 @@ struct Coordinator {
             const FQName &package,
             std::vector<std::string> *fileNames) const;
 
-    status_t getPackageInterfaces(
+    status_t appendPackageInterfacesToSet(
             const FQName &package,
             std::vector<FQName> *packageInterfaces) const;
 

@@ -70,7 +70,8 @@ bool AST::addImport(const char *import) {
         std::vector<FQName> packageInterfaces;
 
         status_t err =
-            mCoordinator->getPackageInterfaces(fqName, &packageInterfaces);
+            mCoordinator->appendPackageInterfacesToSet(fqName,
+                                                       &packageInterfaces);
 
         if (err != OK) {
             return false;
@@ -220,7 +221,7 @@ Type *AST::lookupTypeInternal(const std::string &namePath) const {
     }
 }
 
-void AST::addImportedPackages(std::set<FQName> *importSet) const {
+void AST::getImportedPackages(std::set<FQName> *importSet) const {
     for (const auto &fqName : mImportedNames) {
         FQName packageName(fqName.package(), fqName.version(), "");
 

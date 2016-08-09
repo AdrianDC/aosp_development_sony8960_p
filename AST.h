@@ -55,7 +55,7 @@ struct AST {
 
     status_t generateCpp(const std::string &outputPath) const;
 
-    void addImportedPackages(std::set<FQName> *importSet) const;
+    void getImportedPackages(std::set<FQName> *importSet) const;
 
 private:
     Coordinator *mCoordinator;
