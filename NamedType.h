@@ -16,6 +16,7 @@ struct NamedType : public Type {
     void setLocalName(const std::string &localName);
     void setFullName(const FQName &fullName);
 
+    const FQName &fqName() const;
     std::string localName() const;
     std::string fullName() const;
 

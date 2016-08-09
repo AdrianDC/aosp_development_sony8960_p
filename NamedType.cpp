@@ -12,6 +12,10 @@ void NamedType::setFullName(const FQName &fullName) {
     mFullName = fullName;
 }
 
+const FQName &NamedType::fqName() const {
+    return mFullName;
+}
+
 std::string NamedType::localName() const {
     return mLocalName;
 }
