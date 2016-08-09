@@ -4,6 +4,7 @@
 #include "Formatter.h"
 #include "FQName.h"
 #include "HandleType.h"
+#include "Interface.h"
 #include "Scope.h"
 #include "TypeDef.h"
 
@@ -167,7 +168,14 @@ Type *AST::lookupType(const char *name) {
             FQName typesName(fqName.package(), fqName.version(), "types");
             mImportedNames.insert(typesName);
         } else {
-            mImportedNames.insert(fqName);
+            // Do _not_ use fqName, i.e. the name we used to look up the type,
+            // but instead use the name of the interface we found.
+            // This is necessary because if fqName pointed to a typedef which
+            // in turn referenced the found interface we'd mistakenly use the
+            // name of the typedef instead of the proper name of the interface.
+
+            mImportedNames.insert(
+                    static_cast<Interface *>(resultType)->fqName());
         }
     }
 
