@@ -5,6 +5,8 @@
 #include <android-base/macros.h>
 #include <set>
 #include <string>
+#include <utils/KeyedVector.h>
+#include <utils/RefBase.h>
 #include <utils/Vector.h>
 
 #include "FQName.h"

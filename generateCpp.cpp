@@ -237,6 +237,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
 
+            method->dumpAnnotations(out);
+
             out << "virtual ::android::hardware::Status "
                 << method->name()
                 << "("

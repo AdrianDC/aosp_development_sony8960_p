@@ -13,6 +13,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 
 %{
 
+#include "Annotation.h"
 #include "AST.h"
 #include "CompoundType.h"
 #include "EnumType.h"
@@ -92,6 +93,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "."			{ count(yyg); return('.'); }
 "="			{ count(yyg); return('='); }
 "+"			{ count(yyg); return('+'); }
+"@"			{ count(yyg); return('@'); }
 
 {PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
 {VERSION}"::"{PATH}             { count(yyg); yylval->str = strdup(yytext); return FQNAME; }

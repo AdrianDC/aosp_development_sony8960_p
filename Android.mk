@@ -6,6 +6,7 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_IS_HOST_MODULE := true
 
 LOCAL_SRC_FILES :=              \
+    Annotation.cpp              \
     ArrayType.cpp               \
     CompoundType.cpp            \
     Constant.cpp                \

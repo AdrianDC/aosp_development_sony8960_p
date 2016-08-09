@@ -1,17 +1,19 @@
 #include "Method.h"
 
+#include "Annotation.h"
 #include "Formatter.h"
 #include "Type.h"
 
 namespace android {
 
-Method::Method(
-        const char *name,
-        std::vector<TypedVar *> *args,
-        std::vector<TypedVar *> *results)
+Method::Method(const char *name,
+       std::vector<TypedVar *> *args,
+       std::vector<TypedVar *> *results,
+       KeyedVector<std::string, Annotation *> *annotations)
     : mName(name),
       mArgs(args),
-      mResults(results) {
+      mResults(results),
+      mAnnotationsByName(annotations) {
 }
 
 std::string Method::name() const {
@@ -24,6 +26,10 @@ const std::vector<TypedVar *> &Method::args() const {
 
 const std::vector<TypedVar *> &Method::results() const {
     return *mResults;
+}
+
+const KeyedVector<std::string, Annotation *> &Method::annotations() const {
+    return *mAnnotationsByName;
 }
 
 // static
@@ -45,6 +51,21 @@ std::string Method::GetSignature(const std::vector<TypedVar *> &args) {
     }
 
     return out;
+}
+
+void Method::dumpAnnotations(Formatter &out) const {
+    if (mAnnotationsByName->size() == 0) {
+        return;
+    }
+
+    out << "// ";
+    for (size_t i = 0; i < mAnnotationsByName->size(); ++i) {
+        if (i > 0) {
+            out << " ";
+        }
+        mAnnotationsByName->valueAt(i)->dump(out);
+    }
+    out << "\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

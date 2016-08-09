@@ -1,5 +1,6 @@
 %{
 
+#include "Annotation.h"
 #include "AST.h"
 #include "ArrayType.h"
 #include "CompoundType.h"
@@ -69,6 +70,11 @@ int yyerror(AST *, const char *s) {
 %type<typedVar> typed_var
 %type<method> method_declaration
 %type<compoundStyle> struct_or_union_keyword
+%type<stringVec> annotation_string_values annotation_value
+%type<annotationParam> annotation_param
+%type<annotationParams> opt_annotation_params annotation_params
+%type<annotation> annotation
+%type<annotations> opt_annotations
 
 %start program
 
@@ -84,10 +90,86 @@ int yyerror(AST *, const char *s) {
     std::vector<android::TypedVar *> *typedVars;
     android::Method *method;
     android::CompoundType::Style compoundStyle;
-    android::Vector<std::string> *stringVec;
+    std::vector<std::string> *stringVec;
+    std::pair<std::string, std::vector<std::string> *> *annotationParam;
+    android::KeyedVector<std::string, std::vector<std::string> *> *annotationParams;
+    android::Annotation *annotation;
+    android::KeyedVector<std::string, android::Annotation *> *annotations;
 }
 
 %%
+
+opt_annotations
+    : /* empty */
+      {
+          $$ = new KeyedVector<std::string, Annotation *>;
+      }
+    | opt_annotations annotation
+      {
+          $$ = $1;
+          $$->add($2->name(), $2);
+      }
+    ;
+
+annotation
+    : '@' IDENTIFIER opt_annotation_params
+      {
+          $$ = new Annotation($2, $3);
+      }
+    ;
+
+opt_annotation_params
+    : /* empty */
+      {
+          $$ = new KeyedVector<std::string, std::vector<std::string> *>;
+      }
+    | '(' annotation_params ')'
+      {
+          $$ = $2;
+      }
+    ;
+
+annotation_params
+    : annotation_param
+      {
+          $$ = new KeyedVector<std::string, std::vector<std::string> *>;
+          $$->add($1->first, $1->second);
+      }
+    | annotation_params ',' annotation_param
+      {
+          $$ = $1;
+          $$->add($3->first, $3->second);
+      }
+    ;
+
+annotation_param
+    : IDENTIFIER '=' annotation_value
+      {
+          $$ = new std::pair<std::string, std::vector<std::string> *>($1, $3);
+      }
+    ;
+
+annotation_value
+    : STRING_LITERAL
+      {
+          $$ = new std::vector<std::string>;
+          $$->push_back($1);
+      }
+    | '{' annotation_string_values '}' { $$ = $2; }
+    ;
+
+annotation_string_values
+    : STRING_LITERAL
+      {
+          $$ = new std::vector<std::string>;
+          $$->push_back($1);
+      }
+    | annotation_string_values ',' STRING_LITERAL
+      {
+          $$ = $1;
+          $$->push_back($3);
+      }
+    ;
 
 program
     : package imports body
@@ -226,13 +308,13 @@ const_declaration
     ;
 
 method_declaration
-    : IDENTIFIER '(' typed_vars ')' ';'
+    : opt_annotations IDENTIFIER '(' typed_vars ')' ';'
       {
-          $$ = new Method($1, $3, new std::vector<TypedVar *>);
+          $$ = new Method($2, $4, new std::vector<TypedVar *>, $1);
       }
-    | IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' ';'
+    | opt_annotations IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' ';'
       {
-          $$ = new Method($1, $3, $7);
+          $$ = new Method($2, $4, $8, $1);
       }
     ;
 
