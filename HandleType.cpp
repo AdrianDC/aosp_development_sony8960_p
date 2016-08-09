@@ -6,19 +6,10 @@ namespace android {
 
 HandleType::HandleType() {}
 
-std::string HandleType::getCppType(StorageMode mode, std::string *extra) const {
+std::string HandleType::getCppType(StorageMode, std::string *extra) const {
     extra->clear();
 
-    const std::string base = "::android::sp<::android::NativeHandle>";
-
-    switch (mode) {
-        case StorageMode_Stack:
-        case StorageMode_Result:
-            return base;
-
-        case StorageMode_Argument:
-            return "const " + base + "&";
-    }
+    return "const ::native_handle_t*";
 }
 
 void HandleType::emitReaderWriter(
@@ -34,16 +25,8 @@ void HandleType::emitReaderWriter(
     if (isReader) {
         out << name
             << " = "
-            << "::android::NativeHandle::create(\n";
-
-        out.indent();
-        out.indent();
-
-        out << parcelObjDeref
-            << "readNativeHandle(), true /* ownsHandle */);\n\n";
-
-        out.unindent();
-        out.unindent();
+            << parcelObjDeref
+            << "readNativeHandleNoDup();\n\n";
 
         out << "if ("
             << name
@@ -59,9 +42,9 @@ void HandleType::emitReaderWriter(
     } else {
         out << "_aidl_err = ";
         out << parcelObjDeref
-            << "writeNativeHandle("
+            << "writeNativeHandleNoDup("
             << name
-            << "->handle());\n";
+            << ");\n";
 
         handleError(out, mode);
     }
@@ -93,7 +76,6 @@ void HandleType::emitReaderWriterEmbedded(
         out << parentName
             << ",\n"
             << offsetText
-            << "/* + offsetof(::android::NativeHandle, mHandle) */"
             << ");\n\n";
 
         out.unindent();
@@ -117,16 +99,11 @@ void HandleType::emitReaderWriterEmbedded(
         out.indent();
         out.indent();
 
-        const std::string nameDeref =
-            nameIsPointer ? ("(*" + name + ")") : name;
-
-        out << nameDeref
-            << "->"
-            << "handle(),\n"
+        out << (nameIsPointer ? ("*" + name) : name)
+            << ",\n"
             << parentName
             << ",\n"
             << offsetText
-            << "/* + offsetof(::android::NativeHandle, mHandle) */"
             << ");\n\n";
 
         out.unindent();
