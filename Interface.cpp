@@ -8,7 +8,7 @@ namespace android {
 
 Interface::Interface(
         Interface *super,
-        KeyedVector<std::string, Annotation *> *annotations)
+        AnnotationVector *annotations)
         : mSuperType(super),
           mAnnotationsByName(annotations) {
 }
@@ -29,7 +29,7 @@ const std::vector<Method *> &Interface::methods() const {
     return mMethods;
 }
 
-const KeyedVector<std::string, Annotation *> &Interface::annotations() const {
+const AnnotationVector &Interface::annotations() const {
     return *mAnnotationsByName;
 }
 
@@ -112,6 +112,14 @@ void Interface::emitJavaReaderWriter(
             << argName
             << ".asBinder());\n";
     }
+}
+
+status_t Interface::emitVtsArgumentType(Formatter &out) const {
+    out << "type: TYPE_HIDL_CALLBACK\n"
+        << "predefined_type: \""
+        << localName()
+        << "\"\n";
+    return OK;
 }
 
 }  // namespace android

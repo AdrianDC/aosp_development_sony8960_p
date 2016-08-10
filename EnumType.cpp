@@ -202,6 +202,31 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "name: \""
+        << localName()
+        << "\"\n"
+        << "type: TYPE_ENUM\n"
+        << "enum_value: {\n";
+    out.indent();
+    for (const auto &entry : values()) {
+        out << "enumerator: \""
+            << entry->name()
+            << "\"\n"
+            << "value: "
+            << entry->value()
+            << "\n";
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
+status_t EnumType::emitVtsArgumentType(Formatter &out) const {
+    out << "type: TYPE_ENUM\n" << "predefined_type:\"" << localName() << "\"\n";
+    return OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 EnumValue::EnumValue(const char *name, const char *value)

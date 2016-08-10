@@ -167,5 +167,17 @@ bool VectorType::resultNeedsDeref() const {
     return true;
 }
 
+status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: TYPE_VECTOR\n" << "vector_value: {\n";
+    out.indent();
+    status_t err = mElementType->emitVtsTypeDeclarations(out);
+    if (err != OK) {
+        return err;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
 }  // namespace android
 

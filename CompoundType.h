@@ -49,6 +49,9 @@ struct CompoundType : public Scope {
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
 
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    status_t emitVtsArgumentType(Formatter &out) const override;
+
 private:
     Style mStyle;
     std::vector<CompoundField *> *mFields;

@@ -6,15 +6,17 @@
 
 namespace android {
 
-Annotation::Annotation(
-        const char *name,
-        KeyedVector<std::string, std::vector<std::string> *> *params)
-    : mName(name),
-      mParamsByName(params) {
+Annotation::Annotation(const char *name,AnnotationParamVector *params)
+        : mName(name),
+          mParamsByName(params) {
 }
 
 std::string Annotation::name() const {
     return mName;
+}
+
+const AnnotationParamVector &Annotation::params() const {
+    return *mParamsByName;
 }
 
 void Annotation::dump(Formatter &out) const {

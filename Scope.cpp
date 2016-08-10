@@ -109,5 +109,20 @@ status_t Scope::emitTypeDefinitions(
     return OK;
 }
 
+
+Vector<Type *> Scope::getSubTypes() const {
+    return mTypes;
+}
+
+status_t Scope::emitVtsTypeDeclarations(Formatter &out) const {
+    for (size_t i = 0; i < mTypes.size(); ++i) {
+        status_t status = mTypes[i]->emitVtsTypeDeclarations(out);
+        if (status != OK) {
+            return status;
+        }
+    }
+    return OK;
+}
+
 }  // namespace android
 

@@ -42,6 +42,8 @@ struct ArrayType : public Type {
             const std::string &argName,
             bool isReader) const override;
 
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+
 private:
     Type *mElementType;
     std::string mDimension;

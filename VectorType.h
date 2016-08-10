@@ -36,7 +36,9 @@ struct VectorType : public Type {
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
 
-private:
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+
+ private:
     Type *mElementType;
 
     DISALLOW_COPY_AND_ASSIGN(VectorType);

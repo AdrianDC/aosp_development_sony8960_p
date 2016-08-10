@@ -32,8 +32,7 @@ static status_t generateSourcesForFile(
         const char *,
         Coordinator *coordinator,
         const std::string &outputDir,
-        bool java = false) {
-
+        const std::string &lang) {
     CHECK(fqName.isFullyQualified());
 
     AST *ast = coordinator->parse(fqName);
@@ -46,10 +45,17 @@ static status_t generateSourcesForFile(
         return UNKNOWN_ERROR;
     }
 
-    status_t err =
-        java ? ast->generateJava(outputDir) : ast->generateCpp(outputDir);
-
-    return err;
+    if (lang == "c++") {
+        return ast->generateCpp(outputDir);
+    }
+    if (lang == "java") {
+        return ast->generateJava(outputDir);
+    }
+    if (lang == "vts") {
+        return ast->generateVts(outputDir);
+    }
+    // Unknown language.
+    return UNKNOWN_ERROR;
 }
 
 static status_t generateSourcesForPackage(
@@ -57,11 +63,10 @@ static status_t generateSourcesForPackage(
         const char *hidl_gen,
         Coordinator *coordinator,
         const std::string &outputDir,
-        bool java = false) {
-
+        const std::string &lang) {
     CHECK(packageFQName.isValid() &&
-          !packageFQName.isFullyQualified() &&
-          packageFQName.name().empty());
+        !packageFQName.isFullyQualified() &&
+        packageFQName.name().empty());
 
     std::vector<FQName> packageInterfaces;
 
@@ -75,8 +80,7 @@ static status_t generateSourcesForPackage(
 
     for (const auto &fqName : packageInterfaces) {
         err = generateSourcesForFile(
-                fqName, hidl_gen, coordinator, outputDir, java);
-
+                fqName, hidl_gen, coordinator, outputDir, lang);
         if (err != OK) {
             return err;
         }
@@ -227,7 +231,7 @@ OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
     return OutputHandler::PASS_PACKAGE;
 }
 
-OutputHandler::ValRes validateForCppOrJava(const FQName &fqName) {
+OutputHandler::ValRes validateForSource(const FQName &fqName) {
     if (fqName.package().empty()) {
         fprintf(stderr, "Expecting package name\n");
         return OutputHandler::FAILED;
@@ -246,28 +250,27 @@ OutputHandler::ValRes validateForCppOrJava(const FQName &fqName) {
 static std::vector<OutputHandler> formats = {
     {"c++",
      true /* mNeedsOutputDir */,
-     validateForCppOrJava,
+     validateForSource,
      [](const FQName &fqName,
         const char *hidl_gen, Coordinator *coordinator,
         const std::string &outputDir) -> status_t {
             if (fqName.isFullyQualified()) {
-                return generateSourcesForFile(fqName,
-                                              hidl_gen,
-                                              coordinator,
-                                              outputDir);
-            }
-            else {
-                return generateSourcesForPackage(fqName,
-                                                 hidl_gen,
-                                                 coordinator,
-                                                 outputDir);
+                        return generateSourcesForFile(fqName,
+                                                      hidl_gen,
+                                                      coordinator,
+                                                      outputDir, "c++");
+            } else {
+                        return generateSourcesForPackage(fqName,
+                                                         hidl_gen,
+                                                         coordinator,
+                                                         outputDir, "c++");
             }
         }
     },
 
     {"java",
      true /* mNeedsOutputDir */,
-     validateForCppOrJava,
+     validateForSource,
      [](const FQName &fqName,
         const char *hidl_gen, Coordinator *coordinator,
         const std::string &outputDir) -> status_t {
@@ -275,17 +278,36 @@ static std::vector<OutputHandler> formats = {
                 return generateSourcesForFile(fqName,
                                               hidl_gen,
                                               coordinator,
-                                              outputDir,
-                                              true /* java */);
+                                              outputDir, "java");
             }
             else {
                 return generateSourcesForPackage(fqName,
                                                  hidl_gen,
                                                  coordinator,
-                                                 outputDir,
-                                                 true /* java */);
+                                                 outputDir, "java");
             }
         }
+    },
+
+    {"vts",
+     true,
+     validateForSource,
+     [](const FQName &fqName,
+        const char * hidl_gen,
+        Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            if (fqName.isFullyQualified()) {
+                return generateSourcesForFile(fqName,
+                                              hidl_gen,
+                                              coordinator,
+                                              outputDir, "vts");
+            } else {
+                return generateSourcesForPackage(fqName,
+                                                 hidl_gen,
+                                                 coordinator,
+                                                 outputDir, "vts");
+            }
+       }
     },
 
     {"makefile",

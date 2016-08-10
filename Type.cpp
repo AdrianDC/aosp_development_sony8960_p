@@ -255,5 +255,13 @@ void Type::emitJavaReaderWriterWithSuffix(
     out << ");\n";
 }
 
+status_t Type::emitVtsTypeDeclarations(Formatter &) const {
+    return OK;
+}
+
+status_t Type::emitVtsArgumentType(Formatter &out) const {
+    return emitVtsTypeDeclarations(out);
+}
+
 }  // namespace android
 

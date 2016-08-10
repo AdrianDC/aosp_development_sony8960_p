@@ -92,9 +92,9 @@ int yyerror(AST *, const char *s) {
     android::CompoundType::Style compoundStyle;
     std::vector<std::string> *stringVec;
     std::pair<std::string, std::vector<std::string> *> *annotationParam;
-    android::KeyedVector<std::string, std::vector<std::string> *> *annotationParams;
+    android::DefaultKeyedVector<std::string, std::vector<std::string> *> *annotationParams;
     android::Annotation *annotation;
-    android::KeyedVector<std::string, android::Annotation *> *annotations;
+    android::DefaultKeyedVector<std::string, android::Annotation *> *annotations;
 }
 
 %%
@@ -102,7 +102,7 @@ int yyerror(AST *, const char *s) {
 opt_annotations
     : /* empty */
       {
-          $$ = new KeyedVector<std::string, Annotation *>;
+          $$ = new DefaultKeyedVector<std::string, Annotation *>;
       }
     | opt_annotations annotation
       {
@@ -121,7 +121,7 @@ annotation
 opt_annotation_params
     : /* empty */
       {
-          $$ = new KeyedVector<std::string, std::vector<std::string> *>;
+          $$ = new DefaultKeyedVector<std::string, std::vector<std::string> *>;
       }
     | '(' annotation_params ')'
       {
@@ -132,7 +132,7 @@ opt_annotation_params
 annotation_params
     : annotation_param
       {
-          $$ = new KeyedVector<std::string, std::vector<std::string> *>;
+          $$ = new DefaultKeyedVector<std::string, std::vector<std::string> *>;
           $$->add($1->first, $1->second);
       }
     | annotation_params ',' annotation_param

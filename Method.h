@@ -14,16 +14,19 @@ struct Formatter;
 struct Type;
 struct TypedVar;
 
+using AnnotationVector =
+        DefaultKeyedVector<std::string, Annotation *>;
+
 struct Method {
     Method(const char *name,
            std::vector<TypedVar *> *args,
            std::vector<TypedVar *> *results,
-           KeyedVector<std::string, Annotation *> *annotations);
+           AnnotationVector *annotations);
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;
     const std::vector<TypedVar *> &results() const;
-    const KeyedVector<std::string, Annotation *> &annotations() const;
+    const AnnotationVector &annotations() const;
 
     static std::string GetSignature(const std::vector<TypedVar *> &args);
     static std::string GetJavaSignature(const std::vector<TypedVar *> &args);
@@ -34,7 +37,7 @@ private:
     std::string mName;
     std::vector<TypedVar *> *mArgs;
     std::vector<TypedVar *> *mResults;
-    KeyedVector<std::string, Annotation *> *mAnnotationsByName;
+    AnnotationVector *mAnnotationsByName;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };

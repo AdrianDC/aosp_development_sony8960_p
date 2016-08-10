@@ -298,6 +298,57 @@ bool CompoundType::resultNeedsDeref() const {
     return true;
 }
 
+status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "name: \"" << localName() << "\"\n";
+    switch (mStyle) {
+        case STYLE_STRUCT:
+        {
+            out << "type: TYPE_STRUCT\n" << "struct value: {\n";
+            break;
+        }
+        case STYLE_UNION:
+        {
+            out << "type: TYPE_UNION\n" << "union value: {\n";
+            break;
+        }
+        default:
+            break;
+    }
+    out.indent();
+    // Emit declaration for all subtypes.
+    Scope::emitVtsTypeDeclarations(out);
+    // Emit declaration for all fields.
+    for (const auto &field : *mFields) {
+        status_t status = field->type().emitVtsTypeDeclarations(out);
+        if (status != OK) {
+            return status;
+        }
+    }
+    out.unindent();
+    out << "}\n";
+
+    return OK;
+}
+
+status_t CompoundType::emitVtsArgumentType(Formatter &out) const {
+    switch (mStyle) {
+        case STYLE_STRUCT:
+        {
+            out << "type: TYPE_STRUCT\n";
+            break;
+        }
+        case STYLE_UNION:
+        {
+            out << "type: TYPE_UNION\n";
+            break;
+        }
+        default:
+            break;
+    }
+    out << "predefined_type: \"" << localName() << "\"\n";
+    return OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 CompoundField::CompoundField(const char *name, Type *type)

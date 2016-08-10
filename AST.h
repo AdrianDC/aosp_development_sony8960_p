@@ -58,6 +58,9 @@ struct AST {
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
+    status_t generateVts(const std::string &outputPath) const;
+
+
 private:
     Coordinator *mCoordinator;
     Vector<Scope *> mScopePath;
@@ -110,6 +113,7 @@ private:
 
     status_t emitTypeDeclarations(Formatter &out) const;
     status_t emitJavaTypeDeclarations(Formatter &out) const;
+    status_t emitVtsTypeDeclarations(Formatter &out, Vector<Type*> types) const;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

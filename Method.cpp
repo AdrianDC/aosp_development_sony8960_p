@@ -9,7 +9,7 @@ namespace android {
 Method::Method(const char *name,
        std::vector<TypedVar *> *args,
        std::vector<TypedVar *> *results,
-       KeyedVector<std::string, Annotation *> *annotations)
+       AnnotationVector *annotations)
     : mName(name),
       mArgs(args),
       mResults(results),
@@ -28,7 +28,7 @@ const std::vector<TypedVar *> &Method::results() const {
     return *mResults;
 }
 
-const KeyedVector<std::string, Annotation *> &Method::annotations() const {
+const AnnotationVector &Method::annotations() const {
     return *mAnnotationsByName;
 }
 

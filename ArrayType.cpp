@@ -160,5 +160,18 @@ void ArrayType::emitJavaReaderWriter(
             mDimension);
 }
 
+status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: TYPE_ARRAY\n" << "vector_value: {\n";
+    out.indent();
+    out << "size: " << mDimension;
+    status_t err = mElementType->emitVtsTypeDeclarations(out);
+    if (err != OK) {
+        return err;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
 }  // namespace android
 

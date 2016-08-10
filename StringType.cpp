@@ -122,5 +122,10 @@ bool StringType::resultNeedsDeref() const {
     return true;
 }
 
+status_t StringType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: TYPE_STRING\n";
+    return OK;
+}
+
 }  // namespace android
 

@@ -2,6 +2,7 @@
 
 #define INTERFACE_H_
 
+#include "Method.h"
 #include "Scope.h"
 
 #include <utils/KeyedVector.h>
@@ -15,7 +16,7 @@ struct Method;
 struct Interface : public Scope {
     Interface(
             Interface *super,
-            KeyedVector<std::string, Annotation *> *annotations);
+            AnnotationVector *annotations);
 
     void addMethod(Method *method);
 
@@ -25,7 +26,7 @@ struct Interface : public Scope {
 
     const std::vector<Method *> &methods() const;
 
-    const KeyedVector<std::string, Annotation *> &annotations() const;
+    const AnnotationVector &annotations() const;
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
@@ -45,10 +46,12 @@ struct Interface : public Scope {
             const std::string &argName,
             bool isReader) const override;
 
+    status_t emitVtsArgumentType(Formatter &out) const override;
+
 private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;
-    KeyedVector<std::string, Annotation *> *mAnnotationsByName;
+    AnnotationVector *mAnnotationsByName;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };

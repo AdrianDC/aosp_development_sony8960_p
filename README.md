@@ -13,7 +13,7 @@ make hidl-gen
 hidl-gen -o output-path -L language (-r interface-root) fqname
 
 output-path: directory to store the output files.
-language: output file for given language. e.g.c++.
+language: output file for given language. e.g.c++, vts..
 
 fqname: fully qualified name of the input files.
 For singe file input, follow the format: package@version::fileName
@@ -26,5 +26,6 @@ defined in $TOP.
 examples:
 
 hidl-gen -o output -L c++ android.hardware.nfc@1.0::INfc.hal
+hidl-gen -o output -L vts android.hardware.nfc@1.0
 hild-gen -o test -L c++ -r android.hardware:/home/android/master/hardware/interfaces android.hardware.nfc@1.0
 ```

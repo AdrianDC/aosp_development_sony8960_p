@@ -16,6 +16,7 @@ LOCAL_SRC_FILES :=              \
     FQName.cpp                  \
     generateCpp.cpp             \
     generateJava.cpp            \
+    generateVts.cpp             \
     HandleType.cpp              \
     hidl-gen_y.yy               \
     hidl-gen_l.ll               \

@@ -84,6 +84,12 @@ struct Type {
     virtual bool needsEmbeddedReadWrite() const;
     virtual bool resultNeedsDeref() const;
 
+    // Generates type declaration for vts proto file.
+    // TODO (b/30844146): make it a pure virtual method.
+    virtual status_t emitVtsTypeDeclarations(Formatter &out) const;
+    // Generates type declaration as method argument for vts proto file.
+    virtual status_t emitVtsArgumentType(Formatter &out) const;
+
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
     void handleError2(Formatter &out, ErrorMode mode) const;

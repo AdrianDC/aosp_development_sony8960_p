@@ -51,6 +51,8 @@ struct ScalarType : public Type {
             ErrorMode mode,
             bool needsCast) const;
 
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+
 private:
     Kind mKind;
 

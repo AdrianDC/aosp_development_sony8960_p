@@ -37,6 +37,9 @@ struct EnumType : public NamedType {
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitJavaTypeDeclarations(Formatter &out) const override;
 
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    status_t emitVtsArgumentType(Formatter &out) const override;
+
 private:
     std::vector<EnumValue *> *mValues;
     Type *mStorageType;

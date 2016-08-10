@@ -35,6 +35,8 @@ struct StringType : public Type {
 
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
+
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
 };
 
 }  // namespace android

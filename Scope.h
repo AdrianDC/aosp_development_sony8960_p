@@ -37,6 +37,10 @@ struct Scope : public NamedType {
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;
 
+    Vector<Type *> getSubTypes() const;
+
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+
 private:
     Vector<Type *> mTypes;
     KeyedVector<std::string, size_t> mTypeIndexByName;

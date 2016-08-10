@@ -2,8 +2,6 @@
 
 #include <assert.h>
 
-using std::string;
-
 namespace android {
 
 Formatter::Formatter(FILE *file)
@@ -28,13 +26,13 @@ void Formatter::unindent() {
     --mIndentDepth;
 }
 
-Formatter &Formatter::operator<<(const string &out) {
+Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
     size_t start = 0;
     while (start < len) {
         size_t pos = out.find("\n", start);
 
-        if (pos == string::npos) {
+        if (pos == std::string::npos) {
             if (mAtStartOfLine) {
                 fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
                 mAtStartOfLine = false;

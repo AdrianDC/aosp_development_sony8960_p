@@ -10,19 +10,20 @@
 namespace android {
 
 struct Formatter;
+using AnnotationParamVector =
+    DefaultKeyedVector<std::string, std::vector<std::string> *>;
 
 struct Annotation {
-    Annotation(
-            const char *name,
-            KeyedVector<std::string, std::vector<std::string> *> *params);
+    Annotation(const char *name, AnnotationParamVector *params);
 
     std::string name() const;
+    const AnnotationParamVector &params() const;
 
     void dump(Formatter &out) const;
 
 private:
     std::string mName;
-    KeyedVector<std::string, std::vector<std::string> *> *mParamsByName;
+    AnnotationParamVector *mParamsByName;
 
     DISALLOW_COPY_AND_ASSIGN(Annotation);
 };
