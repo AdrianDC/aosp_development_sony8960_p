@@ -83,7 +83,7 @@ void ScalarType::emitReaderWriterWithCast(
     const std::string parcelObjDeref =
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
-    out << "_aidl_err = "
+    out << "_hidl_err = "
         << parcelObjDeref
         << (isReader ? "read" : "write")
         << kSuffix[mKind]

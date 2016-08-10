@@ -72,25 +72,25 @@ void Type::handleError(Formatter &out, ErrorMode mode) const {
     switch (mode) {
         case ErrorMode_Ignore:
         {
-            out << "/* _aidl_err ignored! */\n\n";
+            out << "/* _hidl_err ignored! */\n\n";
             break;
         }
 
         case ErrorMode_Goto:
         {
-            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
             break;
         }
 
         case ErrorMode_Break:
         {
-            out << "if (_aidl_err != ::android::OK) { break; }\n\n";
+            out << "if (_hidl_err != ::android::OK) { break; }\n\n";
             break;
         }
 
         case ErrorMode_Return:
         {
-            out << "if (_aidl_err != ::android::OK) { return _aidl_err; }\n\n";
+            out << "if (_hidl_err != ::android::OK) { return _hidl_err; }\n\n";
             break;
         }
     }
@@ -100,7 +100,7 @@ void Type::handleError2(Formatter &out, ErrorMode mode) const {
     switch (mode) {
         case ErrorMode_Goto:
         {
-            out << "goto _aidl_error;\n";
+            out << "goto _hidl_error;\n";
             break;
         }
 
@@ -112,13 +112,13 @@ void Type::handleError2(Formatter &out, ErrorMode mode) const {
 
         case ErrorMode_Ignore:
         {
-            out << "/* ignoring _aidl_error! */";
+            out << "/* ignoring _hidl_error! */";
             break;
         }
 
         case ErrorMode_Return:
         {
-            out << "return _aidl_err;\n";
+            out << "return _hidl_err;\n";
             break;
         }
     }
@@ -145,7 +145,7 @@ void Type::emitReaderWriterEmbeddedForTypeName(
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
     const std::string namePointer = nameIsPointer ? name : ("&" + name);
 
-    out << "_aidl_err = ";
+    out << "_hidl_err = ";
 
     if (isReader) {
         out << "const_cast<"

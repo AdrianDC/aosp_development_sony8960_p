@@ -50,12 +50,12 @@ void Interface::emitReaderWriter(
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
     if (isReader) {
-        const std::string binderName = "_aidl_" + name + "_binder";
+        const std::string binderName = "_hidl_" + name + "_binder";
 
         out << "::android::sp<::android::hardware::IBinder> "
             << binderName << ";\n";
 
-        out << "_aidl_err = ";
+        out << "_hidl_err = ";
         out << parcelObjDeref
             << "readNullableStrongBinder(&"
             << binderName
@@ -70,7 +70,7 @@ void Interface::emitReaderWriter(
             << binderName
             << ");\n";
     } else {
-        out << "_aidl_err = ";
+        out << "_hidl_err = ";
         out << parcelObjDeref
             << "writeStrongBinder("
             << fullName()

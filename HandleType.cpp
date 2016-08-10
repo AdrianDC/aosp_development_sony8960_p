@@ -34,13 +34,13 @@ void HandleType::emitReaderWriter(
 
         out.indent();
 
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
 
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = ";
+        out << "_hidl_err = ";
         out << parcelObjDeref
             << "writeNativeHandleNoDup("
             << name
@@ -61,7 +61,7 @@ void HandleType::emitReaderWriterEmbedded(
         const std::string &parentName,
         const std::string &offsetText) const {
     if (isReader) {
-        const std::string ptrName = "_aidl_" + name  + "_ptr";
+        const std::string ptrName = "_hidl_" + name  + "_ptr";
 
         out << "const native_handle_t *"
             << ptrName
@@ -86,12 +86,12 @@ void HandleType::emitReaderWriterEmbedded(
             << " == nullptr) {\n";
 
         out.indent();
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = "
+        out << "_hidl_err = "
             << parcelObj
             << (parcelObjIsPointer ? "->" : ".")
             << "writeEmbeddedNativeHandle(\n";

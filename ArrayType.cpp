@@ -43,7 +43,7 @@ void ArrayType::emitReaderWriter(
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
 
-    const std::string parentName = "_aidl_" + name + "_parent";
+    const std::string parentName = "_hidl_" + name + "_parent";
 
     out << "size_t " << parentName << ";\n\n";
 
@@ -64,13 +64,13 @@ void ArrayType::emitReaderWriter(
 
         out.indent();
 
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
 
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = "
+        out << "_hidl_err = "
             << parcelObjDeref
             << "writeBuffer("
             << name
@@ -116,22 +116,22 @@ void ArrayType::emitReaderWriterEmbedded(
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
 
-    out << "for (size_t _aidl_index = 0; _aidl_index < "
+    out << "for (size_t _hidl_index = 0; _hidl_index < "
         << mDimension
-        << "; ++_aidl_index) {\n";
+        << "; ++_hidl_index) {\n";
 
     out.indent();
 
     mElementType->emitReaderWriterEmbedded(
             out,
-            name + "[_aidl_index]",
+            name + "[_hidl_index]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
             isReader,
             mode,
             parentName,
-            offsetText + " + _aidl_index * sizeof(" + baseType + ")");
+            offsetText + " + _hidl_index * sizeof(" + baseType + ")");
 
     out.unindent();
 

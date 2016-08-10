@@ -249,7 +249,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                     out << ", ";
                 }
 
-                out << method->name() << "_cb _aidl_cb = nullptr";
+                out << method->name() << "_cb _hidl_cb = nullptr";
             }
 
             out << ") = 0;\n";
@@ -330,11 +330,11 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "::android::status_t onTransact(\n";
     out.indent();
     out.indent();
-    out << "uint32_t _aidl_code,\n";
-    out << "const ::android::hardware::Parcel &_aidl_data,\n";
-    out << "::android::hardware::Parcel *_aidl_reply,\n";
-    out << "uint32_t _aidl_flags = 0,\n";
-    out << "TransactCallback _aidl_cb = nullptr) override;\n";
+    out << "uint32_t _hidl_code,\n";
+    out << "const ::android::hardware::Parcel &_hidl_data,\n";
+    out << "::android::hardware::Parcel *_hidl_reply,\n";
+    out << "uint32_t _hidl_flags = 0,\n";
+    out << "TransactCallback _hidl_cb = nullptr) override;\n";
     out.unindent();
     out.unindent();
 
@@ -404,7 +404,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     out << "explicit Bp"
         << baseName
-        << "(const ::android::sp<::android::hardware::IBinder> &_aidl_impl);"
+        << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
     const Interface *iface = mRootScope->getInterface();
@@ -435,7 +435,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
                     out << ", ";
                 }
 
-                out << method->name() << "_cb _aidl_cb";
+                out << method->name() << "_cb _hidl_cb";
             }
 
             out << ") override;\n";
@@ -565,7 +565,7 @@ status_t AST::generateProxySource(
     out << klassName
         << "::"
         << klassName
-        << "(const ::android::sp<::android::hardware::IBinder> &_aidl_impl)\n";
+        << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl)\n";
 
     out.indent();
     out.indent();
@@ -573,7 +573,7 @@ status_t AST::generateProxySource(
     out << ": BpInterface"
         << "<I"
         << baseName
-        << ">(_aidl_impl) {\n";
+        << ">(_hidl_impl) {\n";
 
     out.unindent();
     out.unindent();
@@ -605,51 +605,51 @@ status_t AST::generateProxySource(
                     out << ", ";
                 }
 
-                out << method->name() << "_cb _aidl_cb";
+                out << method->name() << "_cb _hidl_cb";
             }
 
             out << ") {\n";
 
             out.indent();
 
-            out << "::android::hardware::Parcel _aidl_data;\n";
-            out << "::android::hardware::Parcel _aidl_reply;\n";
-            out << "::android::status_t _aidl_err;\n\n";
-            out << "::android::hardware::Status _aidl_status;\n";
+            out << "::android::hardware::Parcel _hidl_data;\n";
+            out << "::android::hardware::Parcel _hidl_reply;\n";
+            out << "::android::status_t _hidl_err;\n\n";
+            out << "::android::hardware::Status _hidl_status;\n";
 
-            out << "_aidl_err = _aidl_data.writeInterfaceToken("
+            out << "_hidl_err = _hidl_data.writeInterfaceToken("
                 << superInterface->fullName()
                 << "::getInterfaceDescriptor());\n";
 
-            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
             for (const auto &arg : method->args()) {
                 emitCppReaderWriter(
                         out,
-                        "_aidl_data",
+                        "_hidl_data",
                         false /* parcelObjIsPointer */,
                         arg,
                         false /* reader */,
                         Type::ErrorMode_Goto);
             }
 
-            out << "_aidl_err = remote()->transact(I"
+            out << "_hidl_err = remote()->transact(I"
                       << baseName
                       << "::"
                       << upcase(method->name())
-                      << ", _aidl_data, &_aidl_reply);\n";
+                      << ", _hidl_data, &_hidl_reply);\n";
 
-            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
-            out << "_aidl_err = _aidl_status.readFromParcel(_aidl_reply);\n";
-            out << "if (_aidl_err != ::android::OK) { goto _aidl_error; }\n\n";
+            out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
-            out << "if (!_aidl_status.isOk()) { return _aidl_status; }\n\n";
+            out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
 
             for (const auto &arg : method->results()) {
                 emitCppReaderWriter(
                         out,
-                        "_aidl_reply",
+                        "_hidl_reply",
                         false /* parcelObjIsPointer */,
                         arg,
                         true /* reader */,
@@ -657,9 +657,9 @@ status_t AST::generateProxySource(
             }
 
             if (returnsValue) {
-                out << "if (_aidl_cb != nullptr) {\n";
+                out << "if (_hidl_cb != nullptr) {\n";
                 out.indent();
-                out << "_aidl_cb(";
+                out << "_hidl_cb(";
 
                 bool first = true;
                 for (const auto &arg : method->results()) {
@@ -681,10 +681,10 @@ status_t AST::generateProxySource(
             }
 
             out.unindent();
-            out << "_aidl_error:\n";
+            out << "_hidl_error:\n";
             out.indent();
-            out << "_aidl_status.setFromStatusT(_aidl_err);\n"
-                      << "return _aidl_status;\n";
+            out << "_hidl_status.setFromStatusT(_hidl_err);\n"
+                      << "return _hidl_status;\n";
 
             out.unindent();
             out << "}\n\n";
@@ -711,17 +711,17 @@ status_t AST::generateStubSource(
     out.indent();
     out.indent();
 
-    out << "uint32_t _aidl_code,\n"
-        << "const ::android::hardware::Parcel &_aidl_data,\n"
-        << "::android::hardware::Parcel *_aidl_reply,\n"
-        << "uint32_t _aidl_flags,\n"
-        << "TransactCallback _aidl_cb) {\n";
+    out << "uint32_t _hidl_code,\n"
+        << "const ::android::hardware::Parcel &_hidl_data,\n"
+        << "::android::hardware::Parcel *_hidl_reply,\n"
+        << "uint32_t _hidl_flags,\n"
+        << "TransactCallback _hidl_cb) {\n";
 
     out.unindent();
 
-    out << "::android::status_t _aidl_err = ::android::OK;\n\n";
+    out << "::android::status_t _hidl_err = ::android::OK;\n\n";
 
-    out << "switch (_aidl_code) {\n";
+    out << "switch (_hidl_code) {\n";
     out.indent();
 
     const Interface *iface = mRootScope->getInterface();
@@ -766,8 +766,8 @@ status_t AST::generateStubSource(
     out.indent();
     out.indent();
 
-    out << "_aidl_code, _aidl_data, _aidl_reply, "
-        << "_aidl_flags, _aidl_cb);\n";
+    out << "_hidl_code, _hidl_data, _hidl_reply, "
+        << "_hidl_flags, _hidl_cb);\n";
 
     out.unindent();
     out.unindent();
@@ -778,15 +778,15 @@ status_t AST::generateStubSource(
     out.unindent();
     out << "}\n\n";
 
-    out << "if (_aidl_err == ::android::UNEXPECTED_NULL) {\n";
+    out << "if (_hidl_err == ::android::UNEXPECTED_NULL) {\n";
     out.indent();
-    out << "_aidl_err = ::android::hardware::Status::fromExceptionCode(\n";
+    out << "_hidl_err = ::android::hardware::Status::fromExceptionCode(\n";
     out.indent();
     out.indent();
     out << "::android::hardware::Status::EX_NULL_POINTER)\n";
     out.indent();
     out.indent();
-    out << ".writeToParcel(_aidl_reply);\n";
+    out << ".writeToParcel(_hidl_reply);\n";
     out.unindent();
     out.unindent();
     out.unindent();
@@ -795,7 +795,7 @@ status_t AST::generateStubSource(
     out.unindent();
     out << "}\n\n";
 
-    out << "return _aidl_err;\n";
+    out << "return _hidl_err;\n";
 
     out.unindent();
     out << "}\n\n";
@@ -805,12 +805,12 @@ status_t AST::generateStubSource(
 
 status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
-    out << "if (!_aidl_data.enforceInterface("
+    out << "if (!_hidl_data.enforceInterface("
         << iface->fullName()
         << "::getInterfaceDescriptor())) {\n";
 
     out.indent();
-    out << "_aidl_err = ::android::BAD_TYPE;\n";
+    out << "_hidl_err = ::android::BAD_TYPE;\n";
     out << "break;\n";
     out.unindent();
     out << "}\n\n";
@@ -818,7 +818,7 @@ status_t AST::generateStubSourceForMethod(
     for (const auto &arg : method->args()) {
         emitCppReaderWriter(
                 out,
-                "_aidl_data",
+                "_hidl_data",
                 false /* parcelObjIsPointer */,
                 arg,
                 true /* reader */,
@@ -828,10 +828,10 @@ status_t AST::generateStubSourceForMethod(
     const bool returnsValue = !method->results().empty();
 
     if (returnsValue) {
-        out << "bool _aidl_callbackCalled = false;\n\n";
+        out << "bool _hidl_callbackCalled = false;\n\n";
     }
 
-    out << "::android::hardware::Status _aidl_status(\n";
+    out << "::android::hardware::Status _hidl_status(\n";
     out.indent();
     out.indent();
     out << method->name() << "(";
@@ -871,22 +871,22 @@ status_t AST::generateStubSourceForMethod(
 
         out << ") {\n";
         out.indent();
-        out << "_aidl_callbackCalled = true;\n\n";
+        out << "_hidl_callbackCalled = true;\n\n";
 
         out << "::android::hardware::Status::ok()"
-                  << ".writeToParcel(_aidl_reply);\n\n";
+                  << ".writeToParcel(_hidl_reply);\n\n";
 
         for (const auto &arg : method->results()) {
             emitCppReaderWriter(
                     out,
-                    "_aidl_reply",
+                    "_hidl_reply",
                     true /* parcelObjIsPointer */,
                     arg,
                     false /* reader */,
                     Type::ErrorMode_Ignore);
         }
 
-        out << "_aidl_cb(*_aidl_reply);\n";
+        out << "_hidl_cb(*_hidl_reply);\n";
 
         out.unindent();
         out << "}\n";
@@ -897,11 +897,11 @@ status_t AST::generateStubSourceForMethod(
     out << "));\n\n";
 
     if (returnsValue) {
-        out << "if (!_aidl_callbackCalled) {\n";
+        out << "if (!_hidl_callbackCalled) {\n";
         out.indent();
     }
 
-    out << "_aidl_err = _aidl_status.writeToParcel(_aidl_reply);\n";
+    out << "_hidl_err = _hidl_status.writeToParcel(_hidl_reply);\n";
 
     if (returnsValue) {
         out.unindent();

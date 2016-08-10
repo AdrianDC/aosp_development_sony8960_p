@@ -40,7 +40,7 @@ void VectorType::emitReaderWriter(
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
 
-    const std::string parentName = "_aidl_" + name + "_parent";
+    const std::string parentName = "_hidl_" + name + "_parent";
 
     out << "size_t " << parentName << ";\n\n";
 
@@ -61,13 +61,13 @@ void VectorType::emitReaderWriter(
 
         out.indent();
 
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
 
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = "
+        out << "_hidl_err = "
             << parcelObjDeref
             << "writeBuffer(&"
             << name
@@ -105,7 +105,7 @@ void VectorType::emitReaderWriterEmbedded(
     std::string baseExtra;
     std::string baseType = Type::getCppType(&baseExtra);
 
-    const std::string childName = "_aidl_" + name + "_child";
+    const std::string childName = "_hidl_" + name + "_child";
     out << "size_t " << childName << ";\n\n";
 
     emitReaderWriterEmbeddedForTypeName(
@@ -129,22 +129,22 @@ void VectorType::emitReaderWriterEmbedded(
 
     baseType = mElementType->getCppType(&baseExtra);
 
-    out << "for (size_t _aidl_index = 0; _aidl_index < "
+    out << "for (size_t _hidl_index = 0; _hidl_index < "
         << nameDeref
-        << "size(); ++_aidl_index) {\n";
+        << "size(); ++_hidl_index) {\n";
 
     out.indent();
 
     mElementType->emitReaderWriterEmbedded(
             out,
-            (nameIsPointer ? "(*" + name + ")" : name) + "[_aidl_index]",
+            (nameIsPointer ? "(*" + name + ")" : name) + "[_hidl_index]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
             isReader,
             mode,
             childName,
-            "_aidl_index * sizeof(" + baseType + ")");
+            "_hidl_index * sizeof(" + baseType + ")");
 
     out.unindent();
 

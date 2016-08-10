@@ -65,7 +65,7 @@ void CompoundType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
-    const std::string parentName = "_aidl_" + name + "_parent";
+    const std::string parentName = "_hidl_" + name + "_parent";
 
     out << "size_t " << parentName << ";\n\n";
 
@@ -89,13 +89,13 @@ void CompoundType::emitReaderWriter(
 
         out.indent();
 
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
 
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = "
+        out << "_hidl_err = "
             << parcelObjDeref
             << "writeBuffer(&"
             << name
@@ -248,7 +248,7 @@ void CompoundType::emitStructReaderWriter(
     out.unindent();
     out.indent();
 
-    out << "::android::status_t _aidl_err = ::android::OK;\n\n";
+    out << "::android::status_t _hidl_err = ::android::OK;\n\n";
 
     for (const auto &field : *mFields) {
         if (!field->type().needsEmbeddedReadWrite()) {
@@ -272,9 +272,9 @@ void CompoundType::emitStructReaderWriter(
     }
 
     out.unindent();
-    out << "_aidl_error:\n";
+    out << "_hidl_error:\n";
     out.indent();
-    out << "return _aidl_err;\n";
+    out << "return _hidl_err;\n";
 
     out.unindent();
     out << "}\n\n";

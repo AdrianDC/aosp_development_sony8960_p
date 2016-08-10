@@ -30,7 +30,7 @@ void StringType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
-    const std::string parentName = "_aidl_" + name + "_parent";
+    const std::string parentName = "_hidl_" + name + "_parent";
     out << "size_t " << parentName << ";\n\n";
 
     const std::string parcelObjDeref =
@@ -51,13 +51,13 @@ void StringType::emitReaderWriter(
 
         out.indent();
 
-        out << "_aidl_err = ::android::UNKNOWN_ERROR;\n";
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         handleError2(out, mode);
 
         out.unindent();
         out << "}\n\n";
     } else {
-        out << "_aidl_err = "
+        out << "_hidl_err = "
             << parcelObjDeref
             << "writeBuffer(&"
             << name
