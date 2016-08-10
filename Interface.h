@@ -4,14 +4,18 @@
 
 #include "Scope.h"
 
+#include <utils/KeyedVector.h>
 #include <vector>
 
 namespace android {
 
+struct Annotation;
 struct Method;
 
 struct Interface : public Scope {
-    Interface(Interface *super);
+    Interface(
+            Interface *super,
+            KeyedVector<std::string, Annotation *> *annotations);
 
     void addMethod(Method *method);
 
@@ -20,6 +24,8 @@ struct Interface : public Scope {
     const Interface *superType() const;
 
     const std::vector<Method *> &methods() const;
+
+    const KeyedVector<std::string, Annotation *> &annotations() const;
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
@@ -34,6 +40,7 @@ struct Interface : public Scope {
 private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;
+    KeyedVector<std::string, Annotation *> *mAnnotationsByName;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
