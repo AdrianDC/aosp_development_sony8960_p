@@ -1,12 +1,16 @@
 #include "Interface.h"
 
+#include "Annotation.h"
 #include "Formatter.h"
 #include "Method.h"
 
 namespace android {
 
-Interface::Interface(Interface *super)
-    : mSuperType(super) {
+Interface::Interface(
+        Interface *super,
+        KeyedVector<std::string, Annotation *> *annotations)
+        : mSuperType(super),
+          mAnnotationsByName(annotations) {
 }
 
 void Interface::addMethod(Method *method) {
@@ -23,6 +27,10 @@ bool Interface::isInterface() const {
 
 const std::vector<Method *> &Interface::methods() const {
     return mMethods;
+}
+
+const KeyedVector<std::string, Annotation *> &Interface::annotations() const {
+    return *mAnnotationsByName;
 }
 
 std::string Interface::getCppType(StorageMode mode, std::string *extra) const {

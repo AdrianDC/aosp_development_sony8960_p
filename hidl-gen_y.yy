@@ -237,18 +237,18 @@ opt_extends
     | EXTENDS fqname { $$ = $2; }
 
 body
-    : INTERFACE IDENTIFIER opt_extends
+    : opt_annotations INTERFACE IDENTIFIER opt_extends
       {
-          if ($3 != NULL && !$3->isInterface()) {
+          if ($4 != NULL && !$4->isInterface()) {
               fprintf(stderr, "You can only extend interfaces.\n");
               YYERROR;
           }
 
-          Interface *iface = new Interface(static_cast<Interface *>($3));
+          Interface *iface = new Interface(static_cast<Interface *>($4), $1);
 
           // Register interface immediately so it can be referenced inside
           // definition.
-          if (!ast->addScopedType($2, iface)) {
+          if (!ast->addScopedType($3, iface)) {
               YYERROR;
           }
 
