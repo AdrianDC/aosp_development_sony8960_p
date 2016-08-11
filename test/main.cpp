@@ -1,20 +1,21 @@
 #include <android-base/logging.h>
 
-#include <android/hardware/foo/1.0/BnFoo.h>
-#include <android/hardware/foo/1.0/BnFooCallback.h>
-#include <android/hardware/bar/1.0/BnBar.h>
+#include <android/hardware/tests/foo/1.0/BnFoo.h>
+#include <android/hardware/tests/foo/1.0/BnFooCallback.h>
+#include <android/hardware/tests/bar/1.0/BnBar.h>
 
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/IServiceManager.h>
 #include <hwbinder/ProcessState.h>
 #include <hwbinder/Status.h>
 
-using ::android::hardware::foo::V1_0::BnFoo;
-using ::android::hardware::foo::V1_0::BnFooCallback;
-using ::android::hardware::bar::V1_0::BnBar;
-using ::android::hardware::foo::V1_0::IFoo;
-using ::android::hardware::foo::V1_0::IFooCallback;
-using ::android::hardware::bar::V1_0::IBar;
+using ::android::hardware::tests::foo::V1_0::BnFoo;
+using ::android::hardware::tests::foo::V1_0::BnFooCallback;
+using ::android::hardware::tests::bar::V1_0::BnBar;
+using ::android::hardware::tests::foo::V1_0::IFoo;
+using ::android::hardware::tests::foo::V1_0::IFooCallback;
+using ::android::hardware::tests::bar::V1_0::IBar;
+using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::Status;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
@@ -60,10 +61,11 @@ struct Bar : public BnBar {
     Status useAnEnum(
             SomeEnum param, useAnEnum_cb _cb) override;
 
-    Status hmmm(const hidl_vec<Goober>& param) override;
-    Status runningOutOfNames(const Goober &g) override;
+    Status haveAGooberVec(const hidl_vec<Goober>& param) override;
+    Status haveAGoober(const Goober &g) override;
+    Status haveAGooberArray(const Goober lots[20]) override;
 
-    Status aGooberArray(const Goober lots[20]) override;
+    Status haveATypeFromAnotherFile(const Abc &def) override;
 
     Status haveSomeStrings(
             const hidl_string array[3],
@@ -137,16 +139,18 @@ Status Bar::mapThisVector(
         const hidl_vec<int32_t> &param, mapThisVector_cb _cb) {
     ALOGI("Bar::mapThisVector");
 
+    int32_t *buffer = new int32_t[param.size()];
+
     hidl_vec<int32_t> out;
-    out.count = param.count;
-    out.buffer = new int32_t[out.count];
-    for (size_t i = 0; i < out.count; ++i) {
-        out.buffer[i] = param.buffer[i] * 2;
+    out.setTo(buffer, param.size());
+
+    for (size_t i = 0; i < out.size(); ++i) {
+        out[i] = param[i] * 2;
     }
 
     _cb(out);
 
-    delete[] out.buffer;
+    delete[] buffer;
 
     return Status::ok();
 }
@@ -172,20 +176,26 @@ Status Bar::useAnEnum(
     return Status::ok();
 }
 
-Status Bar::hmmm(const hidl_vec<Goober>& param) {
-    ALOGI("Bar::hmmm &param = %p", &param);
+Status Bar::haveAGooberVec(const hidl_vec<Goober>& param) {
+    ALOGI("Bar::haveAGooberVec &param = %p", &param);
 
     return Status::ok();
 }
 
-Status Bar::runningOutOfNames(const Goober &g) {
-    ALOGI("Bar::runningOutOfNames g=%p", &g);
+Status Bar::haveAGoober(const Goober &g) {
+    ALOGI("Bar::haveaGoober g=%p", &g);
 
     return Status::ok();
 }
 
-Status Bar::aGooberArray(const Goober lots[20]) {
-    ALOGI("Bar::aGooberArray lots = %p", lots);
+Status Bar::haveAGooberArray(const Goober lots[20]) {
+    ALOGI("Bar::haveAGooberArray lots = %p", lots);
+
+    return Status::ok();
+}
+
+Status Bar::haveATypeFromAnotherFile(const Abc &def) {
+    ALOGI("Bar::haveATypeFromAnotherFile def=%p", &def);
 
     return Status::ok();
 }
@@ -232,7 +242,8 @@ Status Bar::thisIsNew() {
     return Status::ok();
 }
 
-static std::string arrayToString(const int32_t *data, size_t size) {
+template<typename I>
+static std::string arraylikeToString(const I data, size_t size) {
     std::string out = "[";
     for (size_t i = 0; i < size; ++i) {
         if (i > 0) {
@@ -247,7 +258,7 @@ static std::string arrayToString(const int32_t *data, size_t size) {
 }
 
 static std::string vecToString(const hidl_vec<int32_t> &vec) {
-    return arrayToString(vec.buffer, vec.count);
+    return arraylikeToString(vec, vec.size());
 }
 
 static void client() {
@@ -284,7 +295,7 @@ static void client() {
     }
     foo->doSomethingElse(param, [&](const auto &something) {
             ALOGI("=> doSomethingElse returned %s.",
-                  arrayToString(something, 32).c_str());
+                  arraylikeToString(something, 32).c_str());
         });
 
     foo->doStuffAndReturnAString([&](const auto &something) {
@@ -306,8 +317,8 @@ static void client() {
     foo->callMe(new FooCallback);
     ALOGI("=> callMe returned.");
 
-    foo->useAnEnum(IFoo::SomeEnum::quux, [&](auto kkk) {
-                ALOGI("=> useAnEnum returned %u", (unsigned)kkk);
+    foo->useAnEnum(IFoo::SomeEnum::quux, [&](auto sleepy) {
+                ALOGI("=> useAnEnum returned %u", (unsigned)sleepy);
             });
 
     hidl_vec<IFoo::Goober> gooberVecParam;
@@ -315,15 +326,23 @@ static void client() {
     gooberVecParam[0].name = "Hello";
     gooberVecParam[1].name = "World";
 
-    foo->hmmm(gooberVecParam);
-    ALOGI("=> hmmm returned.");
+    foo->haveAGooberVec(gooberVecParam);
+    ALOGI("=> haveAGooberVec returned.");
 
-    foo->runningOutOfNames(gooberVecParam[0]);
-    ALOGI("=> runningOutOfNames returned.");
-
+    foo->haveAGoober(gooberVecParam[0]);
+    ALOGI("=> haveaGoober returned.");
     IFoo::Goober gooberArrayParam[20];
-    foo->aGooberArray(gooberArrayParam);
-    ALOGI("=> aGooberArray returned.");
+    foo->haveAGooberArray(gooberArrayParam);
+    ALOGI("=> haveAGooberArray returned.");
+
+    Abc abcParam{};
+    abcParam.x = "alphabet";
+    abcParam.y = 3.14f;
+    abcParam.z = new native_handle_t();
+    foo->haveATypeFromAnotherFile(abcParam);
+    ALOGI("=> haveATypeFromAnotherFile returned.");
+    delete abcParam.z;
+    abcParam.z = NULL;
 
     hidl_string stringArrayParam[3];
     stringArrayParam[0] = "What";
