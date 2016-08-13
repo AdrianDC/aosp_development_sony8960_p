@@ -5,6 +5,7 @@
 #include "ArrayType.h"
 #include "CompoundType.h"
 #include "Constant.h"
+#include "ConstantExpression.h"
 #include "EnumType.h"
 #include "Interface.h"
 #include "Method.h"
@@ -44,6 +45,7 @@ int yyerror(AST *, const char *s) {
 %token<str> IDENTIFIER
 %token<str> IMPORT
 %token<str> INTEGER
+%token<str> FLOAT
 %token<str> INTERFACE
 %token<str> PACKAGE
 %token<type> SCALAR
@@ -53,6 +55,30 @@ int yyerror(AST *, const char *s) {
 %token<str> UNION
 %token<str> VEC
 %token<void> ONEWAY
+
+/* Operator precedence and associativity, as per
+ * http://en.cppreference.com/w/cpp/language/operator_precedence */
+/* Precedence level 15 ternary operator */
+%right '?' ':'
+/* Precedence level 13 - 14, LTR, logical operators*/
+%left LOGICAL_OR
+%left LOGICAL_AND
+/* Precedence level 10 - 12, LTR, bitwise operators*/
+%left '|'
+%left '^'
+%left '&'
+/* Precedence level 9, LTR */
+%left EQUALITY NEQ
+/* Precedence level 8, LTR */
+%left '<' '>' LEQ GEQ
+/* Precedence level 7, LTR */
+%left LSHIFT RSHIFT
+/* Precedence level 6, LTR */
+%left '+' '-'
+/* Precedence level 5, LTR */
+%left '*' '/' '%'
+/* Precedence level 3, RTL; but we have to use %left here */
+%left UNARY_MINUS UNARY_PLUS '!' '~'
 
 %type<str> optIdentifier package
 %type<str> const_value
@@ -65,6 +91,7 @@ int yyerror(AST *, const char *s) {
 
 %type<field> field_declaration
 %type<fields> field_declarations struct_or_union_body
+%type<constantExpression> const_expr
 %type<enumValue> enum_value
 %type<enumValues> enum_values
 %type<typedVars> typed_vars
@@ -86,6 +113,7 @@ int yyerror(AST *, const char *s) {
     android::CompoundField *field;
     std::vector<android::CompoundField *> *fields;
     android::EnumValue *enumValue;
+    android::ConstantExpression *constantExpression;
     std::vector<android::EnumValue *> *enumValues;
     android::TypedVar *typedVar;
     std::vector<android::TypedVar *> *typedVars;
@@ -303,6 +331,38 @@ typedef_declaration
       }
     ;
 
+const_expr
+    : INTEGER                   { $$ = new ConstantExpression($1); }
+    | IDENTIFIER                { $$ = new ConstantExpression($1); }
+    | const_expr '?' const_expr ':' const_expr
+      {
+        $$ = new ConstantExpression($1, $3, $5);
+      }
+    | const_expr LOGICAL_OR const_expr  { $$ = new ConstantExpression($1, "||", $3); }
+    | const_expr LOGICAL_AND const_expr { $$ = new ConstantExpression($1, "&&", $3); }
+    | const_expr '|' const_expr { $$ = new ConstantExpression($1, "|" , $3); }
+    | const_expr '^' const_expr { $$ = new ConstantExpression($1, "^" , $3); }
+    | const_expr '&' const_expr { $$ = new ConstantExpression($1, "&" , $3); }
+    | const_expr EQUALITY const_expr { $$ = new ConstantExpression($1, "==", $3); }
+    | const_expr NEQ const_expr { $$ = new ConstantExpression($1, "!=", $3); }
+    | const_expr '<' const_expr { $$ = new ConstantExpression($1, "<" , $3); }
+    | const_expr '>' const_expr { $$ = new ConstantExpression($1, ">" , $3); }
+    | const_expr LEQ const_expr { $$ = new ConstantExpression($1, "<=", $3); }
+    | const_expr GEQ const_expr { $$ = new ConstantExpression($1, ">=", $3); }
+    | const_expr LSHIFT const_expr { $$ = new ConstantExpression($1, "<<", $3); }
+    | const_expr RSHIFT const_expr { $$ = new ConstantExpression($1, ">>", $3); }
+    | const_expr '+' const_expr { $$ = new ConstantExpression($1, "+" , $3); }
+    | const_expr '-' const_expr { $$ = new ConstantExpression($1, "-" , $3); }
+    | const_expr '*' const_expr { $$ = new ConstantExpression($1, "*" , $3); }
+    | const_expr '/' const_expr { $$ = new ConstantExpression($1, "/" , $3); }
+    | const_expr '%' const_expr { $$ = new ConstantExpression($1, "%" , $3); }
+    | '+' const_expr %prec UNARY_PLUS  { $$ = new ConstantExpression("+", $2); }
+    | '-' const_expr %prec UNARY_MINUS { $$ = new ConstantExpression("-", $2); }
+    | '!' const_expr { $$ = new ConstantExpression("!", $2); }
+    | '~' const_expr { $$ = new ConstantExpression("~", $2); }
+    | '(' const_expr ')' { $$ = $2; }
+    ;
+
 const_value
     : INTEGER
     | STRING_LITERAL ;
@@ -473,14 +533,7 @@ enum_declaration
 
 enum_value
     : IDENTIFIER { $$ = new EnumValue($1); }
-    | IDENTIFIER '=' INTEGER { $$ = new EnumValue($1, $3); }
-    | IDENTIFIER '=' IDENTIFIER { $$ = new EnumValue($1, $3); }
-    | IDENTIFIER '=' IDENTIFIER '+' INTEGER
-      {
-          $$ = new EnumValue(
-                  $1, strdup(
-                      android::String8::format("%s + %s", $3, $5).string()));
-      }
+    | IDENTIFIER '=' const_expr { $$ = new EnumValue($1, $3->value()); }
     ;
 
 enum_values

@@ -16,6 +16,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "Annotation.h"
 #include "AST.h"
 #include "CompoundType.h"
+#include "ConstantExpression.h"
 #include "EnumType.h"
 #include "HandleType.h"
 #include "Method.h"
@@ -94,6 +95,24 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "."			{ count(yyg); return('.'); }
 "="			{ count(yyg); return('='); }
 "+"			{ count(yyg); return('+'); }
+"-"         { count(yyg); return('-'); }
+"*"         { count(yyg); return('*'); }
+"/"         { count(yyg); return('/'); }
+"%"         { count(yyg); return('%'); }
+"&"         { count(yyg); return('&'); }
+"|"         { count(yyg); return('|'); }
+"^"         { count(yyg); return('^'); }
+"<<"        { count(yyg); return(LSHIFT); }
+">>"        { count(yyg); return(RSHIFT); }
+"&&"        { count(yyg); return(LOGICAL_AND); }
+"||"        { count(yyg); return(LOGICAL_OR);  }
+"!"         { count(yyg); return('!'); }
+"~"         { count(yyg); return('~'); }
+"<="        { count(yyg); return(LEQ); }
+">="        { count(yyg); return(GEQ); }
+"=="        { count(yyg); return(EQUALITY); }
+"!="        { count(yyg); return(NEQ); }
+"?"         { count(yyg); return('?'); }
 "@"			{ count(yyg); return('@'); }
 
 {PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
@@ -105,6 +124,11 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 0[xX]{H}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
 0{D}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
 {D}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
+
+{D}+{E}{FS}?         { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
+{D}+\.{E}?{FS}?      { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
+{D}*\.{D}+{E}?{FS}?  { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
+
 L?\"(\\.|[^\\"])*\"	{ count(yyg); yylval->str = strdup(yytext); return(STRING_LITERAL); }
 
 [ \t\v\n\f]		{ count(yyg); }
