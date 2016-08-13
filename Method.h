@@ -21,11 +21,13 @@ struct Method {
     Method(const char *name,
            std::vector<TypedVar *> *args,
            std::vector<TypedVar *> *results,
+           bool oneway,
            AnnotationVector *annotations);
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;
     const std::vector<TypedVar *> &results() const;
+    bool isOneway() const { return mOneway; }
     const AnnotationVector &annotations() const;
 
     static std::string GetSignature(const std::vector<TypedVar *> &args);
@@ -37,6 +39,7 @@ private:
     std::string mName;
     std::vector<TypedVar *> *mArgs;
     std::vector<TypedVar *> *mResults;
+    bool mOneway;
     AnnotationVector *mAnnotationsByName;
 
     DISALLOW_COPY_AND_ASSIGN(Method);

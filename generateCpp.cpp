@@ -637,47 +637,53 @@ status_t AST::generateProxySource(
                       << baseName
                       << "::"
                       << upcase(method->name())
-                      << ", _hidl_data, &_hidl_reply);\n";
-
-            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-
-            out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
-            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-
-            out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
-
-            for (const auto &arg : method->results()) {
-                emitCppReaderWriter(
-                        out,
-                        "_hidl_reply",
-                        false /* parcelObjIsPointer */,
-                        arg,
-                        true /* reader */,
-                        Type::ErrorMode_Goto);
+                      << ", _hidl_data, &_hidl_reply";
+            if (method->isOneway()) {
+                out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
             }
+            out << ");\n";
 
-            if (returnsValue) {
-                out << "if (_hidl_cb != nullptr) {\n";
-                out.indent();
-                out << "_hidl_cb(";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
-                bool first = true;
+            if (!method->isOneway()) {
+                out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
+                out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
+
+                out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
+
                 for (const auto &arg : method->results()) {
-                    if (!first) {
-                        out << ", ";
-                    }
-
-                    if (arg->type().resultNeedsDeref()) {
-                        out << "*";
-                    }
-                    out << arg->name();
-
-                    first = false;
+                    emitCppReaderWriter(
+                            out,
+                            "_hidl_reply",
+                            false /* parcelObjIsPointer */,
+                            arg,
+                            true /* reader */,
+                            Type::ErrorMode_Goto);
                 }
 
-                out << ");\n";
-                out.unindent();
-                out << "}\n\n";
+                if (returnsValue) {
+                    out << "if (_hidl_cb != nullptr) {\n";
+                    out.indent();
+                    out << "_hidl_cb(";
+
+                    bool first = true;
+                    for (const auto &arg : method->results()) {
+                        if (!first) {
+                            out << ", ";
+                        }
+
+                        if (arg->type().resultNeedsDeref()) {
+                            out << "*";
+                        }
+                        out << arg->name();
+
+                        first = false;
+                    }
+
+                    out << ");\n";
+                    out.unindent();
+                    out << "}\n\n";
+                }
             }
 
             out.unindent();

@@ -9,10 +9,12 @@ namespace android {
 Method::Method(const char *name,
        std::vector<TypedVar *> *args,
        std::vector<TypedVar *> *results,
+       bool oneway,
        AnnotationVector *annotations)
     : mName(name),
       mArgs(args),
       mResults(results),
+      mOneway(oneway),
       mAnnotationsByName(annotations) {
 }
 

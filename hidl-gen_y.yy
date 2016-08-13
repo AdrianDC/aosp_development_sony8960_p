@@ -52,6 +52,7 @@ int yyerror(AST *, const char *s) {
 %token<str> TYPEDEF
 %token<str> UNION
 %token<str> VEC
+%token<void> ONEWAY
 
 %type<str> optIdentifier package
 %type<str> const_value
@@ -310,11 +311,15 @@ const_declaration
 method_declaration
     : opt_annotations IDENTIFIER '(' typed_vars ')' ';'
       {
-          $$ = new Method($2, $4, new std::vector<TypedVar *>, $1);
+          $$ = new Method($2, $4, new std::vector<TypedVar *>, false, $1);
+      }
+    | opt_annotations ONEWAY IDENTIFIER '(' typed_vars ')' ';'
+      {
+          $$ = new Method($3, $5, new std::vector<TypedVar *>, true, $1);
       }
     | opt_annotations IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' ';'
       {
-          $$ = new Method($2, $4, $8, $1);
+          $$ = new Method($2, $4, $8, false, $1);
       }
     ;
 
