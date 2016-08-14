@@ -106,7 +106,7 @@ void ScalarType::emitReaderWriterWithCast(
         bool needsCast) const {
     static const char *const kSuffix[] = {
         "Uint8",
-        "Uint8",
+        "Bool",
         "Pointer",
         "Int8",
         "Uint8",
