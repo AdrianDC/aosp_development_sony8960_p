@@ -41,7 +41,7 @@ Status FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb,
     sleep(10);
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p responding", _cb.get());
     if (_hidl_cb)
-      _hidl_cb(1);
+      _hidl_cb(true);
     return Status::ok();
 }
 
