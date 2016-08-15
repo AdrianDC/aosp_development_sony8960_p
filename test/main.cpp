@@ -139,18 +139,14 @@ Status Bar::mapThisVector(
         const hidl_vec<int32_t> &param, mapThisVector_cb _cb) {
     ALOGI("Bar::mapThisVector");
 
-    int32_t *buffer = new int32_t[param.size()];
-
     hidl_vec<int32_t> out;
-    out.setTo(buffer, param.size());
+    out.resize(param.size());
 
     for (size_t i = 0; i < out.size(); ++i) {
         out[i] = param[i] * 2;
     }
 
     _cb(out);
-
-    delete[] buffer;
 
     return Status::ok();
 }
