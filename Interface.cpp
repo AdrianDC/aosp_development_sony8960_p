@@ -47,6 +47,10 @@ std::string Interface::getCppType(StorageMode mode, std::string *extra) const {
     }
 }
 
+std::string Interface::getJavaType() const {
+    return fullJavaName();
+}
+
 void Interface::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -87,6 +91,26 @@ void Interface::emitReaderWriter(
             << "));\n";
 
         handleError(out, mode);
+    }
+}
+
+void Interface::emitJavaReaderWriter(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader) const {
+    if (isReader) {
+        out << fullJavaName()
+            << ".asInterface("
+            << parcelObj
+            << ".readStrongBinder());\n";
+    } else {
+        out << parcelObj
+            << ".writeStrongBinder("
+            << argName
+            << " == null ? null : "
+            << argName
+            << ".asBinder());\n";
     }
 }
 

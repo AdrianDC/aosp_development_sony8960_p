@@ -4,6 +4,8 @@
 #include "Formatter.h"
 #include "Interface.h"
 
+#include <android-base/logging.h>
+
 namespace android {
 
 Scope::Scope() {}
@@ -65,9 +67,26 @@ bool Scope::containsSingleInterface(std::string *ifaceName) const {
     return false;
 }
 
+std::string Scope::getJavaType() const {
+    CHECK(!"Should not be here");
+    return std::string();
+}
+
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
         status_t err = mTypes[i]->emitTypeDeclarations(out);
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
+}
+
+status_t Scope::emitJavaTypeDeclarations(Formatter &out) const {
+    for (size_t i = 0; i < mTypes.size(); ++i) {
+        status_t err = mTypes[i]->emitJavaTypeDeclarations(out);
 
         if (err != OK) {
             return err;

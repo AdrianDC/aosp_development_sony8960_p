@@ -36,12 +36,19 @@ struct FQName {
     bool operator==(const FQName &other) const;
 
     // Returns an absolute C++ namespace prefix, i.e.
-    // ::android::hardware::Foo.
+    // ::android::hardware::Foo::V1_0.
     std::string cppNamespace() const;
 
     // Returns a fully qualified absolute C++ type name, i.e.
-    // ::android::hardware::Foo::bar::baz.
+    // ::android::hardware::Foo::V1_0::bar::baz.
     std::string cppName() const;
+
+    // Returns the java package name, i.e. "android.hardware.Foo.V1_0".
+    std::string javaPackage() const;
+
+    // Returns the fully qualified java type name,
+    // i.e. "android.hardware.Foo.V1_0.IBar"
+    std::string javaName() const;
 
     void getPackageComponents(std::vector<std::string> *components) const;
 

@@ -29,6 +29,8 @@ struct Interface : public Scope {
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
+    std::string getJavaType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -36,6 +38,12 @@ struct Interface : public Scope {
             bool parcelObjIsPointer,
             bool isReader,
             ErrorMode mode) const override;
+
+    void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader) const override;
 
 private:
     Interface *mSuperType;

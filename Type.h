@@ -40,6 +40,9 @@ struct Type {
     std::string getCppResultType(std::string *extra) const;
     std::string getCppArgumentType(std::string *extra) const;
 
+    virtual std::string getJavaType() const = 0;
+    virtual std::string getJavaSuffix() const;
+
     enum ErrorMode {
         ErrorMode_Ignore,
         ErrorMode_Goto,
@@ -65,10 +68,18 @@ struct Type {
             const std::string &parentName,
             const std::string &offsetText) const;
 
+    virtual void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader) const;
+
     virtual status_t emitTypeDeclarations(Formatter &out) const;
 
     virtual status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const;
+
+    virtual status_t emitJavaTypeDeclarations(Formatter &out) const;
 
     virtual bool needsEmbeddedReadWrite() const;
     virtual bool resultNeedsDeref() const;
@@ -89,6 +100,14 @@ protected:
             const std::string &offsetText,
             const std::string &typeName,
             const std::string &childName) const;
+
+    void emitJavaReaderWriterWithSuffix(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader,
+            const std::string &suffix,
+            const std::string &extra) const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Type);

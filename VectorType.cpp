@@ -30,6 +30,14 @@ std::string VectorType::getCppType(StorageMode mode, std::string *extra) const {
     }
 }
 
+std::string VectorType::getJavaType() const {
+    return mElementType->getJavaType() + "[]";
+}
+
+std::string VectorType::getJavaSuffix() const {
+    return mElementType->getJavaSuffix() + "Vector";
+}
+
 void VectorType::emitReaderWriter(
         Formatter &out,
         const std::string &name,

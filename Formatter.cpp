@@ -69,13 +69,6 @@ Formatter &Formatter::operator<<(size_t n) {
 
 void Formatter::setNamespace(const std::string &space) {
     mSpace = space;
-    if (!mSpace.empty()) {
-        // The intent is for this to strip out all local namespace prefixes,
-        // so that a type "::android::hardware::Foo::bar::baz"
-        // is reduced to the equivalent "bar::baz" in the scope of the namespace
-        // "::android::hardware::Foo".
-        mSpace += "::";
-    }
 }
 
 void Formatter::output(const std::string &text) const {

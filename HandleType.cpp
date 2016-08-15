@@ -2,6 +2,8 @@
 
 #include "Formatter.h"
 
+#include <android-base/logging.h>
+
 namespace android {
 
 HandleType::HandleType() {}
@@ -10,6 +12,11 @@ std::string HandleType::getCppType(StorageMode, std::string *extra) const {
     extra->clear();
 
     return "const ::native_handle_t*";
+}
+
+std::string HandleType::getJavaType() const {
+    CHECK(!"Should not be here");
+    return std::string();
 }
 
 void HandleType::emitReaderWriter(

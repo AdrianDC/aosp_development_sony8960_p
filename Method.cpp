@@ -53,6 +53,27 @@ std::string Method::GetSignature(const std::vector<TypedVar *> &args) {
     return out;
 }
 
+// static
+std::string Method::GetJavaSignature(const std::vector<TypedVar *> &args) {
+    bool first = true;
+    std::string out;
+    for (const auto &arg : args) {
+        if (!first) {
+            out += ", ";
+        }
+
+        std::string extra;
+        out += arg->type().getJavaType();
+        out += " ";
+        out += arg->name();
+        out += extra;
+
+        first = false;
+    }
+
+    return out;
+}
+
 void Method::dumpAnnotations(Formatter &out) const {
     if (mAnnotationsByName->size() == 0) {
         return;

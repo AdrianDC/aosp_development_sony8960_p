@@ -10,6 +10,7 @@ struct HandleType : public Type {
     HandleType();
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
+    std::string getJavaType() const override;
 
     void emitReaderWriter(
             Formatter &out,

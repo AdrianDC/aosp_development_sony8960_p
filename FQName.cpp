@@ -186,6 +186,17 @@ std::string FQName::cppName() const {
     return out;
 }
 
+std::string FQName::javaPackage() const {
+    std::vector<std::string> components;
+    getPackageAndVersionComponents(&components, true /* cpp_compatible */);
+
+    return JoinStrings(components, ".");
+}
+
+std::string FQName::javaName() const {
+    return javaPackage() + "." + name();
+}
+
 void FQName::getPackageComponents(std::vector<std::string> *components) const {
     SplitString(package(), '.', components);
 }

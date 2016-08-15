@@ -39,6 +39,46 @@ std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
     return kName[mKind];
 }
 
+std::string ScalarType::getJavaType() const {
+    static const char *const kName[] = {
+        "byte",
+        "boolean",
+        "long",
+        "byte",
+        "byte",
+        "short",
+        "short",
+        "int",
+        "int",
+        "long",
+        "long",
+        "float",
+        "double"
+    };
+
+    return kName[mKind];
+}
+
+std::string ScalarType::getJavaSuffix() const {
+    static const char *const kSuffix[] = {
+        "Int8",
+        "Int8",
+        "Pointer",
+        "Int8",
+        "Int8",
+        "Int16",
+        "Int16",
+        "Int32",
+        "Int32",
+        "Int64",
+        "Int64",
+        "Float",
+        "Double"
+    };
+
+    return kSuffix[mKind];
+}
+
 void ScalarType::emitReaderWriter(
         Formatter &out,
         const std::string &name,

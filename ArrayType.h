@@ -13,6 +13,8 @@ struct ArrayType : public Type {
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
+    std::string getJavaType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -33,6 +35,12 @@ struct ArrayType : public Type {
             const std::string &offsetText) const override;
 
     bool needsEmbeddedReadWrite() const override;
+
+    void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader) const override;
 
 private:
     Type *mElementType;

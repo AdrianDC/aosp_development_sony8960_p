@@ -79,7 +79,7 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
             out << "namespace " << component << " {\n";
         }
 
-        out.setNamespace(mPackage.cppNamespace());
+        out.setNamespace(mPackage.cppNamespace() + "::");
     } else {
         out.setNamespace(std::string());
 

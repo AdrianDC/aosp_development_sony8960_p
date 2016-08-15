@@ -26,6 +26,7 @@ struct Method {
     const KeyedVector<std::string, Annotation *> &annotations() const;
 
     static std::string GetSignature(const std::vector<TypedVar *> &args);
+    static std::string GetJavaSignature(const std::vector<TypedVar *> &args);
 
     void dumpAnnotations(Formatter &out) const;
 

@@ -31,7 +31,8 @@ static status_t generateSourcesForFile(
         const FQName &fqName,
         const char *,
         Coordinator *coordinator,
-        const std::string &outputDir) {
+        const std::string &outputDir,
+        bool java = false) {
 
     CHECK(fqName.isFullyQualified());
 
@@ -45,7 +46,8 @@ static status_t generateSourcesForFile(
         return UNKNOWN_ERROR;
     }
 
-    status_t err = ast->generateCpp(outputDir);
+    status_t err =
+        java ? ast->generateJava(outputDir) : ast->generateCpp(outputDir);
 
     return err;
 }
@@ -54,7 +56,8 @@ static status_t generateSourcesForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator,
-        const std::string &outputDir) {
+        const std::string &outputDir,
+        bool java = false) {
 
     CHECK(packageFQName.isValid() &&
           !packageFQName.isFullyQualified() &&
@@ -71,7 +74,9 @@ static status_t generateSourcesForPackage(
     }
 
     for (const auto &fqName : packageInterfaces) {
-        err = generateSourcesForFile(fqName, hidl_gen, coordinator, outputDir);
+        err = generateSourcesForFile(
+                fqName, hidl_gen, coordinator, outputDir, java);
+
         if (err != OK) {
             return err;
         }
@@ -222,7 +227,7 @@ OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
     return OutputHandler::PASS_PACKAGE;
 }
 
-OutputHandler::ValRes validateForCpp(const FQName &fqName) {
+OutputHandler::ValRes validateForCppOrJava(const FQName &fqName) {
     if (fqName.package().empty()) {
         fprintf(stderr, "Expecting package name\n");
         return OutputHandler::FAILED;
@@ -240,8 +245,8 @@ OutputHandler::ValRes validateForCpp(const FQName &fqName) {
 
 static std::vector<OutputHandler> formats = {
     {"c++",
-     true,
-     validateForCpp,
+     true /* mNeedsOutputDir */,
+     validateForCppOrJava,
      [](const FQName &fqName,
         const char *hidl_gen, Coordinator *coordinator,
         const std::string &outputDir) -> status_t {
@@ -260,8 +265,31 @@ static std::vector<OutputHandler> formats = {
         }
     },
 
+    {"java",
+     true /* mNeedsOutputDir */,
+     validateForCppOrJava,
+     [](const FQName &fqName,
+        const char *hidl_gen, Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            if (fqName.isFullyQualified()) {
+                return generateSourcesForFile(fqName,
+                                              hidl_gen,
+                                              coordinator,
+                                              outputDir,
+                                              true /* java */);
+            }
+            else {
+                return generateSourcesForPackage(fqName,
+                                                 hidl_gen,
+                                                 coordinator,
+                                                 outputDir,
+                                                 true /* java */);
+            }
+        }
+    },
+
     {"makefile",
-     false,
+     false /* mNeedsOutputDir */,
      validateForMakefile,
      generateMakefileForPackage,
     },

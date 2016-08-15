@@ -17,6 +17,8 @@ struct TypeDef : public NamedType {
     bool isEnum() const override;
     bool isTypeDef() const override;
 
+    std::string getJavaType() const override;
+
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
 

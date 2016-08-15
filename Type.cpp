@@ -45,6 +45,11 @@ std::string Type::getCppType(StorageMode, std::string *) const {
     return std::string();
 }
 
+std::string Type::getJavaSuffix() const {
+    CHECK(!"Should not be here");
+    return std::string();
+}
+
 void Type::emitReaderWriter(
         Formatter &,
         const std::string &,
@@ -66,6 +71,20 @@ void Type::emitReaderWriterEmbedded(
         const std::string &,
         const std::string &) const {
     CHECK(!"Should not be here");
+}
+
+void Type::emitJavaReaderWriter(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader) const {
+    emitJavaReaderWriterWithSuffix(
+            out,
+            parcelObj,
+            argName,
+            isReader,
+            getJavaSuffix(),
+            "" /* extra */);
 }
 
 void Type::handleError(Formatter &out, ErrorMode mode) const {
@@ -189,6 +208,10 @@ status_t Type::emitTypeDefinitions(
     return OK;
 }
 
+status_t Type::emitJavaTypeDeclarations(Formatter &) const {
+    return OK;
+}
+
 bool Type::needsEmbeddedReadWrite() const {
     return false;
 }
@@ -207,6 +230,29 @@ std::string Type::getCppResultType(std::string *extra) const {
 
 std::string Type::getCppArgumentType(std::string *extra) const {
     return getCppType(StorageMode_Argument, extra);
+}
+
+void Type::emitJavaReaderWriterWithSuffix(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader,
+        const std::string &suffix,
+        const std::string &extra) const {
+    out << parcelObj
+        << "."
+        << (isReader ? "read" : "write")
+        << suffix
+        << "(";
+
+    if (isReader) {
+        out << extra;
+    } else {
+        out << (extra.empty() ? "" : (extra + ", "));
+        out << argName;
+    }
+
+    out << ");\n";
 }
 
 }  // namespace android

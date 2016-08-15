@@ -23,6 +23,9 @@ struct EnumType : public NamedType {
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
+    std::string getJavaType() const override;
+    std::string getJavaSuffix() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -32,6 +35,7 @@ struct EnumType : public NamedType {
             ErrorMode mode) const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
+    status_t emitJavaTypeDeclarations(Formatter &out) const override;
 
 private:
     std::vector<EnumValue *> *mValues;

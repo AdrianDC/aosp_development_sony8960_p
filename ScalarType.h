@@ -31,6 +31,9 @@ struct ScalarType : public Type {
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
+    std::string getJavaType() const override;
+    std::string getJavaSuffix() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,

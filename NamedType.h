@@ -19,6 +19,7 @@ struct NamedType : public Type {
     const FQName &fqName() const;
     std::string localName() const;
     std::string fullName() const;
+    std::string fullJavaName() const;
 
 private:
     std::string mLocalName;

@@ -23,6 +23,14 @@ std::string StringType::getCppType(StorageMode mode, std::string *extra) const {
     }
 }
 
+std::string StringType::getJavaType() const {
+    return "String";
+}
+
+std::string StringType::getJavaSuffix() const {
+    return "String";
+}
+
 void StringType::emitReaderWriter(
         Formatter &out,
         const std::string &name,

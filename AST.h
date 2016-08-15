@@ -54,6 +54,7 @@ struct AST {
     Type *lookupTypeInternal(const std::string &namePath) const;
 
     status_t generateCpp(const std::string &outputPath) const;
+    status_t generateJava(const std::string &outputPath) const;
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
@@ -101,7 +102,14 @@ private:
             bool isReader,
             Type::ErrorMode mode) const;
 
+    void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const TypedVar *arg,
+            bool isReader) const;
+
     status_t emitTypeDeclarations(Formatter &out) const;
+    status_t emitJavaTypeDeclarations(Formatter &out) const;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

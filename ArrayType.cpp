@@ -33,6 +33,10 @@ std::string ArrayType::getCppType(StorageMode mode, std::string *extra) const {
     }
 }
 
+std::string ArrayType::getJavaType() const {
+    return mElementType->getJavaType() + "[]";
+}
+
 void ArrayType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -140,6 +144,20 @@ void ArrayType::emitReaderWriterEmbedded(
 
 bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
+}
+
+void ArrayType::emitJavaReaderWriter(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader) const {
+    emitJavaReaderWriterWithSuffix(
+            out,
+            parcelObj,
+            argName,
+            isReader,
+            mElementType->getJavaSuffix() + "Array",
+            mDimension);
 }
 
 }  // namespace android

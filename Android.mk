@@ -15,6 +15,7 @@ LOCAL_SRC_FILES :=              \
     Formatter.cpp               \
     FQName.cpp                  \
     generateCpp.cpp             \
+    generateJava.cpp            \
     HandleType.cpp              \
     hidl-gen_y.yy               \
     hidl-gen_l.ll               \
