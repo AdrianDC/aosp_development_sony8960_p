@@ -17,21 +17,20 @@ bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
     for (const auto &field : *fields) {
         const Type &type = field->type();
 
+        if (type.isInterface()) {
+            fprintf(stderr,
+                    "Structs/Unions must not contain references to "
+                    "interfaces.\n");
+
+            return false;
+        }
+
         if (mStyle == STYLE_UNION) {
             if (type.needsEmbeddedReadWrite()) {
                 // Can't have those in a union.
 
                 fprintf(stderr,
                         "Unions must not contain any types that need fixup.\n");
-
-                return false;
-            }
-        } else {
-            CHECK_EQ(mStyle, STYLE_STRUCT);
-
-            if (type.isInterface()) {
-                fprintf(stderr,
-                        "Structs must not contain references to interfaces.\n");
 
                 return false;
             }
