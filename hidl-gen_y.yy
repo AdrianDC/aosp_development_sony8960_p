@@ -244,6 +244,13 @@ body
               YYERROR;
           }
 
+          if ($3[0] != 'I') {
+              fprintf(stderr,
+                      "All interface names must start with an 'I' prefix.\n");
+
+              YYERROR;
+          }
+
           Interface *iface = new Interface(static_cast<Interface *>($4), $1);
 
           // Register interface immediately so it can be referenced inside
