@@ -495,8 +495,24 @@ enum_values
 
 type
     : fqname { $$ = $1; }
-    | fqname '[' INTEGER ']' { $$ = new ArrayType($1, $3); }
-    | VEC '<' fqname '>' { $$ = new VectorType($3); }
+    | fqname '[' INTEGER ']'
+      {
+          if ($1->isInterface()) {
+              fprintf(stderr, "Arrays of interface types are not supported.");
+              YYERROR;
+          }
+
+          $$ = new ArrayType($1, $3);
+      }
+    | VEC '<' fqname '>'
+      {
+          if ($3->isInterface()) {
+              fprintf(stderr, "Vectors of interface types are not supported.");
+              YYERROR;
+          }
+
+          $$ = new VectorType($3);
+      }
     | struct_or_union_declaration { $$ = $1; }
     | enum_declaration { $$ = $1; }
     ;
