@@ -21,7 +21,6 @@ Type *TypeDef::referencedType() const {
 }
 
 bool TypeDef::isInterface() const {
-    CHECK(!"Should not be here");
     return false;
 }
 
