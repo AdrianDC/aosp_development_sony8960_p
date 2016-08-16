@@ -531,6 +531,26 @@ status_t AST::generateTypeSource(
     return mRootScope->emitTypeDefinitions(out, ifaceName);
 }
 
+void AST::declareCppReaderLocals(
+        Formatter &out, const std::vector<TypedVar *> &args) const {
+    if (args.empty()) {
+        return;
+    }
+
+    for (const auto &arg : args) {
+        const Type &type = arg->type();
+
+        std::string extra;
+        out << type.getCppResultType(&extra)
+            << " "
+            << arg->name()
+            << extra
+            << ";\n";
+    }
+
+    out << "\n";
+}
+
 void AST::emitCppReaderWriter(
         Formatter &out,
         const std::string &parcelObj,
@@ -539,15 +559,6 @@ void AST::emitCppReaderWriter(
         bool isReader,
         Type::ErrorMode mode) const {
     const Type &type = arg->type();
-
-    if (isReader) {
-        std::string extra;
-        out << type.getCppResultType(&extra)
-            << " "
-            << arg->name()
-            << extra
-            << ";\n";
-    }
 
     type.emitReaderWriter(
             out,
@@ -614,8 +625,10 @@ status_t AST::generateProxySource(
 
             out << "::android::hardware::Parcel _hidl_data;\n";
             out << "::android::hardware::Parcel _hidl_reply;\n";
-            out << "::android::status_t _hidl_err;\n\n";
-            out << "::android::hardware::Status _hidl_status;\n";
+            out << "::android::status_t _hidl_err;\n";
+            out << "::android::hardware::Status _hidl_status;\n\n";
+
+            declareCppReaderLocals(out, method->results());
 
             out << "_hidl_err = _hidl_data.writeInterfaceToken("
                 << superInterface->fullName()
@@ -820,6 +833,8 @@ status_t AST::generateStubSourceForMethod(
     out << "break;\n";
     out.unindent();
     out << "}\n\n";
+
+    declareCppReaderLocals(out, method->args());
 
     for (const auto &arg : method->args()) {
         emitCppReaderWriter(

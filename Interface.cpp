@@ -62,6 +62,9 @@ void Interface::emitReaderWriter(
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
     if (isReader) {
+        out << "{\n";
+        out.indent();
+
         const std::string binderName = "_hidl_" + name + "_binder";
 
         out << "::android::sp<::android::hardware::IBinder> "
@@ -81,6 +84,9 @@ void Interface::emitReaderWriter(
             << "::asInterface("
             << binderName
             << ");\n";
+
+        out.unindent();
+        out << "}\n\n";
     } else {
         out << "_hidl_err = ";
         out << parcelObjDeref
