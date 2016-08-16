@@ -46,6 +46,8 @@ struct Interface : public Scope {
 
     const AnnotationVector &annotations() const;
 
+    std::string getBaseName() const;
+
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     std::string getJavaType() const override;

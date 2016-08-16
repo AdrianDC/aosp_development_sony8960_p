@@ -56,6 +56,11 @@ const AnnotationVector &Interface::annotations() const {
     return *mAnnotationsByName;
 }
 
+std::string Interface::getBaseName() const {
+    // cut off the leading 'I'.
+    return localName().substr(1);
+}
+
 std::string Interface::getCppType(StorageMode mode, std::string *extra) const {
     extra->clear();
     const std::string base = "::android::sp<" + fullName() + ">";
@@ -103,7 +108,9 @@ void Interface::emitReaderWriter(
 
         out << name
             << " = "
-            << fullName()
+            << fqName().cppNamespace()
+            << "::IHw"
+            << getBaseName()
             << "::asInterface("
             << binderName
             << ");\n";
@@ -111,14 +118,33 @@ void Interface::emitReaderWriter(
         out.unindent();
         out << "}\n\n";
     } else {
+
+        out << "if (" << name << "->isRemote()) {\n";
+        out.indent();
         out << "_hidl_err = ";
         out << parcelObjDeref
             << "writeStrongBinder("
-            << fullName()
-            << "::asBinder("
-            << name
-            << "));\n";
-
+            << fqName().cppNamespace()
+            << "::IHw"
+            << getBaseName()
+            << "::asBinder(static_cast<"
+            << fqName().cppNamespace()
+            << "::IHw"
+            << getBaseName()
+            << "*>("
+            << name << ".get()"
+            << ")));\n";
+        out.unindent();
+        out << "} else {\n";
+        out.indent();
+        out << "_hidl_err = ";
+        out << parcelObjDeref
+            << "writeStrongBinder("
+            << "new " << fqName().cppNamespace()
+            << "::Bn" << getBaseName() << " "
+            << "(" << name <<"));\n";
+        out.unindent();
+        out << "}\n";
         handleError(out, mode);
     }
 }

@@ -124,6 +124,7 @@ private:
     void enterLeaveNamespace(Formatter &out, bool enter) const;
 
     status_t generateInterfaceHeader(const std::string &outputPath) const;
+    status_t generateHwBinderHeader(const std::string &outputPath) const;
     status_t generateStubHeader(const std::string &outputPath) const;
     status_t generateProxyHeader(const std::string &outputPath) const;
     status_t generateAllSource(const std::string &outputPath) const;

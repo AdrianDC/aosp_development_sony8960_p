@@ -3,9 +3,7 @@
 
 #include <android-base/logging.h>
 
-#include <android/hardware/tests/baz/1.0/BnBaz.h>
-#include <android/hardware/tests/baz/1.0/BnBazCallback.h>
-#include <android/hardware/tests/baz/1.0/BpBaz.h>
+#include <android/hardware/tests/baz/1.0/IBaz.h>
 
 #include <gtest/gtest.h>
 #include <hidl/IServiceManager.h>
@@ -18,16 +16,13 @@ using ::android::Thread;
 using ::android::hardware::tests::baz::V1_0::IBase;
 using ::android::hardware::tests::baz::V1_0::IBaz;
 using ::android::hardware::tests::baz::V1_0::IBazCallback;
-using ::android::hardware::tests::baz::V1_0::BnBaz;
-using ::android::hardware::tests::baz::V1_0::BnBazCallback;
-using ::android::hardware::tests::baz::V1_0::BpBaz;
 
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::hardware::Return;
 using ::android::hardware::Status;
 
-struct BazCallback : public BnBazCallback {
+struct BazCallback : public IBazCallback {
     Status heyItsMe(const sp<IBazCallback> &cb) override;
 };
 
@@ -38,7 +33,7 @@ Status BazCallback::heyItsMe(
     return Status::ok();
 }
 
-struct Baz : public BnBaz {
+struct Baz : public IBaz {
     Status someBaseMethod() override;
 
     Status someOtherBaseMethod(
@@ -349,13 +344,8 @@ struct HidlTest : public ::testing::Test {
 
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        sp<IBinder> service =
-            defaultServiceManager()->getService(
-                    ::android::String16("baz"), kVersion);
+        baz = IBaz::getService(::android::String16("baz"), kVersion);
 
-        CHECK(service != NULL);
-
-        baz = IBaz::asInterface(service);
         CHECK(baz != NULL);
     }
 
@@ -599,7 +589,7 @@ int main(int argc, char **argv) {
 
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        defaultServiceManager()->addService(String16("baz"), baz, kVersion);
+        baz->registerAsService(String16("baz"), kVersion);
 
         ProcessState::self()->startThreadPool();
         ProcessState::self()->setThreadPoolMaxThreadCount(0);

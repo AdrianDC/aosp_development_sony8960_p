@@ -30,6 +30,7 @@ using ::android::hardware::tests::bar::V1_0::BnBar;
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
+using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::Return;
 using ::android::hardware::Status;
@@ -39,7 +40,7 @@ using ::android::sp;
 using ::android::Mutex;
 using ::android::Condition;
 
-struct FooCallback : public BnFooCallback {
+struct FooCallback : public IFooCallback {
     FooCallback() : invokeInfo{}, mLock{}, mCond{} {}
     Status heyItsYou(const sp<IFooCallback> &cb) override;
     Return<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
@@ -122,7 +123,7 @@ Status FooCallback::youBlockedMeFor(const int64_t ns[3]) {
     return Status::ok();
 }
 
-struct Bar : public BnBar {
+struct Bar : public IBar {
     Status doThis(float param) override;
 
     Return<int32_t> doThatAndReturnSomething(int64_t param) override;
@@ -388,7 +389,7 @@ static void startServer(T server, const android::hardware::hidl_version kVersion
     using namespace android::hardware;
     using android::String16;
     ALOGI("SERVER(%s) registering", tag);
-    defaultServiceManager()->addService(String16(serviceName), server, kVersion);
+    server->registerAsService(String16(serviceName), kVersion);
     ALOGI("SERVER(%s) starting", tag);
     ProcessState::self()->setThreadPoolMaxThreadCount(0);
     ProcessState::self()->startThreadPool();
@@ -410,22 +411,13 @@ public:
         using android::String16;
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        service =
-            defaultServiceManager()->getService(String16("foo"), kVersion);
-        ALOGI("CLIENT Found service foo.");
-
-        CHECK(service != NULL);
-
-        foo = IFoo::asInterface(service);
+        foo = IFoo::getService(String16("foo"), kVersion);
         CHECK(foo != NULL);
 
-        bar = IBar::asInterface(service);
+        bar = IBar::getService(String16("foo"), kVersion);
         CHECK(bar != NULL);
 
-        cbService = defaultServiceManager()->getService(String16("foo callback"), kVersion);
-        CHECK(cbService != NULL);
-
-        fooCb = IFooCallback::asInterface(cbService);
+        fooCb = IFooCallback::getService(String16("foo callback"), kVersion);
         CHECK(fooCb != NULL);
 
         ALOGI("Test setup complete");

@@ -49,6 +49,10 @@ status_t AST::generateCpp(const std::string &outputPath) const {
     }
 
     if (err == OK) {
+        err = generateHwBinderHeader(outputPath);
+    }
+
+    if (err == OK) {
         err = generateProxyHeader(outputPath);
     }
 
@@ -158,10 +162,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     }
 
     out << "#include <hidl/HidlSupport.h>\n";
+    out << "#include <hidl/IServiceManager.h>\n";
 
     if (isInterface) {
-        out << "#include <hwbinder/IBinder.h>\n";
-        out << "#include <hwbinder/IInterface.h>\n";
         out << "#include <hwbinder/Status.h>\n";
     }
 
@@ -170,28 +173,27 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
 
+    // cut off the leading 'I'.
+    const std::string baseName = ifaceName.substr(1);
+
     if (isInterface) {
         out << "struct "
-            << ifaceName
-            << " : public ";
+            << ifaceName;
 
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
 
-        if (superType != NULL) {
-            out << superType->fullName();
+        if (superType == NULL) {
+            out << " : virtual public RefBase";
         } else {
-            out << "::android::hardware::IInterface";
+            out << " : public "
+                << superType->fullName();
         }
 
         out << " {\n";
 
         out.indent();
 
-        // cut off the leading 'I'.
-        const std::string baseName = ifaceName.substr(1);
-
-        out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
     }
 
     status_t err = emitTypeDeclarations(out);
@@ -204,33 +206,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
 
-        out << "enum Call {\n";
-        out.indent();
-
-        bool first = true;
-        for (const auto &method : iface->methods()) {
-            out << upcase(method->name());
-
-            if (first) {
-                out << " = ";
-                if (superType != NULL) {
-                    out << superType->fullName()
-                        << "::Call::CallCount";
-                } else {
-                    out << "::android::hardware::IBinder::FIRST_CALL_TRANSACTION";
-                }
-
-                first = false;
-            }
-
-            out << ",\n";
-        }
-
-        out << "CallCount\n";
-
-        out.unindent();
-        out << "};\n\n";
-
+        out << "virtual bool isRemote() const { return false; } \n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
@@ -284,6 +260,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             out << ") = 0;\n";
         }
+
+        out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
     }
 
     if (isInterface) {
@@ -300,12 +278,143 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     return OK;
 }
 
+status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
+    std::string ifaceName;
+    if(!AST::isInterface(&ifaceName)) {
+        // types.hal does not get an HwBinder header.
+        return OK;
+    }
+
+    // cut off the leading 'I'.
+    const std::string baseName = ifaceName.substr(1);
+
+    const std::string klassName = "IHw" + baseName;
+
+    std::string path = outputPath;
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
+    path.append(klassName + ".h");
+
+    FILE* file = fopen(path.c_str(), "w");
+
+    if (file == NULL) {
+        return -errno;
+    }
+
+    Formatter out(file);
+
+    const std::string guard = makeHeaderGuard(klassName);
+
+    out << "#ifndef " << guard << "\n";
+    out << "#define " << guard << "\n\n";
+
+    std::vector<std::string> packageComponents;
+    getPackageAndVersionComponents(
+            &packageComponents, false /* cpp_compatible */);
+
+    out << "#include <";
+    for (const auto &component : packageComponents) {
+        out << component << "/";
+    }
+    out << ifaceName << ".h>\n\n";
+
+    for (const auto &item : mImportedNames) {
+        if (item.name() == "types") {
+            continue;
+        }
+
+        out << "#include <";
+
+        std::vector<std::string> components;
+        item.getPackageAndVersionComponents(
+                &components, false /* cpp_compatible */);
+
+        for (const auto &component : components) {
+            out << component << "/";
+        }
+
+        // cut off the leading I
+        const std::string itemBaseName = item.name().substr(1);
+
+        out << "Bn"
+            << itemBaseName
+            << ".h>\n";
+    }
+
+    out << "\n";
+
+    out << "#include <hidl/HidlSupport.h>\n";
+    out << "#include <hwbinder/IBinder.h>\n";
+    out << "#include <hwbinder/IInterface.h>\n";
+    out << "#include <hwbinder/Status.h>\n";
+
+    out << "\n";
+
+    enterLeaveNamespace(out, true /* enter */);
+    out << "\n";
+
+    out << "struct "
+        << klassName
+        << " : public "
+        << ifaceName;
+
+    const Interface *iface = mRootScope->getInterface();
+    const Interface *superType = iface->superType();
+
+    out << ", public ::android::hardware::IInterface";
+
+    out << " {\n";
+
+    out.indent();
+
+    out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
+
+    out << "enum Call {\n";
+    out.indent();
+
+    bool first = true;
+    for (const auto &method : iface->methods()) {
+        out << upcase(method->name());
+
+        if (first) {
+            out << " = ";
+            if (superType != NULL) {
+                out << superType->fqName().cppNamespace()
+                    << "::IHw"
+                    << superType->getBaseName()
+                    << "::Call::CallCount";
+            } else {
+                out << "::android::hardware::IBinder::FIRST_CALL_TRANSACTION";
+            }
+
+            first = false;
+        }
+
+        out << ",\n";
+    }
+
+    out << "CallCount\n";
+
+    out.unindent();
+    out << "};\n\n";
+
+    out.unindent();
+
+    out << "};\n\n";
+
+    enterLeaveNamespace(out, false /* enter */);
+
+    out << "\n#endif  // " << guard << "\n";
+
+    return OK;
+}
+
 status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope->emitTypeDeclarations(out);
 }
 
 status_t AST::generateHeaderMethodSignatures(
-        Formatter &out, bool abstract) const {
+        Formatter &out, bool stub) const {
     const Interface *iface = mRootScope->getInterface();
 
     std::vector<const Interface *> chain;
@@ -322,6 +431,9 @@ status_t AST::generateHeaderMethodSignatures(
             << " follow.\n";
 
         for (const auto &method : superInterface->methods()) {
+            if (stub) {
+                out << "inline ";
+            }
             const bool returnsValue = !method->results().empty();
 
             const TypedVar *elidedReturn = method->canElideCallback();
@@ -346,7 +458,33 @@ status_t AST::generateHeaderMethodSignatures(
             }
 
             out << ") ";
-            out << (abstract ? "= 0" : "override");
+            if (stub) {
+                out << " {\n";
+                out.indent();
+                out << "return mImpl->"
+                    << method->name()
+                    << "(";
+                bool first = true;
+                for (const auto &arg : method->args()) {
+                    if (!first) {
+                        out << ", ";
+                    }
+                    first = false;
+                    out << arg->name();
+                }
+                if (returnsValue && elidedReturn == nullptr) {
+                    if (!method->args().empty()) {
+                        out << ", ";
+                    }
+
+                    out << "_hidl_cb";
+                }
+                out << ");\n";
+                out.unindent();
+                out << "}";
+            } else {
+                out << "override";
+            }
             out << ";\n";
         }
 
@@ -365,12 +503,12 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
 
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);
+    const std::string klassName = "Bn" + baseName;
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append("Bn");
-    path.append(baseName);
+    path.append(klassName);
     path.append(".h");
 
     CHECK(Coordinator::MakeParentHierarchy(path));
@@ -382,7 +520,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
 
     Formatter out(file);
 
-    const std::string guard = makeHeaderGuard("Bn" + baseName);
+    const std::string guard = makeHeaderGuard(klassName);
 
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
@@ -395,7 +533,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     for (const auto &component : packageComponents) {
         out << component << "/";
     }
-    out << ifaceName << ".h>\n\n";
+    out << "IHw" << baseName << ".h>\n\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
@@ -403,12 +541,15 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "struct "
         << "Bn"
         << baseName
-        << " : public ::android::hardware::BnInterface<"
-        << ifaceName
+        << " : public ::android::hardware::BnInterface<I"
+        << baseName << ", IHw" << baseName
         << "> {\n";
 
     out.indent();
-
+    out << "explicit Bn"
+        << baseName
+        << "(const ::android::sp<" << ifaceName << "> &_hidl_impl);"
+        << "\n\n";
     out << "::android::status_t onTransact(\n";
     out.indent();
     out.indent();
@@ -420,8 +561,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out.unindent();
     out.unindent();
 
-    generateHeaderMethodSignatures(out, true); // = 0
-
+    generateHeaderMethodSignatures(out, true); // stub
     out.unindent();
 
     out << "};\n\n";
@@ -472,7 +612,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     for (const auto &component : packageComponents) {
         out << component << "/";
     }
-    out << ifaceName << ".h>\n\n";
+    out << "IHw" << baseName << ".h>\n\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
@@ -480,8 +620,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     out << "struct "
         << "Bp"
         << baseName
-        << " : public ::android::hardware::BpInterface<"
-        << ifaceName
+        << " : public ::android::hardware::BpInterface<IHw"
+        << baseName
         << "> {\n";
 
     out.indent();
@@ -491,7 +631,9 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
-    generateHeaderMethodSignatures(out, false); // override
+    out << "virtual bool isRemote() const { return true; } \n\n";
+
+    generateHeaderMethodSignatures(out, false); // proxy
 
     out.unindent();
 
@@ -570,6 +712,10 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         err = generateStubSource(out, baseName);
     }
 
+    if (err == OK && isInterface) {
+        out << "IMPLEMENT_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
+    }
+
     enterLeaveNamespace(out, false /* enter */);
 
     return err;
@@ -631,7 +777,7 @@ status_t AST::generateProxySource(
     out.indent();
 
     out << ": BpInterface"
-        << "<I"
+        << "<IHw"
         << baseName
         << ">(_hidl_impl) {\n";
 
@@ -684,12 +830,13 @@ status_t AST::generateProxySource(
             out << "::android::hardware::Parcel _hidl_reply;\n";
             out << "::android::status_t _hidl_err;\n";
             out << "::android::hardware::Status _hidl_status;\n\n";
-
             declareCppReaderLocals(out, method->results());
 
             out << "_hidl_err = _hidl_data.writeInterfaceToken("
-                << superInterface->fullName()
-                << "::getInterfaceDescriptor());\n";
+                << superInterface->fqName().cppNamespace()
+                << "::IHw"
+                << superInterface->getBaseName()
+                << "::descriptor);\n";
 
             out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
@@ -703,9 +850,11 @@ status_t AST::generateProxySource(
                         Type::ErrorMode_Goto);
             }
 
-            out << "_hidl_err = remote()->transact(I"
-                      << baseName
-                      << "::"
+            out << "_hidl_err = remote()->transact("
+                      << superInterface->fqName().cppNamespace()
+                      << "::IHw"
+                      << superInterface->getBaseName()
+                      << "::Call::"
                       << upcase(method->name())
                       << ", _hidl_data, &_hidl_reply";
             if (method->isOneway()) {
@@ -798,6 +947,25 @@ status_t AST::generateStubSource(
 
     const std::string klassName = "Bn" + baseName;
 
+    out << klassName
+        << "::"
+        << klassName
+        << "(const ::android::sp<I" << baseName <<"> &_hidl_impl)\n";
+
+    out.indent();
+    out.indent();
+
+    out << ": BnInterface"
+        << "<I"
+        << baseName
+        << ", IHw"
+        << baseName
+        << ">(_hidl_impl) {\n";
+
+    out.unindent();
+    out.unindent();
+    out << "}\n\n";
+
     out << "::android::status_t " << klassName << "::onTransact(\n";
 
     out.indent();
@@ -812,7 +980,6 @@ status_t AST::generateStubSource(
     out.unindent();
 
     out << "::android::status_t _hidl_err = ::android::OK;\n\n";
-
     out << "switch (_hidl_code) {\n";
     out.indent();
 
@@ -829,7 +996,9 @@ status_t AST::generateStubSource(
 
         for (const auto &method : superInterface->methods()) {
             out << "case "
-                << superInterface->fullName()
+                << superInterface->fqName().cppNamespace()
+                << "::IHw"
+                << superInterface->getBaseName()
                 << "::Call::"
                 << upcase(method->name())
                 << ":\n{\n";
@@ -852,7 +1021,7 @@ status_t AST::generateStubSource(
     out.indent();
 
     out << "return ::android::hardware::BnInterface<I"
-        << baseName
+        << baseName << ", IHw" << baseName
         << ">::onTransact(\n";
 
     out.indent();
@@ -898,8 +1067,10 @@ status_t AST::generateStubSource(
 status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
     out << "if (!_hidl_data.enforceInterface("
-        << iface->fullName()
-        << "::getInterfaceDescriptor())) {\n";
+        << iface->fqName().cppNamespace()
+        << "::IHw"
+        << iface->getBaseName()
+        << "::descriptor)) {\n";
 
     out.indent();
     out << "_hidl_err = ::android::BAD_TYPE;\n";
