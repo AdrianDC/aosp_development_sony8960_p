@@ -1,9 +1,11 @@
 #include "AST.h"
 
 #include "Coordinator.h"
+#include "EnumType.h"
 #include "Formatter.h"
 #include "Interface.h"
 #include "Method.h"
+#include "ScalarType.h"
 #include "Scope.h"
 
 #include <algorithm>
@@ -221,6 +223,10 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                 continue;
             }
 
+            if (method->canElideCallback() != nullptr) {
+                continue;
+            }
+
             haveCallbacks = true;
 
             out << "using "
@@ -239,12 +245,20 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             method->dumpAnnotations(out);
 
-            out << "virtual ::android::hardware::Status "
-                << method->name()
+            const TypedVar *elidedReturn = method->canElideCallback();
+            if (elidedReturn) {
+                std::string extra;
+                out << "virtual ::android::hardware::SimpleReturn<";
+                out << elidedReturn->type().getCppResultType(&extra) << "> ";
+            } else {
+                out << "virtual ::android::hardware::Status ";
+            }
+
+            out << method->name()
                 << "("
                 << Method::GetSignature(method->args());
 
-            if (returnsValue) {
+            if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
                     out << ", ";
                 }
@@ -425,12 +439,20 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         for (const auto &method : superInterface->methods()) {
             const bool returnsValue = !method->results().empty();
 
-            out << "::android::hardware::Status "
-                << method->name()
+            const TypedVar *elidedReturn = method->canElideCallback();
+
+            if (elidedReturn == nullptr) {
+                out << "::android::hardware::Status ";
+            } else {
+                std::string extra;
+                out << "::android::hardware::SimpleReturn<";
+                out << elidedReturn->type().getCppResultType(&extra) << "> ";
+            }
+            out << method->name()
                 << "("
                 << Method::GetSignature(method->args());
 
-            if (returnsValue) {
+            if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
                     out << ", ";
                 }
@@ -604,14 +626,22 @@ status_t AST::generateProxySource(
         for (const auto &method : superInterface->methods()) {
             const bool returnsValue = !method->results().empty();
 
-            out << "::android::hardware::Status "
-                << klassName
+            const TypedVar *elidedReturn = method->canElideCallback();
+            if (elidedReturn) {
+                std::string extra;
+                out << "::android::hardware::SimpleReturn<";
+                out << elidedReturn->type().getCppResultType(&extra) << "> ";
+            } else {
+                out << "::android::hardware::Status ";
+            }
+
+            out << klassName
                 << "::"
                 << method->name()
                 << "("
                 << Method::GetSignature(method->args());
 
-            if (returnsValue) {
+            if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
                     out << ", ";
                 }
@@ -661,7 +691,6 @@ status_t AST::generateProxySource(
             if (!method->isOneway()) {
                 out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
                 out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-
                 out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
 
                 for (const auto &arg : method->results()) {
@@ -674,7 +703,7 @@ status_t AST::generateProxySource(
                             Type::ErrorMode_Goto);
                 }
 
-                if (returnsValue) {
+                if (returnsValue && elidedReturn == nullptr) {
                     out << "if (_hidl_cb != nullptr) {\n";
                     out.indent();
                     out << "_hidl_cb(";
@@ -699,11 +728,28 @@ status_t AST::generateProxySource(
                 }
             }
 
-            out.unindent();
-            out << "_hidl_error:\n";
-            out.indent();
-            out << "_hidl_status.setFromStatusT(_hidl_err);\n"
-                      << "return _hidl_status;\n";
+            if (elidedReturn != nullptr) {
+                std::string extra;
+
+                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+                out << "return ::android::hardware::SimpleReturn<";
+                out << elidedReturn->type().getCppResultType(&extra)
+                    << ">(" << elidedReturn->name() << ");\n\n";
+
+                out.unindent();
+                out << "_hidl_error:\n";
+                out.indent();
+                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+                out << "return ::android::hardware::SimpleReturn<";
+                out << method->results().at(0)->type().getCppResultType(&extra)
+                    << ">(_hidl_status);\n";
+            } else {
+                out.unindent();
+                out << "_hidl_error:\n";
+                out.indent();
+                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+                out << "return _hidl_status;\n";
+            }
 
             out.unindent();
             out << "}\n\n";
@@ -847,86 +893,124 @@ status_t AST::generateStubSourceForMethod(
     }
 
     const bool returnsValue = !method->results().empty();
+    const TypedVar *elidedReturn = method->canElideCallback();
 
-    if (returnsValue) {
-        out << "bool _hidl_callbackCalled = false;\n\n";
-    }
+    if (elidedReturn != nullptr) {
+        std::string extra;
 
-    out << "::android::hardware::Status _hidl_status(\n";
-    out.indent();
-    out.indent();
-    out << method->name() << "(";
+        out << elidedReturn->type().getCppResultType(&extra) << " ";
+        out << elidedReturn->name() << " = ";
+        out << method->name() << "(";
 
-    bool first = true;
-    for (const auto &arg : method->args()) {
-        if (!first) {
-            out << ", ";
-        }
-
-        if (arg->type().resultNeedsDeref()) {
-            out << "*";
-        }
-
-        out << arg->name();
-
-        first = false;
-    }
-
-    if (returnsValue) {
-        if (!first) {
-            out << ", ";
-        }
-
-        out << "[&](";
-
-        first = true;
-        for (const auto &arg : method->results()) {
+        bool first = true;
+        for (const auto &arg : method->args()) {
             if (!first) {
                 out << ", ";
             }
 
-            out << "const auto &" << arg->name();
+            if (arg->type().resultNeedsDeref()) {
+                out << "*";
+            }
+
+            out << arg->name();
 
             first = false;
         }
 
-        out << ") {\n";
-        out.indent();
-        out << "_hidl_callbackCalled = true;\n\n";
-
+        out << ");\n\n";
         out << "::android::hardware::Status::ok()"
-                  << ".writeToParcel(_hidl_reply);\n\n";
+            << ".writeToParcel(_hidl_reply);\n\n";
 
-        for (const auto &arg : method->results()) {
-            emitCppReaderWriter(
-                    out,
-                    "_hidl_reply",
-                    true /* parcelObjIsPointer */,
-                    arg,
-                    false /* reader */,
-                    Type::ErrorMode_Ignore);
-        }
+        elidedReturn->type().emitReaderWriter(
+                out,
+                elidedReturn->name(),
+                "_hidl_reply",
+                true, /* parcelObjIsPointer */
+                false, /* isReader */
+                Type::ErrorMode_Ignore);
 
         out << "_hidl_cb(*_hidl_reply);\n";
+    } else {
+        if (returnsValue) {
+            out << "bool _hidl_callbackCalled = false;\n\n";
+        }
 
-        out.unindent();
-        out << "}\n";
-    }
-
-    out.unindent();
-    out.unindent();
-    out << "));\n\n";
-
-    if (returnsValue) {
-        out << "if (!_hidl_callbackCalled) {\n";
+        out << "::android::hardware::Status _hidl_status(\n";
         out.indent();
-    }
+        out.indent();
+        out << method->name() << "(";
 
-    out << "_hidl_err = _hidl_status.writeToParcel(_hidl_reply);\n";
+        bool first = true;
+        for (const auto &arg : method->args()) {
+            if (!first) {
+                out << ", ";
+            }
 
-    if (returnsValue) {
+            if (arg->type().resultNeedsDeref()) {
+                out << "*";
+            }
+
+            out << arg->name();
+
+            first = false;
+        }
+
+        if (returnsValue) {
+            if (!first) {
+                out << ", ";
+            }
+
+            out << "[&](";
+
+            first = true;
+            for (const auto &arg : method->results()) {
+                if (!first) {
+                    out << ", ";
+                }
+
+                out << "const auto &" << arg->name();
+
+                first = false;
+            }
+
+            out << ") {\n";
+            out.indent();
+            out << "_hidl_callbackCalled = true;\n\n";
+
+            out << "::android::hardware::Status::ok()"
+                      << ".writeToParcel(_hidl_reply);\n\n";
+
+            for (const auto &arg : method->results()) {
+                emitCppReaderWriter(
+                        out,
+                        "_hidl_reply",
+                        true /* parcelObjIsPointer */,
+                        arg,
+                        false /* reader */,
+                        Type::ErrorMode_Ignore);
+            }
+
+            out << "_hidl_cb(*_hidl_reply);\n";
+
+            out.unindent();
+            out << "}\n";
+        }
+
         out.unindent();
-        out << "}\n\n";
+        out.unindent();
+        out << "));\n\n";
+
+        if (returnsValue) {
+            out << "if (!_hidl_callbackCalled) {\n";
+            out.indent();
+        }
+
+        out << "_hidl_err = _hidl_status.writeToParcel(_hidl_reply);\n";
+
+        if (returnsValue) {
+            out.unindent();
+            out << "}\n\n";
+        }
     }
 
     out << "break;\n";

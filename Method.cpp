@@ -2,6 +2,7 @@
 
 #include "Annotation.h"
 #include "Formatter.h"
+#include "ScalarType.h"
 #include "Type.h"
 
 namespace android {
@@ -105,6 +106,24 @@ bool Method::isJavaCompatible() const {
     }
 
     return true;
+}
+
+const TypedVar* Method::canElideCallback() const {
+    auto &res = results();
+
+    // Can't elide callback for void or tuple-returning methods
+    if (res.size() != 1) {
+        return nullptr;
+    }
+
+    const TypedVar *typedVar = res.at(0);
+
+    // We only elide callbacks for methods returning a single scalar.
+    if (typedVar->type().resolveToScalarType() != nullptr) {
+        return typedVar;
+    }
+
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
