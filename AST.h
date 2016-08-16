@@ -97,6 +97,9 @@ private:
     status_t generateStubSourceForMethod(
             Formatter &out, const Interface *iface, const Method *method) const;
 
+    void declareCppReaderLocals(
+            Formatter &out, const std::vector<TypedVar *> &arg) const;
+
     void emitCppReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
