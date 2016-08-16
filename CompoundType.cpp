@@ -17,7 +17,7 @@ bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
     for (const auto &field : *fields) {
         const Type &type = field->type();
 
-        if (type.isInterface()) {
+        if (type.isBinder()) {
             fprintf(stderr,
                     "ERROR: Structs/Unions must not contain references to "
                     "interfaces.\n");

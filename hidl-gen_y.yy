@@ -6,6 +6,7 @@
 #include "CompoundType.h"
 #include "Constant.h"
 #include "EnumType.h"
+#include "GenericBinder.h"
 #include "Interface.h"
 #include "Method.h"
 #include "TypeDef.h"
@@ -505,7 +506,7 @@ type
     : fqname { $$ = $1; }
     | fqname '[' INTEGER ']'
       {
-          if ($1->isInterface()) {
+          if ($1->isBinder()) {
               fprintf(stderr,
                       "ERROR: Arrays of interface types are not supported.");
 
@@ -516,7 +517,7 @@ type
       }
     | VEC '<' fqname '>'
       {
-          if ($3->isInterface()) {
+          if ($3->isBinder()) {
               fprintf(stderr,
                       "ERROR: Vectors of interface types are not supported.");
 
@@ -527,6 +528,7 @@ type
       }
     | struct_or_union_declaration { $$ = $1; }
     | enum_declaration { $$ = $1; }
+    | INTERFACE { $$ = new GenericBinder; }
     ;
 
 optIdentifier
