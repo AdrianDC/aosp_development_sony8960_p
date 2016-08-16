@@ -12,6 +12,10 @@ Scope::Scope() {}
 
 bool Scope::addType(const char *localName, NamedType *type) {
     if (mTypeIndexByName.indexOfKey(localName) >= 0) {
+        fprintf(stderr,
+                "A type named '%s' is already declared in the current scope.\n",
+                localName);
+
         return false;
     }
 
@@ -65,6 +69,18 @@ bool Scope::containsSingleInterface(std::string *ifaceName) const {
     }
 
     return false;
+}
+
+std::string Scope::pickUniqueAnonymousName() const {
+    static size_t sNextID = 0;
+
+    for (;;) {
+        std::string anonName = "_hidl_Anon_" + std::to_string(sNextID++);
+
+        if (mTypeIndexByName.indexOfKey(anonName) < 0) {
+            return anonName;
+        }
+    }
 }
 
 std::string Scope::getJavaType() const {

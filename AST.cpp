@@ -109,6 +109,14 @@ Scope *AST::scope() {
 }
 
 bool AST::addScopedType(const char *localName, NamedType *type) {
+    std::string anonName;
+
+    if (localName == nullptr) {
+        // Anonymous type declaration.
+        anonName = scope()->pickUniqueAnonymousName();
+        localName = anonName.c_str();
+    }
+
     // LOG(INFO) << "adding scoped type '" << localName << "'";
 
     bool success = scope()->addType(localName, type);
