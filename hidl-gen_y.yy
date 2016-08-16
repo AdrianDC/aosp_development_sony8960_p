@@ -241,13 +241,14 @@ body
     : opt_annotations INTERFACE IDENTIFIER opt_extends
       {
           if ($4 != NULL && !$4->isInterface()) {
-              fprintf(stderr, "You can only extend interfaces.\n");
+              fprintf(stderr, "ERROR: You can only extend interfaces.\n");
               YYERROR;
           }
 
           if ($3[0] != 'I') {
               fprintf(stderr,
-                      "All interface names must start with an 'I' prefix.\n");
+                      "ERROR: All interface names must start with an 'I' "
+                      "prefix.\n");
 
               YYERROR;
           }
@@ -429,7 +430,7 @@ opt_storage_type
           $$ = $2;
 
           if ($$ != NULL && !$$->isValidEnumStorageType()) {
-              fprintf(stderr, "Invalid enum storage type specified.\n");
+              fprintf(stderr, "ERROR: Invalid enum storage type specified.\n");
               YYABORT;
           }
       }
@@ -505,7 +506,9 @@ type
     | fqname '[' INTEGER ']'
       {
           if ($1->isInterface()) {
-              fprintf(stderr, "Arrays of interface types are not supported.");
+              fprintf(stderr,
+                      "ERROR: Arrays of interface types are not supported.");
+
               YYERROR;
           }
 
@@ -514,7 +517,9 @@ type
     | VEC '<' fqname '>'
       {
           if ($3->isInterface()) {
-              fprintf(stderr, "Vectors of interface types are not supported.");
+              fprintf(stderr,
+                      "ERROR: Vectors of interface types are not supported.");
+
               YYERROR;
           }
 

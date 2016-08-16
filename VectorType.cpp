@@ -179,5 +179,9 @@ status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+bool VectorType::isJavaCompatible() const {
+    return mElementType->isJavaCompatible();
+}
+
 }  // namespace android
 

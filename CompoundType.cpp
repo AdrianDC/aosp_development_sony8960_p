@@ -19,7 +19,7 @@ bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
 
         if (type.isInterface()) {
             fprintf(stderr,
-                    "Structs/Unions must not contain references to "
+                    "ERROR: Structs/Unions must not contain references to "
                     "interfaces.\n");
 
             return false;
@@ -30,7 +30,8 @@ bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
                 // Can't have those in a union.
 
                 fprintf(stderr,
-                        "Unions must not contain any types that need fixup.\n");
+                        "ERROR: Unions must not contain any types that need "
+                        "fixup.\n");
 
                 return false;
             }
@@ -346,6 +347,10 @@ status_t CompoundType::emitVtsArgumentType(Formatter &out) const {
     }
     out << "predefined_type: \"" << localName() << "\"\n";
     return OK;
+}
+
+bool CompoundType::isJavaCompatible() const {
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

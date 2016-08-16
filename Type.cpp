@@ -263,5 +263,9 @@ status_t Type::emitVtsArgumentType(Formatter &out) const {
     return emitVtsTypeDeclarations(out);
 }
 
+bool Type::isJavaCompatible() const {
+    return true;
+}
+
 }  // namespace android
 

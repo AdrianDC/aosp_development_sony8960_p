@@ -52,6 +52,8 @@ struct CompoundType : public Scope {
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsArgumentType(Formatter &out) const override;
 
+    bool isJavaCompatible() const override;
+
 private:
     Style mStyle;
     std::vector<CompoundField *> *mFields;

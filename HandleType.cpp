@@ -124,5 +124,9 @@ bool HandleType::needsEmbeddedReadWrite() const {
     return true;
 }
 
+bool HandleType::isJavaCompatible() const {
+    return false;
+}
+
 }  // namespace android
 

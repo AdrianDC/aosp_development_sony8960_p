@@ -91,6 +91,22 @@ void Method::dumpAnnotations(Formatter &out) const {
     out << "\n";
 }
 
+bool Method::isJavaCompatible() const {
+    for (const auto &arg : *mArgs) {
+        if (!arg->isJavaCompatible()) {
+            return false;
+        }
+    }
+
+    for (const auto &result : *mResults) {
+        if (!result->isJavaCompatible()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 TypedVar::TypedVar(const char *name, Type *type)
@@ -104,6 +120,10 @@ std::string TypedVar::name() const {
 
 const Type &TypedVar::type() const {
     return *mType;
+}
+
+bool TypedVar::isJavaCompatible() const {
+    return mType->isJavaCompatible();
 }
 
 }  // namespace android
