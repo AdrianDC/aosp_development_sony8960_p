@@ -32,6 +32,8 @@ struct HandleType : public Type {
             const std::string &offsetText) const override;
 
     bool needsEmbeddedReadWrite() const override;
+
+    bool isJavaCompatible() const override;
 };
 
 }  // namespace android

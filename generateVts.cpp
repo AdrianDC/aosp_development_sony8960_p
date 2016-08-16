@@ -21,7 +21,7 @@ static std::string removeQuotes(const std::string in) {
 
 status_t AST::emitVtsTypeDeclarations(
         Formatter &out,
-        Vector<Type*> types) const {
+        const std::vector<Type *> &types) const {
     for (const auto& type : types) {
         out << "attribute: {\n";
         out.indent();

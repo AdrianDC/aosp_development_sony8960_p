@@ -13,7 +13,8 @@ Scope::Scope() {}
 bool Scope::addType(const char *localName, NamedType *type) {
     if (mTypeIndexByName.indexOfKey(localName) >= 0) {
         fprintf(stderr,
-                "A type named '%s' is already declared in the current scope.\n",
+                "ERROR: A type named '%s' is already declared in the current "
+                "scope.\n",
                 localName);
 
         return false;
@@ -126,7 +127,7 @@ status_t Scope::emitTypeDefinitions(
 }
 
 
-Vector<Type *> Scope::getSubTypes() const {
+const std::vector<Type *> &Scope::getSubTypes() const {
     return mTypes;
 }
 
@@ -138,6 +139,16 @@ status_t Scope::emitVtsTypeDeclarations(Formatter &out) const {
         }
     }
     return OK;
+}
+
+bool Scope::isJavaCompatible() const {
+    for (const auto &type : mTypes) {
+        if (!type->isJavaCompatible()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 }  // namespace android

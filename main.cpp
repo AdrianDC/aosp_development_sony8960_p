@@ -39,7 +39,7 @@ static status_t generateSourcesForFile(
 
     if (ast == NULL) {
         fprintf(stderr,
-                "Could not parse %s. Aborting.\n",
+                "ERROR: Could not parse %s. Aborting.\n",
                 fqName.string().c_str());
 
         return UNKNOWN_ERROR;
@@ -119,7 +119,7 @@ static status_t generateMakefileForPackage(
 
         if (ast == NULL) {
             fprintf(stderr,
-                    "Could not parse %s. Aborting.\n",
+                    "ERROR: Could not parse %s. Aborting.\n",
                     fqName.string().c_str());
 
             return UNKNOWN_ERROR;
@@ -213,18 +213,18 @@ static status_t generateMakefileForPackage(
 
 OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
     if (fqName.package().empty()) {
-        fprintf(stderr, "Expecting package name\n");
+        fprintf(stderr, "ERROR: Expecting package name\n");
         return OutputHandler::FAILED;
     }
 
     if (fqName.version().empty()) {
-        fprintf(stderr, "Expecting package version\n");
+        fprintf(stderr, "ERROR: Expecting package version\n");
         return OutputHandler::FAILED;
     }
 
     if (!fqName.name().empty()) {
         fprintf(stderr,
-                "Expecting only package name and version.\n");
+                "ERROR: Expecting only package name and version.\n");
         return OutputHandler::FAILED;
     }
 
@@ -233,12 +233,12 @@ OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
 
 OutputHandler::ValRes validateForSource(const FQName &fqName) {
     if (fqName.package().empty()) {
-        fprintf(stderr, "Expecting package name\n");
+        fprintf(stderr, "ERROR: Expecting package name\n");
         return OutputHandler::FAILED;
     }
 
     if (fqName.version().empty()) {
-        fprintf(stderr, "Expecting package version\n");
+        fprintf(stderr, "ERROR: Expecting package version\n");
         return OutputHandler::FAILED;
     }
 
@@ -432,7 +432,7 @@ int main(int argc, char **argv) {
 
         if (!fqName.isValid()) {
             fprintf(stderr,
-                    "Invalid fully-qualified name.\n");
+                    "ERROR: Invalid fully-qualified name.\n");
             exit(1);
         }
 

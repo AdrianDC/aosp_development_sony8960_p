@@ -48,6 +48,8 @@ struct Interface : public Scope {
 
     status_t emitVtsArgumentType(Formatter &out) const override;
 
+    bool isJavaCompatible() const override;
+
 private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;

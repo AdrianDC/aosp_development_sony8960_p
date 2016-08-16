@@ -38,7 +38,18 @@ void AST::emitJavaReaderWriter(
 status_t AST::generateJava(const std::string &outputPath) const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
-        fprintf(stderr, "Common types are unsupported in the Java backend.\n");
+        fprintf(stderr,
+                "ERROR: Common types are unsupported in the Java backend.\n");
+
+        return UNKNOWN_ERROR;
+    }
+
+    const Interface *iface = mRootScope->getInterface();
+    if (!iface->isJavaCompatible()) {
+        fprintf(stderr,
+                "ERROR: This interface is not Java compatible. The Java backend"
+                " does NOT support struct/union types nor handles.\n");
+
         return UNKNOWN_ERROR;
     }
 
@@ -81,7 +92,6 @@ status_t AST::generateJava(const std::string &outputPath) const {
 
     out.setNamespace(mPackage.javaPackage() + ".");
 
-    const Interface *iface = mRootScope->getInterface();
     const Interface *superType = iface->superType();
 
     out << "public interface " << ifaceName << " extends ";

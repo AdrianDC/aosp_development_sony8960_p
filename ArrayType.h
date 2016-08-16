@@ -44,6 +44,8 @@ struct ArrayType : public Type {
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
+    bool isJavaCompatible() const override;
+
 private:
     Type *mElementType;
     std::string mDimension;

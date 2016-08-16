@@ -35,6 +35,8 @@ struct Method {
 
     void dumpAnnotations(Formatter &out) const;
 
+    bool isJavaCompatible() const;
+
 private:
     std::string mName;
     std::vector<TypedVar *> *mArgs;
@@ -50,6 +52,8 @@ struct TypedVar {
 
     std::string name() const;
     const Type &type() const;
+
+    bool isJavaCompatible() const;
 
 private:
     std::string mName;

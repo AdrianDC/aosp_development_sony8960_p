@@ -7,7 +7,7 @@
 #include <string>
 #include <utils/KeyedVector.h>
 #include <utils/RefBase.h>
-#include <utils/Vector.h>
+#include <vector>
 
 #include "FQName.h"
 #include "Type.h"
@@ -113,7 +113,9 @@ private:
 
     status_t emitTypeDeclarations(Formatter &out) const;
     status_t emitJavaTypeDeclarations(Formatter &out) const;
-    status_t emitVtsTypeDeclarations(Formatter &out, Vector<Type*> types) const;
+
+    status_t emitVtsTypeDeclarations(
+            Formatter &out, const std::vector<Type *> &types) const;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

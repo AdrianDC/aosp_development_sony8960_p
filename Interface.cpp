@@ -122,5 +122,19 @@ status_t Interface::emitVtsArgumentType(Formatter &out) const {
     return OK;
 }
 
+bool Interface::isJavaCompatible() const {
+    if (!Scope::isJavaCompatible()) {
+        return false;
+    }
+
+    for (const auto &method : mMethods) {
+        if (!method->isJavaCompatible()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace android
 

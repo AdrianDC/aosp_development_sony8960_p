@@ -5,7 +5,7 @@
 #include "NamedType.h"
 
 #include <utils/KeyedVector.h>
-#include <utils/Vector.h>
+#include <vector>
 
 namespace android {
 
@@ -39,12 +39,14 @@ struct Scope : public NamedType {
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;
 
-    Vector<Type *> getSubTypes() const;
+    const std::vector<Type *> &getSubTypes() const;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
+    bool isJavaCompatible() const override;
+
 private:
-    Vector<Type *> mTypes;
+    std::vector<Type *> mTypes;
     KeyedVector<std::string, size_t> mTypeIndexByName;
 
     KeyedVector<std::string, Constant *> mConstants;

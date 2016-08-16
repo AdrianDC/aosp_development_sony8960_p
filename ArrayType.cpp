@@ -173,5 +173,9 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+bool ArrayType::isJavaCompatible() const {
+    return mElementType->isJavaCompatible();
+}
+
 }  // namespace android
 

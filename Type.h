@@ -90,6 +90,9 @@ struct Type {
     // Generates type declaration as method argument for vts proto file.
     virtual status_t emitVtsArgumentType(Formatter &out) const;
 
+    // Returns true iff this type is supported through the Java backend.
+    virtual bool isJavaCompatible() const;
+
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
     void handleError2(Formatter &out, ErrorMode mode) const;

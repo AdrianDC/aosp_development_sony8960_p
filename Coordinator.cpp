@@ -65,33 +65,38 @@ AST *Coordinator::parse(const FQName &fqName) {
 
     if (ast->package().package() != fqName.package()
             || ast->package().version() != fqName.version()) {
-        LOG(ERROR)
-            << "File at '" << path << "' does not match expected package "
-            << "and/or version.";
+        fprintf(stderr,
+                "ERROR: File at '%s' does not match expected package and/or "
+                "version.",
+                path.c_str());
 
         err = UNKNOWN_ERROR;
     } else {
         std::string ifaceName;
         if (ast->isInterface(&ifaceName)) {
             if (fqName.name() == "types") {
-                LOG(ERROR)
-                    << "File at '" << path << "' declares an interface '"
-                    << ifaceName
-                    << "' instead of the expected types common to the package.";
+                fprintf(stderr,
+                        "ERROR: File at '%s' declares an interface '%s' "
+                        "instead of the expected types common to the package.",
+                        path.c_str(),
+                        ifaceName.c_str());
 
                 err = UNKNOWN_ERROR;
             } else if (ifaceName != fqName.name()) {
-                LOG(ERROR)
-                    << "File at '" << path << "' does not declare interface type '"
-                    << fqName.name()
-                    << "'.";
+                fprintf(stderr,
+                        "ERROR: File at '%s' does not declare interface type "
+                        "'%s'.",
+                        path.c_str(),
+                        fqName.name().c_str());
 
                 err = UNKNOWN_ERROR;
             }
         } else if (fqName.name() != "types") {
-            LOG(ERROR)
-                << "File at '" << path << "' declares types rather than the "
-                << "expected interface type '" << fqName.name() << "'.";
+            fprintf(stderr,
+                    "ERROR: File at '%s' declares types rather than the "
+                    "expected interface type '%s'.",
+                    path.c_str(),
+                    fqName.name().c_str());
 
             err = UNKNOWN_ERROR;
         }
