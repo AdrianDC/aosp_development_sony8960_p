@@ -81,17 +81,7 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     out.indent();
 
     std::vector<const EnumType *> chain;
-    const EnumType *type = this;
-    for (;;) {
-        chain.push_back(type);
-
-        const Type *superType = type->storageType();
-        if (superType == NULL || !superType->isEnum()) {
-            break;
-        }
-
-        type = static_cast<const EnumType *>(superType);
-    }
+    getTypeChain(&chain);
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
@@ -157,17 +147,7 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out) const {
     const std::string typeName = scalarType->getJavaType();
 
     std::vector<const EnumType *> chain;
-    const EnumType *type = this;
-    for (;;) {
-        chain.push_back(type);
-
-        const Type *superType = type->storageType();
-        if (superType == NULL || !superType->isEnum()) {
-            break;
-        }
-
-        type = static_cast<const EnumType *>(superType);
-    }
+    getTypeChain(&chain);
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
@@ -203,28 +183,50 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out) const {
 }
 
 status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "name: \""
-        << localName()
-        << "\"\n"
+    out << "name: \"" << localName() << "\"\n"
         << "type: TYPE_ENUM\n"
         << "enum_value: {\n";
     out.indent();
-    for (const auto &entry : values()) {
-        out << "enumerator: \""
-            << entry->name()
-            << "\"\n"
-            << "value: "
-            << entry->value()
-            << "\n";
+
+    std::vector<const EnumType *> chain;
+    getTypeChain(&chain);
+
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const auto &type = *it;
+
+        for (const auto &entry : type->values()) {
+            out << "enumerator: \"" << entry->name() << "\"\n";
+
+            const char *value = entry->value();
+            if (value != NULL) {
+                out << "value: " << value << "\n";
+            }
+        }
     }
+
     out.unindent();
     out << "}\n";
     return OK;
 }
 
-status_t EnumType::emitVtsArgumentType(Formatter &out) const {
+status_t EnumType::emitVtsAttributeType(Formatter &out) const {
     out << "type: TYPE_ENUM\n" << "predefined_type:\"" << localName() << "\"\n";
     return OK;
+}
+
+void EnumType::getTypeChain(std::vector<const EnumType *> *out) const {
+    out->clear();
+    const EnumType *type = this;
+    for (;;) {
+        out->push_back(type);
+
+        const Type *superType = type->storageType();
+        if (superType == NULL || !superType->isEnum()) {
+            break;
+        }
+
+        type = static_cast<const EnumType *>(superType);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

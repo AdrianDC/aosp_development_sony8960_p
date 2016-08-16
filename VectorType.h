@@ -37,6 +37,7 @@ struct VectorType : public Type {
     bool resultNeedsDeref() const override;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    status_t emitVtsAttributeType(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
 

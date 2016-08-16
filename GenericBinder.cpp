@@ -76,7 +76,7 @@ void GenericBinder::emitJavaReaderWriter(
     }
 }
 
-status_t GenericBinder::emitVtsArgumentType(Formatter &) const {
+status_t GenericBinder::emitVtsAttributeType(Formatter &) const {
     return UNKNOWN_ERROR;
 }
 

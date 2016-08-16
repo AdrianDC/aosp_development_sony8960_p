@@ -302,34 +302,73 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
     switch (mStyle) {
         case STYLE_STRUCT:
         {
-            out << "type: TYPE_STRUCT\n" << "struct value: {\n";
+            out << "type: TYPE_STRUCT\n";
             break;
         }
         case STYLE_UNION:
         {
-            out << "type: TYPE_UNION\n" << "union value: {\n";
+            out << "type: TYPE_UNION\n";
             break;
         }
         default:
             break;
     }
-    out.indent();
-    // Emit declaration for all subtypes.
-    Scope::emitVtsTypeDeclarations(out);
-    // Emit declaration for all fields.
-    for (const auto &field : *mFields) {
-        status_t status = field->type().emitVtsTypeDeclarations(out);
+
+    // Emit declaration for each subtype.
+    for (const auto &type : getSubTypes()) {
+        switch (mStyle) {
+            case STYLE_STRUCT:
+            {
+                out << "struct_value: {\n";
+                break;
+            }
+            case STYLE_UNION:
+            {
+                out << "union_value: {\n";
+                break;
+            }
+            default:
+                break;
+        }
+        out.indent();
+        status_t status(type->emitVtsTypeDeclarations(out));
         if (status != OK) {
             return status;
         }
+        out.unindent();
+        out << "}\n";
     }
-    out.unindent();
-    out << "}\n";
+
+    // Emit declaration for each field.
+    for (const auto &field : *mFields) {
+        switch (mStyle) {
+            case STYLE_STRUCT:
+            {
+                out << "struct_value: {\n";
+                break;
+            }
+            case STYLE_UNION:
+            {
+                out << "union_value: {\n";
+                break;
+            }
+            default:
+                break;
+        }
+        out.indent();
+        out << "name: \"" << field->name() << "\"\n";
+        status_t status = field->type().emitVtsAttributeType(out);
+        if (status != OK) {
+            return status;
+        }
+        out.unindent();
+        out << "}\n";
+    }
 
     return OK;
 }
 
-status_t CompoundType::emitVtsArgumentType(Formatter &out) const {
+status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
     switch (mStyle) {
         case STYLE_STRUCT:
         {

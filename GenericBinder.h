@@ -28,7 +28,7 @@ struct GenericBinder : public Type {
             const std::string &argName,
             bool isReader) const override;
 
-    status_t emitVtsArgumentType(Formatter &out) const override;
+    status_t emitVtsAttributeType(Formatter &out) const override;
 };
 
 }  // namespace android

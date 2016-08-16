@@ -19,10 +19,33 @@ static std::string removeQuotes(const std::string in) {
     return out.substr(1, out.size() - 2);
 }
 
-status_t AST::emitVtsTypeDeclarations(
+status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
+    std::set<AST *> allImportedASTs;
+    return emitVtsTypeDeclarationsHelper(out, &allImportedASTs);
+}
+
+status_t AST::emitVtsTypeDeclarationsHelper(
         Formatter &out,
-        const std::vector<Type *> &types) const {
-    for (const auto& type : types) {
+        std::set<AST *> *allImportSet) const {
+    // First, generate vts type declaration for all imported AST.
+    for (const auto &ast : mImportedASTs) {
+        // Already processed, skip.
+        if (allImportSet->find(ast) != allImportSet->end()) {
+            continue;
+        }
+        allImportSet->insert(ast);
+        std::string ifaceName;
+        // We only care about types.hal.
+        if (!ast->isInterface(&ifaceName)) {
+            status_t status = ast->emitVtsTypeDeclarationsHelper(
+                    out, allImportSet);
+            if (status != OK) {
+                return status;
+            }
+        }
+    }
+    // Next, generate vts type declaration for the current AST.
+    for (const auto &type : mRootScope->getSubTypes()) {
         out << "attribute: {\n";
         out.indent();
         status_t status = type->emitVtsTypeDeclarations(out);
@@ -98,44 +121,34 @@ status_t AST::generateVts(const std::string &outputPath) const {
         out << "interface: {\n";
         out.indent();
 
-        status_t status = emitVtsTypeDeclarations(out, iface->getSubTypes());
-        if (status != OK) {
-            return status;
+        std::vector<const Interface *> chain;
+        while (iface != NULL) {
+            chain.push_back(iface);
+            iface = iface->superType();
         }
 
-        for (const auto &method : iface->methods()) {
-            out << "api: {\n";
-            out.indent();
-            out << "name: \"" << method->name() << "\"\n";
-            for (const auto &result : method->results()) {
-                out << "return_type_hidl: {\n";
-                out.indent();
-                status_t status = result->type().emitVtsArgumentType(out);
-                if (status != OK) {
-                    return status;
-                }
-                out.unindent();
-                out << "}\n";
+        // Generate all the attribute declarations first.
+        for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+            const Interface *superInterface = *it;
+            status_t status = superInterface->emitVtsAttributeDeclaration(out);
+            if (status != OK) {
+                return status;
             }
-            for (const auto &arg : method->args()) {
-                out << "arg: {\n";
-                out.indent();
-                status_t status = arg->type().emitVtsArgumentType(out);
-                if (status != OK) {
-                    return status;
-                }
-                out.unindent();
-                out << "}\n";
+        }
+
+        // Generate all the method declarations.
+        for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+            const Interface *superInterface = *it;
+            status_t status = superInterface->emitVtsMethodDeclaration(out);
+            if (status != OK) {
+                return status;
             }
-            out.unindent();
-            out << "}\n\n";
         }
 
         out.unindent();
         out << "}\n";
     } else {
-        status_t status = emitVtsTypeDeclarations(out,
-                                                  mRootScope->getSubTypes());
+        status_t status = emitVtsTypeDeclarations(out);
         if (status != OK) {
             return status;
         }

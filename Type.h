@@ -89,8 +89,9 @@ struct Type {
     // Generates type declaration for vts proto file.
     // TODO (b/30844146): make it a pure virtual method.
     virtual status_t emitVtsTypeDeclarations(Formatter &out) const;
-    // Generates type declaration as method argument for vts proto file.
-    virtual status_t emitVtsArgumentType(Formatter &out) const;
+    // Generates type declaration as attribute of method (return value or method
+    // argument) or attribute of compound type for vts proto file.
+    virtual status_t emitVtsAttributeType(Formatter &out) const;
 
     // Returns true iff this type is supported through the Java backend.
     virtual bool isJavaCompatible() const;

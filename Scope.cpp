@@ -112,7 +112,6 @@ status_t Scope::emitTypeDefinitions(
     return OK;
 }
 
-
 const std::vector<Type *> &Scope::getSubTypes() const {
     return mTypes;
 }

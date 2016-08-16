@@ -163,7 +163,7 @@ void ArrayType::emitJavaReaderWriter(
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "type: TYPE_ARRAY\n" << "vector_value: {\n";
     out.indent();
-    out << "size: " << mDimension;
+    out << "size: " << mDimension << "\n";
     status_t err = mElementType->emitVtsTypeDeclarations(out);
     if (err != OK) {
         return err;

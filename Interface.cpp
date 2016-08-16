@@ -4,6 +4,8 @@
 #include "Formatter.h"
 #include "Method.h"
 
+#include <iostream>
+
 namespace android {
 
 Interface::Interface(Interface *super, AnnotationVector *annotations)
@@ -123,7 +125,80 @@ void Interface::emitJavaReaderWriter(
     }
 }
 
-status_t Interface::emitVtsArgumentType(Formatter &out) const {
+status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
+    for (const auto &type : getSubTypes()) {
+        out << "attribute: {\n";
+        out.indent();
+        status_t status = type->emitVtsTypeDeclarations(out);
+        if (status != OK) {
+            return status;
+        }
+        out.unindent();
+        out << "}\n\n";
+    }
+    return OK;
+}
+
+status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
+    for (const auto &method : mMethods) {
+        out << "api: {\n";
+        out.indent();
+        out << "name: \"" << method->name() << "\"\n";
+        // Generate declaration for each return value.
+        for (const auto &result : method->results()) {
+            out << "return_type_hidl: {\n";
+            out.indent();
+            status_t status = result->type().emitVtsAttributeType(out);
+            if (status != OK) {
+                return status;
+            }
+            out.unindent();
+            out << "}\n";
+        }
+        // Generate declaration for each input argument
+        for (const auto &arg : method->args()) {
+            out << "arg: {\n";
+            out.indent();
+            status_t status = arg->type().emitVtsAttributeType(out);
+            if (status != OK) {
+                return status;
+            }
+            out.unindent();
+            out << "}\n";
+        }
+        // Generate declaration for each annotation.
+        const AnnotationVector & annotations = method->annotations();
+        for (size_t i = 0; i < annotations.size(); i++) {
+            out << "callflow: {\n";
+            out.indent();
+            std::string name = annotations.keyAt(i);
+            if (name == "entry") {
+                out << "entry: true\n";
+            } else if (name == "exit") {
+                out << "exit: true\n";
+            } else if (name == "callflow") {
+                Annotation* annotation = annotations.valueAt(i);
+                std::vector<std::string> * values = annotation->params()
+                        .valueFor("next");
+                for (auto value : *values) {
+                    out << "next: " << value << "\n";
+                }
+            } else {
+                std::cerr << "Invalid annotation '"
+                          << name << "' for method: " << method->name()
+                          << ". Should be one of: entry, exit, callflow. \n";
+                return UNKNOWN_ERROR;
+            }
+            out.unindent();
+            out << "}\n";
+        }
+        out.unindent();
+        out << "}\n\n";
+    }
+    return OK;
+}
+
+status_t Interface::emitVtsAttributeType(Formatter &out) const {
     out << "type: TYPE_HIDL_CALLBACK\n"
         << "predefined_type: \""
         << localName()

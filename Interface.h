@@ -47,7 +47,10 @@ struct Interface : public Scope {
             const std::string &argName,
             bool isReader) const override;
 
-    status_t emitVtsArgumentType(Formatter &out) const override;
+    status_t emitVtsAttributeType(Formatter &out) const override;
+
+    status_t emitVtsAttributeDeclaration(Formatter &out) const;
+    status_t emitVtsMethodDeclaration(Formatter &out) const;
 
     bool isJavaCompatible() const override;
 

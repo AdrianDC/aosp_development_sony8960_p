@@ -267,7 +267,7 @@ status_t Type::emitVtsTypeDeclarations(Formatter &) const {
     return OK;
 }
 
-status_t Type::emitVtsArgumentType(Formatter &out) const {
+status_t Type::emitVtsAttributeType(Formatter &out) const {
     return emitVtsTypeDeclarations(out);
 }
 

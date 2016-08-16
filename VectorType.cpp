@@ -179,6 +179,18 @@ status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+status_t VectorType::emitVtsAttributeType(Formatter &out) const {
+    out << "type: TYPE_VECTOR\n" << "vector_value: {\n";
+    out.indent();
+    status_t status = mElementType->emitVtsAttributeType(out);
+    if (status != OK) {
+        return status;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
 bool VectorType::isJavaCompatible() const {
     return mElementType->isJavaCompatible();
 }
