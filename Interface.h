@@ -55,6 +55,7 @@ private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;
     AnnotationVector *mAnnotationsByName;
+    mutable bool mIsJavaCompatibleInProgress;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
