@@ -40,7 +40,7 @@ LOCAL_SHARED_LIBRARIES :=       \
 LOCAL_STATIC_LIBRARIES :=       \
     libutils                    \
 
-LOCAL_CFLAGS := -O0 -g
+LOCAL_CFLAGS := -O0 -g -Wno-deprecated-register
 
 include $(BUILD_HOST_EXECUTABLE)
 

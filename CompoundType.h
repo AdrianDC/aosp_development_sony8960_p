@@ -18,7 +18,7 @@ struct CompoundType : public Scope {
 
     CompoundType(Style style);
 
-    bool setFields(std::vector<CompoundField *> *fields);
+    bool setFields(std::vector<CompoundField *> *fields, std::string *errorMsg);
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 

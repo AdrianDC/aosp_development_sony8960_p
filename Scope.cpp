@@ -9,12 +9,12 @@ namespace android {
 
 Scope::Scope() {}
 
-bool Scope::addType(const char *localName, NamedType *type) {
+bool Scope::addType(
+        const char *localName, NamedType *type, std::string *errorMsg) {
     if (mTypeIndexByName.indexOfKey(localName) >= 0) {
-        fprintf(stderr,
-                "ERROR: A type named '%s' is already declared in the current "
-                "scope.\n",
-                localName);
+        *errorMsg = "A type named '";
+        (*errorMsg) += localName;
+        (*errorMsg) += "' is already declared in the  current scope.";
 
         return false;
     }

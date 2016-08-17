@@ -28,40 +28,46 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include <assert.h>
 
 using namespace android;
+using token = yy::parser::token;
 
-void count(struct yyguts_t *yyg);
 void comment(yyscan_t yyscanner, struct yyguts_t *yyg);
 int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 
 #define SCALAR_TYPE(kind)                                       \
     do {                                                        \
-        count(yyg);                                             \
         yylval->type = new ScalarType(ScalarType::kind);        \
-        return SCALAR;                                        \
+        return token::SCALAR;                                   \
     } while (0)
+
+#define YY_USER_ACTION yylloc->step(); yylloc->columns(yyleng);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 
 %}
 
+%option yylineno
+%option noyywrap
 %option reentrant
 %option bison-bridge
-%option extra-type="android::AST *"
+%option bison-locations
 
 %%
 
 "/*"			{ comment(yyscanner, yyg); }
 "//"[^\r\n]*            { /* skip C++ style comment */ }
 
-"enum"			{ count(yyg); return(ENUM); }
-"extends"		{ count(yyg); return(EXTENDS); }
-"generates"		{ count(yyg); return(GENERATES); }
-"import"		{ count(yyg); return(IMPORT); }
-"interface"		{ count(yyg); return(INTERFACE); }
-"package"		{ count(yyg); return(PACKAGE); }
-"struct"		{ count(yyg); return(STRUCT); }
-"typedef"		{ count(yyg); return(TYPEDEF); }
-"union"			{ count(yyg); return(UNION); }
-"vec"			{ count(yyg); return(VEC); }
-"oneway"		{ count(yyg); return(ONEWAY); }
+"enum"			{ return token::ENUM; }
+"extends"		{ return token::EXTENDS; }
+"generates"		{ return token::GENERATES; }
+"import"		{ return token::IMPORT; }
+"interface"		{ return token::INTERFACE; }
+"package"		{ return token::PACKAGE; }
+"struct"		{ return token::STRUCT; }
+"typedef"		{ return token::TYPEDEF; }
+"union"			{ return token::UNION; }
+"vec"			{ return token::VEC; }
+"oneway"		{ return token::ONEWAY; }
 
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
 "opaque"		{ SCALAR_TYPE(KIND_OPAQUE); }
@@ -76,67 +82,64 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "float"			{ SCALAR_TYPE(KIND_FLOAT); }
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
-"handle"		{ count(yyg); yylval->type = new HandleType; return SCALAR; }
-"string"		{ count(yyg); yylval->type = new StringType; return SCALAR; }
+"handle"		{ yylval->type = new HandleType; return token::SCALAR; }
+"string"		{ yylval->type = new StringType; return token::SCALAR; }
 
-"("			{ count(yyg); return('('); }
-")"			{ count(yyg); return(')'); }
-"<"			{ count(yyg); return('<'); }
-">"			{ count(yyg); return('>'); }
-"{"			{ count(yyg); return('{'); }
-"}"			{ count(yyg); return('}'); }
-"["			{ count(yyg); return('['); }
-"]"			{ count(yyg); return(']'); }
-":"			{ count(yyg); return(':'); }
-";"			{ count(yyg); return(';'); }
-","			{ count(yyg); return(','); }
-"."			{ count(yyg); return('.'); }
-"="			{ count(yyg); return('='); }
-"+"			{ count(yyg); return('+'); }
-"-"         { count(yyg); return('-'); }
-"*"         { count(yyg); return('*'); }
-"/"         { count(yyg); return('/'); }
-"%"         { count(yyg); return('%'); }
-"&"         { count(yyg); return('&'); }
-"|"         { count(yyg); return('|'); }
-"^"         { count(yyg); return('^'); }
-"<<"        { count(yyg); return(LSHIFT); }
-">>"        { count(yyg); return(RSHIFT); }
-"&&"        { count(yyg); return(LOGICAL_AND); }
-"||"        { count(yyg); return(LOGICAL_OR);  }
-"!"         { count(yyg); return('!'); }
-"~"         { count(yyg); return('~'); }
-"<="        { count(yyg); return(LEQ); }
-">="        { count(yyg); return(GEQ); }
-"=="        { count(yyg); return(EQUALITY); }
-"!="        { count(yyg); return(NEQ); }
-"?"         { count(yyg); return('?'); }
-"@"			{ count(yyg); return('@'); }
+"("			{ return('('); }
+")"			{ return(')'); }
+"<"			{ return('<'); }
+">"			{ return('>'); }
+"{"			{ return('{'); }
+"}"			{ return('}'); }
+"["			{ return('['); }
+"]"			{ return(']'); }
+":"			{ return(':'); }
+";"			{ return(';'); }
+","			{ return(','); }
+"."			{ return('.'); }
+"="			{ return('='); }
+"+"			{ return('+'); }
+"-"			{ return('-'); }
+"*"			{ return('*'); }
+"/"			{ return('/'); }
+"%"			{ return('%'); }
+"&"			{ return('&'); }
+"|"			{ return('|'); }
+"^"			{ return('^'); }
+"<<"			{ return(token::LSHIFT); }
+">>"			{ return(token::RSHIFT); }
+"&&"			{ return(token::LOGICAL_AND); }
+"||"			{ return(token::LOGICAL_OR);  }
+"!"			{ return('!'); }
+"~"			{ return('~'); }
+"<="			{ return(token::LEQ); }
+">="			{ return(token::GEQ); }
+"=="			{ return(token::EQUALITY); }
+"!="			{ return(token::NEQ); }
+"?"			{ return('?'); }
+"@"			{ return('@'); }
 
-{PATH}{VERSION}?"::"{PATH}      { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
-{VERSION}"::"{PATH}             { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
-{PATH}{VERSION}                 { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
-{COMPONENT}({DOT}{COMPONENT})+  { count(yyg); yylval->str = strdup(yytext); return FQNAME; }
-{COMPONENT}                     { count(yyg); yylval->str = strdup(yytext); return IDENTIFIER; }
+{PATH}{VERSION}?"::"{PATH}      { yylval->str = strdup(yytext); return token::FQNAME; }
+{VERSION}"::"{PATH}             { yylval->str = strdup(yytext); return token::FQNAME; }
+{PATH}{VERSION}                 { yylval->str = strdup(yytext); return token::FQNAME; }
+{COMPONENT}({DOT}{COMPONENT})+  { yylval->str = strdup(yytext); return token::FQNAME; }
+{COMPONENT}                     { yylval->str = strdup(yytext); return token::IDENTIFIER; }
 
-0[xX]{H}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
-0{D}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
-{D}+{IS}?		{ count(yyg); yylval->str = strdup(yytext); return(INTEGER); }
+0[xX]{H}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
+0{D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
+{D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
+L?\"(\\.|[^\\"])*\"	{ yylval->str = strdup(yytext); return token::STRING_LITERAL; }
 
-{D}+{E}{FS}?         { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
-{D}+\.{E}?{FS}?      { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
-{D}*\.{D}+{E}?{FS}?  { count(yyg); yylval->str = strdup(yytext); return(FLOAT); }
+{D}+{E}{FS}?		{ yylval->str = strdup(yytext); return token::FLOAT; }
+{D}+\.{E}?{FS}?		{ yylval->str = strdup(yytext); return token::FLOAT; }
+{D}*\.{D}+{E}?{FS}?	{ yylval->str = strdup(yytext); return token::FLOAT; }
 
-L?\"(\\.|[^\\"])*\"	{ count(yyg); yylval->str = strdup(yytext); return(STRING_LITERAL); }
-
-[ \t\v\n\f]		{ count(yyg); }
+[\n]		{ yylloc->lines(); }
 .			{ /* ignore bad characters */ }
 
 %%
 
-int yywrap(yyscan_t) {
-    return 1;
-}
+#pragma clang diagnostic pop
 
 void comment(yyscan_t yyscanner, yyguts_t *yyg) {
     char c, c1;
@@ -156,25 +159,8 @@ loop:
     }
 }
 
-
-int column = 0;
-
-void count(yyguts_t *yyg) {
-    int i;
-
-    for (i = 0; yytext[i] != '\0'; i++)
-        if (yytext[i] == '\n')
-            column = 0;
-        else if (yytext[i] == '\t')
-            column += 8 - (column % 8);
-        else
-            column++;
-
-    ECHO;
-}
-
-status_t parseFile(AST *ast, const char *path) {
-    FILE *file = fopen(path, "rb");
+status_t parseFile(AST *ast) {
+    FILE *file = fopen(ast->getFilename().c_str(), "rb");
 
     if (file == NULL) {
         return -errno;
@@ -185,7 +171,7 @@ status_t parseFile(AST *ast, const char *path) {
     ast->setScanner(scanner);
 
     yyset_in(file, scanner);
-    int res = yyparse(ast);
+    int res = yy::parser(ast).parse();
 
     yylex_destroy(scanner);
     ast->setScanner(NULL);

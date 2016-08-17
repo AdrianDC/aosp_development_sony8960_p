@@ -7,7 +7,7 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 
-extern android::status_t parseFile(android::AST *ast, const char *path);
+extern android::status_t parseFile(android::AST *ast);
 
 namespace android {
 
@@ -51,8 +51,8 @@ AST *Coordinator::parse(const FQName &fqName) {
     path.append(fqName.name());
     path.append(".hal");
 
-    AST *ast = new AST(this);
-    status_t err = parseFile(ast, path.c_str());
+    AST *ast = new AST(this, path);
+    status_t err = parseFile(ast);
 
     if (err != OK) {
         // LOG(ERROR) << "parsing '" << path << "' FAILED.";
@@ -67,7 +67,7 @@ AST *Coordinator::parse(const FQName &fqName) {
             || ast->package().version() != fqName.version()) {
         fprintf(stderr,
                 "ERROR: File at '%s' does not match expected package and/or "
-                "version.",
+                "version.\n",
                 path.c_str());
 
         err = UNKNOWN_ERROR;
@@ -77,7 +77,7 @@ AST *Coordinator::parse(const FQName &fqName) {
             if (fqName.name() == "types") {
                 fprintf(stderr,
                         "ERROR: File at '%s' declares an interface '%s' "
-                        "instead of the expected types common to the package.",
+                        "instead of the expected types common to the package.\n",
                         path.c_str(),
                         ifaceName.c_str());
 
@@ -85,7 +85,7 @@ AST *Coordinator::parse(const FQName &fqName) {
             } else if (ifaceName != fqName.name()) {
                 fprintf(stderr,
                         "ERROR: File at '%s' does not declare interface type "
-                        "'%s'.",
+                        "'%s'.\n",
                         path.c_str(),
                         fqName.name().c_str());
 
@@ -94,7 +94,7 @@ AST *Coordinator::parse(const FQName &fqName) {
         } else if (fqName.name() != "types") {
             fprintf(stderr,
                     "ERROR: File at '%s' declares types rather than the "
-                    "expected interface type '%s'.",
+                    "expected interface type '%s'.\n",
                     path.c_str(),
                     fqName.name().c_str());
 

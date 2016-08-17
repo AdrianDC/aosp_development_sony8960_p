@@ -13,8 +13,9 @@
 
 namespace android {
 
-AST::AST(Coordinator *coordinator)
+AST::AST(Coordinator *coordinator, const std::string &path)
     : mCoordinator(coordinator),
+      mPath(path),
       mScanner(NULL),
       mRootScope(new Scope) {
     enterScope(mRootScope);
@@ -35,6 +36,10 @@ void *AST::scanner() {
 
 void AST::setScanner(void *scanner) {
     mScanner = scanner;
+}
+
+const std::string &AST::getFilename() const {
+    return mPath;
 }
 
 bool AST::setPackage(const char *package) {
@@ -108,7 +113,8 @@ Scope *AST::scope() {
     return mScopePath.top();
 }
 
-bool AST::addScopedType(const char *localName, NamedType *type) {
+bool AST::addScopedType(
+        const char *localName, NamedType *type, std::string *errorMsg) {
     std::string anonName;
 
     if (localName == nullptr) {
@@ -119,7 +125,7 @@ bool AST::addScopedType(const char *localName, NamedType *type) {
 
     // LOG(INFO) << "adding scoped type '" << localName << "'";
 
-    bool success = scope()->addType(localName, type);
+    bool success = scope()->addType(localName, type,  errorMsg);
     if (!success) {
         return false;
     }

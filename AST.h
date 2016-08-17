@@ -23,7 +23,7 @@ struct TypedVar;
 struct Scope;
 
 struct AST {
-    AST(Coordinator *coordinator);
+    AST(Coordinator *coordinator, const std::string &path);
     ~AST();
 
     bool setPackage(const char *package);
@@ -38,10 +38,15 @@ struct AST {
     Scope *scope();
 
     // Returns true iff successful.
-    bool addScopedType(const char *localName, NamedType *type);
+    bool addScopedType(
+            const char *localName,
+            NamedType *type,
+            std::string *errorMsg);
 
     void *scanner();
     void setScanner(void *scanner);
+
+    const std::string &getFilename() const;
 
     // Look up a type by FQName, "pure" names, i.e. those without package
     // or version are first looked up in the current scope chain.
@@ -60,9 +65,9 @@ struct AST {
 
     status_t generateVts(const std::string &outputPath) const;
 
-
 private:
     Coordinator *mCoordinator;
+    std::string mPath;
     Vector<Scope *> mScopePath;
 
     void *mScanner;

@@ -11,16 +11,16 @@ CompoundType::CompoundType(Style style)
       mFields(NULL) {
 }
 
-bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
+bool CompoundType::setFields(
+        std::vector<CompoundField *> *fields, std::string *errorMsg) {
     mFields = fields;
 
     for (const auto &field : *fields) {
         const Type &type = field->type();
 
         if (type.isBinder()) {
-            fprintf(stderr,
-                    "ERROR: Structs/Unions must not contain references to "
-                    "interfaces.\n");
+            *errorMsg =
+                "Structs/Unions must not contain references to interfaces.";
 
             return false;
         }
@@ -29,9 +29,8 @@ bool CompoundType::setFields(std::vector<CompoundField *> *fields) {
             if (type.needsEmbeddedReadWrite()) {
                 // Can't have those in a union.
 
-                fprintf(stderr,
-                        "ERROR: Unions must not contain any types that need "
-                        "fixup.\n");
+                *errorMsg =
+                    "Unions must not contain any types that need fixup.";
 
                 return false;
             }

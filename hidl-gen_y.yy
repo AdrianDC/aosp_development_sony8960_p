@@ -19,23 +19,22 @@
 
 using namespace android;
 
-extern int yylex(YYSTYPE *yylval_param, void *yyscanner);
-extern int column;
-
-int yyerror(AST *, const char *s) {
-    fflush(stdout);
-    printf("\n%*s\n%*s\n", column, "^", column, s);
-
-    return 0;
-}
+extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 #define scanner ast->scanner()
 
 %}
 
+%initial-action {
+    // Initialize the initial location.
+    @$.begin.filename = @$.end.filename =
+        const_cast<std::string *>(&ast->getFilename());
+}
+
 %parse-param { android::AST *ast }
 %lex-param { void *scanner }
 %pure-parser
+%skeleton "glr.cc"
 
 %token<str> ENUM
 %token<str> EXTENDS
@@ -207,9 +206,10 @@ fqname
       {
           $$ = ast->lookupType($1);
           if ($$ == NULL) {
-              yyerror(ast,
-                      android::String8::format(
-                          "Failed to lookup type '%s'.", $1).string());
+              std::cerr << "ERROR: Failed to lookup type '" << $1 << "' at "
+                        << @1
+                        << "\n";
+
               YYERROR;
           }
       }
@@ -217,9 +217,9 @@ fqname
       {
           $$ = ast->lookupType($1);
           if ($$ == NULL) {
-              yyerror(ast,
-                      android::String8::format(
-                          "Failed to lookup type '%s'.", $1).string());
+              std::cerr << "Failed to lookup type '" << $1 << "' at " << @1
+                        << "\n";
+
               YYERROR;
           }
       }
@@ -230,7 +230,12 @@ package
     : PACKAGE FQNAME ';'
       {
           if (!ast->setPackage($2)) {
-              yyerror(ast, "Malformed package identifier.");
+              std::cerr << "ERROR: Malformed package identifier '"
+                        << $2
+                        << "' at "
+                        << @2
+                        << "\n";
+
               YYERROR;
           }
       }
@@ -240,9 +245,8 @@ imports
     | imports IMPORT FQNAME ';'
       {
           if (!ast->addImport($3)) {
-              yyerror(ast,
-                      android::String8::format(
-                          "Unable to import '%s'.", $3));
+              std::cerr << "ERROR: Unable to import '" << $3 << "' at " << @3
+                        << "\n";
 
               YYERROR;
           }
@@ -250,9 +254,8 @@ imports
     | imports IMPORT IDENTIFIER ';'
       {
           if (!ast->addImport($3)) {
-              yyerror(ast,
-                      android::String8::format(
-                          "Unable to import '%s'.", $3));
+              std::cerr << "ERROR: Unable to import '" << $3 << "' at " << @3
+                        << "\n";
 
               YYERROR;
           }
@@ -267,14 +270,15 @@ body
     : opt_annotations INTERFACE IDENTIFIER opt_extends
       {
           if ($4 != NULL && !$4->isInterface()) {
-              fprintf(stderr, "ERROR: You can only extend interfaces.\n");
+              std::cerr << "ERROR: You can only extend interfaces. at" << @4
+                        << "\n";
+
               YYERROR;
           }
 
           if ($3[0] != 'I') {
-              fprintf(stderr,
-                      "ERROR: All interface names must start with an 'I' "
-                      "prefix.\n");
+              std::cerr << "ERROR: All interface names must start with an 'I' "
+                        << "prefix. at " << @3 << "\n";
 
               YYERROR;
           }
@@ -283,7 +287,9 @@ body
 
           // Register interface immediately so it can be referenced inside
           // definition.
-          if (!ast->addScopedType($3, iface)) {
+          std::string errorMsg;
+          if (!ast->addScopedType($3, iface, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
 
@@ -323,7 +329,10 @@ typedef_declaration
     : TYPEDEF type IDENTIFIER
       {
           TypeDef *def = new TypeDef($2);
-          if (!ast->addScopedType($3, def)) {
+
+          std::string errorMsg;
+          if (!ast->addScopedType($3, def, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
       }
@@ -412,12 +421,16 @@ named_struct_or_union_declaration
       {
           CompoundType *container = static_cast<CompoundType *>(ast->scope());
 
-          if (!container->setFields($4)) {
+          std::string errorMsg;
+          if (!container->setFields($4, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @4 << "\n";
               YYERROR;
           }
 
           ast->leaveScope();
-          if (!ast->addScopedType($2, container)) {
+
+          if (!ast->addScopedType($2, container, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
       }
@@ -433,12 +446,16 @@ struct_or_union_declaration
       {
           CompoundType *container = static_cast<CompoundType *>(ast->scope());
 
-          if (!container->setFields($4)) {
+          std::string errorMsg;
+          if (!container->setFields($4, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @4 << "\n";
               YYERROR;
           }
 
           ast->leaveScope();
-          if (!ast->addScopedType($2, container)) {
+
+          if (!ast->addScopedType($2, container, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
 
@@ -475,7 +492,9 @@ opt_storage_type
           $$ = $2;
 
           if ($$ != NULL && !$$->isValidEnumStorageType()) {
-              fprintf(stderr, "ERROR: Invalid enum storage type specified.\n");
+              std::cerr << "ERROR: Invalid enum storage type specified. at "
+                        << @2 << "\n";
+
               YYABORT;
           }
       }
@@ -490,7 +509,10 @@ named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($5, $3);
-          if (!ast->addScopedType($2, enumType)) {
+
+          std::string errorMsg;
+          if (!ast->addScopedType($2, enumType, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
       }
@@ -500,7 +522,11 @@ enum_declaration
     : ENUM '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($3);
-          if (!ast->addScopedType(NULL /* localName */, enumType)) {
+
+          std::string errorMsg;
+          if (!ast->addScopedType(NULL /* localName */, enumType, &errorMsg)) {
+              // This should never fail.
+              std::cerr << "ERROR: " << errorMsg << "\n";
               YYERROR;
           }
 
@@ -509,7 +535,10 @@ enum_declaration
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
           EnumType *enumType = new EnumType($5, $3);
-          if (!ast->addScopedType($2, enumType)) {
+
+          std::string errorMsg;
+          if (!ast->addScopedType($2, enumType, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
 
@@ -544,8 +573,8 @@ type
     | fqname '[' INTEGER ']'
       {
           if ($1->isBinder()) {
-              fprintf(stderr,
-                      "ERROR: Arrays of interface types are not supported.");
+              std::cerr << "ERROR: Arrays of interface types are not supported."
+                        << " at " << @1 << "\n";
 
               YYERROR;
           }
@@ -555,8 +584,8 @@ type
     | VEC '<' fqname '>'
       {
           if ($3->isBinder()) {
-              fprintf(stderr,
-                      "ERROR: Vectors of interface types are not supported.");
+              std::cerr << "ERROR: Vectors of interface types are not "
+                        << "supported. at " << @3 << "\n";
 
               YYERROR;
           }
@@ -574,3 +603,12 @@ optIdentifier
     ;
 
 %%
+
+#include <android-base/logging.h>
+
+void yy::parser::error(
+        const yy::parser::location_type &where,
+        const std::string &errstr) {
+    std::cerr << "ERROR: " << errstr << " at " << where << "\n";
+}
+
