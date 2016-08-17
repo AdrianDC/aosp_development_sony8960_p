@@ -17,6 +17,7 @@ LOCAL_SRC_FILES :=              \
     generateCpp.cpp             \
     generateJava.cpp            \
     generateVts.cpp             \
+    GenericBinder.cpp           \
     HandleType.cpp              \
     hidl-gen_y.yy               \
     hidl-gen_l.ll               \

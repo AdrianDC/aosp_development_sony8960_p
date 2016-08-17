@@ -21,6 +21,7 @@ struct Interface : public Scope {
     void addMethod(Method *method);
 
     bool isInterface() const override;
+    bool isBinder() const override;
 
     const Interface *superType() const;
 

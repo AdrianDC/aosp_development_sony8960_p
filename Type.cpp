@@ -26,6 +26,10 @@ bool Type::isTypeDef() const {
     return false;
 }
 
+bool Type::isBinder() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }

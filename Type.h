@@ -21,6 +21,7 @@ struct Type {
     virtual bool isInterface() const;
     virtual bool isEnum() const;
     virtual bool isTypeDef() const;
+    virtual bool isBinder() const;
 
     virtual const ScalarType *resolveToScalarType() const;
 
