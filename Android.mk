@@ -10,6 +10,7 @@ LOCAL_SRC_FILES :=              \
     ArrayType.cpp               \
     CompoundType.cpp            \
     Constant.cpp                \
+    ConstantExpression.cpp      \
     Coordinator.cpp             \
     EnumType.cpp                \
     Formatter.cpp               \
