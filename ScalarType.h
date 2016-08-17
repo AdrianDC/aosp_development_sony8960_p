@@ -78,6 +78,8 @@ struct ScalarType : public Type {
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
+    Kind getKind() const;
+
 private:
     Kind mKind;
 

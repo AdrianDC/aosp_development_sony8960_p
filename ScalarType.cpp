@@ -245,5 +245,9 @@ void ScalarType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = *size = kAlign[mKind];
 }
 
+ScalarType::Kind ScalarType::getKind() const {
+    return mKind;
+}
+
 }  // namespace android
 

@@ -119,12 +119,19 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
         for (const auto &entry : type->values()) {
             out << entry->name();
 
-            const char *value = entry->value();
+            const char *value = entry->cppValue(scalarType->getKind());
             if (value != NULL) {
                 out << " = " << value;
             }
 
-            out << ",\n";
+            out << ",";
+
+            const char *comment = entry->comment();
+            if (comment != NULL && strcmp(comment, value) != 0) {
+                out << " // " << comment;
+            }
+
+            out << "\n";
         }
     }
 
@@ -268,7 +275,7 @@ void EnumType::getAlignmentAndSize(size_t *align, size_t *size) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-EnumValue::EnumValue(const char *name, const char *value)
+EnumValue::EnumValue(const char *name, const ConstantExpression *value)
     : mName(name),
       mValue(value) {
 }
@@ -278,7 +285,15 @@ std::string EnumValue::name() const {
 }
 
 const char *EnumValue::value() const {
-    return mValue;
+    return mValue ? mValue->value() : nullptr;
+}
+
+const char *EnumValue::cppValue(ScalarType::Kind castKind) const {
+    return mValue ? mValue->cppValue(castKind) : nullptr;
+}
+
+const char *EnumValue::comment() const {
+    return mValue ? mValue->description() : nullptr;
 }
 
 }  // namespace android

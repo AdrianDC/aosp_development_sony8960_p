@@ -20,16 +20,25 @@
 
 #include <android-base/macros.h>
 #include <string>
+#include "ScalarType.h"
 
 namespace android {
-
 
 /**
  * A constant expression is represented by a tree.
  */
 struct ConstantExpression {
+
+    enum ConstExprType {
+        kConstExprLiteral,
+        kConstExprUnknown,
+        kConstExprUnary,
+        kConstExprBinary,
+        kConstExprTernary
+    };
+
     /* Literals, identifiers */
-    ConstantExpression(const char *value);
+    ConstantExpression(const char *value, ConstExprType type);
     /* binary operations */
     ConstantExpression(const ConstantExpression *value1,
         const char *op, const ConstantExpression* value2);
@@ -41,12 +50,30 @@ struct ConstantExpression {
                        const ConstantExpression *falseVal);
 
     /* Original expression. */
-    const char *c_str() const;
-    /* Evaluated result. */
+    const char *expr() const;
+    /* Evaluated result in a string form. */
     const char *value() const;
+    /* Evaluated result in a string form, with given contextual kind. */
+    const char *cppValue(ScalarType::Kind castKind) const;
+    /* Original expression with type. */
+    const char *description() const;
 
 private:
-    std::string mValue;
+    /* The formatted expression. */
+    std::string mFormatted;
+    /* The type of the expression. Hints on its original form. */
+    ConstExprType mType;
+    /* The kind of the result value.
+     * Is valid only when mType != kConstExprUnknown. */
+    ScalarType::Kind mValueKind;
+    /* The stored result value.
+     * Is valid only when mType != kConstExprUnknown. */
+    uint64_t mValue;
+    /* Return a signed int64_t value.
+     * First cast it according to mValueKind, then cast it to int64_t. */
+    int64_t int64Value() const;
+    /* Helper function for value(ScalarType::Kind) */
+    const char *value0(ScalarType::Kind castKind) const;
 
     DISALLOW_COPY_AND_ASSIGN(ConstantExpression);
 };

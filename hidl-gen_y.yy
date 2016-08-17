@@ -352,8 +352,8 @@ typedef_declaration
     ;
 
 const_expr
-    : INTEGER                   { $$ = new ConstantExpression($1); }
-    | IDENTIFIER                { $$ = new ConstantExpression($1); }
+    : INTEGER                   { $$ = new ConstantExpression($1, ConstantExpression::kConstExprLiteral); }
+    | IDENTIFIER                { $$ = new ConstantExpression($1, ConstantExpression::kConstExprUnknown); }
     | const_expr '?' const_expr ':' const_expr
       {
         $$ = new ConstantExpression($1, $3, $5);
@@ -570,7 +570,7 @@ enum_declaration
 
 enum_value
     : IDENTIFIER { $$ = new EnumValue($1); }
-    | IDENTIFIER '=' const_expr { $$ = new EnumValue($1, $3->value()); }
+    | IDENTIFIER '=' const_expr { $$ = new EnumValue($1, $3); }
     ;
 
 enum_values

@@ -18,6 +18,7 @@
 
 #define ENUM_TYPE_H_
 
+#include "ConstantExpression.h"
 #include "NamedType.h"
 
 #include <vector>
@@ -77,14 +78,16 @@ private:
 };
 
 struct EnumValue {
-    EnumValue(const char *name, const char *value = NULL);
+    EnumValue(const char *name, const ConstantExpression *value = nullptr);
 
     std::string name() const;
     const char *value() const;
+    const char *cppValue(ScalarType::Kind castKind) const;
+    const char *comment() const;
 
 private:
     std::string mName;
-    const char *mValue;
+    const ConstantExpression *mValue;
 
     DISALLOW_COPY_AND_ASSIGN(EnumValue);
 };
