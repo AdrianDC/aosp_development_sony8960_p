@@ -288,6 +288,58 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope->emitTypeDeclarations(out);
 }
 
+status_t AST::generateHeaderMethodSignatures(
+        Formatter &out, bool abstract) const {
+    const Interface *iface = mRootScope->getInterface();
+
+    std::vector<const Interface *> chain;
+    while (iface != NULL) {
+        chain.push_back(iface);
+        iface = iface->superType();
+    }
+
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const Interface *superInterface = *it;
+
+        out << "// Methods from "
+            << superInterface->fullName()
+            << " follow.\n";
+
+        for (const auto &method : superInterface->methods()) {
+            const bool returnsValue = !method->results().empty();
+
+            const TypedVar *elidedReturn = method->canElideCallback();
+
+            if (elidedReturn == nullptr) {
+                out << "::android::hardware::Status ";
+            } else {
+                std::string extra;
+                out << "::android::hardware::SimpleReturn<";
+                out << elidedReturn->type().getCppResultType(&extra) << "> ";
+            }
+            out << method->name()
+                << "("
+                << Method::GetSignature(method->args());
+
+            if (returnsValue && elidedReturn == nullptr) {
+                if (!method->args().empty()) {
+                    out << ", ";
+                }
+
+                out << method->name() << "_cb _hidl_cb";
+            }
+
+            out << ") ";
+            out << (abstract ? "= 0" : "override");
+            out << ";\n";
+        }
+
+        out << "\n";
+    }
+
+    return OK;
+}
+
 status_t AST::generateStubHeader(const std::string &outputPath) const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
@@ -348,9 +400,11 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "const ::android::hardware::Parcel &_hidl_data,\n";
     out << "::android::hardware::Parcel *_hidl_reply,\n";
     out << "uint32_t _hidl_flags = 0,\n";
-    out << "TransactCallback _hidl_cb = nullptr) override;\n";
+    out << "TransactCallback _hidl_cb = nullptr) override;\n\n";
     out.unindent();
     out.unindent();
+
+    generateHeaderMethodSignatures(out, true); // = 0
 
     out.unindent();
 
@@ -421,50 +475,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
-    const Interface *iface = mRootScope->getInterface();
-
-    std::vector<const Interface *> chain;
-    while (iface != NULL) {
-        chain.push_back(iface);
-        iface = iface->superType();
-    }
-
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
-
-        out << "// Methods from "
-            << superInterface->fullName()
-            << " follow.\n";
-
-        for (const auto &method : superInterface->methods()) {
-            const bool returnsValue = !method->results().empty();
-
-            const TypedVar *elidedReturn = method->canElideCallback();
-
-            if (elidedReturn == nullptr) {
-                out << "::android::hardware::Status ";
-            } else {
-                std::string extra;
-                out << "::android::hardware::SimpleReturn<";
-                out << elidedReturn->type().getCppResultType(&extra) << "> ";
-            }
-            out << method->name()
-                << "("
-                << Method::GetSignature(method->args());
-
-            if (returnsValue && elidedReturn == nullptr) {
-                if (!method->args().empty()) {
-                    out << ", ";
-                }
-
-                out << method->name() << "_cb _hidl_cb";
-            }
-
-            out << ") override;\n";
-        }
-
-        out << "\n";
-    }
+    generateHeaderMethodSignatures(out, false); // override
 
     out.unindent();
 

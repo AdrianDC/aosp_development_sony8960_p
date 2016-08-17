@@ -93,6 +93,9 @@ private:
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;
 
+    status_t generateHeaderMethodSignatures(
+            Formatter &out, bool abstract) const;
+
     status_t generateProxySource(
             Formatter &out, const std::string &baseName) const;
 
