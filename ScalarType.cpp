@@ -19,7 +19,6 @@ bool ScalarType::isValidEnumStorageType() const {
 
 std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
     static const char *const kName[] = {
-        "char",
         "bool",
         "void *",
         "int8_t",
@@ -41,7 +40,6 @@ std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
 
 std::string ScalarType::getJavaType() const {
     static const char *const kName[] = {
-        "byte",
         "boolean",
         "long",
         "byte",
@@ -61,7 +59,6 @@ std::string ScalarType::getJavaType() const {
 
 std::string ScalarType::getJavaSuffix() const {
     static const char *const kSuffix[] = {
-        "Int8",
         "Int8",
         "Pointer",
         "Int8",
@@ -105,7 +102,6 @@ void ScalarType::emitReaderWriterWithCast(
         ErrorMode mode,
         bool needsCast) const {
     static const char *const kSuffix[] = {
-        "Uint8",
         "Bool",
         "Pointer",
         "Int8",
