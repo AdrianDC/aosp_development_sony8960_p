@@ -6,11 +6,10 @@
 
 namespace android {
 
-Interface::Interface(
-        Interface *super,
-        AnnotationVector *annotations)
-        : mSuperType(super),
-          mAnnotationsByName(annotations) {
+Interface::Interface(Interface *super, AnnotationVector *annotations)
+    : mSuperType(super),
+      mAnnotationsByName(annotations),
+      mIsJavaCompatibleInProgress(false) {
 }
 
 void Interface::addMethod(Method *method) {
@@ -133,15 +132,30 @@ status_t Interface::emitVtsArgumentType(Formatter &out) const {
 }
 
 bool Interface::isJavaCompatible() const {
+    if (mIsJavaCompatibleInProgress) {
+        // We're currently trying to determine if this Interface is
+        // java-compatible and something is referencing this interface through
+        // one of its methods. Assume we'll ultimately succeed, if we were wrong
+        // the original invocation of Interface::isJavaCompatible() will then
+        // return the correct "false" result.
+        return true;
+    }
+
+    mIsJavaCompatibleInProgress = true;
+
     if (!Scope::isJavaCompatible()) {
+        mIsJavaCompatibleInProgress = false;
         return false;
     }
 
     for (const auto &method : mMethods) {
         if (!method->isJavaCompatible()) {
+            mIsJavaCompatibleInProgress = false;
             return false;
         }
     }
+
+    mIsJavaCompatibleInProgress = false;
 
     return true;
 }
