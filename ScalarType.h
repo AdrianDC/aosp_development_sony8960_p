@@ -8,7 +8,6 @@ namespace android {
 
 struct ScalarType : public Type {
     enum Kind {
-        KIND_CHAR,
         KIND_BOOL,
         KIND_OPAQUE,
         KIND_INT8,

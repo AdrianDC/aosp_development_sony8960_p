@@ -64,7 +64,6 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "vec"			{ count(yyg); return(VEC); }
 "oneway"		{ count(yyg); return(ONEWAY); }
 
-"char"			{ SCALAR_TYPE(KIND_CHAR); }
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
 "opaque"		{ SCALAR_TYPE(KIND_OPAQUE); }
 "int8_t"		{ SCALAR_TYPE(KIND_INT8); }
