@@ -4,7 +4,6 @@
 #include "AST.h"
 #include "ArrayType.h"
 #include "CompoundType.h"
-#include "Constant.h"
 #include "ConstantExpression.h"
 #include "EnumType.h"
 #include "GenericBinder.h"
@@ -38,7 +37,6 @@ int yyerror(AST *, const char *s) {
 %lex-param { void *scanner }
 %pure-parser
 
-%token<str> CONST
 %token<str> ENUM
 %token<str> EXTENDS
 %token<str> FQNAME
@@ -82,7 +80,6 @@ int yyerror(AST *, const char *s) {
 %left UNARY_MINUS UNARY_PLUS '!' '~'
 
 %type<str> optIdentifier package
-%type<str> const_value
 %type<type> fqname
 
 %type<type> type opt_storage_type
@@ -320,7 +317,6 @@ type_declaration
     : named_struct_or_union_declaration ';'
     | named_enum_declaration ';'
     | typedef_declaration ';'
-    | const_declaration ';'
     ;
 
 typedef_declaration
@@ -363,18 +359,6 @@ const_expr
     | '!' const_expr { $$ = new ConstantExpression("!", $2); }
     | '~' const_expr { $$ = new ConstantExpression("~", $2); }
     | '(' const_expr ')' { $$ = $2; }
-    ;
-
-const_value
-    : INTEGER
-    | STRING_LITERAL ;
-
-const_declaration
-    : CONST fqname IDENTIFIER '=' const_value
-      {
-          Constant *constant = new Constant($3, $2, $5);
-          ast->scope()->addConstant(constant);
-      }
     ;
 
 method_declaration

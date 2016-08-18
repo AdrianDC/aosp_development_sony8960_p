@@ -51,7 +51,6 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "/*"			{ comment(yyscanner, yyg); }
 "//"[^\r\n]*            { /* skip C++ style comment */ }
 
-"const"			{ count(yyg); return(CONST); }
 "enum"			{ count(yyg); return(ENUM); }
 "extends"		{ count(yyg); return(EXTENDS); }
 "generates"		{ count(yyg); return(GENERATES); }

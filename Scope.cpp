@@ -1,6 +1,5 @@
 #include "Scope.h"
 
-#include "Constant.h"
 #include "Formatter.h"
 #include "Interface.h"
 
@@ -23,18 +22,6 @@ bool Scope::addType(const char *localName, NamedType *type) {
     size_t index = mTypes.size();
     mTypes.push_back(type);
     mTypeIndexByName.add(localName, index);
-
-    return true;
-}
-
-bool Scope::addConstant(Constant *constant) {
-    ssize_t index = mConstants.indexOfKey(constant->name());
-
-    if (index >= 0) {
-        return false;
-    }
-
-    mConstants.add(constant->name(), constant);
 
     return true;
 }

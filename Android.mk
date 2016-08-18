@@ -9,7 +9,6 @@ LOCAL_SRC_FILES :=              \
     Annotation.cpp              \
     ArrayType.cpp               \
     CompoundType.cpp            \
-    Constant.cpp                \
     ConstantExpression.cpp      \
     Coordinator.cpp             \
     EnumType.cpp                \

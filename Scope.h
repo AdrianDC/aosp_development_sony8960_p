@@ -9,7 +9,6 @@
 
 namespace android {
 
-struct Constant;
 struct Formatter;
 struct Interface;
 
@@ -19,8 +18,6 @@ struct Scope : public NamedType {
     bool addType(const char *localName, NamedType *type);
 
     Type *lookupType(const char *name) const;
-
-    bool addConstant(Constant *constant);
 
     bool isScope() const override;
 
@@ -48,8 +45,6 @@ struct Scope : public NamedType {
 private:
     std::vector<Type *> mTypes;
     KeyedVector<std::string, size_t> mTypeIndexByName;
-
-    KeyedVector<std::string, Constant *> mConstants;
 
     DISALLOW_COPY_AND_ASSIGN(Scope);
 };
