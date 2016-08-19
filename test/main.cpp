@@ -17,15 +17,15 @@ using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
+using ::android::hardware::SimpleReturn;
 using ::android::hardware::Status;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::sp;
 
 struct FooCallback : public BnFooCallback {
-    Status heyItsYou(
-            const sp<IFooCallback> &cb) override;
-    Status heyItsYouIsntIt(const sp<IFooCallback> &cb, heyItsYouIsntIt_cb _cb) override;
+    Status heyItsYou(const sp<IFooCallback> &cb) override;
+    SimpleReturn<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
     Status heyItsTheMeaningOfLife(uint8_t tmol) override;
 };
 
@@ -35,14 +35,11 @@ Status FooCallback::heyItsYou(
     return Status::ok();
 }
 
-Status FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb,
-        heyItsYouIsntIt_cb _hidl_cb) {
+SimpleReturn<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p sleeping for 10 seconds", _cb.get());
     sleep(10);
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p responding", _cb.get());
-    if (_hidl_cb)
-      _hidl_cb(true);
-    return Status::ok();
+    return true;
 }
 
 Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
@@ -55,15 +52,13 @@ Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
 struct Bar : public BnBar {
     Status doThis(float param) override;
 
-    Status doThatAndReturnSomething(
-            int64_t param, doThatAndReturnSomething_cb _cb) override;
+    SimpleReturn<int32_t> doThatAndReturnSomething(int64_t param) override;
 
-    Status doQuiteABit(
+    SimpleReturn<double> doQuiteABit(
             int32_t a,
             int64_t b,
             float c,
-            double d,
-            doQuiteABit_cb _cb) override;
+            double d) override;
 
     Status doSomethingElse(
             const int32_t param[15], doSomethingElse_cb _cb) override;
@@ -77,8 +72,7 @@ struct Bar : public BnBar {
     Status callMe(
             const sp<IFooCallback> &cb) override;
 
-    Status useAnEnum(
-            SomeEnum param, useAnEnum_cb _cb) override;
+    SimpleReturn<SomeEnum> useAnEnum(SomeEnum param) override;
 
     Status haveAGooberVec(const hidl_vec<Goober>& param) override;
     Status haveAGoober(const Goober &g) override;
@@ -103,26 +97,21 @@ Status Bar::doThis(float param) {
     return Status::ok();
 }
 
-Status Bar::doThatAndReturnSomething(
-        int64_t param, doThatAndReturnSomething_cb _cb) {
+SimpleReturn<int32_t> Bar::doThatAndReturnSomething(
+        int64_t param) {
     ALOGI("SERVER(Bar) doThatAndReturnSomething(%ld)", param);
 
-    _cb(666);
-
-    return Status::ok();
+    return 666;
 }
 
-Status Bar::doQuiteABit(
+SimpleReturn<double> Bar::doQuiteABit(
         int32_t a,
         int64_t b,
         float c,
-        double d,
-        doQuiteABit_cb _cb) {
+        double d) {
     ALOGI("SERVER(Bar) doQuiteABit(%d, %ld, %.2f, %.2f)", a, b, c, d);
 
-    _cb(666.5);
-
-    return Status::ok();
+    return 666.5;
 }
 
 Status Bar::doSomethingElse(
@@ -177,9 +166,8 @@ Status Bar::callMe(
     if (cb != NULL) {
         ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYou, should return immediately", cb.get());
         cb->heyItsYou(cb);
-        uint8_t answer = false;
         ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYouIsntIt, should block for 10 seconds", cb.get());
-        cb->heyItsYouIsntIt(cb, [&answer](uint8_t response) {answer = response;});
+        bool answer = cb->heyItsYouIsntIt(cb);
         ALOGI("SERVER(Bar) callMe %p IFooCallback::heyItsYouIsntIt responded with %d", cb.get(), answer);
         ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsTheMeaningOfLife, should return immediately", cb.get());
         cb->heyItsTheMeaningOfLife(42);
@@ -189,13 +177,10 @@ Status Bar::callMe(
     return Status::ok();
 }
 
-Status Bar::useAnEnum(
-        SomeEnum param, useAnEnum_cb _cb) {
+SimpleReturn<Bar::SomeEnum> Bar::useAnEnum(SomeEnum param) {
     ALOGI("SERVER(Bar) useAnEnum %d", (int)param);
 
-    _cb(SomeEnum::goober);
-
-    return Status::ok();
+    return SomeEnum::goober;
 }
 
 Status Bar::haveAGooberVec(const hidl_vec<Goober>& param) {
@@ -302,16 +287,12 @@ static void client() {
     ALOGI("CLIENT doThis returned.");
 
     ALOGI("CLIENT call doThatAndReturnSomething.");
-    foo->doThatAndReturnSomething(
-            2.0f, [&](auto result) {
-                ALOGI("CLIENT doThatAndReturnSomething returned %d.", result);
-            });
+    int32_t result = foo->doThatAndReturnSomething(2.0f);
+    ALOGI("CLIENT doThatAndReturnSomething returned %d.", result);
 
     ALOGI("CLIENT call doQuiteABit");
-    foo->doQuiteABit(
-            1, 2, 3.0f, 4.0, [&](auto something) {
-                ALOGI("CLIENT doQuiteABit returned %f.", something);
-            });
+    double something = foo->doQuiteABit(1, 2, 3.0f, 4.0);
+    ALOGI("CLIENT doQuiteABit returned %f.", something);
 
     ALOGI("CLIENT call doSomethingElse");
     int32_t param[15];
@@ -345,9 +326,8 @@ static void client() {
     ALOGI("CLIENT callMe returned.");
 
     ALOGI("CLIENT call userAnEnum.");
-    foo->useAnEnum(IFoo::SomeEnum::quux, [&](auto sleepy) {
-                ALOGI("CLIENT useAnEnum returned %u", (unsigned)sleepy);
-            });
+    IFoo::SomeEnum sleepy = foo->useAnEnum(IFoo::SomeEnum::quux);
+    ALOGI("CLIENT useAnEnum returned %u", (unsigned)sleepy);
 
     hidl_vec<IFoo::Goober> gooberVecParam;
     gooberVecParam.resize(2);

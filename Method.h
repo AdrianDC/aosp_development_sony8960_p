@@ -11,6 +11,7 @@ namespace android {
 
 struct Annotation;
 struct Formatter;
+struct ScalarType;
 struct Type;
 struct TypedVar;
 
@@ -32,6 +33,8 @@ struct Method {
 
     static std::string GetSignature(const std::vector<TypedVar *> &args);
     static std::string GetJavaSignature(const std::vector<TypedVar *> &args);
+
+    const TypedVar* canElideCallback() const;
 
     void dumpAnnotations(Formatter &out) const;
 
