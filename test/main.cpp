@@ -5,8 +5,8 @@
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
 #include <android/hardware/tests/bar/1.0/BnBar.h>
 
+#include <hidl/IServiceManager.h>
 #include <hwbinder/IPCThreadState.h>
-#include <hwbinder/IServiceManager.h>
 #include <hwbinder/ProcessState.h>
 #include <hwbinder/Status.h>
 
