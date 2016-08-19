@@ -17,7 +17,7 @@ using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
-using ::android::hardware::SimpleReturn;
+using ::android::hardware::Return;
 using ::android::hardware::Status;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
@@ -25,7 +25,7 @@ using ::android::sp;
 
 struct FooCallback : public BnFooCallback {
     Status heyItsYou(const sp<IFooCallback> &cb) override;
-    SimpleReturn<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
+    Return<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
     Status heyItsTheMeaningOfLife(uint8_t tmol) override;
 };
 
@@ -35,7 +35,7 @@ Status FooCallback::heyItsYou(
     return Status::ok();
 }
 
-SimpleReturn<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
+Return<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p sleeping for 10 seconds", _cb.get());
     sleep(10);
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p responding", _cb.get());
@@ -52,9 +52,9 @@ Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
 struct Bar : public BnBar {
     Status doThis(float param) override;
 
-    SimpleReturn<int32_t> doThatAndReturnSomething(int64_t param) override;
+    Return<int32_t> doThatAndReturnSomething(int64_t param) override;
 
-    SimpleReturn<double> doQuiteABit(
+    Return<double> doQuiteABit(
             int32_t a,
             int64_t b,
             float c,
@@ -72,7 +72,7 @@ struct Bar : public BnBar {
     Status callMe(
             const sp<IFooCallback> &cb) override;
 
-    SimpleReturn<SomeEnum> useAnEnum(SomeEnum param) override;
+    Return<SomeEnum> useAnEnum(SomeEnum param) override;
 
     Status haveAGooberVec(const hidl_vec<Goober>& param) override;
     Status haveAGoober(const Goober &g) override;
@@ -97,14 +97,14 @@ Status Bar::doThis(float param) {
     return Status::ok();
 }
 
-SimpleReturn<int32_t> Bar::doThatAndReturnSomething(
+Return<int32_t> Bar::doThatAndReturnSomething(
         int64_t param) {
     ALOGI("SERVER(Bar) doThatAndReturnSomething(%ld)", param);
 
     return 666;
 }
 
-SimpleReturn<double> Bar::doQuiteABit(
+Return<double> Bar::doQuiteABit(
         int32_t a,
         int64_t b,
         float c,
@@ -177,7 +177,7 @@ Status Bar::callMe(
     return Status::ok();
 }
 
-SimpleReturn<Bar::SomeEnum> Bar::useAnEnum(SomeEnum param) {
+Return<Bar::SomeEnum> Bar::useAnEnum(SomeEnum param) {
     ALOGI("SERVER(Bar) useAnEnum %d", (int)param);
 
     return SomeEnum::goober;

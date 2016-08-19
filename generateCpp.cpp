@@ -248,7 +248,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             const TypedVar *elidedReturn = method->canElideCallback();
             if (elidedReturn) {
                 std::string extra;
-                out << "virtual ::android::hardware::SimpleReturn<";
+                out << "virtual ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra) << "> ";
             } else {
                 out << "virtual ::android::hardware::Status ";
@@ -314,7 +314,7 @@ status_t AST::generateHeaderMethodSignatures(
                 out << "::android::hardware::Status ";
             } else {
                 std::string extra;
-                out << "::android::hardware::SimpleReturn<";
+                out << "::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra) << "> ";
             }
             out << method->name()
@@ -640,7 +640,7 @@ status_t AST::generateProxySource(
             const TypedVar *elidedReturn = method->canElideCallback();
             if (elidedReturn) {
                 std::string extra;
-                out << "::android::hardware::SimpleReturn<";
+                out << "::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra) << "> ";
             } else {
                 out << "::android::hardware::Status ";
@@ -743,7 +743,7 @@ status_t AST::generateProxySource(
                 std::string extra;
 
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return ::android::hardware::SimpleReturn<";
+                out << "return ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra)
                     << ">(" << elidedReturn->name() << ");\n\n";
 
@@ -751,7 +751,7 @@ status_t AST::generateProxySource(
                 out << "_hidl_error:\n";
                 out.indent();
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return ::android::hardware::SimpleReturn<";
+                out << "return ::android::hardware::Return<";
                 out << method->results().at(0)->type().getCppResultType(&extra)
                     << ">(_hidl_status);\n";
             } else {
