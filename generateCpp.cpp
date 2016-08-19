@@ -141,7 +141,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "\n";
     }
 
-    out << "#include <hwbinder/HidlSupport.h>\n";
+    out << "#include <hidl/HidlSupport.h>\n";
 
     if (isInterface) {
         out << "#include <hwbinder/IBinder.h>\n";

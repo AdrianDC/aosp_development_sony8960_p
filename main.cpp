@@ -197,7 +197,8 @@ static status_t generateMakefileForPackage(
         << "\nLOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)"
         << "\nLOCAL_SHARED_LIBRARIES := \\";
     out.indent();
-    out << "\nlibhwbinder \\"
+    out << "\nlibhidl \\"
+        << "\nlibhwbinder \\"
         << "\nlibutils \\";
 
     for (const auto &importedPackage : importedPackages) {

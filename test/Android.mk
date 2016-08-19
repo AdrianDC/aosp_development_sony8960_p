@@ -11,7 +11,8 @@ LOCAL_SHARED_LIBRARIES :=       	\
     libandroid_runtime          	\
     libbase                     	\
     libcutils                   	\
-    libhwbinder                 	\
+    libhidl                      	\
+    libhwbinder                     	\
     libnativehelper             	\
     libutils                    	\
     android.hardware.tests.foo@1.0	\
