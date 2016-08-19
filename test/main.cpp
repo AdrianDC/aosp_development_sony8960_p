@@ -5,6 +5,16 @@
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
 #include <android/hardware/tests/bar/1.0/BnBar.h>
 
+#include <gtest/gtest.h>
+#if GTEST_IS_THREADSAFE
+#include <sys/types.h>
+#include <signal.h>
+#include <errno.h>
+#include <pthread.h>
+#else
+#error "GTest did not detect pthread library."
+#endif
+
 #include <hidl/IServiceManager.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/ProcessState.h>
@@ -264,160 +274,260 @@ static std::string arraylikeToString(const I data, size_t size) {
     return out;
 }
 
+
 static std::string vecToString(const hidl_vec<int32_t> &vec) {
     return arraylikeToString(vec, vec.size());
 }
 
-static void client() {
+static inline void EXPECT_OK(::android::hardware::Status status) {
+    EXPECT_TRUE(status.isOk());
+}
+
+template<typename T, typename S>
+static inline bool EXPECT_ARRAYEQ(const T arr1, const S arr2, size_t size) {
+    for(size_t i = 0; i < size; i++)
+        if(arr1[i] != arr2[i])
+            return false;
+    return true;
+}
+
+
+template <class T>
+static void startServer(T server, const android::hardware::hidl_version kVersion,
+                        const char *serviceName,
+                        const char *tag) {
     using namespace android::hardware;
     using android::String16;
+    ALOGI("SERVER(%s) registering", tag);
+    defaultServiceManager()->addService(String16(serviceName), server, kVersion);
+    ALOGI("SERVER(%s) starting", tag);
+    ProcessState::self()->setThreadPoolMaxThreadCount(0);
+    ProcessState::self()->startThreadPool();
+    IPCThreadState::self()->joinThreadPool(); // never ends. needs kill().
+    ALOGI("SERVER(%s) ends.", tag);
+}
 
-    const hidl_version kVersion = make_hidl_version(1, 0);
 
-    sp<IBinder> service =
-        defaultServiceManager()->getService(String16("foo"), kVersion);
+class HidlTest : public ::testing::Test {
+public:
+    sp<::android::hardware::IBinder> service;
+    sp<IFoo> foo;
+    sp<IBar> bar;
+    sp<::android::hardware::IBinder> cbService;
+    virtual void SetUp() override {
+        ALOGI("Test setup beginning...");
+        using namespace android::hardware;
+        using android::String16;
+        const hidl_version kVersion = make_hidl_version(1, 0);
 
-    CHECK(service != NULL);
+        service =
+            defaultServiceManager()->getService(String16("foo"), kVersion);
+        ALOGI("CLIENT Found service foo.");
 
-    sp<IFoo> foo = IFoo::asInterface(service);
-    CHECK(foo != NULL);
+        CHECK(service != NULL);
 
+        foo = IFoo::asInterface(service);
+        CHECK(foo != NULL);
+
+        bar = IBar::asInterface(service);
+        CHECK(bar != NULL);
+
+        cbService = defaultServiceManager()->getService(String16("foo callback"), kVersion);
+        ALOGI("Test setup complete");
+    }
+    virtual void TearDown() override {
+    }
+};
+
+class HidlEnvironment : public ::testing::Environment {
+private:
+    pid_t fooCallbackServerPid, barServerPid;
+public:
+    virtual void SetUp() {
+        ALOGI("Environment setup beginning...");
+        // use fork to create and kill to destroy server processes.
+        if ((barServerPid = fork()) == 0) {
+            // Fear me, I am a child.
+            startServer(new Bar, android::hardware::make_hidl_version(1, 0),
+                "foo", "Bar"); // never returns
+            return;
+        }
+
+        if ((fooCallbackServerPid = fork()) == 0) {
+            // Fear me, I am a second child.
+            startServer(new FooCallback, android::hardware::make_hidl_version(1, 0),
+                "foo callback", "FooCalback"); // never returns
+            return;
+        }
+
+        // Fear you not, I am parent.
+        sleep(1);
+        ALOGI("Environment setup complete.");
+    }
+
+    virtual void TearDown() {
+        // clean up by killing server processes.
+        ALOGI("Environment tear-down beginning...");
+        ALOGI("Killing servers...");
+        if(kill(barServerPid, SIGTERM)) {
+            ALOGE("Could not kill barServer; errno = %d", errno);
+        } else {
+            int status;
+            ALOGI("Waiting for barServer to exit...");
+            waitpid(barServerPid, &status, 0);
+            ALOGI("Continuing...");
+        }
+        if(kill(fooCallbackServerPid, SIGTERM)) {
+            ALOGE("Could not kill fooCallbackServer; errno = %d", errno);
+        } else {
+            int status;
+            ALOGI("Waiting for fooCallbackServer to exit...");
+            waitpid(barServerPid, &status, 0);
+            ALOGI("Continuing...");
+        }
+        ALOGI("Servers all killed.");
+        ALOGI("Environment tear-down complete.");
+    }
+};
+
+TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
-    foo->doThis(1.0f);
+    EXPECT_OK(foo->doThis(1.0f));
     ALOGI("CLIENT doThis returned.");
+}
 
+TEST_F(HidlTest, FooDoThatAndReturnSomethingTest) {
     ALOGI("CLIENT call doThatAndReturnSomething.");
     int32_t result = foo->doThatAndReturnSomething(2.0f);
     ALOGI("CLIENT doThatAndReturnSomething returned %d.", result);
+    EXPECT_EQ(result, 666);
+}
 
+TEST_F(HidlTest, FooDoQuiteABitTest) {
     ALOGI("CLIENT call doQuiteABit");
     double something = foo->doQuiteABit(1, 2, 3.0f, 4.0);
     ALOGI("CLIENT doQuiteABit returned %f.", something);
+    EXPECT_DOUBLE_EQ(something, 666.5);
+}
+
+TEST_F(HidlTest, FooDoSomethingElseTest) {
 
     ALOGI("CLIENT call doSomethingElse");
     int32_t param[15];
     for (size_t i = 0; i < sizeof(param) / sizeof(param[0]); ++i) {
         param[i] = i;
     }
-    foo->doSomethingElse(param, [&](const auto &something) {
+    EXPECT_OK(foo->doSomethingElse(param, [&](const auto &something) {
             ALOGI("CLIENT doSomethingElse returned %s.",
                   arraylikeToString(something, 32).c_str());
-        });
+            int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,
+                26, 28, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1, 2};
+            EXPECT_ARRAYEQ(something, expect, 32);
+        }));
+}
 
+TEST_F(HidlTest, FooDoStuffAndReturnAStringTest) {
     ALOGI("CLIENT call doStuffAndReturnAString");
-    foo->doStuffAndReturnAString([&](const auto &something) {
+    EXPECT_OK(foo->doStuffAndReturnAString([&](const auto &something) {
             ALOGI("CLIENT doStuffAndReturnAString returned '%s'.",
                   something.c_str());
-        });
+            EXPECT_STREQ(something.c_str(), "Hello, world");
+        }));
+}
 
+TEST_F(HidlTest, FooMapThisVectorTest) {
     hidl_vec<int32_t> vecParam;
     vecParam.resize(10);
     for (size_t i = 0; i < 10; ++i) {
         vecParam[i] = i;
     }
-    foo->mapThisVector(vecParam, [&](const auto &something) {
+    EXPECT_OK(foo->mapThisVector(vecParam, [&](const auto &something) {
             ALOGI("CLIENT mapThisVector returned %s.",
                   vecToString(something).c_str());
-        });
+            int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
+            EXPECT_ARRAYEQ(something, expect, something.size());
+        }));
+}
 
+TEST_F(HidlTest, FooCallMeTest) {
     ALOGI("CLIENT call callMe.");
-    sp<IBinder> cbService = defaultServiceManager()->getService(String16("foo callback"), kVersion);
-    foo->callMe(IFooCallback::asInterface(cbService));
+    EXPECT_OK(foo->callMe(IFooCallback::asInterface(cbService)));
     ALOGI("CLIENT callMe returned.");
+}
 
-    ALOGI("CLIENT call userAnEnum.");
+TEST_F(HidlTest, FooUseAnEnumTest) {
+    ALOGI("CLIENT call useAnEnum.");
     IFoo::SomeEnum sleepy = foo->useAnEnum(IFoo::SomeEnum::quux);
     ALOGI("CLIENT useAnEnum returned %u", (unsigned)sleepy);
+    EXPECT_EQ(sleepy, IFoo::SomeEnum::goober);
+}
 
+TEST_F(HidlTest, FooHaveAGooberTest) {
     hidl_vec<IFoo::Goober> gooberVecParam;
     gooberVecParam.resize(2);
     gooberVecParam[0].name = "Hello";
     gooberVecParam[1].name = "World";
 
     ALOGI("CLIENT call haveAGooberVec.");
-    foo->haveAGooberVec(gooberVecParam);
+    EXPECT_OK(foo->haveAGooberVec(gooberVecParam));
     ALOGI("CLIENT haveAGooberVec returned.");
 
     ALOGI("CLIENT call haveaGoober.");
-    foo->haveAGoober(gooberVecParam[0]);
+    EXPECT_OK(foo->haveAGoober(gooberVecParam[0]));
     ALOGI("CLIENT haveaGoober returned.");
 
     ALOGI("CLIENT call haveAGooberArray.");
     IFoo::Goober gooberArrayParam[20];
-    foo->haveAGooberArray(gooberArrayParam);
+    EXPECT_OK(foo->haveAGooberArray(gooberArrayParam));
     ALOGI("CLIENT haveAGooberArray returned.");
+}
 
+TEST_F(HidlTest, FooHaveATypeFromAnotherFileTest) {
     ALOGI("CLIENT call haveATypeFromAnotherFile.");
     Abc abcParam{};
     abcParam.x = "alphabet";
     abcParam.y = 3.14f;
     abcParam.z = new native_handle_t();
-    foo->haveATypeFromAnotherFile(abcParam);
+    EXPECT_OK(foo->haveATypeFromAnotherFile(abcParam));
     ALOGI("CLIENT haveATypeFromAnotherFile returned.");
     delete abcParam.z;
     abcParam.z = NULL;
+}
 
+TEST_F(HidlTest, FooHaveSomeStringsTest) {
     ALOGI("CLIENT call haveSomeStrings.");
     hidl_string stringArrayParam[3];
     stringArrayParam[0] = "What";
     stringArrayParam[1] = "a";
     stringArrayParam[2] = "disaster";
-    foo->haveSomeStrings(stringArrayParam);
+    EXPECT_OK(foo->haveSomeStrings(stringArrayParam));
     ALOGI("CLIENT haveSomeStrings returned.");
+}
 
+TEST_F(HidlTest, FooHaveAStringVecTest) {
     ALOGI("CLIENT call haveAStringVec.");
     hidl_vec<hidl_string> stringVecParam;
     stringVecParam.resize(3);
     stringVecParam[0] = "What";
     stringVecParam[1] = "a";
     stringVecParam[2] = "disaster";
-    foo->haveAStringVec(stringVecParam);
+    EXPECT_OK(foo->haveAStringVec(stringVecParam));
     ALOGI("CLIENT haveAStringVec returned.");
+}
 
-    // Now the tricky part, get access to the derived interface.
-
-    sp<IBar> bar = IBar::asInterface(service);
-    CHECK(bar != NULL);
-
+TEST_F(HidlTest, BarThisIsNewTest) {
+// Now the tricky part, get access to the derived interface.
     ALOGI("CLIENT call thisIsNew.");
-    bar->thisIsNew();
+    EXPECT_OK(bar->thisIsNew());
     ALOGI("CLIENT thisIsNew returned.");
 }
 
-int main() {
-    using namespace android::hardware;
-    using android::String16;
+int main(int argc, char **argv) {
 
-    if (fork() == 0) {
-        sleep(1);
+    ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
+    ::testing::InitGoogleTest(&argc, argv);
+    int status = RUN_ALL_TESTS();
 
-        // Fear me, I am child.
-        client();
-
-        return 0;
-    }
-
-    if (fork() == 0) {
-        ALOGI("SERVER(FooCallback) registering");
-        sp<FooCallback> fcb = new FooCallback;
-        const hidl_version kVersion = make_hidl_version(1, 0);
-        defaultServiceManager()->addService(String16("foo callback"), fcb, kVersion);
-        ALOGI("SERVER(FooCallback) starting");
-        ProcessState::self()->setThreadPoolMaxThreadCount(0);
-        ProcessState::self()->startThreadPool();
-        IPCThreadState::self()->joinThreadPool();
-
-        return 0;
-    }
-
-    ALOGI("SERVER(Bar) registering");
-    sp<Bar> bar = new Bar;
-    const hidl_version kVersion = make_hidl_version(1, 0);
-    defaultServiceManager()->addService(String16("foo"), bar, kVersion);
-    ALOGI("SERVER(Bar) starting");
-    ProcessState::self()->setThreadPoolMaxThreadCount(0);
-    ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool();
-
-    return 0;
+    ALOGI("Test result = %d", status);
+    return status;
 }
