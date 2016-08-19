@@ -298,11 +298,25 @@ status_t AST::generateJava(const std::string &outputPath) const {
             }
 
             out << "\nHwParcel reply = new HwParcel();\n"
-               << "mRemote.transact(kOp_"
-               << upcase(method->name())
-               << ", request, reply, 0 /* flags */);\n"
-               << "reply.verifySuccess();\n"
-               << "request.releaseTemporaryStorage();\n";
+                << "mRemote.transact(kOp_"
+                << upcase(method->name())
+                << ", request, reply, ";
+
+            if (method->isOneway()) {
+                out << "IHwBinder.FLAG_ONEWAY";
+            } else {
+                out << "0 /* flags */";
+            }
+
+            out << ");\n";
+
+            if (!method->isOneway()) {
+                out << "reply.verifySuccess();\n";
+            } else {
+                CHECK(!returnsValue);
+            }
+
+            out << "request.releaseTemporaryStorage();\n";
 
             if (returnsValue) {
                 out << "\n";
