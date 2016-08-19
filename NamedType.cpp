@@ -4,6 +4,10 @@ namespace android {
 
 NamedType::NamedType() {}
 
+bool NamedType::isNamedType() const {
+    return true;
+}
+
 void NamedType::setLocalName(const std::string &localName) {
     mLocalName = localName;
 }

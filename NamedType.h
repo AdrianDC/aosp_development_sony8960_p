@@ -13,6 +13,8 @@ namespace android {
 struct NamedType : public Type {
     NamedType();
 
+    bool isNamedType() const override;
+
     void setLocalName(const std::string &localName);
     void setFullName(const FQName &fullName);
 

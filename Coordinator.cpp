@@ -23,7 +23,7 @@ Coordinator::~Coordinator() {
     // empty
 }
 
-AST *Coordinator::parse(const FQName &fqName) {
+AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     CHECK(fqName.isFullyQualified());
 
     // LOG(INFO) << "parsing " << fqName.string();
@@ -32,16 +32,22 @@ AST *Coordinator::parse(const FQName &fqName) {
     if (index >= 0) {
         AST *ast = mCache.valueAt(index);
 
+        if (ast != nullptr && parsedASTs != nullptr) {
+            parsedASTs->insert(ast);
+        }
+
         return ast;
     }
 
     // Add this to the cache immediately, so we can discover circular imports.
-    mCache.add(fqName, NULL);
+    mCache.add(fqName, nullptr);
+
+    AST *typesAST = nullptr;
 
     if (fqName.name() != "types") {
         // Any interface file implicitly imports its package's types.hal.
         FQName typesName(fqName.package(), fqName.version(), "types");
-        (void)parse(typesName);
+        typesAST = parse(typesName, parsedASTs);
 
         // fall through.
     }
@@ -52,15 +58,22 @@ AST *Coordinator::parse(const FQName &fqName) {
     path.append(".hal");
 
     AST *ast = new AST(this, path);
+
+    if (typesAST != NULL) {
+        // If types.hal for this AST's package existed, make it's defined
+        // types available to the (about to be parsed) AST right away.
+        ast->addImportedAST(typesAST);
+    }
+
     status_t err = parseFile(ast);
 
     if (err != OK) {
         // LOG(ERROR) << "parsing '" << path << "' FAILED.";
 
         delete ast;
-        ast = NULL;
+        ast = nullptr;
 
-        return NULL;
+        return nullptr;
     }
 
     if (ast->package().package() != fqName.package()
@@ -104,10 +117,12 @@ AST *Coordinator::parse(const FQName &fqName) {
 
     if (err != OK) {
         delete ast;
-        ast = NULL;
+        ast = nullptr;
 
-        return NULL;
+        return nullptr;
     }
+
+    if (parsedASTs != nullptr) { parsedASTs->insert(ast); }
 
     mCache.add(fqName, ast);
 
@@ -193,50 +208,6 @@ std::string Coordinator::getPackagePath(
     packagePath.append("/");
 
     return packagePath;
-}
-
-Type *Coordinator::lookupType(const FQName &fqName) const {
-    // Fully qualified.
-    CHECK(fqName.isFullyQualified());
-
-    std::string topType;
-    size_t dotPos = fqName.name().find('.');
-    if (dotPos == std::string::npos) {
-        topType = fqName.name();
-    } else {
-        topType = fqName.name().substr(0, dotPos);
-    }
-
-    // Assuming {topType} is the name of an interface type, let's see if the
-    // associated {topType}.hal file was imported.
-    FQName ifaceName(fqName.package(), fqName.version(), topType);
-    ssize_t index = mCache.indexOfKey(ifaceName);
-    if (index >= 0) {
-        AST *ast = mCache.valueAt(index);
-        CHECK(ast != NULL);
-
-        Type *type = ast->lookupTypeInternal(fqName.name());
-
-        if (type != NULL) {
-            return type->ref();
-        }
-    }
-
-    FQName typesName(fqName.package(), fqName.version(), "types");
-    index = mCache.indexOfKey(typesName);
-    if (index >= 0) {
-        AST *ast = mCache.valueAt(index);
-        if (ast != NULL) {
-            // ast could be NULL if types.hal didn't exist, which is valid.
-            Type *type = ast->lookupTypeInternal(fqName.name());
-
-            if (type != NULL) {
-                return type->ref();
-            }
-        }
-    }
-
-    return NULL;
 }
 
 status_t Coordinator::getPackageInterfaceFiles(

@@ -225,5 +225,29 @@ void FQName::getPackageAndVersionComponents(
     components->push_back(versionString);
 }
 
+bool FQName::endsWith(const FQName &other) const {
+    std::string s1 = string();
+    std::string s2 = other.string();
+
+    size_t pos = s1.rfind(s2);
+    if (pos == std::string::npos || pos + s2.size() != s1.size()) {
+        return false;
+    }
+
+    if (pos > 0) {
+        // A match is only a match if it is preceded by a "boundary", i.e.
+        // we perform a component-wise match from the end.
+        // "az" is not a match for "android.hardware.foo@1.0::IFoo.bar.baz",
+        // "baz", "bar.baz", "IFoo.bar.baz" are.
+
+        char separator = s1[pos - 1];
+        if (separator != '.' && separator != ':') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace android
 

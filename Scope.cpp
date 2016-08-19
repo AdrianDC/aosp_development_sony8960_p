@@ -9,8 +9,7 @@ namespace android {
 
 Scope::Scope() {}
 
-bool Scope::addType(
-        const char *localName, NamedType *type, std::string *errorMsg) {
+bool Scope::addType(const char *localName, Type *type, std::string *errorMsg) {
     if (mTypeIndexByName.indexOfKey(localName) >= 0) {
         *errorMsg = "A type named '";
         (*errorMsg) += localName;

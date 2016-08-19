@@ -9,6 +9,7 @@
 #include "TypeDef.h"
 
 #include <android-base/logging.h>
+#include <iostream>
 #include <stdlib.h>
 
 namespace android {
@@ -83,7 +84,8 @@ bool AST::addImport(const char *import) {
         }
 
         for (const auto &subFQName : packageInterfaces) {
-            if (mCoordinator->parse(subFQName) == NULL) {
+            AST *ast = mCoordinator->parse(subFQName, &mImportedASTs);
+            if (ast == NULL) {
                 return false;
             }
         }
@@ -91,13 +93,17 @@ bool AST::addImport(const char *import) {
         return true;
     }
 
-    AST *importAST = mCoordinator->parse(fqName);
+    AST *importAST = mCoordinator->parse(fqName, &mImportedASTs);
 
     if (importAST == NULL) {
         return false;
     }
 
     return true;
+}
+
+void AST::addImportedAST(AST *ast) {
+    mImportedASTs.insert(ast);
 }
 
 void AST::enterScope(Scope *container) {
@@ -113,8 +119,33 @@ Scope *AST::scope() {
     return mScopePath.top();
 }
 
+bool AST::addTypeDef(
+        const char *localName, Type *type, std::string *errorMsg) {
+    // The reason we wrap the given type in a TypeDef is simply to suppress
+    // emitting any type definitions later on, since this is just an alias
+    // to a type defined elsewhere.
+    return addScopedTypeInternal(
+            localName, new TypeDef(type), errorMsg, true /* isTypeDef */);
+}
+
 bool AST::addScopedType(
         const char *localName, NamedType *type, std::string *errorMsg) {
+    return addScopedTypeInternal(
+            localName, type, errorMsg, false /* isTypeDef */);
+}
+
+bool AST::addScopedTypeInternal(
+        const char *localName,
+        Type *type,
+        std::string *errorMsg,
+        bool isTypeDef) {
+    if (!isTypeDef) {
+        // Resolve typeDefs to the target type.
+        while (type->isTypeDef()) {
+            type = static_cast<TypeDef *>(type)->referencedType();
+        }
+    }
+
     std::string anonName;
 
     if (localName == nullptr) {
@@ -137,10 +168,17 @@ bool AST::addScopedType(
     }
     path.append(localName);
 
-    type->setLocalName(localName);
-
     FQName fqName(mPackage.package(), mPackage.version(), path);
-    type->setFullName(fqName);
+
+    if (!isTypeDef) {
+        CHECK(type->isNamedType());
+
+        NamedType *namedType = static_cast<NamedType *>(type);
+        namedType->setLocalName(localName);
+        namedType->setFullName(fqName);
+    }
+
+    mDefinedTypesByFullName.add(fqName, type);
 
     return true;
 }
@@ -171,16 +209,52 @@ Type *AST::lookupType(const char *name) {
         }
     }
 
-    fqName.applyDefaults(mPackage.package(), mPackage.version());
+    Type *resolvedType = nullptr;
+    FQName resolvedName;
 
-    // LOG(INFO) << "lookupType now looking for " << fqName.string();
+    for (const auto &importedAST : mImportedASTs) {
+        FQName matchingName;
+        Type *match = importedAST->findDefinedType(fqName, &matchingName);
 
-    Type *resultType = mCoordinator->lookupType(fqName);
+        if (match != nullptr) {
+            if (resolvedType != nullptr) {
+                std::cerr << "ERROR: Unable to resolve type name '"
+                          << fqName.string()
+                          << "', multiple matches found:\n";
 
-    if (resultType) {
-        if (!resultType->isInterface()) {
+                std::cerr << "  " << resolvedName.string() << "\n";
+                std::cerr << "  " << matchingName.string() << "\n";
+
+                return NULL;
+            }
+
+            resolvedType = match;
+            resolvedName = matchingName;
+
+            // Keep going even after finding a match.
+        }
+    }
+
+    if (resolvedType) {
+#if 0
+        LOG(INFO) << "found '"
+                  << resolvedName.string()
+                  << "' after looking for '"
+                  << fqName.string()
+                  << "'.";
+#endif
+
+        // Resolve typeDefs to the target type.
+        while (resolvedType->isTypeDef()) {
+            resolvedType =
+                static_cast<TypeDef *>(resolvedType)->referencedType();
+        }
+
+        if (!resolvedType->isInterface()) {
             // Non-interface types are declared in the associated types header.
-            FQName typesName(fqName.package(), fqName.version(), "types");
+            FQName typesName(
+                    resolvedName.package(), resolvedName.version(), "types");
+
             mImportedNames.insert(typesName);
         } else {
             // Do _not_ use fqName, i.e. the name we used to look up the type,
@@ -190,49 +264,24 @@ Type *AST::lookupType(const char *name) {
             // name of the typedef instead of the proper name of the interface.
 
             mImportedNames.insert(
-                    static_cast<Interface *>(resultType)->fqName());
+                    static_cast<Interface *>(resolvedType)->fqName());
         }
     }
 
-    return resultType;
+    return resolvedType->ref();
 }
 
-Type *AST::lookupTypeInternal(const std::string &namePath) const {
-    Scope *scope = mRootScope;
+Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
+    for (size_t i = 0; i < mDefinedTypesByFullName.size(); ++i) {
+        const FQName &key = mDefinedTypesByFullName.keyAt(i);
 
-    size_t startPos = 0;
-    for (;;) {
-        size_t dotPos = namePath.find('.', startPos);
-
-        std::string component;
-        if (dotPos == std::string::npos) {
-            component = namePath.substr(startPos);
-        } else {
-            component = namePath.substr(startPos, dotPos - startPos);
+        if (key.endsWith(fqName)) {
+            *matchingName = key;
+            return mDefinedTypesByFullName.valueAt(i);
         }
-
-        Type *type = scope->lookupType(component.c_str());
-
-        if (type == NULL) {
-            return NULL;
-        }
-
-        if (dotPos == std::string::npos) {
-            // Resolve typeDefs to the target type.
-            while (type->isTypeDef()) {
-                type = static_cast<TypeDef *>(type)->referencedType();
-            }
-
-            return type;
-        }
-
-        if (!type->isScope()) {
-            return NULL;
-        }
-
-        scope = static_cast<Scope *>(type);
-        startPos = dotPos + 1;
     }
+
+    return nullptr;
 }
 
 void AST::getImportedPackages(std::set<FQName> *importSet) const {

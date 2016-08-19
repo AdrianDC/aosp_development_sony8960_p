@@ -50,6 +50,8 @@ struct FQName {
     // i.e. "android.hardware.Foo.V1_0.IBar"
     std::string javaName() const;
 
+    bool endsWith(const FQName &other) const;
+
     void getPackageComponents(std::vector<std::string> *components) const;
 
     void getPackageAndVersionComponents(

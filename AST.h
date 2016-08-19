@@ -38,10 +38,11 @@ struct AST {
     Scope *scope();
 
     // Returns true iff successful.
+    bool addTypeDef(const char *localName, Type *type, std::string *errorMsg);
+
+    // Returns true iff successful.
     bool addScopedType(
-            const char *localName,
-            NamedType *type,
-            std::string *errorMsg);
+            const char *localName, NamedType *type, std::string *errorMsg);
 
     void *scanner();
     void setScanner(void *scanner);
@@ -53,10 +54,7 @@ struct AST {
     // After that lookup proceeds to imports.
     Type *lookupType(const char *name);
 
-    // Takes dot-separated path components to a type possibly inside this AST.
-    // Name resolution goes from root scope downwards, i.e. the path must be
-    // absolute.
-    Type *lookupTypeInternal(const std::string &namePath) const;
+    void addImportedAST(AST *ast);
 
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateJava(const std::string &outputPath) const;
@@ -75,7 +73,26 @@ private:
 
     FQName mPackage;
 
+    // A set of all external interfaces/types that are _actually_ referenced
+    // in this AST, this is a subset of those specified in import statements.
     std::set<FQName> mImportedNames;
+
+    // A set of all ASTs we explicitly or implicitly (types.hal) import.
+    std::set<AST *> mImportedASTs;
+
+    // Types keyed by full names defined in this AST.
+    KeyedVector<FQName, Type *> mDefinedTypesByFullName;
+
+    bool addScopedTypeInternal(
+            const char *localName,
+            Type *type,
+            std::string *errorMsg,
+            bool isTypeDef);
+
+    // Find a type matching fqName (which may be partial) and if found
+    // return the associated type and fill in the full "matchingName".
+    // Only types defined in this very AST are considered.
+    Type *findDefinedType(const FQName &fqName, FQName *matchingName) const;
 
     void getPackageComponents(std::vector<std::string> *components) const;
 

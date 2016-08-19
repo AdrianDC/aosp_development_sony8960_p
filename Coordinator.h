@@ -4,6 +4,7 @@
 
 #include <android-base/macros.h>
 #include <functional>
+#include <set>
 #include <string>
 #include <utils/KeyedVector.h>
 #include <vector>
@@ -21,9 +22,12 @@ struct Coordinator {
 
     ~Coordinator();
 
-    AST *parse(const FQName &fqName);
-
-    Type *lookupType(const FQName &fqName) const;
+    // Attempts to parse the interface/types referred to by fqName.
+    // Parsing an interface also parses the associated package's types.hal
+    // file if it exists.
+    // If "parsedASTs" is non-NULL, successfully parsed ASTs are inserted
+    // into the set.
+    AST *parse(const FQName &fqName, std::set<AST *> *parsedASTs = nullptr);
 
     // Given package-root paths of ["hardware/interfaces",
     // "vendor/<something>/interfaces"], package roots of

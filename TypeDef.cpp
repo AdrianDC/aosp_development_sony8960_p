@@ -7,7 +7,7 @@
 namespace android {
 
 TypeDef::TypeDef(Type *type)
-    : NamedType(),
+    : Type(),
       mReferencedType(type) {
 }
 
