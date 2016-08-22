@@ -22,6 +22,7 @@ struct Type {
     virtual bool isEnum() const;
     virtual bool isTypeDef() const;
     virtual bool isBinder() const;
+    virtual bool isNamedType() const;
 
     virtual const ScalarType *resolveToScalarType() const;
 

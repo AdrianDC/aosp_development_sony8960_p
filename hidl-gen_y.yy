@@ -9,7 +9,6 @@
 #include "GenericBinder.h"
 #include "Interface.h"
 #include "Method.h"
-#include "TypeDef.h"
 #include "VectorType.h"
 
 #include "hidl-gen_y.h"
@@ -328,10 +327,8 @@ type_declaration
 typedef_declaration
     : TYPEDEF type IDENTIFIER
       {
-          TypeDef *def = new TypeDef($2);
-
           std::string errorMsg;
-          if (!ast->addScopedType($3, def, &errorMsg)) {
+          if (!ast->addTypeDef($3, $2, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }

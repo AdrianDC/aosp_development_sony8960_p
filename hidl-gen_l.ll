@@ -145,17 +145,13 @@ void comment(yyscan_t yyscanner, yyguts_t *yyg) {
     char c, c1;
 
 loop:
-    while ((c = yyinput(yyscanner)) != '*' && c != 0)
-        putchar(c);
+    while ((c = yyinput(yyscanner)) != '*' && c != 0) {
+    }
 
     if ((c1 = yyinput(yyscanner)) != '/' && c != 0)
     {
         unput(c1);
         goto loop;
-    }
-
-    if (c != 0) {
-        putchar(c1);
     }
 }
 

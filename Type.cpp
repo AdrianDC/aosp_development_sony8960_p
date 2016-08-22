@@ -30,6 +30,10 @@ bool Type::isBinder() const {
     return false;
 }
 
+bool Type::isNamedType() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }

@@ -15,7 +15,7 @@ struct Interface;
 struct Scope : public NamedType {
     Scope();
 
-    bool addType(const char *localName, NamedType *type, std::string *errorMsg);
+    bool addType(const char *localName, Type *type, std::string *errorMsg);
 
     Type *lookupType(const char *name) const;
 

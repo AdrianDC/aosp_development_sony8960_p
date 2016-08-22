@@ -2,11 +2,11 @@
 
 #define TYPE_DEF_H_
 
-#include "NamedType.h"
+#include "Type.h"
 
 namespace android {
 
-struct TypeDef : public NamedType {
+struct TypeDef : public Type {
     TypeDef(Type *type);
 
     const ScalarType *resolveToScalarType() const override;
