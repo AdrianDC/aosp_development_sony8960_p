@@ -282,12 +282,12 @@ body
               YYERROR;
           }
 
-          Interface *iface = new Interface(static_cast<Interface *>($4), $1);
+          Interface *iface = new Interface($3, static_cast<Interface *>($4), $1);
 
           // Register interface immediately so it can be referenced inside
           // definition.
           std::string errorMsg;
-          if (!ast->addScopedType($3, iface, &errorMsg)) {
+          if (!ast->addScopedType(iface, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
@@ -411,7 +411,7 @@ struct_or_union_keyword
 named_struct_or_union_declaration
     : struct_or_union_keyword IDENTIFIER
       {
-          CompoundType *container = new CompoundType($1);
+          CompoundType *container = new CompoundType($1, $2);
           ast->enterScope(container);
       }
       struct_or_union_body
@@ -426,7 +426,7 @@ named_struct_or_union_declaration
 
           ast->leaveScope();
 
-          if (!ast->addScopedType($2, container, &errorMsg)) {
+          if (!ast->addScopedType(container, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
@@ -436,7 +436,14 @@ named_struct_or_union_declaration
 struct_or_union_declaration
     : struct_or_union_keyword optIdentifier
       {
-          CompoundType *container = new CompoundType($1);
+          const char *localName = $2;
+          std::string anonName;
+          if (localName == nullptr) {
+              anonName = ast->scope()->pickUniqueAnonymousName();
+              localName = anonName.c_str();
+          }
+
+          CompoundType *container = new CompoundType($1, localName);
           ast->enterScope(container);
       }
       struct_or_union_body
@@ -451,7 +458,7 @@ struct_or_union_declaration
 
           ast->leaveScope();
 
-          if (!ast->addScopedType($2, container, &errorMsg)) {
+          if (!ast->addScopedType(container, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
@@ -505,10 +512,10 @@ opt_comma
 named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType($5, $3);
+          EnumType *enumType = new EnumType($2, $5, $3);
 
           std::string errorMsg;
-          if (!ast->addScopedType($2, enumType, &errorMsg)) {
+          if (!ast->addScopedType(enumType, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
@@ -518,10 +525,12 @@ named_enum_declaration
 enum_declaration
     : ENUM '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType($3);
+          std::string anonName = ast->scope()->pickUniqueAnonymousName();
+
+          EnumType *enumType = new EnumType(anonName.c_str(), $3);
 
           std::string errorMsg;
-          if (!ast->addScopedType(NULL /* localName */, enumType, &errorMsg)) {
+          if (!ast->addScopedType(enumType, &errorMsg)) {
               // This should never fail.
               std::cerr << "ERROR: " << errorMsg << "\n";
               YYERROR;
@@ -531,10 +540,10 @@ enum_declaration
       }
     | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
       {
-          EnumType *enumType = new EnumType($5, $3);
+          EnumType *enumType = new EnumType($2, $5, $3);
 
           std::string errorMsg;
-          if (!ast->addScopedType($2, enumType, &errorMsg)) {
+          if (!ast->addScopedType(enumType, &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }

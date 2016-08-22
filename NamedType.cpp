@@ -2,14 +2,12 @@
 
 namespace android {
 
-NamedType::NamedType() {}
+NamedType::NamedType(const char *localName)
+    : mLocalName(localName) {
+}
 
 bool NamedType::isNamedType() const {
     return true;
-}
-
-void NamedType::setLocalName(const std::string &localName) {
-    mLocalName = localName;
 }
 
 void NamedType::setFullName(const FQName &fullName) {

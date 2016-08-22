@@ -13,7 +13,7 @@ struct Formatter;
 struct Interface;
 
 struct Scope : public NamedType {
-    Scope();
+    Scope(const char *localName);
 
     bool addType(const char *localName, Type *type, std::string *errorMsg);
 

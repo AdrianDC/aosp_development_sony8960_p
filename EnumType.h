@@ -11,7 +11,8 @@ namespace android {
 struct EnumValue;
 
 struct EnumType : public NamedType {
-    EnumType(std::vector<EnumValue *> *values,
+    EnumType(const char *localName,
+             std::vector<EnumValue *> *values,
              Type *storageType = NULL);
 
     const Type *storageType() const;

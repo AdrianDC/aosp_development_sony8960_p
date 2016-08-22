@@ -6,8 +6,10 @@
 
 namespace android {
 
-Interface::Interface(Interface *super, AnnotationVector *annotations)
-    : mSuperType(super),
+Interface::Interface(
+        const char *localName, Interface *super, AnnotationVector *annotations)
+    : Scope(localName),
+      mSuperType(super),
       mAnnotationsByName(annotations),
       mIsJavaCompatibleInProgress(false) {
 }

@@ -143,7 +143,6 @@ void ScalarType::emitReaderWriterWithCast(
     handleError(out, mode);
 }
 
-
 status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
     std::string extra;
     out << "type: TYPE_SCALAR\n"

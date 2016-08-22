@@ -8,8 +8,11 @@
 namespace android {
 
 EnumType::EnumType(
-        std::vector<EnumValue *> *values, Type *storageType)
-    : mValues(values),
+        const char *localName,
+        std::vector<EnumValue *> *values,
+        Type *storageType)
+    : NamedType(localName),
+      mValues(values),
       mStorageType(
               storageType != NULL
                 ? storageType

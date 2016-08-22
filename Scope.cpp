@@ -7,7 +7,9 @@
 
 namespace android {
 
-Scope::Scope() {}
+Scope::Scope(const char *localName)
+    : NamedType(localName) {
+}
 
 bool Scope::addType(const char *localName, Type *type, std::string *errorMsg) {
     if (mTypeIndexByName.indexOfKey(localName) >= 0) {
