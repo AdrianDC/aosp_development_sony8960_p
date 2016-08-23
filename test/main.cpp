@@ -6,6 +6,7 @@
 #include <android/hardware/tests/bar/1.0/BnBar.h>
 
 #include <gtest/gtest.h>
+#include <inttypes.h>
 #if GTEST_IS_THREADSAFE
 #include <sys/types.h>
 #include <signal.h>
@@ -20,6 +21,9 @@
 #include <hwbinder/ProcessState.h>
 #include <hwbinder/Status.h>
 
+#include <utils/Condition.h>
+#include <utils/Timers.h>
+
 using ::android::hardware::tests::foo::V1_0::BnFoo;
 using ::android::hardware::tests::foo::V1_0::BnFooCallback;
 using ::android::hardware::tests::bar::V1_0::BnBar;
@@ -32,30 +36,89 @@ using ::android::hardware::Status;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::sp;
+using ::android::Mutex;
+using ::android::Condition;
 
 struct FooCallback : public BnFooCallback {
+    FooCallback() : invokeInfo{}, mLock{}, mCond{} {}
     Status heyItsYou(const sp<IFooCallback> &cb) override;
     Return<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
     Status heyItsTheMeaningOfLife(uint8_t tmol) override;
+    Status reportResults(int64_t ns, reportResults_cb cb) override;
+    Status youBlockedMeFor(const int64_t ns[3]) override;
+
+    static constexpr nsecs_t DELAY_S = 5;
+    static constexpr nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
+    static constexpr nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
+    static constexpr nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
+
+    InvokeInfo invokeInfo[3];
+    Mutex mLock;
+    Condition mCond;
 };
 
 Status FooCallback::heyItsYou(
         const sp<IFooCallback> &_cb) {
+    nsecs_t start = systemTime();
     ALOGI("SERVER(FooCallback) heyItsYou cb = %p", _cb.get());
+    mLock.lock();
+    invokeInfo[0].invoked = true;
+    invokeInfo[0].timeNs = systemTime() - start;
+    mCond.signal();
+    mLock.unlock();
     return Status::ok();
 }
 
 Return<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
-    ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p sleeping for 10 seconds", _cb.get());
-    sleep(10);
+    nsecs_t start = systemTime();
+    ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p sleeping for %" PRId64 " seconds", _cb.get(), DELAY_S);
+    sleep(DELAY_S);
     ALOGI("SERVER(FooCallback) heyItsYouIsntIt cb = %p responding", _cb.get());
+    mLock.lock();
+    invokeInfo[1].invoked = true;
+    invokeInfo[1].timeNs = systemTime() - start;
+    mCond.signal();
+    mLock.unlock();
     return true;
 }
 
 Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
-    ALOGI("SERVER(FooCallback) heyItsTheMeaningOfLife = %d sleeping for 10 seconds", tmol);
-    sleep(10);
+    nsecs_t start = systemTime();
+    ALOGI("SERVER(FooCallback) heyItsTheMeaningOfLife = %d sleeping for %" PRId64 " seconds", tmol, DELAY_S);
+    sleep(DELAY_S);
     ALOGI("SERVER(FooCallback) heyItsTheMeaningOfLife = %d done sleeping", tmol);
+    mLock.lock();
+    invokeInfo[2].invoked = true;
+    invokeInfo[2].timeNs = systemTime() - start;
+    mCond.signal();
+    mLock.unlock();
+    return Status::ok();
+}
+
+Status FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
+    ALOGI("SERVER(FooCallback) reportResults(%" PRId64 ") seconds", nanoseconds_to_seconds(ns));
+    nsecs_t leftToWaitNs = ns;
+    mLock.lock();
+    while (!(invokeInfo[0].invoked && invokeInfo[1].invoked && invokeInfo[2].invoked) &&
+           leftToWaitNs > 0) {
+      nsecs_t start = systemTime();
+      ::android::status_t rc = mCond.waitRelative(mLock, leftToWaitNs);
+      if (rc != ::android::OK) {
+          ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 ") Condition::waitRelative(%" PRId64 ") returned error (%d)", ns, leftToWaitNs, rc);
+          break;
+      }
+      ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 ") Condition::waitRelative was signalled", ns);
+      leftToWaitNs -= systemTime() - start;
+    }
+    mLock.unlock();
+    cb(leftToWaitNs, invokeInfo);
+    return Status::ok();
+}
+
+Status FooCallback::youBlockedMeFor(const int64_t ns[3]) {
+    for (size_t i = 0; i < 3; i++) {
+        invokeInfo[i].callerBlockedNs = ns[i];
+    }
     return Status::ok();
 }
 
@@ -174,14 +237,40 @@ Status Bar::callMe(
     ALOGI("SERVER(Bar) callMe %p", cb.get());
 
     if (cb != NULL) {
-        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYou, should return immediately", cb.get());
+
+        nsecs_t c[3];
+        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYou, " \
+              "should return immediately", cb.get());
+        c[0] = systemTime();
         cb->heyItsYou(cb);
-        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYouIsntIt, should block for 10 seconds", cb.get());
+        c[0] = systemTime() - c[0];
+        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYou " \
+              "returned after %" PRId64 "ns", cb.get(), c[0]);
+
+        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYouIsntIt, " \
+              "should block for %" PRId64 " seconds", cb.get(),
+              FooCallback::DELAY_S);
+        c[1] = systemTime();
         bool answer = cb->heyItsYouIsntIt(cb);
-        ALOGI("SERVER(Bar) callMe %p IFooCallback::heyItsYouIsntIt responded with %d", cb.get(), answer);
-        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsTheMeaningOfLife, should return immediately", cb.get());
+        c[1] = systemTime() - c[1];
+        ALOGI("SERVER(Bar) callMe %p IFooCallback::heyItsYouIsntIt " \
+              "responded with %d after %" PRId64 "ns", cb.get(), answer, c[1]);
+
+        ALOGI("SERVER(Bar) callMe %p calling " \
+              "IFooCallback::heyItsTheMeaningOfLife, " \
+              "should return immediately ", cb.get());
+        c[2] = systemTime();
         cb->heyItsTheMeaningOfLife(42);
-        ALOGI("SERVER(Bar) callMe %p After call to IFooCallback::heyItsTheMeaningOfLife", cb.get());
+        c[2] = systemTime() - c[2];
+        ALOGI("SERVER(Bar) callMe %p After call to " \
+              "IFooCallback::heyItsTheMeaningOfLife " \
+              "responded after %" PRId64 "ns", cb.get(), c[2]);
+
+        ALOGI("SERVER(Bar) callMe %p calling IFooCallback::youBlockedMeFor " \
+              "to report times", cb.get());
+        cb->youBlockedMeFor(c);
+        ALOGI("SERVER(Bar) callMe %p After call to " \
+              "IFooCallback::heyYouBlockedMeFor", cb.get());
     }
 
     return Status::ok();
@@ -313,6 +402,7 @@ public:
     sp<::android::hardware::IBinder> service;
     sp<IFoo> foo;
     sp<IBar> bar;
+    sp<IFooCallback> fooCb;
     sp<::android::hardware::IBinder> cbService;
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
@@ -333,6 +423,11 @@ public:
         CHECK(bar != NULL);
 
         cbService = defaultServiceManager()->getService(String16("foo callback"), kVersion);
+        CHECK(cbService != NULL);
+
+        fooCb = IFooCallback::asInterface(cbService);
+        CHECK(fooCb != NULL);
+
         ALOGI("Test setup complete");
     }
     virtual void TearDown() override {
@@ -394,6 +489,7 @@ TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
     ALOGI("CLIENT doThis returned.");
+    EXPECT_EQ(true, true);
 }
 
 TEST_F(HidlTest, FooDoThatAndReturnSomethingTest) {
@@ -451,9 +547,64 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
 
 TEST_F(HidlTest, FooCallMeTest) {
     ALOGI("CLIENT call callMe.");
-    EXPECT_OK(foo->callMe(IFooCallback::asInterface(cbService)));
+    // callMe is oneway, should return instantly.
+    nsecs_t now;
+    now = systemTime();
+    EXPECT_OK(foo->callMe(fooCb));
+    EXPECT_TRUE(systemTime() - now < FooCallback::ONEWAY_TOLERANCE_NS);
     ALOGI("CLIENT callMe returned.");
 }
+
+TEST_F(HidlTest, ForReportResultsTest) {
+
+    // Bar::callMe will invoke three methods on FooCallback; one will return
+    // right away (even though it is a two-way method); the second one will
+    // block Bar for FooCallback::DELAY_S seconds, and the third one will return
+    // to Bar right away (is oneway) but will itself block for DELAY_S seconds.
+    // We need a way to make sure that these three things have happened within
+    // 2*DELAY_S seconds plus some small tolerance.
+    //
+    // Method FooCallback::reportResults() takes a timeout parameter.  It blocks for
+    // that length of time, while waiting for the three methods above to
+    // complete.  It returns the information of whether each method was invoked,
+    // as well as how long the body of the method took to execute.  We verify
+    // the information returned by reportResults() against the timeout we pass (which
+    // is long enough for the method bodies to execute, plus tolerance), and
+    // verify that eachof them executed, as expected, and took the length of
+    // time to execute that we also expect.
+
+    const nsecs_t reportResultsNs =
+          seconds_to_nanoseconds(2*(FooCallback::DELAY_S +
+                                    FooCallback::TOLERANCE_NS));
+    ALOGI("CLIENT: Waiting for up to %" PRId64 " seconds.",
+          nanoseconds_to_seconds(reportResultsNs));
+
+    fooCb->reportResults(reportResultsNs,
+                [&](int64_t timeLeftNs,
+                    const IFooCallback::InvokeInfo invokeResults[3]) {
+        ALOGI("CLIENT: FooCallback::reportResults() is returning data.");
+        ALOGI("CLIENT: Waited for %" PRId64 " milliseconds.",
+              nanoseconds_to_milliseconds(reportResultsNs - timeLeftNs));
+
+        EXPECT_TRUE(0 <= timeLeftNs && timeLeftNs <= reportResultsNs);
+
+        // two-way method, was supposed to return right away
+        EXPECT_TRUE(invokeResults[0].invoked);
+        EXPECT_TRUE(invokeResults[0].timeNs <= invokeResults[0].callerBlockedNs);
+        EXPECT_TRUE(invokeResults[0].callerBlockedNs <= FooCallback::TOLERANCE_NS);
+        // two-way method, was supposed to block caller for DELAY_NS
+        EXPECT_TRUE(invokeResults[1].invoked);
+        EXPECT_TRUE(invokeResults[1].timeNs <= invokeResults[1].callerBlockedNs);
+        EXPECT_TRUE(invokeResults[1].callerBlockedNs <=
+                    FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS);
+        // one-way method, do not block caller, but body was supposed to block for DELAY_NS
+        EXPECT_TRUE(invokeResults[2].invoked);
+        EXPECT_TRUE(invokeResults[2].callerBlockedNs <= FooCallback::ONEWAY_TOLERANCE_NS);
+        EXPECT_TRUE(invokeResults[2].timeNs <= FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS);
+    });
+}
+
+
 
 TEST_F(HidlTest, FooUseAnEnumTest) {
     ALOGI("CLIENT call useAnEnum.");
@@ -516,7 +667,7 @@ TEST_F(HidlTest, FooHaveAStringVecTest) {
 }
 
 TEST_F(HidlTest, BarThisIsNewTest) {
-// Now the tricky part, get access to the derived interface.
+    // Now the tricky part, get access to the derived interface.
     ALOGI("CLIENT call thisIsNew.");
     EXPECT_OK(bar->thisIsNew());
     ALOGI("CLIENT thisIsNew returned.");
