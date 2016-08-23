@@ -118,6 +118,28 @@ struct Type {
             const std::string &parentName,
             const std::string &offsetText) const;
 
+    virtual void emitResolveReferences(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const;
+
+    virtual void emitResolveReferencesEmbedded(
+            Formatter &out,
+            size_t depth,
+            const std::string &name,
+            const std::string &sanitizedName,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &parentName,
+            const std::string &offsetText) const;
+
     virtual void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
@@ -146,6 +168,7 @@ struct Type {
             Formatter &out, bool atTopLevel) const;
 
     virtual bool needsEmbeddedReadWrite() const;
+    virtual bool needsResolveReferences() const;
     virtual bool resultNeedsDeref() const;
 
     // Generates type declaration for vts proto file.
@@ -192,6 +215,16 @@ private:
     std::vector<Annotation *> *mAnnotations;
 
     DISALLOW_COPY_AND_ASSIGN(Type);
+};
+
+/* Base type for VectorType and RefType. */
+struct TemplatedType : public Type {
+    void setElementType(Type *elementType);
+protected:
+    TemplatedType();
+    Type *mElementType;
+private:
+    DISALLOW_COPY_AND_ASSIGN(TemplatedType);
 };
 
 }  // namespace android

@@ -236,6 +236,81 @@ void CompoundType::emitJavaFieldReaderWriter(
         << offset
         << ");\n";
 }
+void CompoundType::emitResolveReferences(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const {
+    emitResolveReferencesEmbedded(
+        out,
+        0 /* depth */,
+        name,
+        name /* sanitizedName */,
+        nameIsPointer,
+        parcelObj,
+        parcelObjIsPointer,
+        isReader,
+        mode,
+        "_hidl_" + name + "_parent",
+        "0 /* parentOffset */");
+}
+
+void CompoundType::emitResolveReferencesEmbedded(
+            Formatter &out,
+            size_t /* depth */,
+            const std::string &name,
+            const std::string &/* sanitizedName */,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &parentName,
+            const std::string &offsetText) const {
+    CHECK(needsResolveReferences());
+
+    const std::string parcelObjDeref =
+        parcelObjIsPointer ? ("*" + parcelObj) : parcelObj;
+
+    const std::string parcelObjPointer =
+        parcelObjIsPointer ? parcelObj : ("&" + parcelObj);
+
+    const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+    const std::string namePointer = nameIsPointer ? name : ("&" + name);
+
+    out << "_hidl_err = ";
+
+    if (isReader) {
+        out << "const_cast<"
+            << fullName()
+            << " *"
+            << ">("
+            << namePointer
+            << ")->readEmbeddedReferenceFromParcel(\n";
+    } else {
+        out << nameDeref
+            << "writeEmbeddedReferenceToParcel(\n";
+    }
+
+    out.indent();
+    out.indent();
+
+    out << (isReader ? parcelObjDeref : parcelObjPointer);
+    out << ",\n"
+        << parentName
+        << ",\n"
+        << offsetText;
+
+    out << ");\n\n";
+
+    out.unindent();
+    out.unindent();
+
+    handleError(out, mode);
+}
 
 status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
@@ -282,6 +357,20 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
         out.unindent();
     }
 
+    if(needsResolveReferences()) {
+        out << "\n";
+        out << "::android::status_t readEmbeddedReferenceFromParcel(\n";
+        out.indent(); out.indent();
+        out << "const ::android::hardware::Parcel &parcel,\n"
+            << "size_t parentHandle, size_t parentOffset);\n";
+        out.unindent(); out.unindent();
+        out << "::android::status_t writeEmbeddedReferenceToParcel(\n";
+        out.indent(); out.indent();
+        out << "::android::hardware::Parcel *,\n"
+            << "size_t parentHandle, size_t parentOffset) const;\n";
+        out.unindent(); out.unindent();
+    }
+
     out.unindent();
     out << "};\n\n";
 
@@ -296,12 +385,15 @@ status_t CompoundType::emitTypeDefinitions(
         return err;
     }
 
-    if (!needsEmbeddedReadWrite()) {
-        return OK;
+    if (needsEmbeddedReadWrite()) {
+        emitStructReaderWriter(out, prefix, true /* isReader */);
+        emitStructReaderWriter(out, prefix, false /* isReader */);
     }
 
-    emitStructReaderWriter(out, prefix, true /* isReader */);
-    emitStructReaderWriter(out, prefix, false /* isReader */);
+    if (needsResolveReferences()) {
+        emitResolveReferenceDef(out, prefix, true /* isReader */);
+        emitResolveReferenceDef(out, prefix, false /* isReader */);
+    }
 
     return OK;
 }
@@ -556,6 +648,64 @@ void CompoundType::emitStructReaderWriter(
     out << "}\n\n";
 }
 
+void CompoundType::emitResolveReferenceDef(
+        Formatter &out, const std::string prefix, bool isReader) const {
+    out << "::android::status_t "
+              << (prefix.empty() ? "" : (prefix + "::"))
+              << localName();
+
+    if (isReader) {
+        out << "::readEmbeddedReferenceFromParcel(\n";
+        out.indent(); out.indent();
+        out << "const ::android::hardware::Parcel &parcel,\n"
+            << "size_t parentHandle, size_t parentOffset)\n";
+        out.unindent(); out.unindent();
+    } else {
+        out << "::writeEmbeddedReferenceToParcel(\n";
+        out.indent(); out.indent();
+        out << "::android::hardware::Parcel *parcel,\n"
+            << "size_t parentHandle, size_t parentOffset) const\n";
+        out.unindent(); out.unindent();
+    }
+
+    out << " {\n";
+
+    out.indent();
+
+    out << "::android::status_t _hidl_err = ::android::OK;\n\n";
+
+    for (const auto &field : *mFields) {
+        if (!field->type().needsResolveReferences()) {
+            continue;
+        }
+
+        field->type().emitResolveReferencesEmbedded(
+            out,
+            0 /* depth */,
+            field->name(),
+            field->name() /* sanitizedName */,
+            false,    // nameIsPointer
+            "parcel", // const std::string &parcelObj,
+            !isReader, // bool parcelObjIsPointer,
+            isReader, // bool isReader,
+            ErrorMode_Return,
+            "parentHandle",
+            "parentOffset + offsetof("
+                + fullName()
+                + ", "
+                + field->name()
+                + ")"); // ErrorMode mode
+    }
+
+    out.unindent();
+    out << "_hidl_error:\n";
+    out.indent();
+    out << "return _hidl_err;\n";
+
+    out.unindent();
+    out << "}\n\n";
+}
+
 bool CompoundType::needsEmbeddedReadWrite() const {
     if (mStyle != STYLE_STRUCT) {
         return false;
@@ -563,6 +713,20 @@ bool CompoundType::needsEmbeddedReadWrite() const {
 
     for (const auto &field : *mFields) {
         if (field->type().needsEmbeddedReadWrite()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CompoundType::needsResolveReferences() const {
+    if (mStyle != STYLE_STRUCT) {
+        return false;
+    }
+
+    for (const auto &field : *mFields) {
+        if (field->type().needsResolveReferences()) {
             return true;
         }
     }
