@@ -6,8 +6,9 @@
 
 namespace android {
 
-CompoundType::CompoundType(Style style)
-    : mStyle(style),
+CompoundType::CompoundType(Style style, const char *localName)
+    : Scope(localName),
+      mStyle(style),
       mFields(NULL) {
 }
 

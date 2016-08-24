@@ -11,11 +11,10 @@
 namespace android {
 
 struct NamedType : public Type {
-    NamedType();
+    NamedType(const char *localName);
 
     bool isNamedType() const override;
 
-    void setLocalName(const std::string &localName);
     void setFullName(const FQName &fullName);
 
     const FQName &fqName() const;

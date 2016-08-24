@@ -15,6 +15,7 @@ struct Method;
 
 struct Interface : public Scope {
     Interface(
+            const char *localName,
             Interface *super,
             AnnotationVector *annotations);
 

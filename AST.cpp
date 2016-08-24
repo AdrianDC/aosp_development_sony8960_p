@@ -18,7 +18,7 @@ AST::AST(Coordinator *coordinator, const std::string &path)
     : mCoordinator(coordinator),
       mPath(path),
       mScanner(NULL),
-      mRootScope(new Scope) {
+      mRootScope(new Scope("" /* localName */)) {
     enterScope(mRootScope);
 }
 
@@ -128,10 +128,9 @@ bool AST::addTypeDef(
             localName, new TypeDef(type), errorMsg, true /* isTypeDef */);
 }
 
-bool AST::addScopedType(
-        const char *localName, NamedType *type, std::string *errorMsg) {
+bool AST::addScopedType(NamedType *type, std::string *errorMsg) {
     return addScopedTypeInternal(
-            localName, type, errorMsg, false /* isTypeDef */);
+            type->localName().c_str(), type, errorMsg, false /* isTypeDef */);
 }
 
 bool AST::addScopedTypeInternal(
@@ -144,14 +143,6 @@ bool AST::addScopedTypeInternal(
         while (type->isTypeDef()) {
             type = static_cast<TypeDef *>(type)->referencedType();
         }
-    }
-
-    std::string anonName;
-
-    if (localName == nullptr) {
-        // Anonymous type declaration.
-        anonName = scope()->pickUniqueAnonymousName();
-        localName = anonName.c_str();
     }
 
     // LOG(INFO) << "adding scoped type '" << localName << "'";
@@ -174,7 +165,6 @@ bool AST::addScopedTypeInternal(
         CHECK(type->isNamedType());
 
         NamedType *namedType = static_cast<NamedType *>(type);
-        namedType->setLocalName(localName);
         namedType->setFullName(fqName);
     }
 

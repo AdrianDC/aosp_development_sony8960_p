@@ -41,8 +41,7 @@ struct AST {
     bool addTypeDef(const char *localName, Type *type, std::string *errorMsg);
 
     // Returns true iff successful.
-    bool addScopedType(
-            const char *localName, NamedType *type, std::string *errorMsg);
+    bool addScopedType(NamedType *type, std::string *errorMsg);
 
     void *scanner();
     void setScanner(void *scanner);
