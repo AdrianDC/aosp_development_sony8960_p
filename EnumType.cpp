@@ -1,6 +1,7 @@
 #include "EnumType.h"
 
 #include "Formatter.h"
+#include <inttypes.h>
 #include "ScalarType.h"
 
 #include <android-base/logging.h>
@@ -127,7 +128,7 @@ static bool MakeSignedIntegerValue(
             sprintf(out, "%d", (int)(int32_t)x);
         } else {
             assert(typeName == "long");
-            sprintf(out, "%lldL", (int64_t)x);
+            sprintf(out, "%" PRId64 "L", (int64_t)x);
         }
 
         *output = out;
