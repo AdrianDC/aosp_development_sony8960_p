@@ -207,6 +207,12 @@ static status_t generateMakefileForPackage(
     out << "\n";
     out.unindent();
 
+    if (path.find("hardware/interfaces/tests/") != std::string::npos) {
+        out << "\nLOCAL_COMPATIBILITY_SUITE := vts"
+            << "\n-include test/vts/tools/build/Android.packaging_sharedlib.mk";
+        // TODO(yim): b/30589200 remove the above -include line after the
+        // build rule change is merged.
+    }
     out << "\ninclude $(BUILD_SHARED_LIBRARY)\n";
 
     return OK;
