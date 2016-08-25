@@ -59,7 +59,7 @@ std::string ScalarType::getJavaType() const {
 
 std::string ScalarType::getJavaSuffix() const {
     static const char *const kSuffix[] = {
-        "Int8",
+        "Bool",
         "Pointer",
         "Int8",
         "Int8",
