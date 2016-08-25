@@ -53,6 +53,10 @@ std::string Type::getCppType(StorageMode, std::string *) const {
     return std::string();
 }
 
+std::string Type::getJavaWrapperType() const {
+    return getJavaType();
+}
+
 std::string Type::getJavaSuffix() const {
     CHECK(!"Should not be here");
     return std::string();
@@ -93,6 +97,24 @@ void Type::emitJavaReaderWriter(
             isReader,
             getJavaSuffix(),
             "" /* extra */);
+}
+
+void Type::emitJavaFieldInitializer(
+        Formatter &out,
+        const std::string &fieldName) const {
+    out << getJavaType()
+        << " "
+        << fieldName
+        << ";\n";
+}
+
+void Type::emitJavaFieldReaderWriter(
+        Formatter &,
+        const std::string &,
+        const std::string &,
+        const std::string &,
+        bool) const {
+    CHECK(!"Should not be here");
 }
 
 void Type::handleError(Formatter &out, ErrorMode mode) const {
@@ -216,7 +238,7 @@ status_t Type::emitTypeDefinitions(
     return OK;
 }
 
-status_t Type::emitJavaTypeDeclarations(Formatter &) const {
+status_t Type::emitJavaTypeDeclarations(Formatter &, bool) const {
     return OK;
 }
 
@@ -273,6 +295,10 @@ status_t Type::emitVtsAttributeType(Formatter &out) const {
 
 bool Type::isJavaCompatible() const {
     return true;
+}
+
+void Type::getAlignmentAndSize(size_t *, size_t *) const {
+    CHECK(!"Should not be here");
 }
 
 }  // namespace android

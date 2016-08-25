@@ -35,11 +35,22 @@ struct EnumType : public NamedType {
             bool isReader,
             ErrorMode mode) const override;
 
+    void emitJavaFieldReaderWriter(
+            Formatter &out,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader) const override;
+
     status_t emitTypeDeclarations(Formatter &out) const override;
-    status_t emitJavaTypeDeclarations(Formatter &out) const override;
+
+    status_t emitJavaTypeDeclarations(
+            Formatter &out, bool atTopLevel) const override;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsAttributeType(Formatter &out) const override;
+
+    void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
 private:
     void getTypeChain(std::vector<const EnumType *> *out) const;

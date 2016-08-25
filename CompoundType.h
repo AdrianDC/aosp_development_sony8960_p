@@ -22,6 +22,8 @@ struct CompoundType : public Scope {
 
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
+    std::string getJavaType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -41,10 +43,29 @@ struct CompoundType : public Scope {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader) const override;
+
+    void emitJavaFieldInitializer(
+            Formatter &out, const std::string &fieldName) const override;
+
+    void emitJavaFieldReaderWriter(
+            Formatter &out,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader) const override;
+
     status_t emitTypeDeclarations(Formatter &out) const override;
 
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;
+
+    status_t emitJavaTypeDeclarations(
+            Formatter &out, bool atTopLevel) const override;
 
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
@@ -53,6 +74,8 @@ struct CompoundType : public Scope {
     status_t emitVtsAttributeType(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
+
+    void getAlignmentAndSize(size_t *align, size_t *size) const;
 
 private:
     Style mStyle;

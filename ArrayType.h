@@ -42,9 +42,21 @@ struct ArrayType : public Type {
             const std::string &argName,
             bool isReader) const override;
 
+    void emitJavaFieldInitializer(
+            Formatter &out, const std::string &fieldName) const override;
+
+    void emitJavaFieldReaderWriter(
+            Formatter &out,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader) const override;
+
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
+
+    void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
 private:
     Type *mElementType;

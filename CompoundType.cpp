@@ -58,6 +58,10 @@ std::string CompoundType::getCppType(
     }
 }
 
+std::string CompoundType::getJavaType() const {
+    return fullJavaName();
+}
+
 void CompoundType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -148,6 +152,59 @@ void CompoundType::emitReaderWriterEmbedded(
             "" /* childName */);
 }
 
+void CompoundType::emitJavaReaderWriter(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader) const {
+    if (isReader) {
+        out << "new " << fullJavaName() << "();\n";
+    }
+
+    out << argName
+        << "."
+        << (isReader ? "readFromParcel" : "writeToParcel")
+        << "("
+        << parcelObj
+        << ");\n";
+}
+
+void CompoundType::emitJavaFieldInitializer(
+        Formatter &out, const std::string &fieldName) const {
+    out << "final "
+        << fullJavaName()
+        << " "
+        << fieldName
+        << " = new "
+        << fullJavaName()
+        << "();\n";
+}
+
+void CompoundType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    if (isReader) {
+        out << fieldName
+            << ".readEmbeddedFromParcel(parcel, "
+            << blobName
+            << ", "
+            << offset
+            << ");\n";
+
+        return;
+    }
+
+    out << fieldName
+        << ".writeEmbeddedToBlob("
+        << blobName
+        << ", "
+        << offset
+        << ");\n";
+}
+
 status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
         << " "
@@ -213,6 +270,121 @@ status_t CompoundType::emitTypeDefinitions(
 
     emitStructReaderWriter(out, prefix, true /* isReader */);
     emitStructReaderWriter(out, prefix, false /* isReader */);
+
+    return OK;
+}
+
+status_t CompoundType::emitJavaTypeDeclarations(
+        Formatter &out, bool atTopLevel) const {
+    out << "public final ";
+
+    if (!atTopLevel) {
+        out << "static ";
+    }
+
+    out << "class "
+        << localName()
+        << " {\n";
+
+    out.indent();
+
+    Scope::emitJavaTypeDeclarations(out, false /* atTopLevel */);
+
+    for (const auto &field : *mFields) {
+        const bool isScope = field->type().isScope();  // really isStruct...
+
+        out << "public ";
+
+        field->type().emitJavaFieldInitializer(out, field->name());
+    }
+
+    if (!mFields->empty()) {
+        out << "\n";
+    }
+
+    out << "public final void readFromParcel(HwParcel parcel) {\n";
+    out.indent();
+    out << "HwBlob blob = parcel.readBuffer();\n";
+    out << "readEmbeddedFromParcel(parcel, blob, 0 /* parentOffset */);\n";
+    out.unindent();
+    out << "}\n\n";
+
+    out << "public final void readEmbeddedFromParcel(\n";
+    out.indent();
+    out.indent();
+    out << "HwParcel parcel, HwBlob _hidl_blob, long _hidl_offset) {\n";
+    out.unindent();
+
+    size_t offset = 0;
+    for (const auto &field : *mFields) {
+        size_t fieldAlign, fieldSize;
+        field->type().getAlignmentAndSize(&fieldAlign, &fieldSize);
+
+        size_t pad = offset % fieldAlign;
+        if (pad > 0) {
+            offset += fieldAlign - pad;
+        }
+
+        field->type().emitJavaFieldReaderWriter(
+                out,
+                "_hidl_blob",
+                field->name(),
+                "_hidl_offset + " + std::to_string(offset),
+                true /* isReader */);
+
+        offset += fieldSize;
+    }
+
+    out.unindent();
+    out << "}\n\n";
+
+    out << "public final void writeToParcel(HwParcel parcel) {\n";
+    out.indent();
+
+    size_t structAlign, structSize;
+    getAlignmentAndSize(&structAlign, &structSize);
+
+    out << "HwBlob _hidl_blob = new HwBlob("
+        << structSize
+        << " /* size */);\n";
+
+    out << "writeEmbeddedToBlob(_hidl_blob, 0 /* parentOffset */);\n"
+        << "parcel.writeBuffer(_hidl_blob);\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    out << "public final void writeEmbeddedToBlob(\n";
+    out.indent();
+    out.indent();
+    out << "HwBlob _hidl_blob, long _hidl_offset) {\n";
+    out.unindent();
+
+    offset = 0;
+    for (const auto &field : *mFields) {
+        size_t fieldAlign, fieldSize;
+        field->type().getAlignmentAndSize(&fieldAlign, &fieldSize);
+
+        size_t pad = offset % fieldAlign;
+        if (pad > 0) {
+            offset += fieldAlign - pad;
+        }
+
+        field->type().emitJavaFieldReaderWriter(
+                out,
+                "_hidl_blob",
+                field->name(),
+                "_hidl_offset + " + std::to_string(offset),
+                false /* isReader */);
+
+        offset += fieldSize;
+    }
+
+    out.unindent();
+    out << "}\n";
+
+    out.unindent();
+    out << "};\n\n";
 
     return OK;
 }
@@ -389,7 +561,40 @@ status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
 }
 
 bool CompoundType::isJavaCompatible() const {
-    return false;
+    return mStyle == STYLE_STRUCT && Scope::isJavaCompatible();
+}
+
+void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    *align = 1;
+
+    size_t offset = 0;
+    for (const auto &field : *mFields) {
+        // Each field is aligned according to its alignment requirement.
+        // The surrounding structure's alignment is the maximum of its
+        // fields' aligments.
+
+        size_t fieldAlign, fieldSize;
+        field->type().getAlignmentAndSize(&fieldAlign, &fieldSize);
+
+        size_t pad = offset % fieldAlign;
+        if (pad > 0) {
+            offset += fieldAlign - pad;
+        }
+
+        offset += fieldSize;
+
+        if (fieldAlign > (*align)) {
+            *align = fieldAlign;
+        }
+    }
+
+    // Final padding to account for the structure's alignment.
+    size_t pad = offset % (*align);
+    if (pad > 0) {
+        offset += (*align) - pad;
+    }
+
+    *size = offset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

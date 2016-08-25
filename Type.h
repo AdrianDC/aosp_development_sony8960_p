@@ -43,6 +43,7 @@ struct Type {
     std::string getCppArgumentType(std::string *extra) const;
 
     virtual std::string getJavaType() const = 0;
+    virtual std::string getJavaWrapperType() const;
     virtual std::string getJavaSuffix() const;
 
     enum ErrorMode {
@@ -76,12 +77,24 @@ struct Type {
             const std::string &argName,
             bool isReader) const;
 
+    virtual void emitJavaFieldInitializer(
+            Formatter &out,
+            const std::string &fieldName) const;
+
+    virtual void emitJavaFieldReaderWriter(
+            Formatter &out,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader) const;
+
     virtual status_t emitTypeDeclarations(Formatter &out) const;
 
     virtual status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const;
 
-    virtual status_t emitJavaTypeDeclarations(Formatter &out) const;
+    virtual status_t emitJavaTypeDeclarations(
+            Formatter &out, bool atTopLevel) const;
 
     virtual bool needsEmbeddedReadWrite() const;
     virtual bool resultNeedsDeref() const;
@@ -95,6 +108,8 @@ struct Type {
 
     // Returns true iff this type is supported through the Java backend.
     virtual bool isJavaCompatible() const;
+
+    virtual void getAlignmentAndSize(size_t *align, size_t *size) const;
 
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;

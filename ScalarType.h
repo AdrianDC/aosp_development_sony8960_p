@@ -31,6 +31,7 @@ struct ScalarType : public Type {
     std::string getCppType(StorageMode mode, std::string *extra) const override;
 
     std::string getJavaType() const override;
+    std::string getJavaWrapperType() const override;
     std::string getJavaSuffix() const override;
 
     void emitReaderWriter(
@@ -50,7 +51,16 @@ struct ScalarType : public Type {
             ErrorMode mode,
             bool needsCast) const;
 
+    void emitJavaFieldReaderWriter(
+            Formatter &out,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader) const override;
+
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
+
+    void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
 private:
     Kind mKind;

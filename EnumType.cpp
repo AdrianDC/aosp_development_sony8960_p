@@ -70,6 +70,16 @@ void EnumType::emitReaderWriter(
             true /* needsCast */);
 }
 
+void EnumType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    return mStorageType->emitJavaFieldReaderWriter(
+            out, blobName, fieldName, offset, isReader);
+}
+
 status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
@@ -138,7 +148,7 @@ static bool MakeSignedIntegerValue(
     return false;
 }
 
-status_t EnumType::emitJavaTypeDeclarations(Formatter &out) const {
+status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
@@ -231,6 +241,10 @@ void EnumType::getTypeChain(std::vector<const EnumType *> *out) const {
 
         type = static_cast<const EnumType *>(superType);
     }
+}
+
+void EnumType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    mStorageType->getAlignmentAndSize(align, size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

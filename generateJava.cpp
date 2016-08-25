@@ -35,20 +35,65 @@ void AST::emitJavaReaderWriter(
     arg->type().emitJavaReaderWriter(out, parcelObj, arg->name(), isReader);
 }
 
+status_t AST::generateJavaTypes(const std::string &outputPath) const {
+    // Splits types.hal up into one java file per declared type.
+
+    for (size_t i = 0; i < mRootScope->countTypes(); ++i) {
+        std::string typeName;
+        const Type *type = mRootScope->typeAt(i, &typeName);
+
+        if (type->isTypeDef()) {
+            continue;
+        }
+
+        std::string path = outputPath;
+        path.append(mCoordinator->convertPackageRootToPath(mPackage));
+        path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
+        path.append(typeName);
+        path.append(".java");
+
+        CHECK(Coordinator::MakeParentHierarchy(path));
+        FILE *file = fopen(path.c_str(), "w");
+
+        if (file == NULL) {
+            return -errno;
+        }
+
+        Formatter out(file);
+
+        std::vector<std::string> packageComponents;
+        getPackageAndVersionComponents(
+                &packageComponents, true /* cpp_compatible */);
+
+        out << "package " << mPackage.javaPackage() << ";\n\n";
+
+        out << "import android.os.HwBlob;\n";
+        out << "import android.os.HwParcel;\n\n";
+
+        out << "import java.util.Vector;\n\n";
+
+        status_t err =
+            type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
+}
+
 status_t AST::generateJava(const std::string &outputPath) const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
-        fprintf(stderr,
-                "ERROR: Common types are unsupported in the Java backend.\n");
-
-        return UNKNOWN_ERROR;
+        return generateJavaTypes(outputPath);
     }
 
     const Interface *iface = mRootScope->getInterface();
     if (!iface->isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
-                " does NOT support struct/union types nor handles.\n");
+                " does NOT support union types or native handles.\n");
 
         return UNKNOWN_ERROR;
     }
@@ -80,13 +125,15 @@ status_t AST::generateJava(const std::string &outputPath) const {
     out << "import android.os.IHwBinder;\n";
     out << "import android.os.IHwInterface;\n";
     out << "import android.os.HwBinder;\n";
+    out << "import android.os.HwBlob;\n";
     out << "import android.os.HwParcel;\n\n";
+    out << "import java.util.Vector;\n\n";
 
-    for (const auto &item : mImportedNames) {
+    for (const auto &item : mImportedNamesForJava) {
         out << "import " << item.javaName() << ";\n";
     }
 
-    if (!mImportedNames.empty()) {
+    if (!mImportedNamesForJava.empty()) {
         out << "\n";
     }
 
@@ -515,7 +562,7 @@ status_t AST::generateJava(const std::string &outputPath) const {
 }
 
 status_t AST::emitJavaTypeDeclarations(Formatter &out) const {
-    return mRootScope->emitJavaTypeDeclarations(out);
+    return mRootScope->emitJavaTypeDeclarations(out, false /* atTopLevel */);
 }
 
 }  // namespace android

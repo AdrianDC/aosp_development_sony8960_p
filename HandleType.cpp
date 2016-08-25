@@ -128,5 +128,9 @@ bool HandleType::isJavaCompatible() const {
     return false;
 }
 
+void HandleType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    *align = *size = 8;
+}
+
 }  // namespace android
 

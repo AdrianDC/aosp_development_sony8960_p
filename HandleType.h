@@ -34,6 +34,8 @@ struct HandleType : public Type {
     bool needsEmbeddedReadWrite() const override;
 
     bool isJavaCompatible() const override;
+
+    void getAlignmentAndSize(size_t *align, size_t *size) const override;
 };
 
 }  // namespace android

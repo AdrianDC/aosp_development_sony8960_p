@@ -56,7 +56,9 @@ struct AST {
     void addImportedAST(AST *ast);
 
     status_t generateCpp(const std::string &outputPath) const;
+
     status_t generateJava(const std::string &outputPath) const;
+    status_t generateJavaTypes(const std::string &outputPath) const;
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
@@ -75,6 +77,10 @@ private:
     // A set of all external interfaces/types that are _actually_ referenced
     // in this AST, this is a subset of those specified in import statements.
     std::set<FQName> mImportedNames;
+
+    // Similar to mImportedNames, but all types references from "types.hal"
+    // are individually listed.
+    std::set<FQName> mImportedNamesForJava;
 
     // A set of all ASTs we explicitly or implicitly (types.hal) import.
     std::set<AST *> mImportedASTs;

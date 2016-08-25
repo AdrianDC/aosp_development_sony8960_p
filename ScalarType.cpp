@@ -57,6 +57,25 @@ std::string ScalarType::getJavaType() const {
     return kName[mKind];
 }
 
+std::string ScalarType::getJavaWrapperType() const {
+    static const char *const kName[] = {
+        "Boolean",
+        "Long",
+        "Byte",
+        "Byte",
+        "Short",
+        "Short",
+        "Int",
+        "Int",
+        "Long",
+        "Long",
+        "Float",
+        "Double"
+    };
+
+    return kName[mKind];
+}
+
 std::string ScalarType::getJavaSuffix() const {
     static const char *const kSuffix[] = {
         "Bool",
@@ -143,6 +162,35 @@ void ScalarType::emitReaderWriterWithCast(
     handleError(out, mode);
 }
 
+void ScalarType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    if (isReader) {
+        out << fieldName
+            << " = "
+            << blobName
+            << ".get"
+            << getJavaSuffix()
+            << "("
+            << offset
+            << ");\n";
+
+        return;
+    }
+
+    out << blobName
+        << ".put"
+        << getJavaSuffix()
+        << "("
+        << offset
+        << ", "
+        << fieldName
+        << ");\n";
+}
+
 status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
     std::string extra;
     out << "type: TYPE_SCALAR\n"
@@ -150,6 +198,25 @@ status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
         << getCppType(StorageMode_Stack, &extra)
         << "\n";
     return OK;
+}
+
+void ScalarType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    static const size_t kAlign[] = {
+        1,  // bool, this is NOT standardized!
+        8,  // void *, 64-bit mode
+        1,  // int8_t
+        1,  // uint8_t
+        2,  // int16_t
+        2,  // uint16_t
+        4,  // int32_t
+        4,  // uint32_t
+        8,  // int64_t
+        8,  // uint64_t
+        4,  // float
+        8   // double
+    };
+
+    *align = *size = kAlign[mKind];
 }
 
 }  // namespace android

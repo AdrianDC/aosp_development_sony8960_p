@@ -159,6 +159,124 @@ void VectorType::emitReaderWriterEmbedded(
     out << "}\n\n";
 }
 
+void VectorType::emitJavaFieldInitializer(
+        Formatter &out, const std::string &fieldName) const {
+    out << "final Vector<"
+        << mElementType->getJavaWrapperType()
+        << "> "
+        << fieldName
+        << " = new Vector();\n";
+}
+
+void VectorType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    if (isReader) {
+        out << "{\n";
+        out.indent();
+
+        out << "HwBlob childBlob = parcel.readEmbeddedBuffer(\n";
+        out.indent();
+        out.indent();
+
+        out << blobName
+            << ".handle(),\n"
+            << offset
+            << " + 0 /* offsetof(hidl_vec<T>, mBuffer) */);\n\n";
+
+        out.unindent();
+        out.unindent();
+
+        out << fieldName << ".clear();\n";
+        out << "long _hidl_vec_size = "
+            << blobName
+            << ".getInt64("
+            << offset
+            << " + 8 /* offsetof(hidl_vec<T>, mSize) */);\n";
+
+        out << "for (int _hidl_index = 0; _hidl_index < _hidl_vec_size; "
+            << "++_hidl_index) {\n";
+
+        out.indent();
+
+        mElementType->emitJavaFieldInitializer(out, "_hidl_vec_element");
+
+        size_t elementAlign, elementSize;
+        mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
+        mElementType->emitJavaFieldReaderWriter(
+                out,
+                "childBlob",
+                "_hidl_vec_element",
+                "_hidl_index * " + std::to_string(elementSize),
+                true /* isReader */);
+
+        out << fieldName
+            << ".add(_hidl_vec_element);\n";
+
+        out.unindent();
+
+        out << "}\n";
+
+        out.unindent();
+        out << "}\n";
+
+        return;
+    }
+
+    out << "{\n";
+    out.indent();
+
+    out << "long _hidl_vec_size = "
+        << fieldName
+        << ".size();\n";
+
+    out << blobName
+        << ".putInt64("
+        << offset
+        << " + 8 /* offsetof(hidl_vec<T>, mSize) */, _hidl_vec_size);\n";
+
+    out << blobName
+        << ".putBool("
+        << offset
+        << " + 16 /* offsetof(hidl_vec<T>, mOwnsBuffer) */, false);\n";
+
+    size_t elementAlign, elementSize;
+    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
+    // XXX make HwBlob constructor take a long instead of an int?
+    out << "HwBlob childBlob = new HwBlob((int)(_hidl_vec_size * "
+        << elementSize
+        << "));\n";
+
+    out << "for (int _hidl_index = 0; _hidl_index < _hidl_vec_size; "
+        << "++_hidl_index) {\n";
+
+    out.indent();
+
+    mElementType->emitJavaFieldReaderWriter(
+            out,
+            "childBlob",
+            fieldName + ".elementAt(_hidl_index)",
+            "_hidl_index * " + std::to_string(elementSize),
+            false /* isReader */);
+
+    out.unindent();
+
+    out << "}\n";
+
+    out << blobName
+        << ".putBlob("
+        << offset
+        << " + 0 /* offsetof(hidl_vec<T>, mBuffer) */, childBlob);\n";
+
+    out.unindent();
+    out << "}\n";
+}
+
 bool VectorType::needsEmbeddedReadWrite() const {
     return true;
 }
@@ -193,6 +311,11 @@ status_t VectorType::emitVtsAttributeType(Formatter &out) const {
 
 bool VectorType::isJavaCompatible() const {
     return mElementType->isJavaCompatible();
+}
+
+void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    *align = 8;  // hidl_vec<T>
+    *size = 24;
 }
 
 }  // namespace android

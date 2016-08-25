@@ -31,7 +31,9 @@ struct Scope : public NamedType {
     std::string getJavaType() const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
-    status_t emitJavaTypeDeclarations(Formatter &out) const override;
+
+    status_t emitJavaTypeDeclarations(
+            Formatter &out, bool atTopLevel) const override;
 
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;
@@ -41,6 +43,9 @@ struct Scope : public NamedType {
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
+
+    size_t countTypes() const;
+    const Type *typeAt(size_t index, std::string *name) const;
 
 private:
     std::vector<Type *> mTypes;

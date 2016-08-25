@@ -160,6 +160,44 @@ void ArrayType::emitJavaReaderWriter(
             mDimension);
 }
 
+void ArrayType::emitJavaFieldInitializer(
+        Formatter &out, const std::string &fieldName) const {
+    out << mElementType->getJavaType()
+        << "[] "
+        << fieldName
+        << " = new "
+        << mElementType->getJavaType()
+        << "["
+        << mDimension
+        << "];\n";
+}
+
+void ArrayType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    out << "for (int _hidl_index = 0; _hidl_index < "
+        << mDimension
+        << "; ++_hidl_index) {\n";
+
+    out.indent();
+
+    size_t elementAlign, elementSize;
+    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
+    mElementType->emitJavaFieldReaderWriter(
+            out,
+            blobName,
+            fieldName + "[_hidl_index]",
+            offset + " + _hidl_index * " + std::to_string(elementSize),
+            isReader);
+
+    out.unindent();
+    out << "}\n";
+}
+
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "type: TYPE_ARRAY\n" << "vector_value: {\n";
     out.indent();
@@ -175,6 +213,16 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
 
 bool ArrayType::isJavaCompatible() const {
     return mElementType->isJavaCompatible();
+}
+
+void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    mElementType->getAlignmentAndSize(align, size);
+
+    char *end;
+    unsigned long dim = strtoul(mDimension.c_str(), &end, 10);
+    CHECK(end > mDimension.c_str() && *end == '\0');
+
+    (*size) *= dim;
 }
 
 }  // namespace android

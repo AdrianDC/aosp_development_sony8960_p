@@ -89,9 +89,10 @@ status_t Scope::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-status_t Scope::emitJavaTypeDeclarations(Formatter &out) const {
+status_t Scope::emitJavaTypeDeclarations(
+        Formatter &out, bool atTopLevel) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = mTypes[i]->emitJavaTypeDeclarations(out);
+        status_t err = mTypes[i]->emitJavaTypeDeclarations(out, atTopLevel);
 
         if (err != OK) {
             return err;
@@ -136,6 +137,15 @@ bool Scope::isJavaCompatible() const {
     }
 
     return true;
+}
+
+size_t Scope::countTypes() const {
+    return mTypeIndexByName.size();
+}
+
+const Type *Scope::typeAt(size_t index, std::string *name) const {
+    *name = mTypeIndexByName.keyAt(index);
+    return mTypes[mTypeIndexByName.valueAt(index)];
 }
 
 }  // namespace android
