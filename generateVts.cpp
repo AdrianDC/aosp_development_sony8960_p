@@ -46,6 +46,10 @@ status_t AST::emitVtsTypeDeclarationsHelper(
     }
     // Next, generate vts type declaration for the current AST.
     for (const auto &type : mRootScope->getSubTypes()) {
+        // Skip for TypeDef as it is just an alias of a defined type.
+        if (type->isTypeDef()) {
+            continue;
+        }
         out << "attribute: {\n";
         out.indent();
         status_t status = type->emitVtsTypeDeclarations(out);

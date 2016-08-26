@@ -44,22 +44,4 @@ LOCAL_CFLAGS := -O0 -g -Wno-deprecated-register
 
 include $(BUILD_HOST_EXECUTABLE)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := hidl_gen_test
-LOCAL_MODULE_CLASS := FAKE
-LOCAL_IS_HOST_MODULE := true
-
-include $(BUILD_SYSTEM)/base_rules.mk
-
-the_py_script := $(LOCAL_PATH)/test/test_output.py
-$(LOCAL_BUILT_MODULE): PRIVATE_PY_SCRIPT := $(the_py_script)
-$(LOCAL_BUILT_MODULE): PRIVATE_OUT_DIR := $(LOCAL_PATH)/test_out
-$(LOCAL_BUILT_MODULE): PRIVATE_CANONICAL_DIR := $(LOCAL_PATH)/test/data
-$(LOCAL_BUILT_MODULE): PRIVATE_HIDL_EXEC := $(HOST_OUT_EXECUTABLES)/hidl-gen
-$(LOCAL_BUILT_MODULE): PRIVATE_PACKAGE_ROOT := android.hardware:$(TOP)/hardware/interfaces
-$(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-gen
-	@echo "host Test: $(PRIVATE_MODULE)"
-	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_CANONICAL_DIR) $(PRIVATE_OUT_DIR) $(PRIVATE_PACKAGE_ROOT)
-	$(hide) touch $@
-
 include $(call all-makefiles-under,$(LOCAL_PATH))
