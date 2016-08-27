@@ -222,6 +222,7 @@ static status_t generateMakefileForPackage(
     }
     out << "\n";
     out.unindent();
+    out << "\nLOCAL_MULTILIB := both";
 
     if (path.find("hardware/interfaces/tests/") != std::string::npos) {
         out << "\nLOCAL_COMPATIBILITY_SUITE := vts"
