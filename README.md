@@ -27,5 +27,5 @@ examples:
 
 hidl-gen -o output -L c++ android.hardware.nfc@1.0::INfc.hal
 hidl-gen -o output -L vts android.hardware.nfc@1.0
-hild-gen -o test -L c++ -r android.hardware:/home/android/master/hardware/interfaces android.hardware.nfc@1.0
+hidl-gen -o test -L c++ -r android.hardware:/home/android/master/hardware/interfaces android.hardware.nfc@1.0
 ```
