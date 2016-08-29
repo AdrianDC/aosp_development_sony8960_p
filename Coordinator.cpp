@@ -236,6 +236,7 @@ status_t Coordinator::getPackageInterfaceFiles(
     DIR *dir = opendir(packagePath.c_str());
 
     if (dir == NULL) {
+        LOG(ERROR) << "Could not open package path: " << packagePath;
         return -errno;
     }
 

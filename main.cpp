@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
             outputFormat->generate(fqName, me, &coordinator, outputDir);
 
         if (err != OK) {
-            break;
+            exit(1);
         }
     }
 
