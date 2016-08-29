@@ -208,11 +208,21 @@ void ScalarType::emitJavaFieldReaderWriter(
 }
 
 status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
-    std::string extra;
-    out << "type: TYPE_SCALAR\n"
-        << "scalar_type: "
-        << getCppType(StorageMode_Stack, &extra)
-        << "\n";
+    static const char *const kName[] = {
+            "bool_t",
+            "opaque",
+            "int8_t",
+            "uint8_t",
+            "int16_t",
+            "uint16_t",
+            "int32_t",
+            "uint32_t",
+            "int64_t",
+            "uint64_t",
+            "float_t",
+            "double_t"
+    };
+    out << "type: TYPE_SCALAR\n"<< "scalar_type: \""<< kName[mKind]<< "\"\n";
     return OK;
 }
 

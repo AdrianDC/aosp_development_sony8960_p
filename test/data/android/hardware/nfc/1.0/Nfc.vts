@@ -1,5 +1,4 @@
 component_class: HAL_HIDL
-component_type: NFC
 component_type_version: 1.0
 component_name: "INfc"
 
@@ -13,11 +12,12 @@ interface: {
     name: "open"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
     arg: {
       type: TYPE_HIDL_CALLBACK
       predefined_type: "INfcClientCallback"
+      is_callback: true
     }
   }
 
@@ -25,7 +25,7 @@ interface: {
     name: "write"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
     arg: {
       type: TYPE_STRUCT
@@ -37,13 +37,13 @@ interface: {
     name: "core_initialized"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
     arg: {
       type: TYPE_VECTOR
       vector_value: {
         type: TYPE_SCALAR
-        scalar_type: uint8_t
+        scalar_type: "uint8_t"
       }
     }
   }
@@ -52,7 +52,7 @@ interface: {
     name: "pre_discover"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
   }
 
@@ -60,7 +60,7 @@ interface: {
     name: "close"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
   }
 
@@ -68,7 +68,7 @@ interface: {
     name: "control_granted"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
   }
 
@@ -76,7 +76,7 @@ interface: {
     name: "power_cycle"
     return_type_hidl: {
       type: TYPE_SCALAR
-      scalar_type: int32_t
+      scalar_type: "int32_t"
     }
   }
 
