@@ -97,7 +97,7 @@ Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
 }
 
 Status FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
-    ALOGI("SERVER(FooCallback) reportResults(%" PRId64 ") seconds", nanoseconds_to_seconds(ns));
+    ALOGI("SERVER(FooCallback) reportResults(%" PRId64 " seconds)", nanoseconds_to_seconds(ns));
     nsecs_t leftToWaitNs = ns;
     mLock.lock();
     while (!(invokeInfo[0].invoked && invokeInfo[1].invoked && invokeInfo[2].invoked) &&
@@ -105,10 +105,10 @@ Status FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
       nsecs_t start = systemTime();
       ::android::status_t rc = mCond.waitRelative(mLock, leftToWaitNs);
       if (rc != ::android::OK) {
-          ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 ") Condition::waitRelative(%" PRId64 ") returned error (%d)", ns, leftToWaitNs, rc);
+          ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 " ns) Condition::waitRelative(%" PRId64 ") returned error (%d)", ns, leftToWaitNs, rc);
           break;
       }
-      ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 ") Condition::waitRelative was signalled", ns);
+      ALOGI("SERVER(FooCallback)::reportResults(%" PRId64 " ns) Condition::waitRelative was signalled", ns);
       leftToWaitNs -= systemTime() - start;
     }
     mLock.unlock();
@@ -566,8 +566,8 @@ TEST_F(HidlTest, ForReportResultsTest) {
     // time to execute that we also expect.
 
     const nsecs_t reportResultsNs =
-          seconds_to_nanoseconds(2*(FooCallback::DELAY_S +
-                                    FooCallback::TOLERANCE_NS));
+        2 * FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS;
+
     ALOGI("CLIENT: Waiting for up to %" PRId64 " seconds.",
           nanoseconds_to_seconds(reportResultsNs));
 
