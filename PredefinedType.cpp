@@ -25,6 +25,9 @@ PredefinedType::PredefinedType(const char *name)
     : mName(name) {
 }
 
+void PredefinedType::addNamedTypesToSet(std::set<const FQName> &) const {
+    // do nothing
+}
 std::string PredefinedType::getCppType(
         StorageMode mode,
         std::string *extra,
