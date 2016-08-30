@@ -48,3 +48,5 @@ $(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-gen
 	@echo "host Test: $(PRIVATE_MODULE)"
 	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_CANONICAL_DIR) $(PRIVATE_OUT_DIR) $(PRIVATE_PACKAGE_ROOT)
 	$(hide) touch $@
+
+include $(call all-makefiles-under,$(LOCAL_PATH))

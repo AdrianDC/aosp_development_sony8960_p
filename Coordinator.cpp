@@ -165,7 +165,8 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
             break;
         }
     }
-    CHECK(it != mPackageRoots.end());
+    CHECK(it != mPackageRoots.end())
+        << "Unable to find package root for " << fqName.string();
 
     return it;
 }

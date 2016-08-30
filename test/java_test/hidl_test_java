@@ -1,0 +1,21 @@
+base=/system
+export CLASSPATH=$base/framework/hidl_test_java.jar
+
+# Test native server with Java client
+hidl_test_java_native -s &
+sleep 1
+NATIVE_PID=$!
+(app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -c     \
+    && echo "Java client => native server PASS")                               \
+    || echo "Java client => native server FAIL"
+
+kill $NATIVE_PID
+
+# Test Java server with native client
+app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -s &
+NATIVE_PID=$!
+sleep 1
+(hidl_test_java_native -c && echo "native client => Java server PASS")         \
+    || echo "native client => Java server FAIL"
+
+kill $NATIVE_PID
