@@ -240,7 +240,10 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
 }
 
 status_t EnumType::emitVtsAttributeType(Formatter &out) const {
-    out << "type: TYPE_ENUM\n" << "predefined_type:\"" << localName() << "\"\n";
+    out << "type: TYPE_ENUM\n"
+        << "predefined_type: \""
+        << localName()
+        << "\"\n";
     return OK;
 }
 

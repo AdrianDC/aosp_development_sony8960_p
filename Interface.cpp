@@ -220,7 +220,8 @@ status_t Interface::emitVtsAttributeType(Formatter &out) const {
     out << "type: TYPE_HIDL_CALLBACK\n"
         << "predefined_type: \""
         << localName()
-        << "\"\n";
+        << "\"\n"
+        << "is_callback: true\n";
     return OK;
 }
 

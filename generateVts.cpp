@@ -107,22 +107,6 @@ status_t AST::generateVts(const std::string &outputPath) const {
     Formatter out(file);
 
     out << "component_class: HAL_HIDL\n";
-
-    // Get the component_type for interface from annotation.
-    if (isInterface) {
-        const Interface *iface = mRootScope->getInterface();
-        Annotation *annotation = iface->annotations().valueFor("hal_type");
-        if (annotation != NULL) {
-            std::vector<std::string> * values = annotation->params().valueFor(
-                    "type");
-            if (values != NULL) {
-                out << "component_type: "
-                    << removeQuotes(values->at(0))
-                    << "\n";
-            }
-        }
-    }
-
     out << "component_type_version: " << mPackage.version().substr(1) << "\n";
     out << "component_name: \""
         << (isInterface ? ifaceName : "types")

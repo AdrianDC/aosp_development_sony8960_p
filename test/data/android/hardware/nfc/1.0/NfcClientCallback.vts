@@ -1,5 +1,4 @@
 component_class: HAL_HIDL
-component_type: NFC
 component_type_version: 1.0
 component_name: "INfcClientCallback"
 
@@ -12,11 +11,11 @@ interface: {
     name: "sendEvent"
     arg: {
       type: TYPE_ENUM
-      predefined_type:"nfc_event_t"
+      predefined_type: "nfc_event_t"
     }
     arg: {
       type: TYPE_ENUM
-      predefined_type:"nfc_status_t"
+      predefined_type: "nfc_status_t"
     }
   }
 
