@@ -178,7 +178,8 @@ void ArrayType::emitJavaReaderWriter(
 
 void ArrayType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
-    out << mElementType->getJavaType()
+    out << "final "
+        << mElementType->getJavaType()
         << "[] "
         << fieldName
         << " = new "
