@@ -311,4 +311,23 @@ void AST::getImportedPackages(std::set<FQName> *importSet) const {
     }
 }
 
+bool AST::isJavaCompatible() const {
+    std::string ifaceName;
+    if (!AST::isInterface(&ifaceName)) {
+        for (size_t i = 0; i < mRootScope->countTypes(); ++i) {
+            std::string typeName;
+            const Type *type = mRootScope->typeAt(i, &typeName);
+
+            if (!type->isJavaCompatible()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const Interface *iface = mRootScope->getInterface();
+    return iface->isJavaCompatible();
+}
+
 }  // namespace android;

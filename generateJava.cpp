@@ -51,7 +51,8 @@ void AST::emitJavaReaderWriter(
     arg->type().emitJavaReaderWriter(out, parcelObj, arg->name(), isReader);
 }
 
-status_t AST::generateJavaTypes(const std::string &outputPath) const {
+status_t AST::generateJavaTypes(
+        const std::string &outputPath, const char *limitToType) const {
     // Splits types.hal up into one java file per declared type.
 
     for (size_t i = 0; i < mRootScope->countTypes(); ++i) {
@@ -59,6 +60,10 @@ status_t AST::generateJavaTypes(const std::string &outputPath) const {
         const Type *type = mRootScope->typeAt(i, &typeName);
 
         if (type->isTypeDef()) {
+            continue;
+        }
+
+        if ((limitToType != nullptr) && typeName != limitToType) {
             continue;
         }
 
@@ -99,20 +104,22 @@ status_t AST::generateJavaTypes(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateJava(const std::string &outputPath) const {
-    std::string ifaceName;
-    if (!AST::isInterface(&ifaceName)) {
-        return generateJavaTypes(outputPath);
-    }
-
-    const Interface *iface = mRootScope->getInterface();
-    if (!iface->isJavaCompatible()) {
+status_t AST::generateJava(
+        const std::string &outputPath, const char *limitToType) const {
+    if (!isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
                 " does NOT support union types or native handles.\n");
 
         return UNKNOWN_ERROR;
     }
+
+    std::string ifaceName;
+    if (!AST::isInterface(&ifaceName)) {
+        return generateJavaTypes(outputPath, limitToType);
+    }
+
+    const Interface *iface = mRootScope->getInterface();
 
     // cut off the leading 'I'.
     const std::string baseName = ifaceName.substr(1);

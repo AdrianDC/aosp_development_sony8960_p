@@ -73,12 +73,17 @@ struct AST {
 
     status_t generateCpp(const std::string &outputPath) const;
 
-    status_t generateJava(const std::string &outputPath) const;
-    status_t generateJavaTypes(const std::string &outputPath) const;
+    status_t generateJava(
+            const std::string &outputPath, const char *limitToType) const;
+
+    status_t generateJavaTypes(
+            const std::string &outputPath, const char *limitToType) const;
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
     status_t generateVts(const std::string &outputPath) const;
+
+    bool isJavaCompatible() const;
 
 private:
     Coordinator *mCoordinator;
