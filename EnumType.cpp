@@ -195,7 +195,7 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
                 << " "
                 << entry->name();
 
-            const char *value = entry->value();
+            const char *value = entry->javaValue(scalarType->getKind());
             if (value != NULL) {
                 out << " = ";
 
@@ -209,7 +209,14 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
                 }
             }
 
-            out << ";\n";
+            out << ";";
+
+            const char *comment = entry->comment();
+            if (comment != NULL && strcmp(comment, value) != 0) {
+                out << " // " << comment;
+            }
+
+            out << "\n";
         }
     }
 
@@ -290,6 +297,9 @@ const char *EnumValue::value() const {
 
 const char *EnumValue::cppValue(ScalarType::Kind castKind) const {
     return mValue ? mValue->cppValue(castKind) : nullptr;
+}
+const char *EnumValue::javaValue(ScalarType::Kind castKind) const {
+    return mValue ? mValue->javaValue(castKind) : nullptr;
 }
 
 const char *EnumValue::comment() const {

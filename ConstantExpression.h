@@ -55,6 +55,8 @@ struct ConstantExpression {
     const char *value() const;
     /* Evaluated result in a string form, with given contextual kind. */
     const char *cppValue(ScalarType::Kind castKind) const;
+    /* Evaluated result in a string form, with given contextual kind. */
+    const char *javaValue(ScalarType::Kind castKind) const;
     /* Original expression with type. */
     const char *description() const;
 
@@ -69,9 +71,10 @@ private:
     /* The stored result value.
      * Is valid only when mType != kConstExprUnknown. */
     uint64_t mValue;
-    /* Return a signed int64_t value.
-     * First cast it according to mValueKind, then cast it to int64_t. */
-    int64_t int64Value() const;
+    /* Return the value casted to the given type.
+     * First cast it according to mValueKind, then cast it to T.
+     * Assumes mType != kConstExprUnknown */
+    template <typename T> T cast() const;
     /* Helper function for value(ScalarType::Kind) */
     const char *value0(ScalarType::Kind castKind) const;
 

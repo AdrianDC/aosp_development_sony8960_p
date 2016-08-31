@@ -248,7 +248,7 @@ ConstantExpression::ConstantExpression(const ConstantExpression *lval, const cha
   if(OP_IS_BIN_SHIFT) {
     mValueKind = integralPromotion(lval->mValueKind);
     // instead of promoting rval, simply casting it to int64 should also be good.
-    int64_t numBits = rval->int64Value();
+    int64_t numBits = rval->cast<int64_t>();
     if(numBits < 0) {
       // shifting with negative number of bits is undefined in C. In HIDL it
       // is defined as shifting into the other direction.
@@ -343,21 +343,37 @@ const char *ConstantExpression::cppValue(ScalarType::Kind castKind) const {
   return strdup(literal.c_str());
 }
 
+const char *ConstantExpression::javaValue(ScalarType::Kind castKind) const {
+  switch(castKind) {
+    case SK(UINT64): return value0(SK(INT64));
+    case SK(UINT32): return value0(SK(INT32));
+    case SK(UINT16): return value0(SK(INT16));
+    case SK(UINT8) : return value0(SK(INT8));
+    case SK(BOOL)  :
+      if(mType == kConstExprUnknown)
+        return expr();
+      return this->cast<bool>() ? strdup("true") : strdup("false");
+    default: break;
+  }
+  return value0(castKind);
+}
+
 const char *ConstantExpression::value0(ScalarType::Kind castKind) const {
   if(mType == kConstExprUnknown)
     return expr();
 
-#define CASE_STR(__type__) return strdup(std::to_string(static_cast<__type__>(mValue)).c_str());
+#define CASE_STR(__type__) return strdup(std::to_string(this->cast<__type__>()).c_str());
 
   SWITCH_KIND(castKind, CASE_STR, return expr(); );
 }
 
-int64_t ConstantExpression::int64Value() const {
+template<typename T>
+T ConstantExpression::cast() const {
   CHECK(mType != kConstExprUnknown);
 
-#define CASE_CAST_INT64(__type__) return static_cast<int64_t>(static_cast<__type__>(mValue));
+#define CASE_CAST_T(__type__) return static_cast<T>(static_cast<__type__>(mValue));
 
-  SWITCH_KIND(mValueKind, CASE_CAST_INT64, CHECK(false); return 0; );
+  SWITCH_KIND(mValueKind, CASE_CAST_T, CHECK(false); return 0; );
 }
 
 /*
