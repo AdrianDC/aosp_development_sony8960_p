@@ -2,8 +2,7 @@
 #define HIDL_GENERATED_android_hardware_tests_expression_V1_0_IExpression_H_
 
 #include <hidl/HidlSupport.h>
-#include <hwbinder/IBinder.h>
-#include <hwbinder/IInterface.h>
+#include <hidl/IServiceManager.h>
 #include <hwbinder/Status.h>
 #include <utils/NativeHandle.h>
 
@@ -13,9 +12,7 @@ namespace tests {
 namespace expression {
 namespace V1_0 {
 
-struct IExpression : public ::android::hardware::IInterface {
-  DECLARE_HWBINDER_META_INTERFACE(Expression);
-
+struct IExpression : virtual public RefBase {
   enum class UInt64LiteralTypeGuessing : uint64_t {
     noSuffixDec1 = 0ull, // (int32_t)0
     noSuffixDec2 = 1ull, // (int32_t)1
@@ -131,10 +128,9 @@ struct IExpression : public ::android::hardware::IInterface {
     logand4 = 1, // (bool)((0 && 1) == 0)
   };
 
-  enum Call {
-    CallCount
-  };
+  virtual bool isRemote() const { return false; } 
 
+  DECLARE_REGISTER_AND_GET_SERVICE(Expression)
 };
 
 }  // namespace V1_0

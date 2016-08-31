@@ -8,10 +8,14 @@ namespace expression {
 namespace V1_0 {
 
 BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder> &_hidl_impl)
-    : BpInterface<IExpression>(_hidl_impl) {
+    : BpInterface<IHwExpression>(_hidl_impl) {
 }
 
 IMPLEMENT_HWBINDER_META_INTERFACE(Expression, "android.hardware.tests.expression@1.0::IExpression");
+
+BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
+    : BnInterface<IExpression, IHwExpression>(_hidl_impl) {
+}
 
 ::android::status_t BnExpression::onTransact(
     uint32_t _hidl_code,
@@ -24,7 +28,7 @@ IMPLEMENT_HWBINDER_META_INTERFACE(Expression, "android.hardware.tests.expression
   switch (_hidl_code) {
     default:
     {
-      return ::android::hardware::BnInterface<IExpression>::onTransact(
+      return ::android::hardware::BnInterface<IExpression, IHwExpression>::onTransact(
           _hidl_code, _hidl_data, _hidl_reply, _hidl_flags, _hidl_cb);
     }
   }
@@ -38,6 +42,7 @@ IMPLEMENT_HWBINDER_META_INTERFACE(Expression, "android.hardware.tests.expression
   return _hidl_err;
 }
 
+IMPLEMENT_REGISTER_AND_GET_SERVICE(Expression)
 }  // namespace V1_0
 }  // namespace expression
 }  // namespace tests
