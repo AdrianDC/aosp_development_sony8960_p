@@ -1,0 +1,151 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "PredefinedType.h"
+
+#include "Formatter.h"
+
+#include <android-base/logging.h>
+
+namespace android {
+
+PredefinedType::PredefinedType(const char *name)
+    : mName(name) {
+}
+
+std::string PredefinedType::getCppType(
+        StorageMode mode, std::string *extra) const {
+    extra->clear();
+
+    const std::string base = mName;
+
+    switch (mode) {
+        case StorageMode_Stack:
+            return base;
+
+        case StorageMode_Argument:
+            return "const " + base + "&";
+
+        case StorageMode_Result:
+            return "const " + base + "*";
+    }
+}
+
+std::string PredefinedType::getJavaType() const {
+    CHECK(!"Should not be here");
+    return std::string();
+}
+
+void PredefinedType::emitReaderWriter(
+        Formatter &out,
+        const std::string &name,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode) const {
+    const std::string parentName = "_hidl_" + name + "_parent";
+
+    out << "size_t " << parentName << ";\n\n";
+
+    const std::string parcelObjDeref =
+        parcelObj + (parcelObjIsPointer ? "->" : ".");
+
+    if (isReader) {
+        out << name
+            << " = (const "
+            << mName
+            << " *)"
+            << parcelObjDeref
+            << "readBuffer("
+            << "&"
+            << parentName
+            << ");\n";
+
+        out << "if ("
+            << name
+            << " == nullptr) {\n";
+
+        out.indent();
+
+        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
+        handleError2(out, mode);
+
+        out.unindent();
+        out << "}\n\n";
+    } else {
+        out << "_hidl_err = "
+            << parcelObjDeref
+            << "writeBuffer(&"
+            << name
+            << ", sizeof("
+            << name
+            << "), &"
+            << parentName
+            << ");\n";
+
+        handleError(out, mode);
+    }
+
+    emitReaderWriterEmbedded(
+            out,
+            name,
+            isReader /* nameIsPointer */,
+            parcelObj,
+            parcelObjIsPointer,
+            isReader,
+            mode,
+            parentName,
+            "0 /* parentOffset */");
+}
+
+void PredefinedType::emitReaderWriterEmbedded(
+        Formatter &out,
+        const std::string &name,
+        bool nameIsPointer,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode,
+        const std::string &parentName,
+        const std::string &offsetText) const {
+    emitReaderWriterEmbeddedForTypeName(
+            out,
+            name,
+            nameIsPointer,
+            parcelObj,
+            parcelObjIsPointer,
+            isReader,
+            mode,
+            parentName,
+            offsetText,
+            mName,
+            "" /* childName */);
+}
+
+bool PredefinedType::isJavaCompatible() const {
+    return false;
+}
+
+bool PredefinedType::needsEmbeddedReadWrite() const {
+    return true;
+}
+
+bool PredefinedType::resultNeedsDeref() const {
+    return true;
+}
+
+}  // namespace android
+

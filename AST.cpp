@@ -21,6 +21,7 @@
 #include "FQName.h"
 #include "HandleType.h"
 #include "Interface.h"
+#include "PredefinedType.h"
 #include "Scope.h"
 #include "TypeDef.h"
 

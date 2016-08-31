@@ -24,6 +24,7 @@ LOCAL_SRC_FILES :=              \
     Interface.cpp               \
     Method.cpp                  \
     NamedType.cpp               \
+    PredefinedType.cpp          \
     ScalarType.cpp              \
     Scope.cpp                   \
     StringType.cpp              \
