@@ -165,7 +165,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     out << "#include <hidl/IServiceManager.h>\n";
 
     if (isInterface) {
-        out << "#include <hwbinder/Status.h>\n";
+        out << "#include <hidl/Status.h>\n";
     }
 
     out << "#include <utils/NativeHandle.h>\n\n";
@@ -344,9 +344,9 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out << "\n";
 
     out << "#include <hidl/HidlSupport.h>\n";
+    out << "#include <hidl/Status.h>\n";
     out << "#include <hwbinder/IBinder.h>\n";
     out << "#include <hwbinder/IInterface.h>\n";
-    out << "#include <hwbinder/Status.h>\n";
 
     out << "\n";
 
