@@ -577,7 +577,17 @@ status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
 }
 
 bool CompoundType::isJavaCompatible() const {
-    return mStyle == STYLE_STRUCT && Scope::isJavaCompatible();
+    if (mStyle != STYLE_STRUCT || !Scope::isJavaCompatible()) {
+        return false;
+    }
+
+    for (const auto &field : *mFields) {
+        if (!field->type().isJavaCompatible()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {

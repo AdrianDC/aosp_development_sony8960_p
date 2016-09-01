@@ -18,6 +18,7 @@
 #include "Coordinator.h"
 #include "Formatter.h"
 #include "FQName.h"
+#include "Scope.h"
 
 #include <android-base/logging.h>
 #include <set>
@@ -36,7 +37,7 @@ struct OutputHandler {
         PASS_PACKAGE,
         PASS_FULL
     };
-    ValRes (*validate)(const FQName &);
+    ValRes (*validate)(const FQName &, const std::string &language);
     status_t (*generate)(const FQName &fqName,
                          const char *hidl_gen,
                          Coordinator *coordinator,
@@ -51,7 +52,19 @@ static status_t generateSourcesForFile(
         const std::string &lang) {
     CHECK(fqName.isFullyQualified());
 
-    AST *ast = coordinator->parse(fqName);
+    AST *ast;
+    const char *limitToType = nullptr;
+
+    if (fqName.name().find("types.") == 0) {
+        CHECK(lang == "java");  // Already verified in validate().
+
+        limitToType = fqName.name().c_str() + strlen("types.");
+
+        FQName typesName(fqName.package(), fqName.version(), "types");
+        ast = coordinator->parse(typesName);
+    } else {
+        ast = coordinator->parse(fqName);
+    }
 
     if (ast == NULL) {
         fprintf(stderr,
@@ -65,7 +78,7 @@ static status_t generateSourcesForFile(
         return ast->generateCpp(outputDir);
     }
     if (lang == "java") {
-        return ast->generateJava(outputDir);
+        return ast->generateJava(outputDir, limitToType);
     }
     if (lang == "vts") {
         return ast->generateVts(outputDir);
@@ -109,6 +122,110 @@ static std::string makeLibraryName(const FQName &packageFQName) {
     return packageFQName.string();
 }
 
+static void generateMakefileSectionForLanguageAndType(
+        Formatter &out,
+        Coordinator *coordinator,
+        const FQName &packageFQName,
+        const FQName &fqName,
+        const char *typeName,
+        bool forJava) {
+    out << "\n"
+        << "\n#"
+        << "\n# Build " << fqName.name() << ".hal";
+
+    if (forJava && typeName != nullptr) {
+        out << " (" << typeName << ")";
+    }
+
+    out << "\n#"
+        << "\nGEN := $(intermediates)/"
+        << coordinator->convertPackageRootToPath(packageFQName)
+        << coordinator->getPackagePath(packageFQName, true /* relative */);
+    if (!forJava) {
+        CHECK(typeName == nullptr);
+
+        if (fqName.name() == "types") {
+            out << "types.cpp";
+        } else {
+            out << fqName.name().substr(1) << "All.cpp";
+        }
+    } else if (typeName == nullptr) {
+        out << fqName.name() << ".java";
+    } else {
+        out << typeName << ".java";
+    }
+
+    out << "\n$(GEN): $(HIDL)";
+    out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
+    out << "\n$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/"
+        << fqName.name() << ".hal";
+    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
+        << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
+    out.indent();
+    out.indent();
+    out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
+        << "\n-L"
+        << (forJava ? "java" : "c++")
+        << " -r"
+        << coordinator->getPackageRoot(packageFQName) << ":"
+        << coordinator->getPackageRootPath(packageFQName) << " \\\n";
+
+    out << packageFQName.string()
+        << "::"
+        << fqName.name();
+
+    if (forJava && typeName != nullptr) {
+        out << "." << typeName;
+    }
+
+    out << "\n";
+
+    out.unindent();
+    out.unindent();
+
+    out << "\n$(GEN): $(LOCAL_PATH)/" << fqName.name() << ".hal";
+    out << "\n\t$(transform-generated-source)";
+    out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
+}
+
+static void generateMakefileSectionForLanguage(
+        Formatter &out,
+        Coordinator *coordinator,
+        const FQName &packageFQName,
+        const std::vector<FQName> &packageInterfaces,
+        AST *typesAST,
+        bool forJava) {
+    for (const auto &fqName : packageInterfaces) {
+        if (forJava && fqName.name() == "types") {
+            CHECK(typesAST != nullptr);
+
+            Scope *rootScope = typesAST->scope();
+            for (size_t i = 0; i < rootScope->countTypes(); ++i) {
+                std::string typeName;
+                rootScope->typeAt(i, &typeName);
+
+                generateMakefileSectionForLanguageAndType(
+                        out,
+                        coordinator,
+                        packageFQName,
+                        fqName,
+                        typeName.c_str(),
+                        forJava);
+            }
+
+            continue;
+        }
+
+        generateMakefileSectionForLanguageAndType(
+                out,
+                coordinator,
+                packageFQName,
+                fqName,
+                nullptr /* typeName */,
+                forJava);
+    }
+}
+
 static status_t generateMakefileForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -130,6 +247,9 @@ static status_t generateMakefileForPackage(
     }
 
     std::set<FQName> importedPackages;
+    bool packageIsJavaCompatible = true;
+    AST *typesAST = nullptr;
+
     for (const auto &fqName : packageInterfaces) {
         AST *ast = coordinator->parse(fqName);
 
@@ -139,6 +259,14 @@ static status_t generateMakefileForPackage(
                     fqName.string().c_str());
 
             return UNKNOWN_ERROR;
+        }
+
+        if (packageIsJavaCompatible && !ast->isJavaCompatible()) {
+            packageIsJavaCompatible = false;
+        }
+
+        if (fqName.name() == "types") {
+            typesAST = ast;
         }
 
         ast->getImportedPackages(&importedPackages);
@@ -170,44 +298,13 @@ static status_t generateMakefileForPackage(
         << "HIDL := $(HOST_OUT_EXECUTABLES)/"
         << hidl_gen << "$(HOST_EXECUTABLE_SUFFIX)";
 
-    for (const auto &fqName : packageInterfaces) {
-
-        out << "\n"
-            << "\n#"
-            << "\n# Build " << fqName.name() << ".hal"
-            << "\n#";
-        out << "\nGEN := $(intermediates)/"
-            << coordinator->convertPackageRootToPath(packageFQName)
-            << coordinator->getPackagePath(packageFQName, true /* relative */);
-        if (fqName.name() == "types") {
-            out << "types.cpp";
-        } else {
-            out << fqName.name().substr(1) << "All.cpp";
-        }
-
-        out << "\n$(GEN): $(HIDL)";
-        out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
-        out << "\n$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/"
-            << fqName.name() << ".hal";
-        out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
-            << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
-        out.indent();
-        out.indent();
-        out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-            << "\n-Lc++ -r"
-            << coordinator->getPackageRoot(packageFQName) << ":"
-            << coordinator->getPackageRootPath(packageFQName) << "\\";
-        out << "\n"
-            << packageFQName.string()
-            << "::$(patsubst %.hal,%,$(notdir $(PRIVATE_DEPS)))"
-            << "\n";
-        out.unindent();
-        out.unindent();
-
-        out << "\n$(GEN): $(LOCAL_PATH)/" << fqName.name() << ".hal";
-        out << "\n\t$(transform-generated-source)";
-        out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
-    }
+    generateMakefileSectionForLanguage(
+            out,
+            coordinator,
+            packageFQName,
+            packageInterfaces,
+            typesAST,
+            false /* forJava */);
 
     out << "\n"
         << "\nLOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)"
@@ -226,10 +323,37 @@ static status_t generateMakefileForPackage(
 
     out << "\ninclude $(BUILD_SHARED_LIBRARY)\n";
 
+    if (packageIsJavaCompatible) {
+        out << "\n"
+            << "########################################"
+            << "########################################\n\n";
+
+        out << "include $(CLEAR_VARS)\n"
+            << "LOCAL_MODULE := "
+            << libraryName
+            << "-java\n"
+            << "LOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
+            << "intermediates := $(local-generated-sources-dir)\n\n"
+            << "HIDL := $(HOST_OUT_EXECUTABLES)/"
+            << hidl_gen
+            << "$(HOST_EXECUTABLE_SUFFIX)";
+
+        generateMakefileSectionForLanguage(
+                out,
+                coordinator,
+                packageFQName,
+                packageInterfaces,
+                typesAST,
+                true /* forJava */);
+
+        out << "\ninclude $(BUILD_JAVA_LIBRARY)\n";
+    }
+
     return OK;
 }
 
-OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
+OutputHandler::ValRes validateForMakefile(
+        const FQName &fqName, const std::string & /* language */) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
         return OutputHandler::FAILED;
@@ -249,7 +373,8 @@ OutputHandler::ValRes validateForMakefile(const FQName &fqName) {
     return OutputHandler::PASS_PACKAGE;
 }
 
-OutputHandler::ValRes validateForSource(const FQName &fqName) {
+OutputHandler::ValRes validateForSource(
+        const FQName &fqName, const std::string &language) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
         return OutputHandler::FAILED;
@@ -260,9 +385,26 @@ OutputHandler::ValRes validateForSource(const FQName &fqName) {
         return OutputHandler::FAILED;
     }
 
-    return fqName.name().empty() ?
-        OutputHandler::PASS_PACKAGE :
-        OutputHandler::PASS_FULL;
+    const std::string &name = fqName.name();
+    if (!name.empty()) {
+        if (name.find('.') == std::string::npos) {
+            return OutputHandler::PASS_FULL;
+        }
+
+        if (language != "java" || name.find("types.") != 0) {
+            // When generating java sources for "types.hal", output can be
+            // constrained to just one of the top-level types declared
+            // by using the extended syntax
+            // android.hardware.Foo@1.0::types.TopLevelTypeName.
+            // In all other cases (different language, not 'types') the dot
+            // notation in the name is illegal in this context.
+            return OutputHandler::FAILED;
+        }
+
+        return OutputHandler::PASS_FULL;
+    }
+
+    return OutputHandler::PASS_PACKAGE;
 }
 
 static std::vector<OutputHandler> formats = {
@@ -276,12 +418,14 @@ static std::vector<OutputHandler> formats = {
                         return generateSourcesForFile(fqName,
                                                       hidl_gen,
                                                       coordinator,
-                                                      outputDir, "c++");
+                                                      outputDir,
+                                                      "c++");
             } else {
                         return generateSourcesForPackage(fqName,
                                                          hidl_gen,
                                                          coordinator,
-                                                         outputDir, "c++");
+                                                         outputDir,
+                                                         "c++");
             }
         }
     },
@@ -296,13 +440,15 @@ static std::vector<OutputHandler> formats = {
                 return generateSourcesForFile(fqName,
                                               hidl_gen,
                                               coordinator,
-                                              outputDir, "java");
+                                              outputDir,
+                                              "java");
             }
             else {
                 return generateSourcesForPackage(fqName,
                                                  hidl_gen,
                                                  coordinator,
-                                                 outputDir, "java");
+                                                 outputDir,
+                                                 "java");
             }
         }
     },
@@ -454,7 +600,9 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        OutputHandler::ValRes valid = outputFormat->validate(fqName);
+        OutputHandler::ValRes valid =
+            outputFormat->validate(fqName, outputFormat->mKey);
+
         if (valid == OutputHandler::FAILED) {
             exit(1);
         }

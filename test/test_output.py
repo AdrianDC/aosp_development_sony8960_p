@@ -60,8 +60,8 @@ class Tester(unittest.TestCase):
     def testAll(self):
         """Run all tests. """
         self.TestVtsOutput()
-        # Uncomment once we want to test cpp output.
         self.TestCppOutput()
+        self.TestJavaOutput()
 
     def TestVtsOutput(self):
         """Runs hidl-gen to generate vts file and verify the output."""
@@ -74,6 +74,11 @@ class Tester(unittest.TestCase):
         # self.RunTest("c++", "android.hardware.nfc@1.0",
         #              "android/hardware/nfc/1.0")
         self.RunTest("c++", "android.hardware.tests.expression@1.0",
+                     "android/hardware/tests/expression/1.0")
+        self.assertEqual(self._errors, 0)
+
+    def TestJavaOutput(self):
+        self.RunTest("java", "android.hardware.tests.expression@1.0",
                      "android/hardware/tests/expression/1.0")
         self.assertEqual(self._errors, 0)
 

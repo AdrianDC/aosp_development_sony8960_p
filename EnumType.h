@@ -83,6 +83,7 @@ struct EnumValue {
     std::string name() const;
     const char *value() const;
     const char *cppValue(ScalarType::Kind castKind) const;
+    const char *javaValue(ScalarType::Kind castKind) const;
     const char *comment() const;
 
 private:

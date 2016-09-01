@@ -1,5 +1,5 @@
 base=/system
-export CLASSPATH=$base/framework/hidl_test_java.jar
+export CLASSPATH=$base/framework/hidl_test_java.jar:$base/framework/android.hardware.tests.baz@1.0-java.jar
 
 # Test native server with Java client
 hidl_test_java_native -s &

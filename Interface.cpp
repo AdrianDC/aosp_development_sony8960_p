@@ -261,6 +261,11 @@ bool Interface::isJavaCompatible() const {
         return true;
     }
 
+    if (mSuperType != nullptr && !mSuperType->isJavaCompatible()) {
+        mIsJavaCompatibleInProgress = false;
+        return false;
+    }
+
     mIsJavaCompatibleInProgress = true;
 
     if (!Scope::isJavaCompatible()) {
