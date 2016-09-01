@@ -32,7 +32,7 @@ extern status_t parseFile(android::AST *ast);
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-g] -o dir -p package (-r interface-root)+ (header-filepath)+\n",
+            "usage: %s [-g] [-o dir] -p package (-r interface-root)+ (header-filepath)+\n",
             me);
 
     fprintf(stderr, "         -o output path\n");
