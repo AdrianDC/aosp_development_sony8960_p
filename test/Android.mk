@@ -7,9 +7,6 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_SRC_FILES :=                                  \
     main.cpp                                        \
 
-LOCAL_C_INCLUDES := \
-    external/gtest/include
-
 LOCAL_SHARED_LIBRARIES :=       	\
     libandroid_runtime          	\
     libbase                     	\
