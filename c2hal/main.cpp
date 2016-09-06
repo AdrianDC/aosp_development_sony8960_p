@@ -35,6 +35,7 @@ static void usage(const char *me) {
             "usage: %s [-g] [-o dir] -p package (-r interface-root)+ (header-filepath)+\n",
             me);
 
+    fprintf(stderr, "         -h print this message\n");
     fprintf(stderr, "         -o output path\n");
     fprintf(stderr, "            (example: ~/android/master)\n");
     fprintf(stderr, "         -p package\n");
@@ -133,7 +134,6 @@ int main(int argc, char **argv) {
             case 'h':
             default:
             {
-                LOG(INFO) << "UNKOWN ARGUMENT: " << optarg;
                 usage(me);
                 exit(1);
                 break;
