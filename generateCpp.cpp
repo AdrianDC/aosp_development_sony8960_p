@@ -206,7 +206,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
 
-        out << "virtual bool isRemote() const { return false; } \n\n";
+        out << "virtual bool isRemote() const { return false; }\n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
@@ -631,7 +631,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
-    out << "virtual bool isRemote() const { return true; } \n\n";
+    out << "virtual bool isRemote() const { return true; }\n\n";
 
     generateHeaderMethodSignatures(out, false); // proxy
 
