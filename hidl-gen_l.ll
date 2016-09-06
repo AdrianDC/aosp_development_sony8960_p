@@ -46,7 +46,6 @@ VERSION                 {AT}{D}+{DOT}{D}+
 using namespace android;
 using token = yy::parser::token;
 
-void comment(yyscan_t yyscanner, struct yyguts_t *yyg);
 int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 
 #define SCALAR_TYPE(kind)                                       \
@@ -68,10 +67,16 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 %option bison-bridge
 %option bison-locations
 
+%x COMMENT_STATE
+
 %%
 
-"/*"			{ comment(yyscanner, yyg); }
-"//"[^\r\n]*            { /* skip C++ style comment */ }
+"/*"                 { BEGIN(COMMENT_STATE); }
+<COMMENT_STATE>"*/"  { BEGIN(INITIAL); }
+<COMMENT_STATE>[\n]  { yylloc->lines(); }
+<COMMENT_STATE>.     { }
+
+"//"[^\r\n]*         { /* skip C++ style comment */ }
 
 "enum"			{ return token::ENUM; }
 "extends"		{ return token::EXTENDS; }
@@ -156,20 +161,6 @@ L?\"(\\.|[^\\"])*\"	{ yylval->str = strdup(yytext); return token::STRING_LITERAL
 %%
 
 #pragma clang diagnostic pop
-
-void comment(yyscan_t yyscanner, yyguts_t *yyg) {
-    char c, c1;
-
-loop:
-    while ((c = yyinput(yyscanner)) != '*' && c != 0) {
-    }
-
-    if ((c1 = yyinput(yyscanner)) != '/' && c != 0)
-    {
-        unput(c1);
-        goto loop;
-    }
-}
 
 status_t parseFile(AST *ast) {
     FILE *file = fopen(ast->getFilename().c_str(), "rb");
