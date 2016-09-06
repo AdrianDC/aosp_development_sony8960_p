@@ -128,7 +128,7 @@ struct IExpression : virtual public RefBase {
     logand4 = 1, // (bool)((0 && 1) == 0)
   };
 
-  virtual bool isRemote() const { return false; } 
+  virtual bool isRemote() const { return false; }
 
   DECLARE_REGISTER_AND_GET_SERVICE(Expression)
 };
