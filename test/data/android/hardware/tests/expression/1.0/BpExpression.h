@@ -12,7 +12,7 @@ namespace V1_0 {
 struct BpExpression : public ::android::hardware::BpInterface<IHwExpression> {
   explicit BpExpression(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);
 
-  virtual bool isRemote() const { return true; } 
+  virtual bool isRemote() const { return true; }
 
   // Methods from IExpression follow.
 
