@@ -44,14 +44,12 @@ const std::string Type::decorateName(const std::string &name) const {
     std::string special = getSpecialTypeName();
 
     if(special.empty()) {
-        ss << getPreHidlType()
-           << name
-           << getPostHidlType();
+        ss << getHidlType();
     } else {
-        ss << special
-           << " "
-           << name;
+        ss << special;
     }
+
+    ss << " " << name;
 
     return ss.str();
 }
@@ -76,44 +74,41 @@ const std::string Type::cToHidlType(const std::string &cType) {
     return (*it).second;
 }
 
-const std::string Type::getPreHidlType() const {
+const std::string Type::getHidlType() const {
     if (mQualifiers == NULL) {
         return "";
     }
 
     std::stringstream ss;
 
-    for(auto* qualifier : *mQualifiers) {
-        switch(qualifier->qualification) {
+    for(auto it = mQualifiers->begin(); it != mQualifiers->end(); ++it) {
+        if (it != mQualifiers->begin()) {
+            ss << " ";
+        }
+
+        switch((*it)->qualification) {
             case Type::Qualifier::STRUCT:
             case Type::Qualifier::UNION:
             case Type::Qualifier::ENUM:
             case Type::Qualifier::POINTER:
             case Type::Qualifier::CONST:
                 ss << "/* "
-                   << Type::qualifierText(qualifier->qualification)
-                   << " */ ";
+                   << Type::qualifierText((*it)->qualification)
+                   << " */";
                 break;
             case Type::Qualifier::ID:
-                ss << cToHidlType(qualifier->id) << " ";
+                ss << cToHidlType((*it)->id);
                 break;
             case Type::Qualifier::GENERICS:
                 ss << "<"
-                   << qualifier->generics->decorateName("")
-                   << "> ";
+                   << (*it)->generics->decorateName("")
+                   << ">";
                 break;
             default: {
-                ss << Type::qualifierText(qualifier->qualification)
-                   << " ";
+                ss << Type::qualifierText((*it)->qualification);
             }
         }
     }
-
-    return ss.str();
-}
-
-const std::string Type::getPostHidlType() const {
-    std::stringstream ss;
 
     if (mArray != NULL) {
         ss << "[" << mArray->toString() << "]";
