@@ -33,16 +33,6 @@
 
 namespace android {
 
-static std::string upcase(const std::string &in) {
-    std::string out{in};
-
-    for (auto &ch : out) {
-        ch = toupper(ch);
-    }
-
-    return out;
-}
-
 status_t AST::generateCppImpl(const std::string &outputPath) const {
     status_t err = generateStubImplHeader(outputPath);
 
