@@ -95,8 +95,7 @@ private:
     static std::map<std::string, std::string> kCToHidlMap;
     static const std::string cToHidlType(const std::string &cType);
 
-    const std::string getPreHidlType() const;
-    const std::string getPostHidlType() const;
+    const std::string getHidlType() const;
 
     const std::string getRawQualifierList() const;
     const std::string getSpecialTypeName() const;
