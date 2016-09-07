@@ -217,6 +217,7 @@ Type *AST::lookupType(const char *name) {
     }
 
     Type *resolvedType = nullptr;
+    Type *returnedType = nullptr;
     FQName resolvedName;
 
     for (const auto &importedAST : mImportedASTs) {
@@ -236,6 +237,7 @@ Type *AST::lookupType(const char *name) {
             }
 
             resolvedType = match;
+            returnedType = resolvedType;
             resolvedName = matchingName;
 
             // Keep going even after finding a match.
@@ -255,6 +257,44 @@ Type *AST::lookupType(const char *name) {
         while (resolvedType->isTypeDef()) {
             resolvedType =
                 static_cast<TypeDef *>(resolvedType)->referencedType();
+        }
+
+        returnedType = resolvedType;
+
+        // If the resolved type is not an interface, we need to determine
+        // whether it is defined in types.hal, or in some other interface.  In
+        // the latter case, we need to emit a dependency for the interface in
+        // which the type is defined.
+        //
+        // Consider the following:
+        //    android.hardware.tests.foo@1.0::Record
+        //    android.hardware.tests.foo@1.0::IFoo.Folder
+        //    android.hardware.tests.foo@1.0::Folder
+        //
+        // If Record is an interface, then we keep track of it for the purpose
+        // of emitting dependencies in the target language (for example #include
+        // in C++).  If Record is a UDT, then we assume it is defined in
+        // types.hal in android.hardware.tests.foo@1.0.
+        //
+        // In the case of IFoo.Folder, the same applies.  If IFoo is an
+        // interface, we need to track this for the purpose of emitting
+        // dependencies.  If not, then it must have been defined in types.hal.
+        //
+        // In the case of just specifying Folder, the resolved type is
+        // android.hardware.tests.foo@1.0::IFoo.Folder, and the same logic as
+        // above applies.
+
+        if (!resolvedType->isInterface()) {
+            FQName ifc(resolvedName.package(),
+                       resolvedName.version(),
+                       resolvedName.names().at(0));
+            for (const auto &importedAST : mImportedASTs) {
+                FQName matchingName;
+                Type *match = importedAST->findDefinedType(ifc, &matchingName);
+                if (match != nullptr && match->isInterface()) {
+                    resolvedType = match;
+                }
+            }
         }
 
         if (!resolvedType->isInterface()) {
@@ -283,7 +323,7 @@ Type *AST::lookupType(const char *name) {
         }
     }
 
-    return resolvedType->ref();
+    return returnedType->ref();
 }
 
 Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
