@@ -27,6 +27,9 @@ LOCAL_CFLAGS := -O0 -g
 
 include $(BUILD_EXECUTABLE)
 
+ENABLE_HIDL_GEN_TEST := false
+
+ifeq ($(ENABLE_HIDL_GEN_TEST),true)
 # build for hidl_gen_test which verify hidl_gen generates expected output codes.
 include $(CLEAR_VARS)
 LOCAL_MODULE := hidl_gen_test
@@ -45,5 +48,6 @@ $(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-gen
 	@echo "host Test: $(PRIVATE_MODULE)"
 	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_CANONICAL_DIR) $(PRIVATE_OUT_DIR) $(PRIVATE_PACKAGE_ROOT)
 	$(hide) touch $@
+endif
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
