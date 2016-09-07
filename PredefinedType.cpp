@@ -27,7 +27,9 @@ PredefinedType::PredefinedType(const char *name)
 }
 
 std::string PredefinedType::getCppType(
-        StorageMode mode, std::string *extra) const {
+        StorageMode mode,
+        std::string *extra,
+        bool) const {
     extra->clear();
 
     const std::string base = mName;

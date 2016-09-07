@@ -25,7 +25,9 @@ namespace android {
 struct PredefinedType : public Type {
     PredefinedType(const char *name);
 
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
+    std::string getCppType(StorageMode mode,
+                           std::string *extra,
+                           bool specifyNamespaces) const override;
     std::string getJavaType() const override;
 
     void emitReaderWriter(

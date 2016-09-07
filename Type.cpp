@@ -64,7 +64,7 @@ bool Type::isValidEnumStorageType() const {
     return scalarType->isValidEnumStorageType();
 }
 
-std::string Type::getCppType(StorageMode, std::string *) const {
+std::string Type::getCppType(StorageMode, std::string *, bool) const {
     CHECK(!"Should not be here");
     return std::string();
 }
@@ -266,16 +266,19 @@ bool Type::resultNeedsDeref() const {
     return false;
 }
 
-std::string Type::getCppType(std::string *extra) const {
-    return getCppType(StorageMode_Stack, extra);
+std::string Type::getCppType(std::string *extra,
+                             bool specifyNamespaces) const {
+    return getCppType(StorageMode_Stack, extra, specifyNamespaces);
 }
 
-std::string Type::getCppResultType(std::string *extra) const {
-    return getCppType(StorageMode_Result, extra);
+std::string Type::getCppResultType(std::string *extra,
+                                   bool specifyNamespaces) const {
+    return getCppType(StorageMode_Result, extra, specifyNamespaces);
 }
 
-std::string Type::getCppArgumentType(std::string *extra) const {
-    return getCppType(StorageMode_Argument, extra);
+std::string Type::getCppArgumentType(std::string *extra,
+                                     bool specifyNamespaces) const {
+    return getCppType(StorageMode_Argument, extra, specifyNamespaces);
 }
 
 void Type::emitJavaReaderWriterWithSuffix(

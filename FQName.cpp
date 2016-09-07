@@ -203,6 +203,13 @@ std::string FQName::cppNamespace() const {
     return out;
 }
 
+std::string FQName::cppLocalName() const {
+    std::vector<std::string> components;
+    SplitString(mName, '.', &components);
+
+    return JoinStrings(components, "::");
+}
+
 std::string FQName::cppName() const {
     std::string out = cppNamespace();
 

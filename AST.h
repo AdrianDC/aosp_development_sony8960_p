@@ -151,13 +151,16 @@ private:
 
     status_t generateMethods(Formatter &out,
                              const std::string &className,
-                             MethodLocation type) const;
+                             MethodLocation type,
+                             bool specifyNamespaces) const;
     status_t generateStubMethod(Formatter &out,
                                 const std::string &className,
-                                const Method *method) const;
+                                const Method *method,
+                                bool specifyNamespaces) const;
     status_t generateProxyMethod(Formatter &out,
                                  const std::string &className,
-                                 const Method *method) const;
+                                 const Method *method,
+                                 bool specifyNamespaces) const;
 
     status_t generateProxySource(
             Formatter &out, const std::string &baseName) const;
