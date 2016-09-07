@@ -17,7 +17,9 @@
 #include "FQName.h"
 
 #include <android-base/logging.h>
+#include <iostream>
 #include <regex>
+#include <sstream>
 
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "([.]" RE_COMPONENT ")*"
@@ -100,6 +102,16 @@ std::string FQName::version() const {
 
 std::string FQName::name() const {
     return mName;
+}
+
+std::vector<std::string> FQName::names() const {
+    std::vector<std::string> res {};
+    std::istringstream ss(name());
+    std::string s;
+    while (std::getline(ss, s, '.')) {
+        res.push_back(s);
+    }
+    return res;
 }
 
 void FQName::applyDefaults(
