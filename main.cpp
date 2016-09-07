@@ -338,6 +338,17 @@ static status_t generateMakefileForPackage(
             << hidl_gen
             << "$(HOST_EXECUTABLE_SUFFIX)";
 
+        if (!importedPackages.empty()) {
+            out << "\n"
+                << "\nLOCAL_JAVA_LIBRARIES := \\";
+            out.indent();
+            for (const auto &importedPackage : importedPackages) {
+                out << "\n" << makeLibraryName(importedPackage) << "-java \\";
+            }
+            out << "\n";
+            out.unindent();
+        }
+
         generateMakefileSectionForLanguage(
                 out,
                 coordinator,
