@@ -48,7 +48,7 @@ struct FooCallback : public IFooCallback {
     Status reportResults(int64_t ns, reportResults_cb cb) override;
     Status youBlockedMeFor(const int64_t ns[3]) override;
 
-    static constexpr nsecs_t DELAY_S = 5;
+    static constexpr nsecs_t DELAY_S = 1;
     static constexpr nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
     static constexpr nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
     static constexpr nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
