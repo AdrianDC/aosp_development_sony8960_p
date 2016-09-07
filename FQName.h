@@ -41,7 +41,33 @@ struct FQName {
 
     std::string package() const;
     std::string version() const;
+
+    // The next two methods return the name part of the FQName, that is, the
+    // part after the version field.  For example:
+    //
+    // package android.hardware.tests.foo@1.0;
+    // interface IFoo {
+    //    struct bar {
+    //        struct baz {
+    //            ...
+    //        };
+    //    };
+    // };
+    //
+    // package android.hardware.tests.bar@1.0;
+    // import android.hardware.tests.foo@1.0;
+    // interface {
+    //    struct boo {
+    //        IFoo.bar.baz base;
+    //    };
+    // }
+    //
+    // The FQName for base is android.hardware.tests.foo@1.0::IFoo.bar.baz; so
+    // FQName::name() will return "IFoo.bar.baz". FQName::names() will return
+    // std::vector<std::string>{"IFoo","bar","baz"}
+
     std::string name() const;
+    std::vector<std::string> names() const;
 
     bool isFullyQualified() const;
 

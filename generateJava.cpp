@@ -93,6 +93,11 @@ status_t AST::generateJavaTypes(
 
         out << "import java.util.Vector;\n\n";
 
+        for (const auto &item : mImportedNamesForJava) {
+            out << "import " << item.javaName() << ";\n";
+        }
+        out << "\n";
+
         status_t err =
             type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
 
