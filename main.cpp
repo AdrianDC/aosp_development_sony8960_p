@@ -77,6 +77,9 @@ static status_t generateSourcesForFile(
     if (lang == "c++") {
         return ast->generateCpp(outputDir);
     }
+    if (lang == "c++-impl") {
+        return ast->generateCppImpl(outputDir);
+    }
     if (lang == "java") {
         return ast->generateJava(outputDir, limitToType);
     }
@@ -465,6 +468,27 @@ static std::vector<OutputHandler> formats = {
             }
         }
     },
+
+    {"c++-impl",
+     true /* mNeedsOutputDir */,
+     validateForSource,
+     [](const FQName &fqName,
+        const char *hidl_gen, Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            if (fqName.isFullyQualified()) {
+                        return generateSourcesForFile(fqName,
+                                                      hidl_gen,
+                                                      coordinator,
+                                                      outputDir, "c++-impl");
+            } else {
+                        return generateSourcesForPackage(fqName,
+                                                         hidl_gen,
+                                                         coordinator,
+                                                         outputDir, "c++-impl");
+            }
+        }
+    },
+
 
     {"java",
      true /* mNeedsOutputDir */,
