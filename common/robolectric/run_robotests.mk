@@ -12,8 +12,8 @@
 #   ROBOTEST_RUN_INDIVIDUALLY
 #
 #
-# If ROBOTEST_FAILURE_FATAL is set to false then failing tests will not cause a
-# build failure. Otherwise failures will be fatal.
+# If ROBOTEST_FAILURE_FATAL is set to true then failing tests will cause a
+# build failure. Otherwise failures will be logged but ignored by make.
 #
 # If ROBOTEST_FILTER is set to a regex then only tests matching that pattern
 # will be run. This currently only works at the class level.
@@ -49,10 +49,10 @@ ifneq ($(strip $(LOCAL_ROBOTEST_FAILURE_FATAL)),)
         my_failure_fatal := false
     endif
 else
-    ifeq ($(strip $(ROBOTEST_FAILURE_FATAL)),false)
-        my_failure_fatal := false
-    else
+    ifeq ($(strip $(ROBOTEST_FAILURE_FATAL)),true)
         my_failure_fatal := true
+    else
+        my_failure_fatal := false
     endif
 endif
 # The timeout for the command. A value of '0' means no timeout. The default is
