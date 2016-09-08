@@ -159,6 +159,31 @@ static void generateMakefileSectionForLanguageAndType(
     out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
     out << "\n$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/"
         << fqName.name() << ".hal";
+
+    {
+        AST *ast = coordinator->parse(fqName);
+        CHECK(ast != nullptr);
+        const std::set<FQName>& refs = ast->getImportedNames();
+        for (auto depFQName : refs) {
+            // If the package of depFQName is the same as this fqName's package,
+            // then add it explicitly as a .hal dependency within the same
+            // package.
+            if (fqName.package() == depFQName.package() &&
+                fqName.version() == depFQName.version()) {
+                    // PRIVATE_DEPS is not actually being used in the
+                    // auto-generated file, but is necessary if the build rule
+                    // ever needs to use the dependency information, since the
+                    // built-in Make variables are not supported in the Android
+                    // build system.
+                    out << "\n$(GEN): PRIVATE_DEPS += $(LOCAL_PATH)/"
+                        << depFQName.name() << ".hal";
+                    // This is the actual dependency.
+                    out << "\n$(GEN): $(LOCAL_PATH)/"
+                        << depFQName.name() << ".hal";
+            }
+        }
+    }
+
     out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
         << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
     out.indent();
