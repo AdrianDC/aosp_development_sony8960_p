@@ -58,7 +58,7 @@ void Method::generateCppSignature(Formatter &out,
     const TypedVar *elidedReturn = canElideCallback();
 
     if (elidedReturn == nullptr) {
-        out << "::android::hardware::Status ";
+        out << "::android::hardware::Return<void> ";
     } else {
         std::string extra;
         out << "::android::hardware::Return<"
