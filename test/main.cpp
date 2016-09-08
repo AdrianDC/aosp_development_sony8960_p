@@ -384,12 +384,12 @@ static inline bool EXPECT_ARRAYEQ(const T arr1, const S arr2, size_t size) {
 
 
 template <class T>
-static void startServer(T server, const android::hardware::hidl_version kVersion,
+static void startServer(T server,
                         const char *serviceName,
                         const char *tag) {
     using namespace android::hardware;
     ALOGI("SERVER(%s) registering", tag);
-    server->registerAsService(serviceName, kVersion);
+    server->registerAsService(serviceName);
     ALOGI("SERVER(%s) starting", tag);
     ProcessState::self()->setThreadPoolMaxThreadCount(0);
     ProcessState::self()->startThreadPool();
@@ -408,15 +408,13 @@ public:
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
         using namespace android::hardware;
-        const hidl_version kVersion = make_hidl_version(1, 0);
-
-        foo = IFoo::getService("foo", kVersion);
+        foo = IFoo::getService("foo");
         CHECK(foo != NULL);
 
-        bar = IBar::getService("foo", kVersion);
+        bar = IBar::getService("foo");
         CHECK(bar != NULL);
 
-        fooCb = IFooCallback::getService("foo callback", kVersion);
+        fooCb = IFooCallback::getService("foo callback");
         CHECK(fooCb != NULL);
 
         ALOGI("Test setup complete");
@@ -434,15 +432,13 @@ public:
         // use fork to create and kill to destroy server processes.
         if ((barServerPid = fork()) == 0) {
             // Fear me, I am a child.
-            startServer(new Bar, android::hardware::make_hidl_version(1, 0),
-                "foo", "Bar"); // never returns
+            startServer(new Bar, "foo", "Bar"); // never returns
             return;
         }
 
         if ((fooCallbackServerPid = fork()) == 0) {
             // Fear me, I am a second child.
-            startServer(new FooCallback, android::hardware::make_hidl_version(1, 0),
-                "foo callback", "FooCalback"); // never returns
+            startServer(new FooCallback, "foo callback", "FooCalback"); // never returns
             return;
         }
 
