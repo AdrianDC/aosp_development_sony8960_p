@@ -388,9 +388,8 @@ static void startServer(T server, const android::hardware::hidl_version kVersion
                         const char *serviceName,
                         const char *tag) {
     using namespace android::hardware;
-    using android::String16;
     ALOGI("SERVER(%s) registering", tag);
-    server->registerAsService(String16(serviceName), kVersion);
+    server->registerAsService(serviceName, kVersion);
     ALOGI("SERVER(%s) starting", tag);
     ProcessState::self()->setThreadPoolMaxThreadCount(0);
     ProcessState::self()->startThreadPool();
@@ -409,16 +408,15 @@ public:
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
         using namespace android::hardware;
-        using android::String16;
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        foo = IFoo::getService(String16("foo"), kVersion);
+        foo = IFoo::getService("foo", kVersion);
         CHECK(foo != NULL);
 
-        bar = IBar::getService(String16("foo"), kVersion);
+        bar = IBar::getService("foo", kVersion);
         CHECK(bar != NULL);
 
-        fooCb = IFooCallback::getService(String16("foo callback"), kVersion);
+        fooCb = IFooCallback::getService("foo callback", kVersion);
         CHECK(fooCb != NULL);
 
         ALOGI("Test setup complete");
