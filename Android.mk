@@ -15,6 +15,7 @@ LOCAL_SRC_FILES :=              \
     Formatter.cpp               \
     FQName.cpp                  \
     generateCpp.cpp             \
+    generateCppImpl.cpp         \
     generateJava.cpp            \
     generateVts.cpp             \
     GenericBinder.cpp           \
