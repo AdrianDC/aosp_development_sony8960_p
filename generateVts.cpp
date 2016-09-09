@@ -29,12 +29,6 @@
 
 namespace android {
 
-// Remove the double quotas in a string.
-static std::string removeQuotes(const std::string in) {
-    std::string out{in};
-    return out.substr(1, out.size() - 2);
-}
-
 status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
     std::set<AST *> allImportedASTs;
     return emitVtsTypeDeclarationsHelper(out, &allImportedASTs);

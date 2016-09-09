@@ -116,10 +116,6 @@ struct FQName {
             std::vector<std::string> *components,
             bool cpp_compatible) const;
 
-    static std::string JoinStrings(
-            const std::vector<std::string> &components,
-            const std::string &separator);
-
 private:
     bool mValid;
     std::string mPackage;
