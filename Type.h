@@ -21,11 +21,13 @@
 #include <android-base/macros.h>
 #include <string>
 #include <utils/Errors.h>
+#include <set>
 
 namespace android {
 
 struct Formatter;
 struct ScalarType;
+struct FQName;
 
 struct Type {
     Type();
@@ -50,13 +52,30 @@ struct Type {
         StorageMode_Result
     };
     virtual std::string getCppType(
-            StorageMode mode, std::string *extra) const;
+            StorageMode mode,
+            std::string *extra,
+            bool specifyNamespaces) const;
+
+    /* gets all hidl-defined types used when this item is
+     * printed using getCppType or getJavaType. Examples:
+     *
+     * vec<vec<vec<IFoo>>>: IFoo is added to the set
+     * (the hypothetical type pair)
+     * pair<IFoo, IBar>: IFoo and IBar are added to the set
+     * int32_t: nothing is added to the set
+     * string: nothing is added to the set
+     * IFoo: IFoo is added to the set
+     */
+    virtual void addNamedTypesToSet(std::set<const FQName> &set) const = 0;
 
     // Convenience, gets StorageMode_Stack type.
-    std::string getCppType(std::string *extra) const;
+    std::string getCppType(std::string *extra,
+                           bool specifyNamespaces = true) const;
 
-    std::string getCppResultType(std::string *extra) const;
-    std::string getCppArgumentType(std::string *extra) const;
+    std::string getCppResultType(std::string *extra,
+                                 bool specifyNamespaces = true) const;
+    std::string getCppArgumentType(std::string *extra,
+                                   bool specifyNamespaces = true) const;
 
     virtual std::string getJavaType() const = 0;
     virtual std::string getJavaWrapperType() const;

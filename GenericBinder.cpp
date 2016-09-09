@@ -26,10 +26,20 @@ bool GenericBinder::isBinder() const {
     return true;
 }
 
+void GenericBinder::addNamedTypesToSet(std::set<const FQName> &) const {
+    // do nothing
+}
+
 std::string GenericBinder::getCppType(
-        StorageMode mode, std::string *extra) const {
+        StorageMode mode,
+        std::string *extra,
+        bool specifyNamespaces) const {
     extra->clear();
-    const std::string base = "::android::sp<::android::hardware::IBinder>";
+    const std::string base =
+          std::string(specifyNamespaces ? "::android::" : "")
+        + "sp<"
+        + std::string(specifyNamespaces ? "::android::hardware::" : "")
+        + "IBinder>";
 
     switch (mode) {
         case StorageMode_Stack:

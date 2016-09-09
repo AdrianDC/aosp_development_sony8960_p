@@ -22,10 +22,18 @@ namespace android {
 
 StringType::StringType() {}
 
-std::string StringType::getCppType(StorageMode mode, std::string *extra) const {
+void StringType::addNamedTypesToSet(std::set<const FQName> &) const {
+    // do nothing
+}
+
+std::string StringType::getCppType(StorageMode mode,
+                                   std::string *extra,
+                                   bool specifyNamespaces) const {
     extra->clear();
 
-    const std::string base = "::android::hardware::hidl_string";
+    const std::string base =
+          std::string(specifyNamespaces ? "::android::hardware::" : "")
+        + "hidl_string";
 
     switch (mode) {
         case StorageMode_Stack:

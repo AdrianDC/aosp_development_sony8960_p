@@ -61,9 +61,15 @@ std::string Interface::getBaseName() const {
     return localName().substr(1);
 }
 
-std::string Interface::getCppType(StorageMode mode, std::string *extra) const {
+std::string Interface::getCppType(StorageMode mode,
+                                  std::string *extra,
+                                  bool specifyNamespaces) const {
     extra->clear();
-    const std::string base = "::android::sp<" + fullName() + ">";
+    const std::string base =
+          std::string(specifyNamespaces ? "::android::" : "")
+        + "sp<"
+        + (specifyNamespaces ? fullName() : partialCppName())
+        + ">";
 
     switch (mode) {
         case StorageMode_Stack:

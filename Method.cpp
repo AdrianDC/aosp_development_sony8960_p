@@ -52,7 +52,8 @@ const AnnotationVector &Method::annotations() const {
 }
 
 void Method::generateCppSignature(Formatter &out,
-                                  const std::string &className) const {
+                                  const std::string &className,
+                                  bool specifyNamespaces) const {
     const bool returnsValue = !results().empty();
 
     const TypedVar *elidedReturn = canElideCallback();
@@ -72,7 +73,7 @@ void Method::generateCppSignature(Formatter &out,
 
     out << name()
         << "("
-        << GetArgSignature(args());
+        << GetArgSignature(args(), specifyNamespaces);
 
     if (returnsValue && elidedReturn == nullptr) {
         if (!args().empty()) {
@@ -86,7 +87,8 @@ void Method::generateCppSignature(Formatter &out,
 }
 
 // static
-std::string Method::GetArgSignature(const std::vector<TypedVar *> &args) {
+std::string Method::GetArgSignature(const std::vector<TypedVar *> &args,
+                                    bool specifyNamespaces) {
     bool first = true;
     std::string out;
     for (const auto &arg : args) {
@@ -95,7 +97,8 @@ std::string Method::GetArgSignature(const std::vector<TypedVar *> &args) {
         }
 
         std::string extra;
-        out += arg->type().getCppArgumentType(&extra);
+        out += arg->type().getCppArgumentType(&extra,
+                                              specifyNamespaces);
         out += " ";
         out += arg->name();
         out += extra;

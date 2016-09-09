@@ -33,7 +33,11 @@ bool ScalarType::isValidEnumStorageType() const {
     return mKind >= KIND_INT8 && mKind <= KIND_UINT64;
 }
 
-std::string ScalarType::getCppType(StorageMode, std::string *extra) const {
+void ScalarType::addNamedTypesToSet(std::set<const FQName> &) const {
+    // do nothing
+}
+
+std::string ScalarType::getCppType(StorageMode, std::string *extra, bool) const {
     static const char *const kName[] = {
         "bool",
         "void *",
