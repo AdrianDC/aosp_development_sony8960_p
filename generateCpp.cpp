@@ -224,7 +224,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             out << "using "
                 << method->name()
                 << "_cb = std::function<void("
-                << Method::GetSignature(method->results())
+                << Method::GetArgSignature(method->results())
                 << ")>;\n";
         }
 
@@ -248,7 +248,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             out << method->name()
                 << "("
-                << Method::GetSignature(method->args());
+                << Method::GetArgSignature(method->args());
 
             if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
@@ -413,8 +413,59 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope->emitTypeDeclarations(out);
 }
 
-status_t AST::generateHeaderMethodSignatures(
-        Formatter &out, bool stub) const {
+status_t AST::generateStubMethod(Formatter &out,
+                                 const std::string &className,
+                                 const Method *method) const {
+    out << "inline ";
+
+    method->generateCppSignature(out, className);
+
+    const bool returnsValue = !method->results().empty();
+    const TypedVar *elidedReturn = method->canElideCallback();
+    out << " {\n";
+    out.indent();
+    out << "return mImpl->"
+        << method->name()
+        << "(";
+    bool first = true;
+    for (const auto &arg : method->args()) {
+        if (!first) {
+            out << ", ";
+        }
+        first = false;
+        out << arg->name();
+    }
+    if (returnsValue && elidedReturn == nullptr) {
+        if (!method->args().empty()) {
+            out << ", ";
+        }
+
+        out << "_hidl_cb";
+    }
+    out << ");\n";
+    out.unindent();
+    out << "}";
+
+    out << ";\n";
+
+    return OK;
+}
+
+status_t AST::generateProxyMethod(Formatter &out,
+                                  const std::string &className,
+                                  const Method *method) const {
+
+    method->generateCppSignature(out, className);
+    out << " override;\n";
+
+    return OK;
+}
+
+status_t AST::generateMethods(
+        Formatter &out,
+        const std::string &className,
+        MethodLocation type) const {
+
     const Interface *iface = mRootScope->getInterface();
 
     std::vector<const Interface *> chain;
@@ -431,61 +482,25 @@ status_t AST::generateHeaderMethodSignatures(
             << " follow.\n";
 
         for (const auto &method : superInterface->methods()) {
-            if (stub) {
-                out << "inline ";
-            }
-            const bool returnsValue = !method->results().empty();
-
-            const TypedVar *elidedReturn = method->canElideCallback();
-
-            if (elidedReturn == nullptr) {
-                out << "::android::hardware::Status ";
-            } else {
-                std::string extra;
-                out << "::android::hardware::Return<";
-                out << elidedReturn->type().getCppResultType(&extra) << "> ";
-            }
-            out << method->name()
-                << "("
-                << Method::GetSignature(method->args());
-
-            if (returnsValue && elidedReturn == nullptr) {
-                if (!method->args().empty()) {
-                    out << ", ";
-                }
-
-                out << method->name() << "_cb _hidl_cb";
+            status_t err;
+            switch(type) {
+                case STUB_HEADER:
+                    err = generateStubMethod(out,
+                                             className,
+                                             method);
+                    break;
+                case PROXY_HEADER:
+                    err = generateProxyMethod(out,
+                                              className,
+                                              method);
+                    break;
+                default:
+                    err = UNKNOWN_ERROR;
             }
 
-            out << ") ";
-            if (stub) {
-                out << " {\n";
-                out.indent();
-                out << "return mImpl->"
-                    << method->name()
-                    << "(";
-                bool first = true;
-                for (const auto &arg : method->args()) {
-                    if (!first) {
-                        out << ", ";
-                    }
-                    first = false;
-                    out << arg->name();
-                }
-                if (returnsValue && elidedReturn == nullptr) {
-                    if (!method->args().empty()) {
-                        out << ", ";
-                    }
-
-                    out << "_hidl_cb";
-                }
-                out << ");\n";
-                out.unindent();
-                out << "}";
-            } else {
-                out << "override";
+            if (err != OK) {
+                return err;
             }
-            out << ";\n";
         }
 
         out << "\n";
@@ -561,7 +576,9 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out.unindent();
     out.unindent();
 
-    generateHeaderMethodSignatures(out, true); // stub
+    generateMethods(out,
+                    "" /* class name */,
+                    MethodLocation::STUB_HEADER);
     out.unindent();
 
     out << "};\n\n";
@@ -633,7 +650,9 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     out << "virtual bool isRemote() const { return true; }\n\n";
 
-    generateHeaderMethodSignatures(out, false); // proxy
+    generateMethods(out,
+                    "" /* class name */,
+                    MethodLocation::PROXY_HEADER);
 
     out.unindent();
 
@@ -797,32 +816,12 @@ status_t AST::generateProxySource(
         const Interface *superInterface = *it;
 
         for (const auto &method : superInterface->methods()) {
+            method->generateCppSignature(out, klassName);
+
             const bool returnsValue = !method->results().empty();
-
             const TypedVar *elidedReturn = method->canElideCallback();
-            if (elidedReturn) {
-                std::string extra;
-                out << "::android::hardware::Return<";
-                out << elidedReturn->type().getCppResultType(&extra) << "> ";
-            } else {
-                out << "::android::hardware::Status ";
-            }
 
-            out << klassName
-                << "::"
-                << method->name()
-                << "("
-                << Method::GetSignature(method->args());
-
-            if (returnsValue && elidedReturn == nullptr) {
-                if (!method->args().empty()) {
-                    out << ", ";
-                }
-
-                out << method->name() << "_cb _hidl_cb";
-            }
-
-            out << ") {\n";
+            out << "{\n";
 
             out.indent();
 

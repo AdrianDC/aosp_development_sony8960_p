@@ -144,8 +144,20 @@ private:
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;
 
-    status_t generateHeaderMethodSignatures(
-            Formatter &out, bool abstract) const;
+    enum MethodLocation {
+        PROXY_HEADER,
+        STUB_HEADER
+    };
+
+    status_t generateMethods(Formatter &out,
+                             const std::string &className,
+                             MethodLocation type) const;
+    status_t generateStubMethod(Formatter &out,
+                                const std::string &className,
+                                const Method *method) const;
+    status_t generateProxyMethod(Formatter &out,
+                                 const std::string &className,
+                                 const Method *method) const;
 
     status_t generateProxySource(
             Formatter &out, const std::string &baseName) const;
