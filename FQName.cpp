@@ -193,6 +193,28 @@ std::string FQName::JoinStrings(
     return out;
 }
 
+const FQName FQName::getTopLevelType() const {
+    auto idx = mName.find('.');
+
+    if (idx == std::string::npos) {
+        return *this;
+    }
+
+    return FQName(mPackage, mVersion, mName.substr(0, idx));
+}
+
+std::string FQName::tokenName() const {
+    std::vector<std::string> components;
+    getPackageAndVersionComponents(&components, true /* cpp_compatible */);
+
+    std::vector<std::string> nameComponents;
+    SplitString(mName, '.', &nameComponents);
+
+    components.insert(components.end(), nameComponents.begin(), nameComponents.end());
+
+    return JoinStrings(components, "_");
+}
+
 std::string FQName::cppNamespace() const {
     std::vector<std::string> components;
     getPackageAndVersionComponents(&components, true /* cpp_compatible */);

@@ -72,6 +72,7 @@ struct AST {
     void addImportedAST(AST *ast);
 
     status_t generateCpp(const std::string &outputPath) const;
+    status_t generateCppImpl(const std::string &outputPath) const;
 
     status_t generateJava(
             const std::string &outputPath, const char *limitToType) const;
@@ -146,8 +147,13 @@ private:
 
     enum MethodLocation {
         PROXY_HEADER,
-        STUB_HEADER
+        STUB_HEADER,
+        IMPL_HEADER,
+        IMPL_SOURCE
     };
+
+    status_t generateStubImplHeader(const std::string &outputPath) const;
+    status_t generateStubImplSource(const std::string &outputPath) const;
 
     status_t generateMethods(Formatter &out,
                              const std::string &className,
@@ -157,10 +163,20 @@ private:
                                 const std::string &className,
                                 const Method *method,
                                 bool specifyNamespaces) const;
-    status_t generateProxyMethod(Formatter &out,
-                                 const std::string &className,
-                                 const Method *method,
-                                 bool specifyNamespaces) const;
+    status_t generateProxyDeclaration(Formatter &out,
+                                      const std::string &className,
+                                      const Method *method,
+                                      bool specifyNamespaces) const;
+    status_t generateStubImplDeclaration(Formatter &out,
+                                         const std::string &className,
+                                         const Method *method,
+                                         bool specifyNamespaces) const;
+    status_t generateStubImplMethod(Formatter &out,
+                                    const std::string &className,
+                                    const Method *method,
+                                    bool specifyNamespaces) const;
+
+    void generateFetchSymbol(Formatter &out, const std::string &ifaceName) const;
 
     status_t generateProxySource(
             Formatter &out, const std::string &baseName) const;
