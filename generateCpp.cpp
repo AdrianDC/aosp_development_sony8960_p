@@ -18,14 +18,14 @@
 
 #include "Coordinator.h"
 #include "EnumType.h"
-#include "Formatter.h"
 #include "Interface.h"
 #include "Method.h"
 #include "ScalarType.h"
 #include "Scope.h"
-#include "StringHelper.h"
 
 #include <algorithm>
+#include <hidl-util/StringHelper.h>
+#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 #include <string>
 #include <vector>

@@ -17,12 +17,12 @@
 #include "AST.h"
 
 #include "Coordinator.h"
-#include "Formatter.h"
 #include "Interface.h"
 #include "Method.h"
 #include "Scope.h"
-#include "StringHelper.h"
 
+#include <hidl-util/StringHelper.h>
+#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {

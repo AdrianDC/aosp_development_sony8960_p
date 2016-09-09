@@ -20,7 +20,7 @@
 
 #include <android-base/logging.h>
 #include <iterator>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <sys/stat.h>
 
 extern android::status_t parseFile(android::AST *ast);
