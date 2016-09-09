@@ -50,6 +50,10 @@ bool Type::isNamedType() const {
     return false;
 }
 
+bool Type::isCompoundType() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
