@@ -33,7 +33,7 @@ using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::Return;
-using ::android::hardware::Status;
+using ::android::hardware::Void;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::sp;
@@ -42,11 +42,11 @@ using ::android::Condition;
 
 struct FooCallback : public IFooCallback {
     FooCallback() : invokeInfo{}, mLock{}, mCond{} {}
-    Status heyItsYou(const sp<IFooCallback> &cb) override;
+    Return<void> heyItsYou(const sp<IFooCallback> &cb) override;
     Return<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
-    Status heyItsTheMeaningOfLife(uint8_t tmol) override;
-    Status reportResults(int64_t ns, reportResults_cb cb) override;
-    Status youBlockedMeFor(const int64_t ns[3]) override;
+    Return<void> heyItsTheMeaningOfLife(uint8_t tmol) override;
+    Return<void> reportResults(int64_t ns, reportResults_cb cb) override;
+    Return<void> youBlockedMeFor(const int64_t ns[3]) override;
 
     static constexpr nsecs_t DELAY_S = 1;
     static constexpr nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
@@ -58,7 +58,7 @@ struct FooCallback : public IFooCallback {
     Condition mCond;
 };
 
-Status FooCallback::heyItsYou(
+Return<void> FooCallback::heyItsYou(
         const sp<IFooCallback> &_cb) {
     nsecs_t start = systemTime();
     ALOGI("SERVER(FooCallback) heyItsYou cb = %p", _cb.get());
@@ -67,7 +67,7 @@ Status FooCallback::heyItsYou(
     invokeInfo[0].timeNs = systemTime() - start;
     mCond.signal();
     mLock.unlock();
-    return Status::ok();
+    return Void();
 }
 
 Return<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
@@ -83,7 +83,7 @@ Return<bool> FooCallback::heyItsYouIsntIt(const sp<IFooCallback> &_cb) {
     return true;
 }
 
-Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
+Return<void> FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
     nsecs_t start = systemTime();
     ALOGI("SERVER(FooCallback) heyItsTheMeaningOfLife = %d sleeping for %" PRId64 " seconds", tmol, DELAY_S);
     sleep(DELAY_S);
@@ -93,10 +93,10 @@ Status FooCallback::heyItsTheMeaningOfLife(uint8_t tmol) {
     invokeInfo[2].timeNs = systemTime() - start;
     mCond.signal();
     mLock.unlock();
-    return Status::ok();
+    return Void();
 }
 
-Status FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
+Return<void> FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
     ALOGI("SERVER(FooCallback) reportResults(%" PRId64 " seconds)", nanoseconds_to_seconds(ns));
     nsecs_t leftToWaitNs = ns;
     mLock.lock();
@@ -113,18 +113,18 @@ Status FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
     }
     mLock.unlock();
     cb(leftToWaitNs, invokeInfo);
-    return Status::ok();
+    return Void();
 }
 
-Status FooCallback::youBlockedMeFor(const int64_t ns[3]) {
+Return<void> FooCallback::youBlockedMeFor(const int64_t ns[3]) {
     for (size_t i = 0; i < 3; i++) {
         invokeInfo[i].callerBlockedNs = ns[i];
     }
-    return Status::ok();
+    return Void();
 }
 
 struct Bar : public IBar {
-    Status doThis(float param) override;
+    Return<void> doThis(float param) override;
 
     Return<int32_t> doThatAndReturnSomething(int64_t param) override;
 
@@ -134,41 +134,41 @@ struct Bar : public IBar {
             float c,
             double d) override;
 
-    Status doSomethingElse(
+    Return<void> doSomethingElse(
             const int32_t param[15], doSomethingElse_cb _cb) override;
 
-    Status doStuffAndReturnAString(
+    Return<void> doStuffAndReturnAString(
             doStuffAndReturnAString_cb _cb) override;
 
-    Status mapThisVector(
+    Return<void> mapThisVector(
             const hidl_vec<int32_t> &param, mapThisVector_cb _cb) override;
 
-    Status callMe(
+    Return<void> callMe(
             const sp<IFooCallback> &cb) override;
 
     Return<SomeEnum> useAnEnum(SomeEnum param) override;
 
-    Status haveAGooberVec(const hidl_vec<Goober>& param) override;
-    Status haveAGoober(const Goober &g) override;
-    Status haveAGooberArray(const Goober lots[20]) override;
+    Return<void> haveAGooberVec(const hidl_vec<Goober>& param) override;
+    Return<void> haveAGoober(const Goober &g) override;
+    Return<void> haveAGooberArray(const Goober lots[20]) override;
 
-    Status haveATypeFromAnotherFile(const Abc &def) override;
+    Return<void> haveATypeFromAnotherFile(const Abc &def) override;
 
-    Status haveSomeStrings(
+    Return<void> haveSomeStrings(
             const hidl_string array[3],
             haveSomeStrings_cb _cb) override;
 
-    Status haveAStringVec(
+    Return<void> haveAStringVec(
             const hidl_vec<hidl_string> &vector,
             haveAStringVec_cb _cb) override;
 
-    Status thisIsNew() override;
+    Return<void> thisIsNew() override;
 };
 
-Status Bar::doThis(float param) {
+Return<void> Bar::doThis(float param) {
     ALOGI("SERVER(Bar) doThis(%.2f)", param);
 
-    return Status::ok();
+    return Void();
 }
 
 Return<int32_t> Bar::doThatAndReturnSomething(
@@ -188,7 +188,7 @@ Return<double> Bar::doQuiteABit(
     return 666.5;
 }
 
-Status Bar::doSomethingElse(
+Return<void> Bar::doSomethingElse(
         const int32_t param[15], doSomethingElse_cb _cb) {
     ALOGI("SERVER(Bar) doSomethingElse(...)");
 
@@ -202,10 +202,10 @@ Status Bar::doSomethingElse(
 
     _cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::doStuffAndReturnAString(
+Return<void> Bar::doStuffAndReturnAString(
         doStuffAndReturnAString_cb _cb) {
     ALOGI("SERVER(Bar) doStuffAndReturnAString");
 
@@ -214,10 +214,10 @@ Status Bar::doStuffAndReturnAString(
 
     _cb(s);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::mapThisVector(
+Return<void> Bar::mapThisVector(
         const hidl_vec<int32_t> &param, mapThisVector_cb _cb) {
     ALOGI("SERVER(Bar) mapThisVector");
 
@@ -230,10 +230,10 @@ Status Bar::mapThisVector(
 
     _cb(out);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::callMe(
+Return<void> Bar::callMe(
         const sp<IFooCallback> &cb) {
     ALOGI("SERVER(Bar) callMe %p", cb.get());
 
@@ -274,7 +274,7 @@ Status Bar::callMe(
               "IFooCallback::heyYouBlockedMeFor", cb.get());
     }
 
-    return Status::ok();
+    return Void();
 }
 
 Return<Bar::SomeEnum> Bar::useAnEnum(SomeEnum param) {
@@ -283,31 +283,31 @@ Return<Bar::SomeEnum> Bar::useAnEnum(SomeEnum param) {
     return SomeEnum::goober;
 }
 
-Status Bar::haveAGooberVec(const hidl_vec<Goober>& param) {
+Return<void> Bar::haveAGooberVec(const hidl_vec<Goober>& param) {
     ALOGI("SERVER(Bar) haveAGooberVec &param = %p", &param);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::haveAGoober(const Goober &g) {
+Return<void> Bar::haveAGoober(const Goober &g) {
     ALOGI("SERVER(Bar) haveaGoober g=%p", &g);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::haveAGooberArray(const Goober lots[20]) {
+Return<void> Bar::haveAGooberArray(const Goober lots[20]) {
     ALOGI("SERVER(Bar) haveAGooberArray lots = %p", lots);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::haveATypeFromAnotherFile(const Abc &def) {
+Return<void> Bar::haveATypeFromAnotherFile(const Abc &def) {
     ALOGI("SERVER(Bar) haveATypeFromAnotherFile def=%p", &def);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::haveSomeStrings(
+Return<void> Bar::haveSomeStrings(
         const hidl_string array[3],
         haveSomeStrings_cb _cb) {
     ALOGI("SERVER(Bar) haveSomeStrings([\"%s\", \"%s\", \"%s\"])",
@@ -321,10 +321,10 @@ Status Bar::haveSomeStrings(
 
     _cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::haveAStringVec(
+Return<void> Bar::haveAStringVec(
         const hidl_vec<hidl_string> &vector,
         haveAStringVec_cb _cb) {
     ALOGI("SERVER(Bar) haveAStringVec([\"%s\", \"%s\", \"%s\"])",
@@ -340,13 +340,13 @@ Status Bar::haveAStringVec(
 
     _cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Bar::thisIsNew() {
+Return<void> Bar::thisIsNew() {
     ALOGI("SERVER(Bar) thisIsNew");
 
-    return Status::ok();
+    return Void();
 }
 
 template<typename I>
@@ -369,8 +369,9 @@ static std::string vecToString(const hidl_vec<int32_t> &vec) {
     return arraylikeToString(vec, vec.size());
 }
 
-static inline void EXPECT_OK(::android::hardware::Status status) {
-    EXPECT_TRUE(status.isOk());
+template <typename T>
+static inline void EXPECT_OK(::android::hardware::Return<T> ret) {
+    EXPECT_TRUE(ret.getStatus().isOk());
 }
 
 template<typename T, typename S>

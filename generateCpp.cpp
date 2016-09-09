@@ -243,7 +243,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                 out << "virtual ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra) << "> ";
             } else {
-                out << "virtual ::android::hardware::Status ";
+                out << "virtual ::android::hardware::Return<void> ";
             }
 
             out << method->name()
@@ -905,26 +905,27 @@ status_t AST::generateProxySource(
 
             if (elidedReturn != nullptr) {
                 std::string extra;
-
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
                 out << "return ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra)
                     << ">(" << elidedReturn->name() << ");\n\n";
-
-                out.unindent();
-                out << "_hidl_error:\n";
-                out.indent();
-                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return ::android::hardware::Return<";
-                out << method->results().at(0)->type().getCppResultType(&extra)
-                    << ">(_hidl_status);\n";
             } else {
-                out.unindent();
-                out << "_hidl_error:\n";
-                out.indent();
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return _hidl_status;\n";
+                out << "return ::android::hardware::Return<void>();\n\n";
             }
+
+            out.unindent();
+            out << "_hidl_error:\n";
+            out.indent();
+            out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+            out << "return ::android::hardware::Return<";
+            if (elidedReturn != nullptr) {
+                std::string extra;
+                out << method->results().at(0)->type().getCppResultType(&extra);
+            } else {
+                out << "void";
+            }
+            out << ">(_hidl_status);\n";
 
             out.unindent();
             out << "}\n\n";
@@ -1132,9 +1133,6 @@ status_t AST::generateStubSourceForMethod(
             out << "bool _hidl_callbackCalled = false;\n\n";
         }
 
-        out << "::android::hardware::Status _hidl_status(\n";
-        out.indent();
-        out.indent();
         out << method->name() << "(";
 
         bool first = true;
@@ -1193,16 +1191,22 @@ status_t AST::generateStubSourceForMethod(
             out << "}\n";
         }
 
-        out.unindent();
-        out.unindent();
-        out << "));\n\n";
+        out << ");\n\n";
+
+        // What to do if the stub implementation has a synchronous callback
+        // which does not get invoked?  This is not a transport error but a
+        // service error of sorts. For now, return OK to the caller, as this is
+        // not a transport error.
+        //
+        // TODO(b/31365311) Figure out how to deal with this later.
 
         if (returnsValue) {
             out << "if (!_hidl_callbackCalled) {\n";
             out.indent();
         }
 
-        out << "_hidl_err = _hidl_status.writeToParcel(_hidl_reply);\n";
+        out << "::android::hardware::Status::ok()"
+            << ".writeToParcel(_hidl_reply);\n";
 
         if (returnsValue) {
             out.unindent();

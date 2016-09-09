@@ -20,37 +20,37 @@ using ::android::hardware::tests::baz::V1_0::IBazCallback;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::hardware::Return;
-using ::android::hardware::Status;
+using ::android::hardware::Void;
 
 struct BazCallback : public IBazCallback {
-    Status heyItsMe(const sp<IBazCallback> &cb) override;
+    Return<void> heyItsMe(const sp<IBazCallback> &cb) override;
 };
 
-Status BazCallback::heyItsMe(
+Return<void> BazCallback::heyItsMe(
         const sp<IBazCallback> &cb) {
     LOG(INFO) << "SERVER: heyItsMe cb = " << cb.get();
 
-    return Status::ok();
+    return Void();
 }
 
 struct Baz : public IBaz {
-    Status someBaseMethod() override;
+    Return<void> someBaseMethod() override;
 
-    Status someOtherBaseMethod(
+    Return<void> someOtherBaseMethod(
             const IBaz::Foo &foo, someOtherBaseMethod_cb _hidl_cb) override;
 
     Return<bool> someBoolMethod(bool x) override;
 
-    Status someBoolArrayMethod(
+    Return<void> someBoolArrayMethod(
             const bool x[3], someBoolArrayMethod_cb _hidl_cb) override;
 
-    Status someBoolVectorMethod(
+    Return<void> someBoolVectorMethod(
             const hidl_vec<bool> &x, someBoolVectorMethod_cb _hidl_cb) override;
 
-    Status doSomethingElse(
+    Return<void> doSomethingElse(
             const int32_t param[15], doSomethingElse_cb _hidl_cb) override;
 
-    Status doThis(float param) override;
+    Return<void> doThis(float param) override;
 
     Return<int32_t> doThatAndReturnSomething(int64_t param) override;
 
@@ -60,29 +60,29 @@ struct Baz : public IBaz {
             float c,
             double d) override;
 
-    Status doStuffAndReturnAString(
+    Return<void> doStuffAndReturnAString(
             doStuffAndReturnAString_cb _hidl_cb) override;
 
-    Status mapThisVector(
+    Return<void> mapThisVector(
             const hidl_vec<int32_t>& param, mapThisVector_cb _hidl_cb) override;
 
-    Status callMe(const sp<IBazCallback>& cb) override;
+    Return<void> callMe(const sp<IBazCallback>& cb) override;
     Return<IBaz::SomeEnum> useAnEnum(IBaz::SomeEnum zzz) override;
 
-    Status haveSomeStrings(
+    Return<void> haveSomeStrings(
             const hidl_string array[3], haveSomeStrings_cb _hidl_cb) override;
 
-    Status haveAStringVec(
+    Return<void> haveAStringVec(
             const hidl_vec<hidl_string>& vector,
             haveAStringVec_cb _hidl_cb) override;
 
-    Status returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) override;
+    Return<void> returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) override;
 };
 
-Status Baz::someBaseMethod() {
+Return<void> Baz::someBaseMethod() {
     LOG(INFO) << "Baz::someBaseMethod";
 
-    return Status::ok();
+    return Void();
 }
 
 using std::to_string;
@@ -141,14 +141,14 @@ static std::string to_string(const IBaz::Foo &foo) {
     return out;
 }
 
-Status Baz::someOtherBaseMethod(
+Return<void> Baz::someOtherBaseMethod(
         const IBaz::Foo &foo, someOtherBaseMethod_cb _hidl_cb) {
     LOG(INFO) << "Baz::someOtherBaseMethod "
               << to_string(foo);
 
     _hidl_cb(foo);
 
-    return Status::ok();
+    return Void();
 }
 
 Return<bool> Baz::someBoolMethod(bool x) {
@@ -157,7 +157,7 @@ Return<bool> Baz::someBoolMethod(bool x) {
     return !x;
 }
 
-Status Baz::someBoolArrayMethod(
+Return<void> Baz::someBoolArrayMethod(
         const bool x[3], someBoolArrayMethod_cb _hidl_cb) {
     LOG(INFO) << "Baz::someBoolArrayMethod("
         << to_string(x[0])
@@ -175,10 +175,10 @@ Status Baz::someBoolArrayMethod(
 
     _hidl_cb(out);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::someBoolVectorMethod(
+Return<void> Baz::someBoolVectorMethod(
         const hidl_vec<bool> &x, someBoolVectorMethod_cb _hidl_cb) {
     LOG(INFO) << "Baz::someBoolVectorMethod(" << to_string(x) << ")";
 
@@ -190,10 +190,10 @@ Status Baz::someBoolVectorMethod(
 
     _hidl_cb(out);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::doSomethingElse(
+Return<void> Baz::doSomethingElse(
         const int32_t param[15], doSomethingElse_cb _hidl_cb) {
     LOG(INFO) << "Baz::doSomethingElse(...)";
 
@@ -207,13 +207,13 @@ Status Baz::doSomethingElse(
 
     _hidl_cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::doThis(float param) {
+Return<void> Baz::doThis(float param) {
     LOG(INFO) << "Baz::doThis(" << param << ")";
 
-    return Status::ok();
+    return Void();
 }
 
 Return<int32_t> Baz::doThatAndReturnSomething(int64_t param) {
@@ -240,7 +240,7 @@ Return<double> Baz::doQuiteABit(
     return 666.5;
 }
 
-Status Baz::doStuffAndReturnAString(
+Return<void> Baz::doStuffAndReturnAString(
         doStuffAndReturnAString_cb _hidl_cb) {
     LOG(INFO) << "doStuffAndReturnAString";
 
@@ -249,10 +249,10 @@ Status Baz::doStuffAndReturnAString(
 
     _hidl_cb(s);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::mapThisVector(
+Return<void> Baz::mapThisVector(
         const hidl_vec<int32_t>& param, mapThisVector_cb _hidl_cb) {
     LOG(INFO) << "mapThisVector";
 
@@ -264,10 +264,10 @@ Status Baz::mapThisVector(
 
     _hidl_cb(out);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::callMe(const sp<IBazCallback>& cb) {
+Return<void> Baz::callMe(const sp<IBazCallback>& cb) {
     LOG(INFO) << "callMe " << cb.get();
 
     if (cb != NULL) {
@@ -275,7 +275,7 @@ Status Baz::callMe(const sp<IBazCallback>& cb) {
         cb->heyItsMe(my_cb);
     }
 
-    return Status::ok();
+    return Void();
 }
 
 Return<IBaz::SomeEnum> Baz::useAnEnum(IBaz::SomeEnum zzz) {
@@ -284,7 +284,7 @@ Return<IBaz::SomeEnum> Baz::useAnEnum(IBaz::SomeEnum zzz) {
     return SomeEnum::goober;
 }
 
-Status Baz::haveSomeStrings(
+Return<void> Baz::haveSomeStrings(
         const hidl_string array[3], haveSomeStrings_cb _hidl_cb) {
     LOG(INFO) << "haveSomeStrings("
               << array_to_string(array, 3)
@@ -296,10 +296,10 @@ Status Baz::haveSomeStrings(
 
     _hidl_cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::haveAStringVec(
+Return<void> Baz::haveAStringVec(
         const hidl_vec<hidl_string>& vector,
         haveAStringVec_cb _hidl_cb) {
     LOG(INFO) << "haveAStringVec(" << to_string(vector) << ")";
@@ -312,16 +312,16 @@ Status Baz::haveAStringVec(
 
     _hidl_cb(result);
 
-    return Status::ok();
+    return Void();
 }
 
-Status Baz::returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) {
+Return<void> Baz::returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) {
     hidl_string eins; eins = "Eins";
     hidl_string zwei; zwei = "Zwei";
     hidl_string drei; drei = "Drei";
     _hidl_cb(eins, zwei, drei);
 
-    return Status::ok();
+    return Void();
 }
 
 static void usage(const char *me) {
@@ -353,8 +353,9 @@ struct HidlTest : public ::testing::Test {
     }
 };
 
-static void EXPECT_OK(::android::hardware::Status status) {
-    EXPECT_TRUE(status.isOk());
+template <typename T>
+static void EXPECT_OK(::android::hardware::Return<T> ret) {
+    EXPECT_TRUE(ret.getStatus().isOk());
 }
 
 TEST_F(HidlTest, BazSomeBaseMethodTest) {
@@ -391,7 +392,7 @@ TEST_F(HidlTest, BazSomeOtherBaseMethodTest) {
 
 TEST_F(HidlTest, BazSomeBoolMethodTest) {
     auto result = baz->someBoolMethod(true);
-    EXPECT_OK(result.status);
+    EXPECT_OK(result);
     EXPECT_EQ(to_string(result), "false");
 }
 
@@ -430,14 +431,14 @@ TEST_F(HidlTest, BazDoThisMethodTest) {
 
 TEST_F(HidlTest, BazDoThatAndReturnSomethingMethodTest) {
     auto result = baz->doThatAndReturnSomething(1);
-    EXPECT_OK(result.status);
+    EXPECT_OK(result);
     EXPECT_EQ(to_string(result), "666");
 }
 
 TEST_F(HidlTest, BazDoQuiteABitMethodTest) {
     auto result = baz->doQuiteABit(1, 2ll, 3.0f, 4.0);
 
-    EXPECT_OK(result.status);
+    EXPECT_OK(result);
     EXPECT_EQ(to_string(result), "666.500000");
 }
 
@@ -492,7 +493,7 @@ TEST_F(HidlTest, BazCallMeMethodTest) {
 TEST_F(HidlTest, BazUseAnEnumMethodTest) {
     auto result = baz->useAnEnum(IBaz::SomeEnum::bar);
 
-    EXPECT_OK(result.status);
+    EXPECT_OK(result);
     EXPECT_TRUE(result == IBaz::SomeEnum::quux);
 }
 
