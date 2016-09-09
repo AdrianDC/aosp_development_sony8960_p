@@ -418,7 +418,7 @@ static status_t generateMakefileImplForPackage(
         Coordinator *coordinator,
         const std::string &outputDir) {
 
-    const std::string libraryName = makeLibraryName(packageFQName) + ".impl";
+    const std::string libraryName = makeLibraryName(packageFQName) + "-impl";
 
     std::vector<FQName> packageInterfaces;
 
