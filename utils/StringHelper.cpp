@@ -16,6 +16,8 @@
 
 #include "StringHelper.h"
 
+#include <sstream>
+
 namespace android {
 
 // static
@@ -24,6 +26,30 @@ std::string StringHelper::Upcase(const std::string &in) {
 
     for (auto &ch : out) {
         ch = toupper(ch);
+    }
+
+    return out;
+}
+
+// static
+std::string StringHelper::Capitalize(const std::string &in) {
+    std::string out{in};
+
+    if(!out.empty()) {
+        out[0] = toupper(out[0]);
+    }
+
+    return out;
+}
+
+// static
+std::string StringHelper::SnakeCaseToCamelCase(const std::string &in) {
+    std::istringstream ss(in);
+    std::string word;
+    std::string out;
+
+    while (std::getline(ss, word, '_')) {
+        out += Capitalize(word);
     }
 
     return out;
