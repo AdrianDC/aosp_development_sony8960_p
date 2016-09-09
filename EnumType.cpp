@@ -52,10 +52,12 @@ bool EnumType::isEnum() const {
     return true;
 }
 
-std::string EnumType::getCppType(StorageMode, std::string *extra) const {
+std::string EnumType::getCppType(StorageMode,
+                                 std::string *extra,
+                                 bool specifyNamespaces) const {
     extra->clear();
 
-    return fullName();
+    return specifyNamespaces ? fullName() : partialCppName();
 }
 
 std::string EnumType::getJavaType() const {

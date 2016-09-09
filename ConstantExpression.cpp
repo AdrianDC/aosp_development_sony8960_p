@@ -333,7 +333,10 @@ const char *ConstantExpression::cppValue(ScalarType::Kind castKind) const {
   if(castKind == SK(INT64) && (int64_t)mValue == INT64_MIN) {
     std::string extra;
     return strdup(("("
-      + ScalarType(SK(INT64)).getCppType(android::Type::StorageMode_Stack, &extra) // "int64_t"
+      + ScalarType(SK(INT64)).getCppType(
+          android::Type::StorageMode_Stack,
+          &extra,
+          true /* specify namespaces */) // "int64_t"
       + ")(" + literal + "ull)").c_str());
   }
 
