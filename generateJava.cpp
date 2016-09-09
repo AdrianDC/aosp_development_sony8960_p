@@ -269,7 +269,7 @@ status_t AST::generateJava(
             out.indent();
 
             out << "public abstract void onValues("
-                << Method::GetJavaSignature(method->results())
+                << Method::GetJavaArgSignature(method->results())
                 << ");\n";
 
             out.unindent();
@@ -285,7 +285,7 @@ status_t AST::generateJava(
         out << " "
             << method->name()
             << "("
-            << Method::GetJavaSignature(method->args());
+            << Method::GetJavaArgSignature(method->args());
 
         if (needsCallback) {
             if (!method->args().empty()) {
@@ -345,7 +345,7 @@ status_t AST::generateJava(
             out << " "
                 << method->name()
                 << "("
-                << Method::GetJavaSignature(method->args());
+                << Method::GetJavaArgSignature(method->args());
 
             if (needsCallback) {
                 if (!method->args().empty()) {
@@ -529,7 +529,7 @@ status_t AST::generateJava(
 
                 out << "@Override\n"
                     << "public void onValues("
-                    << Method::GetJavaSignature(method->results())
+                    << Method::GetJavaArgSignature(method->results())
                     << ") {\n";
 
                 out.indent();
