@@ -21,20 +21,11 @@
 #include "Interface.h"
 #include "Method.h"
 #include "Scope.h"
+#include "StringHelper.h"
 
 #include <android-base/logging.h>
 
 namespace android {
-
-static std::string upcase(const std::string in) {
-    std::string out{in};
-
-    for (auto &ch : out) {
-        ch = toupper(ch);
-    }
-
-    return out;
-}
 
 void AST::emitJavaReaderWriter(
         Formatter &out,
@@ -235,7 +226,7 @@ status_t AST::generateJava(
     size_t index = 0;
     for (const auto &method : iface->methods()) {
         out << "public static final int kOp_"
-            << upcase(method->name())
+            << StringHelper::Upcase(method->name())
             << " = "
             << base;
 
@@ -374,7 +365,7 @@ status_t AST::generateJava(
 
             out << "\nHwParcel reply = new HwParcel();\n"
                 << "mRemote.transact(kOp_"
-                << upcase(method->name())
+                << StringHelper::Upcase(method->name())
                 << ", request, reply, ";
 
             if (method->isOneway()) {
@@ -479,7 +470,7 @@ status_t AST::generateJava(
                 << superInterface->fullJavaName()
                 << ".kOp_"
                 <<
-                upcase(method->name())
+                StringHelper::Upcase(method->name())
                 << ":\n{\n";
 
             out.indent();
