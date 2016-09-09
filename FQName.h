@@ -77,6 +77,18 @@ struct FQName {
     bool operator<(const FQName &other) const;
     bool operator==(const FQName &other) const;
 
+    // the following comments all assume that the FQName
+    // is ::android::hardware::Foo::V1_0::IBar::Baz
+
+    // returns highest type in the hidl namespace, i.e.
+    // ::android::hardware::Foo::V1_0::IBar
+    const FQName getTopLevelType() const;
+
+    // returns an unambiguous fully qualified name which can be
+    // baked into a token, i.e.
+    // android_hardware_Foo_V1_0_IBar_Baz
+    std::string tokenName() const;
+
     // Returns an absolute C++ namespace prefix, i.e.
     // ::android::hardware::Foo::V1_0.
     std::string cppNamespace() const;
@@ -86,14 +98,14 @@ struct FQName {
     std::string cppLocalName() const;
 
     // Returns a fully qualified absolute C++ type name, i.e.
-    // ::android::hardware::Foo::V1_0::bar::baz.
+    // ::android::hardware::Foo::V1_0::IBar::Baz.
     std::string cppName() const;
 
     // Returns the java package name, i.e. "android.hardware.Foo.V1_0".
     std::string javaPackage() const;
 
     // Returns the fully qualified java type name,
-    // i.e. "android.hardware.Foo.V1_0.IBar"
+    // i.e. "android.hardware.Foo.V1_0.IBar.Baz"
     std::string javaName() const;
 
     bool endsWith(const FQName &other) const;

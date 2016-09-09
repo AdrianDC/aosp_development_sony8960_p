@@ -74,15 +74,8 @@ void AST::getPackageAndVersionComponents(
 }
 
 std::string AST::makeHeaderGuard(const std::string &baseName) const {
-    std::vector<std::string> packageComponents;
-    getPackageAndVersionComponents(
-            &packageComponents, true /* cpp_compatible */);
-
-    std::string guard = "HIDL_GENERATED";
-    for (const auto &component : packageComponents) {
-        guard += "_";
-        guard += component;
-    }
+    std::string guard = "HIDL_GENERATED_";
+    guard += mPackage.tokenName();
 
     guard += "_";
     guard += baseName;
@@ -456,10 +449,10 @@ status_t AST::generateStubMethod(Formatter &out,
     return OK;
 }
 
-status_t AST::generateProxyMethod(Formatter &out,
-                                  const std::string &className,
-                                  const Method *method,
-                                  bool specifyNamespaces) const {
+status_t AST::generateProxyDeclaration(Formatter &out,
+                                       const std::string &className,
+                                       const Method *method,
+                                       bool specifyNamespaces) const {
 
     method->generateCppSignature(out,
                                  className,
@@ -500,12 +493,25 @@ status_t AST::generateMethods(
                                              specifyNamespaces);
                     break;
                 case PROXY_HEADER:
-                    err = generateProxyMethod(out,
-                                              className,
-                                              method,
-                                              specifyNamespaces);
+                    err = generateProxyDeclaration(out,
+                                                   className,
+                                                   method,
+                                                   specifyNamespaces);
+                    break;
+                case IMPL_HEADER:
+                    err = generateStubImplDeclaration(out,
+                                                      className,
+                                                      method,
+                                                      specifyNamespaces);
+                    break;
+                case IMPL_SOURCE:
+                    err = generateStubImplMethod(out,
+                                                 className,
+                                                 method,
+                                                 specifyNamespaces);
                     break;
                 default:
+                    LOG(ERROR) << "Unkown method type: " << type;
                     err = UNKNOWN_ERROR;
             }
 
@@ -587,10 +593,15 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out.unindent();
     out.unindent();
 
-    generateMethods(out,
-                    "" /* class name */,
-                    MethodLocation::STUB_HEADER,
-                    true /* specify namespaces */);
+    status_t err = generateMethods(out,
+                                   "" /* class name */,
+                                   MethodLocation::STUB_HEADER,
+                                   true /* specify namespaces */);
+
+    if (err != OK) {
+        return err;
+    }
+
     out.unindent();
 
     out << "};\n\n";
@@ -662,10 +673,14 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     out << "virtual bool isRemote() const { return true; }\n\n";
 
-    generateMethods(out,
-                    "" /* class name */,
-                    MethodLocation::PROXY_HEADER,
-                    true /* generate specify namespaces */);
+    status_t err = generateMethods(out,
+                                   "" /* class name */,
+                                   MethodLocation::PROXY_HEADER,
+                                   true /* generate specify namespaces */);
+
+    if (err != OK) {
+        return err;
+    }
 
     out.unindent();
 
@@ -745,7 +760,13 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     }
 
     if (err == OK && isInterface) {
-        out << "IMPLEMENT_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
+        const Interface *iface = mRootScope->getInterface();
+
+        out << "IMPLEMENT_REGISTER_AND_GET_SERVICE("
+            << baseName << ", "
+            << "\"" << iface->fqName().package()
+            << iface->fqName().version() << ".impl.so\""
+            << ")\n";
     }
 
     enterLeaveNamespace(out, false /* enter */);
