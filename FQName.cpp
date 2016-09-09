@@ -160,6 +160,14 @@ bool FQName::operator==(const FQName &other) const {
     return string() == other.string();
 }
 
+std::string FQName::getInterfaceBaseName() const {
+    CHECK(names().size() == 1) << "Must be a top level type";
+    CHECK(!mName.empty() && mName[0] == 'I') << mName;
+
+    // cut off the leading 'I'.
+    return mName.substr(1);
+}
+
 const FQName FQName::getTopLevelType() const {
     auto idx = mName.find('.');
 
