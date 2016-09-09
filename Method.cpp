@@ -58,11 +58,14 @@ void Method::generateCppSignature(Formatter &out,
 
     const TypedVar *elidedReturn = canElideCallback();
 
+    std::string space = (specifyNamespaces ? "::android::hardware::" : "");
+
     if (elidedReturn == nullptr) {
-        out << "::android::hardware::Return<void> ";
+        out << space << "Return<void> ";
     } else {
         std::string extra;
-        out << "::android::hardware::Return<"
+        out << space
+            << "Return<"
             << elidedReturn->type().getCppResultType(&extra)
             << "> ";
     }
