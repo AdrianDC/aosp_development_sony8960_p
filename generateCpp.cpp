@@ -189,7 +189,14 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     if (isInterface) {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
-
+        out << "constexpr static hidl_version version = {"
+            << mPackage.getPackageMajorVersion() << ","
+            << mPackage.getPackageMinorVersion() << "};\n";
+        out << "virtual const hidl_version& getInterfaceVersion() const {\n";
+        out.indent();
+        out << "return version;\n";
+        out.unindent();
+        out << "}\n\n";
         out << "virtual bool isRemote() const { return false; }\n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
@@ -743,6 +750,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     status_t err = generateTypeSource(out, ifaceName);
 
     if (err == OK && isInterface) {
+        out << "constexpr hidl_version " << ifaceName << "::version;\n\n";
         err = generateProxySource(out, baseName);
     }
 

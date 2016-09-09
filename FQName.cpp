@@ -230,23 +230,35 @@ void FQName::getPackageAndVersionComponents(
         bool cpp_compatible) const {
     getPackageComponents(components);
 
-    const std::string packageVersion = version();
-    CHECK(packageVersion[0] == '@');
-
     if (!cpp_compatible) {
-        components->push_back(packageVersion.substr(1));
+        components->push_back(getPackageMajorVersion() +
+                "." + getPackageMinorVersion());
         return;
     }
 
-    const size_t dotPos = packageVersion.find('.');
-
     // Form "Vmajor_minor".
     std::string versionString = "V";
-    versionString.append(packageVersion.substr(1, dotPos - 1));
+    versionString.append(getPackageMajorVersion());
     versionString.append("_");
-    versionString.append(packageVersion.substr(dotPos + 1));
+    versionString.append(getPackageMinorVersion());
 
     components->push_back(versionString);
+}
+
+std::string FQName::getPackageMajorVersion() const {
+    const std::string packageVersion = version();
+    CHECK(packageVersion[0] == '@');
+    const size_t dotPos = packageVersion.find('.');
+    CHECK(dotPos != std::string::npos);
+    return packageVersion.substr(1, dotPos - 1);
+}
+
+std::string FQName::getPackageMinorVersion() const {
+    const std::string packageVersion = version();
+    CHECK(packageVersion[0] == '@');
+    const size_t dotPos = packageVersion.find('.');
+    CHECK(dotPos != std::string::npos);
+    return packageVersion.substr(dotPos + 1);
 }
 
 bool FQName::endsWith(const FQName &other) const {
