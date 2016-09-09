@@ -47,8 +47,11 @@ struct Method {
     bool isOneway() const { return mOneway; }
     const AnnotationVector &annotations() const;
 
-    static std::string GetSignature(const std::vector<TypedVar *> &args);
-    static std::string GetJavaSignature(const std::vector<TypedVar *> &args);
+    void generateCppSignature(Formatter &out,
+                              const std::string &className) const;
+
+    static std::string GetArgSignature(const std::vector<TypedVar *> &args);
+    static std::string GetJavaArgSignature(const std::vector<TypedVar *> &args);
 
     const TypedVar* canElideCallback() const;
 

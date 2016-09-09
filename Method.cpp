@@ -51,8 +51,42 @@ const AnnotationVector &Method::annotations() const {
     return *mAnnotationsByName;
 }
 
+void Method::generateCppSignature(Formatter &out,
+                                  const std::string &className) const {
+    const bool returnsValue = !results().empty();
+
+    const TypedVar *elidedReturn = canElideCallback();
+
+    if (elidedReturn == nullptr) {
+        out << "::android::hardware::Status ";
+    } else {
+        std::string extra;
+        out << "::android::hardware::Return<"
+            << elidedReturn->type().getCppResultType(&extra)
+            << "> ";
+    }
+
+    if (!className.empty()) {
+        out << className << "::";
+    }
+
+    out << name()
+        << "("
+        << GetArgSignature(args());
+
+    if (returnsValue && elidedReturn == nullptr) {
+        if (!args().empty()) {
+            out << ", ";
+        }
+
+        out << name() << "_cb _hidl_cb";
+    }
+
+    out << ") ";
+}
+
 // static
-std::string Method::GetSignature(const std::vector<TypedVar *> &args) {
+std::string Method::GetArgSignature(const std::vector<TypedVar *> &args) {
     bool first = true;
     std::string out;
     for (const auto &arg : args) {
@@ -73,7 +107,7 @@ std::string Method::GetSignature(const std::vector<TypedVar *> &args) {
 }
 
 // static
-std::string Method::GetJavaSignature(const std::vector<TypedVar *> &args) {
+std::string Method::GetJavaArgSignature(const std::vector<TypedVar *> &args) {
     bool first = true;
     std::string out;
     for (const auto &arg : args) {
