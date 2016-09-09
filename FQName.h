@@ -77,6 +77,11 @@ struct FQName {
     bool operator<(const FQName &other) const;
     bool operator==(const FQName &other) const;
 
+    // Must be called on an interface
+    // ::android::hardware::Foo::V1_0::IBar
+    // -> Bar
+    std::string getInterfaceBaseName() const;
+
     // the following comments all assume that the FQName
     // is ::android::hardware::Foo::V1_0::IBar::Baz
 
@@ -119,6 +124,7 @@ struct FQName {
     std::string getPackageMajorVersion() const;
 
     std::string getPackageMinorVersion() const;
+
 private:
     bool mValid;
     std::string mPackage;
