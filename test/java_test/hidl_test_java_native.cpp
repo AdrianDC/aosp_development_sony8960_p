@@ -342,9 +342,7 @@ struct HidlTest : public ::testing::Test {
     void SetUp() override {
         using namespace ::android::hardware;
 
-        const hidl_version kVersion = make_hidl_version(1, 0);
-
-        baz = IBaz::getService("baz", kVersion);
+        baz = IBaz::getService("baz");
 
         CHECK(baz != NULL);
     }
@@ -587,9 +585,7 @@ int main(int argc, char **argv) {
     } else {
         sp<Baz> baz = new Baz;
 
-        const hidl_version kVersion = make_hidl_version(1, 0);
-
-        baz->registerAsService("baz", kVersion);
+        baz->registerAsService("baz");
 
         ProcessState::self()->startThreadPool();
         ProcessState::self()->setThreadPoolMaxThreadCount(0);
