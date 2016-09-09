@@ -15,8 +15,8 @@
  */
 
 #include "FQName.h"
-#include "StringHelper.h"
 
+#include <hidl-util/StringHelper.h>
 #include <android-base/logging.h>
 #include <iostream>
 #include <regex>
