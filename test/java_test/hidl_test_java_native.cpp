@@ -344,7 +344,7 @@ struct HidlTest : public ::testing::Test {
 
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        baz = IBaz::getService(::android::String16("baz"), kVersion);
+        baz = IBaz::getService("baz", kVersion);
 
         CHECK(baz != NULL);
     }
@@ -542,7 +542,6 @@ TEST_F(HidlTest, BazReturnABunchOfStringsMethodTest) {
 
 int main(int argc, char **argv) {
     using namespace android::hardware;
-    using android::String16;
 
     const char *me = argv[0];
 
@@ -590,7 +589,7 @@ int main(int argc, char **argv) {
 
         const hidl_version kVersion = make_hidl_version(1, 0);
 
-        baz->registerAsService(String16("baz"), kVersion);
+        baz->registerAsService("baz", kVersion);
 
         ProcessState::self()->startThreadPool();
         ProcessState::self()->setThreadPoolMaxThreadCount(0);
