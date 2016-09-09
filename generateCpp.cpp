@@ -23,6 +23,7 @@
 #include "Method.h"
 #include "ScalarType.h"
 #include "Scope.h"
+#include "StringHelper.h"
 
 #include <algorithm>
 #include <android-base/logging.h>
@@ -30,16 +31,6 @@
 #include <vector>
 
 namespace android {
-
-static std::string upcase(const std::string in) {
-    std::string out{in};
-
-    for (auto &ch : out) {
-        ch = toupper(ch);
-    }
-
-    return out;
-}
 
 status_t AST::generateCpp(const std::string &outputPath) const {
     status_t err = generateInterfaceHeader(outputPath);
@@ -369,7 +360,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 
     bool first = true;
     for (const auto &method : iface->methods()) {
-        out << upcase(method->name());
+        out << StringHelper::Upcase(method->name());
 
         if (first) {
             out << " = ";
@@ -890,7 +881,7 @@ status_t AST::generateProxySource(
                       << "::IHw"
                       << superInterface->getBaseName()
                       << "::Call::"
-                      << upcase(method->name())
+                      << StringHelper::Upcase(method->name())
                       << ", _hidl_data, &_hidl_reply";
             if (method->isOneway()) {
                 out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
@@ -1036,7 +1027,7 @@ status_t AST::generateStubSource(
                 << "::IHw"
                 << superInterface->getBaseName()
                 << "::Call::"
-                << upcase(method->name())
+                << StringHelper::Upcase(method->name())
                 << ":\n{\n";
 
             out.indent();
