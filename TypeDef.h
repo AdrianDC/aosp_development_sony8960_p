@@ -27,6 +27,8 @@ struct TypeDef : public Type {
 
     const ScalarType *resolveToScalarType() const override;
 
+    void addNamedTypesToSet(std::set<const FQName> &set) const override;
+
     Type *referencedType() const;
 
     bool isInterface() const override;

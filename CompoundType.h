@@ -36,7 +36,9 @@ struct CompoundType : public Scope {
 
     bool setFields(std::vector<CompoundField *> *fields, std::string *errorMsg);
 
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
+    std::string getCppType(StorageMode mode,
+                           std::string *extra,
+                           bool specifyNamespaces) const override;
 
     std::string getJavaType() const override;
 

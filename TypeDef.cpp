@@ -27,6 +27,10 @@ TypeDef::TypeDef(Type *type)
       mReferencedType(type) {
 }
 
+void TypeDef::addNamedTypesToSet(std::set<const FQName> &set) const {
+    mReferencedType->addNamedTypesToSet(set);
+}
+
 const ScalarType *TypeDef::resolveToScalarType() const {
     CHECK(!"Should not be here");
     return NULL;

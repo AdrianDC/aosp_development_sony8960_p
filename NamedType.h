@@ -33,9 +33,17 @@ struct NamedType : public Type {
 
     void setFullName(const FQName &fullName);
 
+    void addNamedTypesToSet(std::set<const FQName> &set) const override;
+
     const FQName &fqName() const;
+
     std::string localName() const;
+
+    /* short for fqName().cppName() */
     std::string fullName() const;
+    /* short for fqName().cppLocalName() */
+    std::string partialCppName() const;
+    /* short for fqName().fullJavaName() */
     std::string fullJavaName() const;
 
 private:

@@ -224,7 +224,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             out << "using "
                 << method->name()
                 << "_cb = std::function<void("
-                << Method::GetArgSignature(method->results())
+                << Method::GetArgSignature(method->results(),
+                                           true /* specify namespaces */)
                 << ")>;\n";
         }
 
@@ -248,7 +249,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             out << method->name()
                 << "("
-                << Method::GetArgSignature(method->args());
+                << Method::GetArgSignature(method->args(),
+                                           true /* specify namespaces */);
 
             if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
@@ -415,10 +417,13 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
 
 status_t AST::generateStubMethod(Formatter &out,
                                  const std::string &className,
-                                 const Method *method) const {
+                                 const Method *method,
+                                 bool specifyNamespaces) const {
     out << "inline ";
 
-    method->generateCppSignature(out, className);
+    method->generateCppSignature(out,
+                                 className,
+                                 specifyNamespaces);
 
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
@@ -453,9 +458,12 @@ status_t AST::generateStubMethod(Formatter &out,
 
 status_t AST::generateProxyMethod(Formatter &out,
                                   const std::string &className,
-                                  const Method *method) const {
+                                  const Method *method,
+                                  bool specifyNamespaces) const {
 
-    method->generateCppSignature(out, className);
+    method->generateCppSignature(out,
+                                 className,
+                                 specifyNamespaces);
     out << " override;\n";
 
     return OK;
@@ -464,7 +472,8 @@ status_t AST::generateProxyMethod(Formatter &out,
 status_t AST::generateMethods(
         Formatter &out,
         const std::string &className,
-        MethodLocation type) const {
+        MethodLocation type,
+        bool specifyNamespaces) const {
 
     const Interface *iface = mRootScope->getInterface();
 
@@ -487,12 +496,14 @@ status_t AST::generateMethods(
                 case STUB_HEADER:
                     err = generateStubMethod(out,
                                              className,
-                                             method);
+                                             method,
+                                             specifyNamespaces);
                     break;
                 case PROXY_HEADER:
                     err = generateProxyMethod(out,
                                               className,
-                                              method);
+                                              method,
+                                              specifyNamespaces);
                     break;
                 default:
                     err = UNKNOWN_ERROR;
@@ -578,7 +589,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
 
     generateMethods(out,
                     "" /* class name */,
-                    MethodLocation::STUB_HEADER);
+                    MethodLocation::STUB_HEADER,
+                    true /* specify namespaces */);
     out.unindent();
 
     out << "};\n\n";
@@ -652,7 +664,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     generateMethods(out,
                     "" /* class name */,
-                    MethodLocation::PROXY_HEADER);
+                    MethodLocation::PROXY_HEADER,
+                    true /* generate specify namespaces */);
 
     out.unindent();
 
@@ -816,7 +829,9 @@ status_t AST::generateProxySource(
         const Interface *superInterface = *it;
 
         for (const auto &method : superInterface->methods()) {
-            method->generateCppSignature(out, klassName);
+            method->generateCppSignature(out,
+                                         klassName,
+                                         true /* specify namespaces */);
 
             const bool returnsValue = !method->results().empty();
             const TypedVar *elidedReturn = method->canElideCallback();

@@ -58,9 +58,13 @@ bool CompoundType::setFields(
 }
 
 std::string CompoundType::getCppType(
-        StorageMode mode, std::string *extra) const {
+        StorageMode mode,
+        std::string *extra,
+        bool specifyNamespaces) const {
+
     extra->clear();
-    const std::string base = fullName();
+    const std::string base =
+        specifyNamespaces ? fullName() : partialCppName();
 
     switch (mode) {
         case StorageMode_Stack:

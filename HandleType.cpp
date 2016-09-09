@@ -24,10 +24,20 @@ namespace android {
 
 HandleType::HandleType() {}
 
-std::string HandleType::getCppType(StorageMode, std::string *extra) const {
+void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
+    // do nothing
+}
+
+std::string HandleType::getCppType(StorageMode,
+                                   std::string *extra,
+                                   bool specifyNamespaces) const {
     extra->clear();
 
-    return "const ::native_handle_t*";
+    const std::string base =
+          std::string(specifyNamespaces ? "::" : "")
+        + "native_handle_t";
+
+    return "const " + base + "*";
 }
 
 std::string HandleType::getJavaType() const {

@@ -25,7 +25,11 @@ namespace android {
 struct HandleType : public Type {
     HandleType();
 
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
+    void addNamedTypesToSet(std::set<const FQName> &set) const override;
+
+    std::string getCppType(StorageMode mode,
+                           std::string *extra,
+                           bool specifyNamespaces) const override;
     std::string getJavaType() const override;
 
     void emitReaderWriter(
