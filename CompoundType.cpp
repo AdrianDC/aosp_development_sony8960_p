@@ -16,8 +16,7 @@
 
 #include "CompoundType.h"
 
-#include "Formatter.h"
-
+#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {
