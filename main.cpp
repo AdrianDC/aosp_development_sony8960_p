@@ -412,6 +412,79 @@ OutputHandler::ValRes validateForMakefile(
     return OutputHandler::PASS_PACKAGE;
 }
 
+static status_t generateMakefileImplForPackage(
+        const FQName &packageFQName,
+        const char *,
+        Coordinator *coordinator,
+        const std::string &outputDir) {
+
+    const std::string libraryName = makeLibraryName(packageFQName) + ".impl";
+
+    std::vector<FQName> packageInterfaces;
+
+    status_t err =
+        coordinator->appendPackageInterfacesToSet(packageFQName,
+                                                  &packageInterfaces);
+
+    if (err != OK) {
+        return err;
+    }
+
+    std::set<FQName> importedPackages;
+
+    for (const auto &fqName : packageInterfaces) {
+        AST *ast = coordinator->parse(fqName);
+
+        if (ast == NULL) {
+            fprintf(stderr,
+                    "ERROR: Could not parse %s. Aborting.\n",
+                    fqName.string().c_str());
+
+            return UNKNOWN_ERROR;
+        }
+
+        ast->getImportedPackages(&importedPackages);
+    }
+
+    std::string path = outputDir + "Android.mk";
+
+    CHECK(Coordinator::MakeParentHierarchy(path));
+    FILE *file = fopen(path.c_str(), "w");
+
+    if (file == NULL) {
+        return -errno;
+    }
+
+    Formatter out(file);
+
+    out << "LOCAL_PATH := $(call my-dir)\n\n"
+        << "include $(CLEAR_VARS)\n"
+        << "LOCAL_MODULE := " << libraryName << "\n"
+        << "LOCAL_MODULE_RELATIVE_PATH := hw\n"
+        << "LOCAL_SRC_FILES := \\\n";
+    out.indent();
+    for (const auto &fqName : packageInterfaces) {
+        if (fqName.name() == "types") {
+            continue;
+        }
+        out << fqName.getInterfaceBaseName() << ".cpp \\\n";
+    }
+    out.unindent();
+    out << "\n";
+    out << "LOCAL_SHARED_LIBRARIES := \\\n";
+    out.indent();
+    out << "libhidl \\\n"
+        << "libhwbinder \\\n"
+        << "libutils \\\n"
+        << makeLibraryName(packageFQName) << " \\\n";
+    out.unindent();
+    out << "\n";
+
+    out << "include $(BUILD_SHARED_LIBRARY)\n";
+
+    return OK;
+}
+
 OutputHandler::ValRes validateForSource(
         const FQName &fqName, const std::string &language) {
     if (fqName.package().empty()) {
@@ -539,6 +612,12 @@ static std::vector<OutputHandler> formats = {
      validateForMakefile,
      generateMakefileForPackage,
     },
+
+    {"makefile-impl",
+     true /* mNeedsOutputDir */,
+     validateForMakefile,
+     generateMakefileImplForPackage,
+    }
 };
 
 static void usage(const char *me) {
