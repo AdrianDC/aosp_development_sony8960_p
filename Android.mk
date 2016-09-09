@@ -28,6 +28,7 @@ LOCAL_SRC_FILES :=              \
     PredefinedType.cpp          \
     ScalarType.cpp              \
     Scope.cpp                   \
+    StringHelper.cpp            \
     StringType.cpp              \
     Type.cpp                    \
     TypeDef.cpp                 \
