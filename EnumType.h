@@ -39,7 +39,9 @@ struct EnumType : public NamedType {
 
     bool isEnum() const override;
 
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
+    std::string getCppType(StorageMode mode,
+                           std::string *extra,
+                           bool specifyNamespaces) const override;
 
     std::string getJavaType() const override;
     std::string getJavaSuffix() const override;

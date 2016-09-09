@@ -48,9 +48,11 @@ struct Method {
     const AnnotationVector &annotations() const;
 
     void generateCppSignature(Formatter &out,
-                              const std::string &className) const;
+                              const std::string &className,
+                              bool specifyNamespaces) const;
 
-    static std::string GetArgSignature(const std::vector<TypedVar *> &args);
+    static std::string GetArgSignature(const std::vector<TypedVar *> &args,
+                                       bool specifyNamespaces);
     static std::string GetJavaArgSignature(const std::vector<TypedVar *> &args);
 
     const TypedVar* canElideCallback() const;

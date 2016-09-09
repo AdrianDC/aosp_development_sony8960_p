@@ -27,7 +27,11 @@ namespace android {
 struct ArrayType : public Type {
     ArrayType(Type *elementType, const char *dimension);
 
-    std::string getCppType(StorageMode mode, std::string *extra) const override;
+    std::string getCppType(StorageMode mode,
+                           std::string *extra,
+                           bool specifyNamespaces) const override;
+
+    void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getJavaType() const override;
 

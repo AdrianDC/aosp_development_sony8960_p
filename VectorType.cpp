@@ -26,10 +26,17 @@ VectorType::VectorType(Type *elementType)
     : mElementType(elementType) {
 }
 
-std::string VectorType::getCppType(StorageMode mode, std::string *extra) const {
+void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
+    mElementType->addNamedTypesToSet(set);
+}
+
+std::string VectorType::getCppType(StorageMode mode,
+                                   std::string *extra,
+                                   bool specifyNamespaces) const {
     const std::string base =
-        "::android::hardware::hidl_vec<"
-        + mElementType->getCppType(extra)
+          std::string(specifyNamespaces ? "::android::hardware::" : "")
+        + "hidl_vec<"
+        + mElementType->getCppType(extra, specifyNamespaces)
         + ">";
 
     CHECK(extra->empty());

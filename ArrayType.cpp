@@ -27,8 +27,14 @@ ArrayType::ArrayType(Type *elementType, const char *dimension)
       mDimension(dimension) {
 }
 
-std::string ArrayType::getCppType(StorageMode mode, std::string *extra) const {
-    const std::string base = mElementType->getCppType(extra);
+void ArrayType::addNamedTypesToSet(std::set<const FQName> &set) const {
+    mElementType->addNamedTypesToSet(set);
+}
+
+std::string ArrayType::getCppType(StorageMode mode,
+                                  std::string *extra,
+                                  bool specifyNamespaces) const {
+    const std::string base = mElementType->getCppType(extra, specifyNamespaces);
 
     CHECK(extra->empty());
 

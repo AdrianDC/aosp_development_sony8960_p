@@ -81,6 +81,10 @@ struct FQName {
     // ::android::hardware::Foo::V1_0.
     std::string cppNamespace() const;
 
+    // Returns a name qualified assuming we are in cppNamespace, i.e.
+    // IBar::Baz.
+    std::string cppLocalName() const;
+
     // Returns a fully qualified absolute C++ type name, i.e.
     // ::android::hardware::Foo::V1_0::bar::baz.
     std::string cppName() const;

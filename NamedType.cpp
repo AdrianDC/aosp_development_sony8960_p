@@ -30,6 +30,10 @@ void NamedType::setFullName(const FQName &fullName) {
     mFullName = fullName;
 }
 
+void NamedType::addNamedTypesToSet(std::set<const FQName> &set) const {
+    set.insert(mFullName);
+}
+
 const FQName &NamedType::fqName() const {
     return mFullName;
 }
@@ -40,6 +44,10 @@ std::string NamedType::localName() const {
 
 std::string NamedType::fullName() const {
     return mFullName.cppName();
+}
+
+std::string NamedType::partialCppName() const {
+    return mFullName.cppLocalName();
 }
 
 std::string NamedType::fullJavaName() const {
