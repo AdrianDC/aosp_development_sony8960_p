@@ -116,6 +116,9 @@ struct FQName {
             std::vector<std::string> *components,
             bool cpp_compatible) const;
 
+    std::string getPackageMajorVersion() const;
+
+    std::string getPackageMinorVersion() const;
 private:
     bool mValid;
     std::string mPackage;
