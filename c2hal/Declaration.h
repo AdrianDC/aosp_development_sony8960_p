@@ -21,7 +21,7 @@
 #include <android-base/logging.h>
 #include <string>
 #include <vector>
-#include <hidl-util/Formatter.h>
+#include "../Formatter.h"
 
 namespace android {
 

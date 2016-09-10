@@ -17,6 +17,7 @@
 #include "AST.h"
 
 #include "Coordinator.h"
+#include "Formatter.h"
 #include "FQName.h"
 #include "HandleType.h"
 #include "Interface.h"
@@ -24,7 +25,6 @@
 #include "Scope.h"
 #include "TypeDef.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 #include <iostream>
 #include <stdlib.h>
