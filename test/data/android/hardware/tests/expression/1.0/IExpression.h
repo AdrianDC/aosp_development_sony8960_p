@@ -3,6 +3,7 @@
 
 #include <hidl/HidlSupport.h>
 #include <hidl/IServiceManager.h>
+#include <hidl/MQDescriptor.h>
 #include <hidl/Status.h>
 #include <utils/NativeHandle.h>
 

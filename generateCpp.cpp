@@ -147,6 +147,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
     out << "#include <hidl/HidlSupport.h>\n";
     out << "#include <hidl/IServiceManager.h>\n";
+    out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
         out << "#include <hidl/Status.h>\n";
