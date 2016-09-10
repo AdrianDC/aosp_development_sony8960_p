@@ -16,9 +16,9 @@
 
 #include "Scope.h"
 
+#include "Formatter.h"
 #include "Interface.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {

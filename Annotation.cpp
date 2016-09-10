@@ -16,7 +16,8 @@
 
 #include "Annotation.h"
 
-#include <hidl-util/Formatter.h>
+#include "Formatter.h"
+
 #include <vector>
 
 namespace android {
