@@ -67,7 +67,7 @@ void Method::generateCppSignature(Formatter &out,
         std::string extra;
         out << space
             << "Return<"
-            << elidedReturn->type().getCppResultType(&extra)
+            << elidedReturn->type().getCppResultType(&extra, specifyNamespaces)
             << "> ";
     }
 
