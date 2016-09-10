@@ -27,8 +27,6 @@ namespace android {
 struct StringHelper {
 
     static std::string Upcase(const std::string &in);
-    static std::string Capitalize(const std::string &in);
-    static std::string SnakeCaseToCamelCase(const std::string &in);
 
     static void SplitString(
         const std::string &s,
