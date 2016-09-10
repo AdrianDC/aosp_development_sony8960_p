@@ -17,9 +17,9 @@
 #include "Interface.h"
 
 #include "Annotation.h"
+#include "Formatter.h"
 #include "Method.h"
 
-#include <hidl-util/Formatter.h>
 #include <iostream>
 
 namespace android {

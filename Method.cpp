@@ -17,10 +17,9 @@
 #include "Method.h"
 
 #include "Annotation.h"
+#include "Formatter.h"
 #include "ScalarType.h"
 #include "Type.h"
-
-#include <hidl-util/Formatter.h>
 
 namespace android {
 
