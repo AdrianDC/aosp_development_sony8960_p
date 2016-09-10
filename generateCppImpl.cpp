@@ -130,6 +130,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     out << "I" << baseName << ".h>\n";
 
     out << "#include <hidl/Status.h>\n\n";
+    out << "#include <hidl/MQDescriptor.h>\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "namespace implementation {\n\n";

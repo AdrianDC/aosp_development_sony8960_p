@@ -244,6 +244,13 @@ Type *AST::lookupType(const char *name) {
         }
     }
 
+    if (resolvedType == nullptr
+            && fqName.package().empty()
+            && fqName.version().empty()
+            && fqName.name() == "MQDescriptor") {
+        return new PredefinedType("::android::hardware::MQDescriptor");
+    }
+
     if (resolvedType) {
 #if 0
         LOG(INFO) << "found '"
