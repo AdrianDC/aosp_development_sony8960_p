@@ -21,9 +21,31 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <hidl-util/StringHelper.h>
+#include <sstream>
 
 namespace android {
+
+static std::string capitalize(const std::string in) {
+    std::string out{in};
+
+    if(!out.empty()) {
+        out[0] = toupper(out[0]);
+    }
+
+    return out;
+}
+
+static std::string snakeCaseToCamelCase(const std::string in) {
+    std::istringstream ss(in);
+    std::string word;
+    std::string out;
+
+    while (std::getline(ss, word, '_')) {
+        out += capitalize(word);
+    }
+
+    return out;
+}
 
 CompositeDeclaration::CompositeDeclaration(
         const Type::Qualifier::Qualification qualifier,
@@ -135,7 +157,7 @@ std::string CompositeDeclaration::getInterfaceName() const {
         baseName = baseName.substr(0, baseName.length() - 2);
     }
 
-    return "I" + StringHelper::SnakeCaseToCamelCase(baseName);
+    return "I" + snakeCaseToCamelCase(baseName);
 }
 
 bool CompositeDeclaration::isInterface() const {
