@@ -16,9 +16,9 @@
 
 #include "Type.h"
 
+#include "Formatter.h"
 #include "ScalarType.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {

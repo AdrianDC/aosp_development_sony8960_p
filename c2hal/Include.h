@@ -17,12 +17,11 @@
 #ifndef INCLUDE_H_
 #define INCLUDE_H_
 
-#include "Declaration.h"
-
 #include <android-base/macros.h>
 #include <android-base/logging.h>
 #include <string>
-#include <hidl-util/Formatter.h>
+#include "../Formatter.h"
+#include "Declaration.h"
 
 namespace android {
 

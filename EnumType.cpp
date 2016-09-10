@@ -16,10 +16,10 @@
 
 #include "EnumType.h"
 
+#include "Formatter.h"
+#include <inttypes.h>
 #include "ScalarType.h"
 
-#include <inttypes.h>
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {

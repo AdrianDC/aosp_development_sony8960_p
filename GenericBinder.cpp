@@ -16,7 +16,7 @@
 
 #include "GenericBinder.h"
 
-#include <hidl-util/Formatter.h>
+#include "Formatter.h"
 
 namespace android {
 

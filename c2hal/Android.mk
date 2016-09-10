@@ -6,6 +6,7 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 # LOCAL_IS_HOST_MODULE := true
 
 LOCAL_SRC_FILES :=              \
+    ../Formatter.cpp            \
     AST.cpp                     \
     c2hal_l.ll                  \
     c2hal_y.yy                  \
@@ -25,7 +26,6 @@ LOCAL_SRC_FILES :=              \
 LOCAL_SHARED_LIBRARIES :=       \
     libbase                     \
     liblog                      \
-    libhidl-gen-utils           \
 
 LOCAL_STATIC_LIBRARIES :=       \
     libutils                    \
