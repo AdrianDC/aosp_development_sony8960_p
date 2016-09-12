@@ -19,27 +19,39 @@
 #define ANNOTATION_H_
 
 #include <android-base/macros.h>
-
+#include <map>
 #include <string>
-#include <utils/KeyedVector.h>
 
 namespace android {
 
 struct Formatter;
-using AnnotationParamVector =
-    DefaultKeyedVector<std::string, std::vector<std::string> *>;
+
+struct AnnotationParam {
+    AnnotationParam(const std::string &name,
+                    std::vector<std::string> *values);
+
+    const std::string &getName() const;
+    const std::vector<std::string> *getValues() const;
+
+private:
+    const std::string mName;
+    std::vector<std::string> *mValues;
+};
+
+using AnnotationParamVector = std::vector<const AnnotationParam*>;
 
 struct Annotation {
     Annotation(const char *name, AnnotationParamVector *params);
 
     std::string name() const;
     const AnnotationParamVector &params() const;
+    const AnnotationParam *getParam(const std::string &name);
 
     void dump(Formatter &out) const;
 
 private:
     std::string mName;
-    AnnotationParamVector *mParamsByName;
+    AnnotationParamVector *mParams;
 
     DISALLOW_COPY_AND_ASSIGN(Annotation);
 };

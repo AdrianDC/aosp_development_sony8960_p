@@ -21,9 +21,22 @@
 
 namespace android {
 
+
+AnnotationParam::AnnotationParam(const std::string &name,
+                std::vector<std::string> *values)
+: mName(name), mValues(values) {}
+
+const std::string &AnnotationParam::getName() const {
+    return mName;
+}
+
+const std::vector<std::string> *AnnotationParam::getValues() const {
+    return mValues;
+}
+
 Annotation::Annotation(const char *name,AnnotationParamVector *params)
         : mName(name),
-          mParamsByName(params) {
+          mParams(params) {
 }
 
 std::string Annotation::name() const {
@@ -31,32 +44,44 @@ std::string Annotation::name() const {
 }
 
 const AnnotationParamVector &Annotation::params() const {
-    return *mParamsByName;
+    return *mParams;
+}
+
+const AnnotationParam *Annotation::getParam(const std::string &name) {
+    for (auto *i: *mParams) {
+        if (i->getName() == name) {
+            return i;
+        }
+    }
+
+    return nullptr;
 }
 
 void Annotation::dump(Formatter &out) const {
     out << "@" << mName;
 
-    if (mParamsByName->size() == 0) {
+    if (mParams->size() == 0) {
         return;
     }
 
     out << "(";
 
-    for (size_t i = 0; i < mParamsByName->size(); ++i) {
+    for (size_t i = 0; i < mParams->size(); ++i) {
         if (i > 0) {
             out << ", ";
         }
 
-        out << mParamsByName->keyAt(i) << "=";
+        const AnnotationParam* param = mParams->at(i);
 
-        const std::vector<std::string> *param = mParamsByName->valueAt(i);
-        if (param->size() > 1) {
+        out << param->getName() << "=";
+
+        const std::vector<std::string> *values = param->getValues();
+        if (values->size() > 1) {
             out << "{";
         }
 
         bool first = true;
-        for (const auto &value : *param) {
+        for (const auto &value : *values) {
             if (!first) {
                 out << ", ";
             }
@@ -66,7 +91,7 @@ void Annotation::dump(Formatter &out) const {
             first = false;
         }
 
-        if (param->size() > 1) {
+        if (values->size() > 1) {
             out << "}";
         }
     }

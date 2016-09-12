@@ -20,9 +20,10 @@
 
 #include <android-base/macros.h>
 #include <functional>
+#include <map>
 #include <set>
 #include <string>
-#include <utils/KeyedVector.h>
+#include <utils/Errors.h>
 #include <vector>
 
 namespace android {
@@ -92,7 +93,7 @@ private:
     // "hardware/interfaces".
     std::vector<std::string> mPackageRootPaths;
     std::vector<std::string> mPackageRoots;
-    KeyedVector<FQName, AST *> mCache;
+    std::map<FQName, AST *> mCache;
 
     std::vector<std::string>::const_iterator findPackageRoot(
             const FQName &fqName) const;

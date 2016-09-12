@@ -25,10 +25,11 @@
 namespace android {
 
 Interface::Interface(
-        const char *localName, Interface *super, AnnotationVector *annotations)
+        const char *localName, Interface *super,
+        std::vector<Annotation *> *annotations)
     : Scope(localName),
       mSuperType(super),
-      mAnnotationsByName(annotations),
+      mAnnotations(annotations),
       mIsJavaCompatibleInProgress(false) {
 }
 
@@ -52,8 +53,8 @@ const std::vector<Method *> &Interface::methods() const {
     return mMethods;
 }
 
-const AnnotationVector &Interface::annotations() const {
-    return *mAnnotationsByName;
+const std::vector<Annotation *> &Interface::annotations() const {
+    return *mAnnotations;
 }
 
 std::string Interface::getBaseName() const {
@@ -217,21 +218,21 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
             out << "}\n";
         }
         // Generate declaration for each annotation.
-        const AnnotationVector & annotations = method->annotations();
-        for (size_t i = 0; i < annotations.size(); i++) {
+        for (const auto &annotation : method->annotations()) {
             out << "callflow: {\n";
             out.indent();
-            std::string name = annotations.keyAt(i);
+            std::string name = annotation->name();
             if (name == "entry") {
                 out << "entry: true\n";
             } else if (name == "exit") {
                 out << "exit: true\n";
             } else if (name == "callflow") {
-                Annotation* annotation = annotations.valueAt(i);
-                std::vector<std::string> * values = annotation->params()
-                        .valueFor("next");
-                for (auto value : *values) {
-                    out << "next: " << value << "\n";
+                const AnnotationParam *param =
+                        annotation->getParam("next");
+                if (param != nullptr) {
+                    for (auto value : *param->getValues()) {
+                        out << "next: " << value << "\n";
+                    }
                 }
             } else {
                 std::cerr << "Invalid annotation '"

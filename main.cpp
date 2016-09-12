@@ -228,16 +228,14 @@ static void generateMakefileSectionForLanguage(
             CHECK(typesAST != nullptr);
 
             Scope *rootScope = typesAST->scope();
-            for (size_t i = 0; i < rootScope->countTypes(); ++i) {
-                std::string typeName;
-                rootScope->typeAt(i, &typeName);
 
+            for (const auto &type : rootScope->getSubTypes()) {
                 generateMakefileSectionForLanguageAndType(
                         out,
                         coordinator,
                         packageFQName,
                         fqName,
-                        typeName.c_str(),
+                        type->localName().c_str(),
                         forJava);
             }
 

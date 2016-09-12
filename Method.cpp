@@ -28,12 +28,12 @@ Method::Method(const char *name,
        std::vector<TypedVar *> *args,
        std::vector<TypedVar *> *results,
        bool oneway,
-       AnnotationVector *annotations)
+       std::vector<Annotation *> *annotations)
     : mName(name),
       mArgs(args),
       mResults(results),
       mOneway(oneway),
-      mAnnotationsByName(annotations) {
+      mAnnotations(annotations) {
 }
 
 std::string Method::name() const {
@@ -48,8 +48,8 @@ const std::vector<TypedVar *> &Method::results() const {
     return *mResults;
 }
 
-const AnnotationVector &Method::annotations() const {
-    return *mAnnotationsByName;
+const std::vector<Annotation *> &Method::annotations() const {
+    return *mAnnotations;
 }
 
 void Method::generateCppSignature(Formatter &out,
@@ -135,16 +135,16 @@ std::string Method::GetJavaArgSignature(const std::vector<TypedVar *> &args) {
 }
 
 void Method::dumpAnnotations(Formatter &out) const {
-    if (mAnnotationsByName->size() == 0) {
+    if (mAnnotations->size() == 0) {
         return;
     }
 
     out << "// ";
-    for (size_t i = 0; i < mAnnotationsByName->size(); ++i) {
+    for (size_t i = 0; i < mAnnotations->size(); ++i) {
         if (i > 0) {
             out << " ";
         }
-        mAnnotationsByName->valueAt(i)->dump(out);
+        mAnnotations->at(i)->dump(out);
     }
     out << "\n";
 }

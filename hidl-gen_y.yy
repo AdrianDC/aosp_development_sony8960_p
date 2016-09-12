@@ -30,7 +30,6 @@
 #include "hidl-gen_y.h"
 
 #include <stdio.h>
-#include <utils/String8.h>
 
 using namespace android;
 
@@ -132,10 +131,10 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
     android::Method *method;
     android::CompoundType::Style compoundStyle;
     std::vector<std::string> *stringVec;
-    std::pair<std::string, std::vector<std::string> *> *annotationParam;
-    android::DefaultKeyedVector<std::string, std::vector<std::string> *> *annotationParams;
+    android::AnnotationParam *annotationParam;
+    android::AnnotationParamVector *annotationParams;
     android::Annotation *annotation;
-    android::DefaultKeyedVector<std::string, android::Annotation *> *annotations;
+    std::vector<android::Annotation *> *annotations;
 }
 
 %%
@@ -143,12 +142,12 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 opt_annotations
     : /* empty */
       {
-          $$ = new DefaultKeyedVector<std::string, Annotation *>;
+          $$ = new std::vector<Annotation *>;
       }
     | opt_annotations annotation
       {
           $$ = $1;
-          $$->add($2->name(), $2);
+          $$->push_back($2);
       }
     ;
 
@@ -162,7 +161,7 @@ annotation
 opt_annotation_params
     : /* empty */
       {
-          $$ = new DefaultKeyedVector<std::string, std::vector<std::string> *>;
+          $$ = new AnnotationParamVector;
       }
     | '(' annotation_params ')'
       {
@@ -173,20 +172,20 @@ opt_annotation_params
 annotation_params
     : annotation_param
       {
-          $$ = new DefaultKeyedVector<std::string, std::vector<std::string> *>;
-          $$->add($1->first, $1->second);
+          $$ = new AnnotationParamVector;
+          $$->push_back($1);
       }
     | annotation_params ',' annotation_param
       {
           $$ = $1;
-          $$->add($3->first, $3->second);
+          $$->push_back($3);
       }
     ;
 
 annotation_param
     : IDENTIFIER '=' annotation_value
       {
-          $$ = new std::pair<std::string, std::vector<std::string> *>($1, $3);
+          $$ = new AnnotationParam($1, $3);
       }
     ;
 

@@ -43,11 +43,9 @@ Coordinator::~Coordinator() {
 AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     CHECK(fqName.isFullyQualified());
 
-    // LOG(INFO) << "parsing " << fqName.string();
-
-    ssize_t index = mCache.indexOfKey(fqName);
-    if (index >= 0) {
-        AST *ast = mCache.valueAt(index);
+    auto it = mCache.find(fqName);
+    if (it != mCache.end()) {
+        AST *ast = (*it).second;
 
         if (ast != nullptr && parsedASTs != nullptr) {
             parsedASTs->insert(ast);
@@ -57,7 +55,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     }
 
     // Add this to the cache immediately, so we can discover circular imports.
-    mCache.add(fqName, nullptr);
+    mCache[fqName] = nullptr;
 
     AST *typesAST = nullptr;
 
@@ -141,7 +139,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
 
     if (parsedASTs != nullptr) { parsedASTs->insert(ast); }
 
-    mCache.add(fqName, ast);
+    mCache[fqName] = ast;
 
     return ast;
 }

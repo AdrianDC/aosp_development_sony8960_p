@@ -19,10 +19,9 @@
 #define AST_H_
 
 #include <android-base/macros.h>
+#include <map>
 #include <set>
 #include <string>
-#include <utils/KeyedVector.h>
-#include <utils/RefBase.h>
 #include <vector>
 
 #include "FQName.h"
@@ -96,7 +95,7 @@ struct AST {
 private:
     Coordinator *mCoordinator;
     std::string mPath;
-    Vector<Scope *> mScopePath;
+    std::vector<Scope *> mScopePath;
 
     void *mScanner;
     Scope *mRootScope;
@@ -115,13 +114,11 @@ private:
     std::set<AST *> mImportedASTs;
 
     // Types keyed by full names defined in this AST.
-    KeyedVector<FQName, Type *> mDefinedTypesByFullName;
+    std::map<FQName, Type *> mDefinedTypesByFullName;
 
     bool addScopedTypeInternal(
-            const char *localName,
-            Type *type,
-            std::string *errorMsg,
-            bool isTypeDef);
+            NamedType *type,
+            std::string *errorMsg);
 
     // Find a type matching fqName (which may be partial) and if found
     // return the associated type and fill in the full "matchingName".
