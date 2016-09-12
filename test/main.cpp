@@ -162,6 +162,13 @@ struct Bar : public IBar {
             const hidl_vec<hidl_string> &vector,
             haveAStringVec_cb _cb) override;
 
+    Return<void> transposeMe(
+            const float *in /* float[3][5] */, transposeMe_cb _cb) override;
+
+    Return<void> callingDrWho(
+            const MultiDimensional &in,
+            callingDrWho_cb _hidl_cb) override;
+
     Return<void> thisIsNew() override;
 };
 
@@ -339,6 +346,101 @@ Return<void> Bar::haveAStringVec(
     result[1] = "World";
 
     _cb(result);
+
+    return Void();
+}
+
+static std::string FloatArray2DToString(const float *x, size_t n1, size_t n2) {
+    std::string s;
+    s += "[";
+    for (size_t i = 0; i < n1; ++i) {
+        if (i > 0) {
+            s += ", ";
+        }
+
+        s += "[";
+        for (size_t j = 0; j < n2; ++j) {
+            if (j > 0) {
+                s += ", ";
+            }
+            s += std::to_string(x[i * n2 + j]);
+        }
+        s += "]";
+    }
+    s += "]";
+
+    return s;
+}
+
+Return<void> Bar::transposeMe(
+        const float *in /* float[3][5] */, transposeMe_cb _cb) {
+    ALOGI("SERVER(Bar) transposeMe(%s)",
+          FloatArray2DToString(in, 3, 5).c_str());
+
+    float out[5][3];
+    for (size_t i = 0; i < 5; ++i) {
+        for (size_t j = 0; j < 3; ++j) {
+            out[i][j] = in[5 * j + i];
+        }
+    }
+
+    _cb(&out[0][0]);
+
+    return Void();
+}
+
+static std::string QuuxToString(const IFoo::Quux &val) {
+    std::string s;
+
+    s = "Quux(first='";
+    s += val.first.c_str();
+    s += "', last='";
+    s += val.last.c_str();
+    s += "')";
+
+    return s;
+}
+
+static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
+    std::string s;
+
+    s += "MultiDimensional(";
+
+    s += "quuxMatrix=[";
+    for (size_t i = 0; i < 5; ++i) {
+        if (i > 0) {
+            s += ", ";
+        }
+
+        s += "[";
+        for (size_t j = 0; j < 3; ++j) {
+            if (j > 0) {
+                s += ", ";
+            }
+
+            s += QuuxToString(val.quuxMatrix[i][j]);
+        }
+    }
+    s += "]";
+
+    s += ")";
+
+    return s;
+}
+
+Return<void> Bar::callingDrWho(
+        const MultiDimensional &in, callingDrWho_cb _hidl_cb) {
+    ALOGI("SERVER(Bar) callingDrWho(%s)", MultiDimensionalToString(in).c_str());
+
+    MultiDimensional out;
+    for (size_t i = 0; i < 5; ++i) {
+        for (size_t j = 0; j < 3; ++j) {
+            out.quuxMatrix[i][j].first = in.quuxMatrix[4 - i][2 - j].last;
+            out.quuxMatrix[i][j].last = in.quuxMatrix[4 - i][2 - j].first;
+        }
+    }
+
+    _hidl_cb(out);
 
     return Void();
 }
@@ -651,6 +753,66 @@ TEST_F(HidlTest, FooHaveAStringVecTest) {
     stringVecParam[2] = "disaster";
     EXPECT_OK(foo->haveAStringVec(stringVecParam));
     ALOGI("CLIENT haveAStringVec returned.");
+}
+
+TEST_F(HidlTest, FooTransposeMeTest) {
+    float in[3][5];
+    float k = 1.0f;
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j, ++k) {
+            in[i][j] = k;
+        }
+    }
+
+    ALOGI("CLIENT call transposeMe(%s).",
+          FloatArray2DToString(&in[0][0], 3, 5).c_str());
+
+    EXPECT_OK(foo->transposeMe(
+                &in[0][0],
+                [&](const auto &out) {
+                    ALOGI("CLIENT transposeMe returned %s.",
+                          FloatArray2DToString(out, 5, 3).c_str());
+
+                    for (size_t i = 0; i < 3; ++i) {
+                        for (size_t j = 0; j < 5; ++j) {
+                            EXPECT_EQ(out[3 * j + i], in[i][j]);
+                        }
+                    }
+                }));
+}
+
+TEST_F(HidlTest, FooCallingDrWhoTest) {
+    IFoo::MultiDimensional in;
+
+    size_t k = 0;
+    for (size_t i = 0; i < 5; ++i) {
+        for (size_t j = 0; j < 3; ++j, ++k) {
+            in.quuxMatrix[i][j].first = ("First " + std::to_string(k)).c_str();
+            in.quuxMatrix[i][j].last = ("Last " + std::to_string(15-k)).c_str();
+        }
+    }
+
+    ALOGI("CLIENT call callingDrWho(%s).",
+          MultiDimensionalToString(in).c_str());
+
+    EXPECT_OK(foo->callingDrWho(
+                in,
+                [&](const auto &out) {
+                    ALOGI("CLIENT callingDrWho returned %s.",
+                          MultiDimensionalToString(out).c_str());
+
+                    for (size_t i = 0; i < 5; ++i) {
+                        for (size_t j = 0; j < 3; ++j) {
+                            EXPECT_STREQ(
+                                out.quuxMatrix[i][j].first.c_str(),
+                                in.quuxMatrix[4-i][2-j].last.c_str());
+
+                            EXPECT_STREQ(
+                                out.quuxMatrix[i][j].last.c_str(),
+                                in.quuxMatrix[4-i][2-j].first.c_str());
+                        }
+                    }
+                }));
 }
 
 TEST_F(HidlTest, BarThisIsNewTest) {
