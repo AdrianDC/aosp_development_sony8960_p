@@ -39,6 +39,14 @@ struct Baz : public IBaz {
     Return<void> someOtherBaseMethod(
             const IBaz::Foo &foo, someOtherBaseMethod_cb _hidl_cb) override;
 
+    Return<void> someMethodWithFooArrays(
+            const IBaz::Foo fooInput[2],
+            someMethodWithFooArrays_cb _hidl_cb) override;
+
+    Return<void> someMethodWithFooVectors(
+            const hidl_vec<IBaz::Foo> &fooInput,
+            someMethodWithFooVectors_cb _hidl_cb) override;
+
     Return<bool> someBoolMethod(bool x) override;
 
     Return<void> someBoolArrayMethod(
@@ -147,6 +155,36 @@ Return<void> Baz::someOtherBaseMethod(
               << to_string(foo);
 
     _hidl_cb(foo);
+
+    return Void();
+}
+
+Return<void> Baz::someMethodWithFooArrays(
+        const IBaz::Foo fooInput[2], someMethodWithFooArrays_cb _hidl_cb) {
+    LOG(INFO) << "Baz::someMethodWithFooArrays "
+              << array_to_string(fooInput, 2);
+
+    IBaz::Foo fooOutput[2];
+    fooOutput[0] = fooInput[1];
+    fooOutput[1] = fooInput[0];
+
+    _hidl_cb(fooOutput);
+
+    return Void();
+}
+
+Return<void> Baz::someMethodWithFooVectors(
+        const hidl_vec<IBaz::Foo> &fooInput,
+        someMethodWithFooVectors_cb _hidl_cb) {
+    LOG(INFO) << "Baz::someMethodWithFooVectors "
+              << to_string(fooInput);
+
+    hidl_vec<IBaz::Foo> fooOutput;
+    fooOutput.resize(2);
+    fooOutput[0] = fooInput[1];
+    fooOutput[1] = fooInput[0];
+
+    _hidl_cb(fooOutput);
 
     return Void();
 }
@@ -385,6 +423,95 @@ TEST_F(HidlTest, BazSomeOtherBaseMethodTest) {
                                    "Bar(z = 1.020000, s = 'Hello, world 2'), "
                                    "Bar(z = 1.030000, s = 'Hello, world 3'), "
                                    "Bar(z = 1.040000, s = 'Hello, world 4')])");
+                }));
+}
+
+TEST_F(HidlTest, BazSomeMethodWithFooArraysTest) {
+    IBase::Foo foo[2];
+
+    foo[0].x = 1;
+    foo[0].y.z = 2.5;
+    foo[0].y.s = "Hello, world";
+
+    foo[0].aaa.resize(5);
+    for (size_t i = 0; i < foo[0].aaa.size(); ++i) {
+        foo[0].aaa[i].z = 1.0f + (float)i * 0.01f;
+        foo[0].aaa[i].s = ("Hello, world " + std::to_string(i)).c_str();
+    }
+
+    foo[1].x = 2;
+    foo[1].y.z = -2.5;
+    foo[1].y.s = "Morituri te salutant";
+
+    foo[1].aaa.resize(3);
+    for (size_t i = 0; i < foo[1].aaa.size(); ++i) {
+        foo[1].aaa[i].z = 2.0f - (float)i * 0.01f;
+        foo[1].aaa[i].s = ("Alea iacta est: " + std::to_string(i)).c_str();
+    }
+
+    EXPECT_OK(
+            baz->someMethodWithFooArrays(
+                foo,
+                [&](const auto &result) {
+                    EXPECT_EQ(
+                        array_to_string(result, 2),
+                        "[Foo(x = 2, "
+                             "y = Bar(z = -2.500000, s = 'Morituri te salutant'), "
+                             "aaa = [Bar(z = 2.000000, s = 'Alea iacta est: 0'), "
+                                    "Bar(z = 1.990000, s = 'Alea iacta est: 1'), "
+                                    "Bar(z = 1.980000, s = 'Alea iacta est: 2')]), "
+                        "Foo(x = 1, "
+                            "y = Bar(z = 2.500000, s = 'Hello, world'), "
+                            "aaa = [Bar(z = 1.000000, s = 'Hello, world 0'), "
+                                   "Bar(z = 1.010000, s = 'Hello, world 1'), "
+                                   "Bar(z = 1.020000, s = 'Hello, world 2'), "
+                                   "Bar(z = 1.030000, s = 'Hello, world 3'), "
+                                   "Bar(z = 1.040000, s = 'Hello, world 4')])]");
+                }));
+}
+
+TEST_F(HidlTest, BazSomeMethodWithFooVectorsTest) {
+    hidl_vec<IBase::Foo> foo;
+    foo.resize(2);
+
+    foo[0].x = 1;
+    foo[0].y.z = 2.5;
+    foo[0].y.s = "Hello, world";
+
+    foo[0].aaa.resize(5);
+    for (size_t i = 0; i < foo[0].aaa.size(); ++i) {
+        foo[0].aaa[i].z = 1.0f + (float)i * 0.01f;
+        foo[0].aaa[i].s = ("Hello, world " + std::to_string(i)).c_str();
+    }
+
+    foo[1].x = 2;
+    foo[1].y.z = -2.5;
+    foo[1].y.s = "Morituri te salutant";
+
+    foo[1].aaa.resize(3);
+    for (size_t i = 0; i < foo[1].aaa.size(); ++i) {
+        foo[1].aaa[i].z = 2.0f - (float)i * 0.01f;
+        foo[1].aaa[i].s = ("Alea iacta est: " + std::to_string(i)).c_str();
+    }
+
+    EXPECT_OK(
+            baz->someMethodWithFooVectors(
+                foo,
+                [&](const auto &result) {
+                    EXPECT_EQ(
+                        to_string(result),
+                        "[Foo(x = 2, "
+                             "y = Bar(z = -2.500000, s = 'Morituri te salutant'), "
+                             "aaa = [Bar(z = 2.000000, s = 'Alea iacta est: 0'), "
+                                    "Bar(z = 1.990000, s = 'Alea iacta est: 1'), "
+                                    "Bar(z = 1.980000, s = 'Alea iacta est: 2')]), "
+                        "Foo(x = 1, "
+                            "y = Bar(z = 2.500000, s = 'Hello, world'), "
+                            "aaa = [Bar(z = 1.000000, s = 'Hello, world 0'), "
+                                   "Bar(z = 1.010000, s = 'Hello, world 1'), "
+                                   "Bar(z = 1.020000, s = 'Hello, world 2'), "
+                                   "Bar(z = 1.030000, s = 'Hello, world 3'), "
+                                   "Bar(z = 1.040000, s = 'Hello, world 4')])]");
                 }));
 }
 

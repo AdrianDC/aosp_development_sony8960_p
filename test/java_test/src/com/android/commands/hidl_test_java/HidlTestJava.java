@@ -93,6 +93,20 @@ public final class HidlTestJava {
         return builder.toString();
     }
 
+    public static String toString(IBase.Foo[] array) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        for (int i = 0; i < array.length; ++i) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(toString(array[i]));
+        }
+        builder.append("]");
+
+        return builder.toString();
+    }
+
     public static String toString(IBase.Foo.Bar[] array) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
@@ -237,6 +251,106 @@ public final class HidlTestJava {
                               "Bar(z = 1.04, s = 'Hello, world 4')])");
         }
 
+        {
+            IBase.Foo[] inputArray = new IBase.Foo[2];
+
+            IBase.Foo foo = new IBase.Foo();
+            foo.x = 1;
+
+            for (int i = 0; i < 5; ++i) {
+                IBase.Foo.Bar bar = new IBase.Foo.Bar();
+                bar.z = 1.0f + (float)i * 0.01f;
+                bar.s = "Hello, world " + i;
+                foo.aaa.add(bar);
+            }
+
+            foo.y.z = 3.14f;
+            foo.y.s = "Lorem ipsum...";
+
+            inputArray[0] = foo;
+
+            foo = new IBase.Foo();
+            foo.x = 2;
+
+            for (int i = 0; i < 3; ++i) {
+                IBase.Foo.Bar bar = new IBase.Foo.Bar();
+                bar.z = 2.0f - (float)i * 0.01f;
+                bar.s = "Lorem ipsum " + i;
+                foo.aaa.add(bar);
+            }
+
+            foo.y.z = 1.1414f;
+            foo.y.s = "Et tu brute?";
+
+            inputArray[1] = foo;
+
+            IBase.Foo[] outputArray = proxy.someMethodWithFooArrays(inputArray);
+
+            Expect(toString(outputArray),
+                   "[Foo(x = 2, " +
+                        "y = Bar(z = 1.1414, s = 'Et tu brute?'), " +
+                        "aaa = [Bar(z = 2.0, s = 'Lorem ipsum 0'), " +
+                               "Bar(z = 1.99, s = 'Lorem ipsum 1'), " +
+                               "Bar(z = 1.98, s = 'Lorem ipsum 2')]), " +
+                     "Foo(x = 1, " +
+                         "y = Bar(z = 3.14, s = 'Lorem ipsum...'), " +
+                         "aaa = [Bar(z = 1.0, s = 'Hello, world 0'), " +
+                                "Bar(z = 1.01, s = 'Hello, world 1'), " +
+                                "Bar(z = 1.02, s = 'Hello, world 2'), " +
+                                "Bar(z = 1.03, s = 'Hello, world 3'), " +
+                                "Bar(z = 1.04, s = 'Hello, world 4')])]");
+        }
+
+        {
+            IBase.Foo[] inputArray = new IBase.Foo[2];
+
+            IBase.Foo foo = new IBase.Foo();
+            foo.x = 1;
+
+            for (int i = 0; i < 5; ++i) {
+                IBase.Foo.Bar bar = new IBase.Foo.Bar();
+                bar.z = 1.0f + (float)i * 0.01f;
+                bar.s = "Hello, world " + i;
+                foo.aaa.add(bar);
+            }
+
+            foo.y.z = 3.14f;
+            foo.y.s = "Lorem ipsum...";
+
+            inputArray[0] = foo;
+
+            foo = new IBase.Foo();
+            foo.x = 2;
+
+            for (int i = 0; i < 3; ++i) {
+                IBase.Foo.Bar bar = new IBase.Foo.Bar();
+                bar.z = 2.0f - (float)i * 0.01f;
+                bar.s = "Lorem ipsum " + i;
+                foo.aaa.add(bar);
+            }
+
+            foo.y.z = 1.1414f;
+            foo.y.s = "Et tu brute?";
+
+            inputArray[1] = foo;
+
+            IBase.Foo[] outputArray = proxy.someMethodWithFooVectors(inputArray);
+
+            Expect(toString(outputArray),
+                   "[Foo(x = 2, " +
+                        "y = Bar(z = 1.1414, s = 'Et tu brute?'), " +
+                        "aaa = [Bar(z = 2.0, s = 'Lorem ipsum 0'), " +
+                               "Bar(z = 1.99, s = 'Lorem ipsum 1'), " +
+                               "Bar(z = 1.98, s = 'Lorem ipsum 2')]), " +
+                     "Foo(x = 1, " +
+                         "y = Bar(z = 3.14, s = 'Lorem ipsum...'), " +
+                         "aaa = [Bar(z = 1.0, s = 'Hello, world 0'), " +
+                                "Bar(z = 1.01, s = 'Hello, world 1'), " +
+                                "Bar(z = 1.02, s = 'Hello, world 2'), " +
+                                "Bar(z = 1.03, s = 'Hello, world 3'), " +
+                                "Bar(z = 1.04, s = 'Hello, world 4')])]");
+        }
+
         Expect(toString(proxy.someBoolMethod(true)), "false");
 
         {
@@ -313,6 +427,26 @@ public final class HidlTestJava {
         public IBase.Foo someOtherBaseMethod(IBase.Foo foo) {
             Log.d(TAG, "Baz someOtherBaseMethod " + HidlTestJava.toString(foo));
             return foo;
+        }
+
+        public IBase.Foo[] someMethodWithFooArrays(IBase.Foo[] fooInput) {
+            Log.d(TAG, "Baz someMethodWithFooArrays " + HidlTestJava.toString(fooInput));
+
+            IBase.Foo[] fooOutput = new IBase.Foo[2];
+            fooOutput[0] = fooInput[1];
+            fooOutput[1] = fooInput[0];
+
+            return fooOutput;
+        }
+
+        public IBase.Foo[] someMethodWithFooVectors(IBase.Foo[] fooInput) {
+            Log.d(TAG, "Baz someMethodWithFooVectors " + HidlTestJava.toString(fooInput));
+
+            IBase.Foo[] fooOutput = new IBase.Foo[2];
+            fooOutput[0] = fooInput[1];
+            fooOutput[1] = fooInput[0];
+
+            return fooOutput;
         }
 
         public boolean someBoolMethod(boolean x) {
