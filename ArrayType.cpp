@@ -173,6 +173,28 @@ void ArrayType::emitJavaReaderWriter(
         const std::string &parcelObj,
         const std::string &argName,
         bool isReader) const {
+    if (mElementType->isCompoundType()) {
+        if (isReader) {
+            out << mElementType->getJavaType()
+                << ".readArrayFromParcel("
+                << parcelObj
+                << ", "
+                << mDimension
+                << ");\n";
+        } else {
+            out << mElementType->getJavaType()
+                << ".writeArrayToParcel("
+                << parcelObj
+                << ", "
+                << mDimension
+                << ", "
+                << argName
+                << ");\n";
+        }
+
+        return;
+    }
+
     emitJavaReaderWriterWithSuffix(
             out,
             parcelObj,
