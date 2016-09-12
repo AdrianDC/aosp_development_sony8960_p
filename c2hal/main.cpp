@@ -24,7 +24,6 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <utils/Errors.h>
 
 using namespace android;
 

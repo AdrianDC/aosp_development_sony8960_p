@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := c2hal
 LOCAL_MODULE_CLASS := EXECUTABLES
-# LOCAL_IS_HOST_MODULE := true
+LOCAL_IS_HOST_MODULE := true
 
 LOCAL_SRC_FILES :=              \
     AST.cpp                     \
