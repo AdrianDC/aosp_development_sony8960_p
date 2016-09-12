@@ -17,6 +17,7 @@
 #include "CompoundType.h"
 
 #include "Formatter.h"
+#include "VectorType.h"
 
 #include <android-base/logging.h>
 
@@ -54,6 +55,10 @@ bool CompoundType::setFields(
         }
     }
 
+    return true;
+}
+
+bool CompoundType::isCompoundType() const {
     return true;
 }
 
@@ -329,6 +334,71 @@ status_t CompoundType::emitJavaTypeDeclarations(
     out.unindent();
     out << "}\n\n";
 
+    ////////////////////////////////////////////////////////////////////////////
+
+    out << "public static final "
+        << localName()
+        << "[] readArrayFromParcel(HwParcel parcel, int size) {\n";
+    out.indent();
+
+    out << localName()
+        << "[] _hidl_array = new "
+        << localName()
+        << "[size];\n";
+
+    out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
+
+    out << "for (int _hidl_index = 0; _hidl_index < size; ++_hidl_index) {\n";
+    out.indent();
+
+    out << "_hidl_array[_hidl_index] = new "
+        << localName()
+        << "();\n";
+
+    size_t structAlign, structSize;
+    getAlignmentAndSize(&structAlign, &structSize);
+
+    out << "_hidl_array[_hidl_index].readEmbeddedFromParcel(\n";
+    out.indent();
+    out.indent();
+    out << "parcel, _hidl_blob, _hidl_index * "
+        << structSize
+        << " /* parentOffset */);\n";
+
+    out.unindent();
+    out.unindent();
+    out.unindent();
+
+    out << "}\nreturn _hidl_array;\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    out << "public static final "
+        << localName()
+        << "[] readVectorFromParcel(HwParcel parcel) {\n";
+    out.indent();
+
+    out << "Vector<"
+        << localName()
+        << "> _hidl_vec = new Vector();\n";
+
+    out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
+
+    VectorType::EmitJavaFieldReaderWriterForElementType(
+            out, this, "_hidl_blob", "_hidl_vec", "0", true /* isReader */);
+
+    out << "\nreturn _hidl_vec.toArray(new "
+        << localName()
+        << "[_hidl_vec.size()]);\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    ////////////////////////////////////////////////////////////////////////////
+
     out << "public final void readEmbeddedFromParcel(\n";
     out.indent();
     out.indent();
@@ -358,11 +428,10 @@ status_t CompoundType::emitJavaTypeDeclarations(
     out.unindent();
     out << "}\n\n";
 
+    ////////////////////////////////////////////////////////////////////////////
+
     out << "public final void writeToParcel(HwParcel parcel) {\n";
     out.indent();
-
-    size_t structAlign, structSize;
-    getAlignmentAndSize(&structAlign, &structSize);
 
     out << "HwBlob _hidl_blob = new HwBlob("
         << structSize
@@ -373,6 +442,66 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out.unindent();
     out << "}\n\n";
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    out << "public static final void writeArrayToParcel(\n";
+    out.indent();
+    out.indent();
+    out << "HwParcel parcel, int size, "
+        << localName()
+        << "[] _hidl_array) {\n";
+    out.unindent();
+
+    out << "HwBlob _hidl_blob = new HwBlob("
+        << "size * "
+        << structSize
+        << " /* size */);\n";
+
+    out << "for (int _hidl_index = 0; _hidl_index < size; ++_hidl_index) {\n";
+    out.indent();
+
+    out << "_hidl_array[_hidl_index].writeEmbeddedToBlob(\n";
+    out.indent();
+    out.indent();
+    out << "_hidl_blob, _hidl_index * "
+        << structSize
+        << " /* parentOffset */);\n";
+
+    out.unindent();
+    out.unindent();
+    out.unindent();
+
+    out << "}\nparcel.writeBuffer(_hidl_blob);\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    out << "public static final void writeVectorToParcel(\n";
+    out.indent();
+    out.indent();
+    out << "HwParcel parcel, "
+        << localName()
+        << "[] _hidl_array) {\n";
+    out.unindent();
+
+    out << "Vector<"
+        << localName()
+        << "> _hidl_vec = new Vector(Arrays.asList(_hidl_array));\n";
+
+    out << "HwBlob _hidl_blob = new HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
+
+    VectorType::EmitJavaFieldReaderWriterForElementType(
+            out, this, "_hidl_blob", "_hidl_vec", "0", false /* isReader */);
+
+    out << "\nparcel.writeBuffer(_hidl_blob);\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    ////////////////////////////////////////////////////////////////////////////
 
     out << "public final void writeEmbeddedToBlob(\n";
     out.indent();

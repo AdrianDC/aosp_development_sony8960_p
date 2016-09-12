@@ -41,6 +41,7 @@ struct Type {
     virtual bool isTypeDef() const;
     virtual bool isBinder() const;
     virtual bool isNamedType() const;
+    virtual bool isCompoundType() const;
 
     virtual const ScalarType *resolveToScalarType() const;
 

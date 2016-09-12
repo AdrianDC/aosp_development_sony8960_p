@@ -82,6 +82,7 @@ status_t AST::generateJavaTypes(
         out << "import android.os.HwBlob;\n";
         out << "import android.os.HwParcel;\n\n";
 
+        out << "import java.util.Arrays;\n";
         out << "import java.util.Vector;\n\n";
 
         for (const auto &item : mImportedNamesForJava) {
@@ -146,6 +147,8 @@ status_t AST::generateJava(
     out << "import android.os.HwBinder;\n";
     out << "import android.os.HwBlob;\n";
     out << "import android.os.HwParcel;\n\n";
+
+    out << "import java.util.Arrays;\n";
     out << "import java.util.Vector;\n\n";
 
     for (const auto &item : mImportedNamesForJava) {
