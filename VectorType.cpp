@@ -57,10 +57,6 @@ std::string VectorType::getJavaType() const {
     return mElementType->getJavaType() + "[]";
 }
 
-std::string VectorType::getJavaSuffix() const {
-    return mElementType->getJavaSuffix() + "Vector";
-}
-
 void VectorType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -182,6 +178,38 @@ void VectorType::emitReaderWriterEmbedded(
     out << "}\n\n";
 }
 
+void VectorType::emitJavaReaderWriter(
+        Formatter &out,
+        const std::string &parcelObj,
+        const std::string &argName,
+        bool isReader) const {
+    if (mElementType->isCompoundType()) {
+        if (isReader) {
+            out << mElementType->getJavaType()
+                << ".readVectorFromParcel("
+                << parcelObj
+                << ");\n";
+        } else {
+            out << mElementType->getJavaType()
+                << ".writeVectorToParcel("
+                << parcelObj
+                << ", "
+                << argName
+                << ");\n";
+        }
+
+        return;
+    }
+
+    emitJavaReaderWriterWithSuffix(
+            out,
+            parcelObj,
+            argName,
+            isReader,
+            mElementType->getJavaSuffix() + "Vector",
+            "" /* extra */);
+}
+
 void VectorType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
     out << "final Vector<"
@@ -197,6 +225,18 @@ void VectorType::emitJavaFieldReaderWriter(
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
+    VectorType::EmitJavaFieldReaderWriterForElementType(
+            out, mElementType, blobName, fieldName, offset, isReader);
+}
+
+// static
+void VectorType::EmitJavaFieldReaderWriterForElementType(
+        Formatter &out,
+        const Type *elementType,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) {
     if (isReader) {
         out << "{\n";
         out.indent();
@@ -225,12 +265,12 @@ void VectorType::emitJavaFieldReaderWriter(
 
         out.indent();
 
-        mElementType->emitJavaFieldInitializer(out, "_hidl_vec_element");
+        elementType->emitJavaFieldInitializer(out, "_hidl_vec_element");
 
         size_t elementAlign, elementSize;
-        mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+        elementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
-        mElementType->emitJavaFieldReaderWriter(
+        elementType->emitJavaFieldReaderWriter(
                 out,
                 "childBlob",
                 "_hidl_vec_element",
@@ -268,7 +308,7 @@ void VectorType::emitJavaFieldReaderWriter(
         << " + 16 /* offsetof(hidl_vec<T>, mOwnsBuffer) */, false);\n";
 
     size_t elementAlign, elementSize;
-    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+    elementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
     // XXX make HwBlob constructor take a long instead of an int?
     out << "HwBlob childBlob = new HwBlob((int)(_hidl_vec_size * "
@@ -280,7 +320,7 @@ void VectorType::emitJavaFieldReaderWriter(
 
     out.indent();
 
-    mElementType->emitJavaFieldReaderWriter(
+    elementType->emitJavaFieldReaderWriter(
             out,
             "childBlob",
             fieldName + ".elementAt(_hidl_index)",

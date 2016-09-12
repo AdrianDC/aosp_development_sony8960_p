@@ -32,7 +32,6 @@ struct VectorType : public Type {
                            bool specifyNamespaces) const override;
 
     std::string getJavaType() const override;
-    std::string getJavaSuffix() const override;
 
     void emitReaderWriter(
             Formatter &out,
@@ -53,6 +52,12 @@ struct VectorType : public Type {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    void emitJavaReaderWriter(
+            Formatter &out,
+            const std::string &parcelObj,
+            const std::string &argName,
+            bool isReader) const override;
+
     void emitJavaFieldInitializer(
             Formatter &out, const std::string &fieldName) const override;
 
@@ -62,6 +67,14 @@ struct VectorType : public Type {
             const std::string &fieldName,
             const std::string &offset,
             bool isReader) const override;
+
+    static void EmitJavaFieldReaderWriterForElementType(
+            Formatter &out,
+            const Type *elementType,
+            const std::string &blobName,
+            const std::string &fieldName,
+            const std::string &offset,
+            bool isReader);
 
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
