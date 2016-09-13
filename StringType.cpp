@@ -104,6 +104,7 @@ void StringType::emitReaderWriter(
 
     emitReaderWriterEmbedded(
             out,
+            0 /* depth */,
             name,
             isReader /* nameIsPointer */,
             parcelObj,
@@ -116,6 +117,7 @@ void StringType::emitReaderWriter(
 
 void StringType::emitReaderWriterEmbedded(
         Formatter &out,
+        size_t /* depth */,
         const std::string &name,
         bool nameIsPointer,
         const std::string &parcelObj,

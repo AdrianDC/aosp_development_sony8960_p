@@ -142,6 +142,7 @@ void CompoundType::emitReaderWriter(
 
     emitReaderWriterEmbedded(
             out,
+            0 /* depth */,
             name,
             isReader /* nameIsPointer */,
             parcelObj,
@@ -154,6 +155,7 @@ void CompoundType::emitReaderWriter(
 
 void CompoundType::emitReaderWriterEmbedded(
         Formatter &out,
+        size_t /* depth */,
         const std::string &name,
         bool nameIsPointer,
         const std::string &parcelObj,
@@ -577,6 +579,7 @@ void CompoundType::emitStructReaderWriter(
 
         field->type().emitReaderWriterEmbedded(
                 out,
+                0 /* depth */,
                 field->name(),
                 false /* nameIsPointer */,
                 "parcel",
