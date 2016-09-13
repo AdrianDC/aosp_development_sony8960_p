@@ -1,6 +1,6 @@
 The object in this prebuilt directory can be rebuilt from
 
 platform/tools/tradefederation
-From the revision a714e85655c94fc115eda920dd4be7e5c520b300
+From the revision df4ec3fa5a4236120bee5e31ca4f379fed7896b9
 
-prebuilt jar is obtained from tradefed@3252269
+prebuilt jar is obtained from tradefed@3267082
