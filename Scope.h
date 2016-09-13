@@ -20,7 +20,7 @@
 
 #include "NamedType.h"
 
-#include <utils/KeyedVector.h>
+#include <map>
 #include <vector>
 
 namespace android {
@@ -31,9 +31,9 @@ struct Interface;
 struct Scope : public NamedType {
     Scope(const char *localName);
 
-    bool addType(const char *localName, Type *type, std::string *errorMsg);
+    bool addType(NamedType *type, std::string *errorMsg);
 
-    Type *lookupType(const char *name) const;
+    NamedType *lookupType(const char *name) const;
 
     bool isScope() const override;
 
@@ -54,18 +54,15 @@ struct Scope : public NamedType {
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;
 
-    const std::vector<Type *> &getSubTypes() const;
+    const std::vector<NamedType *> &getSubTypes() const;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
 
-    size_t countTypes() const;
-    const Type *typeAt(size_t index, std::string *name) const;
-
 private:
-    std::vector<Type *> mTypes;
-    KeyedVector<std::string, size_t> mTypeIndexByName;
+    std::vector<NamedType *> mTypes;
+    std::map<std::string, size_t> mTypeIndexByName;
 
     DISALLOW_COPY_AND_ASSIGN(Scope);
 };

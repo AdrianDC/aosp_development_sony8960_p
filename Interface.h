@@ -18,10 +18,8 @@
 
 #define INTERFACE_H_
 
-#include "Method.h"
 #include "Scope.h"
 
-#include <utils/KeyedVector.h>
 #include <vector>
 
 namespace android {
@@ -33,7 +31,7 @@ struct Interface : public Scope {
     Interface(
             const char *localName,
             Interface *super,
-            AnnotationVector *annotations);
+            std::vector<Annotation *> *annotations);
 
     void addMethod(Method *method);
 
@@ -44,7 +42,7 @@ struct Interface : public Scope {
 
     const std::vector<Method *> &methods() const;
 
-    const AnnotationVector &annotations() const;
+    const std::vector<Annotation *> &annotations() const;
 
     std::string getBaseName() const;
 
@@ -78,7 +76,7 @@ struct Interface : public Scope {
 private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;
-    AnnotationVector *mAnnotationsByName;
+    std::vector<Annotation *> *mAnnotations;
     mutable bool mIsJavaCompatibleInProgress;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);

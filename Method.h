@@ -20,7 +20,6 @@
 
 #include <android-base/macros.h>
 #include <string>
-#include <utils/KeyedVector.h>
 #include <vector>
 
 namespace android {
@@ -31,21 +30,18 @@ struct ScalarType;
 struct Type;
 struct TypedVar;
 
-using AnnotationVector =
-        DefaultKeyedVector<std::string, Annotation *>;
-
 struct Method {
     Method(const char *name,
            std::vector<TypedVar *> *args,
            std::vector<TypedVar *> *results,
            bool oneway,
-           AnnotationVector *annotations);
+           std::vector<Annotation *> *annotations);
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;
     const std::vector<TypedVar *> &results() const;
     bool isOneway() const { return mOneway; }
-    const AnnotationVector &annotations() const;
+    const std::vector<Annotation *> &annotations() const;
 
     void generateCppSignature(Formatter &out,
                               const std::string &className,
@@ -66,7 +62,7 @@ private:
     std::vector<TypedVar *> *mArgs;
     std::vector<TypedVar *> *mResults;
     bool mOneway;
-    AnnotationVector *mAnnotationsByName;
+    std::vector<Annotation *> *mAnnotations;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };
