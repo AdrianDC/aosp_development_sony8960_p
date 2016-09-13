@@ -42,6 +42,7 @@ struct HandleType : public Type {
 
     void emitReaderWriterEmbedded(
             Formatter &out,
+            size_t depth,
             const std::string &name,
             bool nameIsPointer,
             const std::string &parcelObj,

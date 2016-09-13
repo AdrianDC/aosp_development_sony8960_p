@@ -35,20 +35,17 @@ std::string ArrayType::getCppType(StorageMode mode,
                                   bool specifyNamespaces) const {
     const std::string base = mElementType->getCppType(extra, specifyNamespaces);
 
-    CHECK(extra->empty());
-
-    *extra = "[" + mDimension + "]";
+    *extra = "[" + mDimension + "]" + (*extra);
 
     switch (mode) {
         case StorageMode_Stack:
             return base;
 
         case StorageMode_Argument:
-            return "const " + base;
-
         case StorageMode_Result:
         {
-            extra->clear();
+            *extra = " /* " + base + (*extra) + " */";
+
             return "const " + base + "*";
         }
     }
@@ -103,6 +100,7 @@ void ArrayType::emitReaderWriter(
             << mDimension
             << " * sizeof("
             << baseType
+            << baseExtra
             << "), &"
             << parentName
             << ");\n";
@@ -112,6 +110,7 @@ void ArrayType::emitReaderWriter(
 
     emitReaderWriterEmbedded(
             out,
+            0 /* depth */,
             name,
             isReader /* nameIsPointer */,
             parcelObj,
@@ -124,6 +123,7 @@ void ArrayType::emitReaderWriter(
 
 void ArrayType::emitReaderWriterEmbedded(
         Formatter &out,
+        size_t depth,
         const std::string &name,
         bool nameIsPointer,
         const std::string &parcelObj,
@@ -141,22 +141,35 @@ void ArrayType::emitReaderWriterEmbedded(
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
 
-    out << "for (size_t _hidl_index = 0; _hidl_index < "
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (size_t "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < "
         << mDimension
-        << "; ++_hidl_index) {\n";
+        << "; ++"
+        << iteratorName
+        << ") {\n";
 
     out.indent();
 
     mElementType->emitReaderWriterEmbedded(
             out,
-            name + "[_hidl_index]",
+            depth + 1,
+            name + "[" + iteratorName + "]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
             isReader,
             mode,
             parentName,
-            offsetText + " + _hidl_index * sizeof(" + baseType + ")");
+            offsetText
+                + " + " + iteratorName + " * sizeof("
+                + baseType
+                + baseExtra
+                + ")");
 
     out.unindent();
 
