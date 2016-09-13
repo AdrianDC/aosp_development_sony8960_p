@@ -128,12 +128,12 @@ void AST::enterScope(Scope *container) {
 }
 
 void AST::leaveScope() {
-    mScopePath.pop();
+    mScopePath.pop_back();
 }
 
 Scope *AST::scope() {
     CHECK(!mScopePath.empty());
-    return mScopePath.top();
+    return mScopePath.back();
 }
 
 bool AST::addTypeDef(
@@ -142,29 +142,19 @@ bool AST::addTypeDef(
     // emitting any type definitions later on, since this is just an alias
     // to a type defined elsewhere.
     return addScopedTypeInternal(
-            localName, new TypeDef(type), errorMsg, true /* isTypeDef */);
+            new TypeDef(localName, type), errorMsg);
 }
 
 bool AST::addScopedType(NamedType *type, std::string *errorMsg) {
     return addScopedTypeInternal(
-            type->localName().c_str(), type, errorMsg, false /* isTypeDef */);
+            type, errorMsg);
 }
 
 bool AST::addScopedTypeInternal(
-        const char *localName,
-        Type *type,
-        std::string *errorMsg,
-        bool isTypeDef) {
-    if (!isTypeDef) {
-        // Resolve typeDefs to the target type.
-        while (type->isTypeDef()) {
-            type = static_cast<TypeDef *>(type)->referencedType();
-        }
-    }
+        NamedType *type,
+        std::string *errorMsg) {
 
-    // LOG(INFO) << "adding scoped type '" << localName << "'";
-
-    bool success = scope()->addType(localName, type,  errorMsg);
+    bool success = scope()->addType(type, errorMsg);
     if (!success) {
         return false;
     }
@@ -174,18 +164,13 @@ bool AST::addScopedTypeInternal(
         path.append(mScopePath[i]->localName());
         path.append(".");
     }
-    path.append(localName);
+    path.append(type->localName());
 
     FQName fqName(mPackage.package(), mPackage.version(), path);
 
-    if (!isTypeDef) {
-        CHECK(type->isNamedType());
+    type->setFullName(fqName);
 
-        NamedType *namedType = static_cast<NamedType *>(type);
-        namedType->setFullName(fqName);
-    }
-
-    mDefinedTypesByFullName.add(fqName, type);
+    mDefinedTypesByFullName[fqName] = type;
 
     return true;
 }
@@ -311,7 +296,7 @@ Type *AST::lookupType(const char *name) {
 
             mImportedNames.insert(typesName);
 
-            if (resolvedType->isNamedType()) {
+            if (resolvedType->isNamedType() && !resolvedType->isTypeDef()) {
                 mImportedNamesForJava.insert(
                         static_cast<NamedType *>(resolvedType)->fqName());
             }
@@ -334,12 +319,13 @@ Type *AST::lookupType(const char *name) {
 }
 
 Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
-    for (size_t i = 0; i < mDefinedTypesByFullName.size(); ++i) {
-        const FQName &key = mDefinedTypesByFullName.keyAt(i);
+    for (const auto &pair : mDefinedTypesByFullName) {
+        const FQName &key = pair.first;
+        Type* type = pair.second;
 
         if (key.endsWith(fqName)) {
             *matchingName = key;
-            return mDefinedTypesByFullName.valueAt(i);
+            return type;
         }
     }
 
@@ -362,10 +348,7 @@ void AST::getImportedPackages(std::set<FQName> *importSet) const {
 bool AST::isJavaCompatible() const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {
-        for (size_t i = 0; i < mRootScope->countTypes(); ++i) {
-            std::string typeName;
-            const Type *type = mRootScope->typeAt(i, &typeName);
-
+        for (const auto *type : mRootScope->getSubTypes()) {
             if (!type->isJavaCompatible()) {
                 return false;
             }

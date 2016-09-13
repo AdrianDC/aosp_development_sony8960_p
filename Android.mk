@@ -26,15 +26,12 @@ common_libhidl-gen_src_files := \
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libhidl-gen
-LOCAL_CFLAGS := -O0 -g -Wno-deprecated-register
+LOCAL_CFLAGS := -O0 -g
 LOCAL_SRC_FILES := $(common_libhidl-gen_src_files)
 LOCAL_SHARED_LIBRARIES :=       \
     libbase                     \
     liblog                      \
     libhidl-gen-utils           \
-
-LOCAL_STATIC_LIBRARIES :=       \
-    libutils                    \
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -44,15 +41,12 @@ include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libhidl-gen
-LOCAL_CFLAGS := -O0 -g -Wno-deprecated-register
+LOCAL_CFLAGS := -O0 -g
 LOCAL_SRC_FILES := $(common_libhidl-gen_src_files)
 LOCAL_SHARED_LIBRARIES :=       \
     libbase                     \
     liblog                      \
     libhidl-gen-utils           \
-
-LOCAL_STATIC_LIBRARIES :=       \
-    libutils                    \
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 
