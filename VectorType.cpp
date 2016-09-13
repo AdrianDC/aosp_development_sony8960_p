@@ -36,9 +36,10 @@ std::string VectorType::getCppType(StorageMode mode,
           std::string(specifyNamespaces ? "::android::hardware::" : "")
         + "hidl_vec<"
         + mElementType->getCppType(extra, specifyNamespaces)
+        + (*extra)
         + ">";
 
-    CHECK(extra->empty());
+    extra->clear();
 
     switch (mode) {
         case StorageMode_Stack:
@@ -77,6 +78,7 @@ void VectorType::emitReaderWriter(
         out << name
             << " = (const ::android::hardware::hidl_vec<"
             << baseType
+            << baseExtra
             << "> *)"
             << parcelObjDeref
             << "readBuffer(&"
@@ -108,6 +110,7 @@ void VectorType::emitReaderWriter(
 
     emitReaderWriterEmbedded(
             out,
+            0 /* depth */,
             name,
             isReader /* nameIsPointer */,
             parcelObj,
@@ -118,8 +121,19 @@ void VectorType::emitReaderWriter(
             "0 /* parentOffset */");
 }
 
+// Remove any trailing array indices from the given name, i.e. foo[2][3] => foo
+static std::string StripIndex(const std::string &name) {
+    size_t pos = name.find("[");
+    if (pos == std::string::npos) {
+        return name;
+    }
+
+    return name.substr(0, pos);
+}
+
 void VectorType::emitReaderWriterEmbedded(
         Formatter &out,
+        size_t depth,
         const std::string &name,
         bool nameIsPointer,
         const std::string &parcelObj,
@@ -131,7 +145,7 @@ void VectorType::emitReaderWriterEmbedded(
     std::string baseExtra;
     std::string baseType = Type::getCppType(&baseExtra);
 
-    const std::string childName = "_hidl_" + name + "_child";
+    const std::string childName = "_hidl_" + StripIndex(name) + "_child";
     out << "size_t " << childName << ";\n\n";
 
     emitReaderWriterEmbeddedForTypeName(
@@ -155,22 +169,32 @@ void VectorType::emitReaderWriterEmbedded(
 
     baseType = mElementType->getCppType(&baseExtra);
 
-    out << "for (size_t _hidl_index = 0; _hidl_index < "
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (size_t "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < "
         << nameDeref
-        << "size(); ++_hidl_index) {\n";
+        << "size(); ++"
+        << iteratorName
+        << ") {\n";
 
     out.indent();
 
     mElementType->emitReaderWriterEmbedded(
             out,
-            (nameIsPointer ? "(*" + name + ")" : name) + "[_hidl_index]",
+            depth + 1,
+            (nameIsPointer ? "(*" + name + ")" : name)
+                + "[" + iteratorName + "]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
             isReader,
             mode,
             childName,
-            "_hidl_index * sizeof(" + baseType + ")");
+            iteratorName + " * sizeof(" + baseType + baseExtra + ")");
 
     out.unindent();
 
