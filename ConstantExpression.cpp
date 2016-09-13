@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 #include <string>
-#include <utils/String8.h>
 #include <android-base/parseint.h>
 #include <android-base/logging.h>
 #include <sstream>
@@ -202,7 +201,7 @@ ConstantExpression::ConstantExpression(const char *value,
 
 /* Unary operations. */
 ConstantExpression::ConstantExpression(const char *op, const ConstantExpression *value)
-    : mFormatted(android::String8::format("(%s%s)", op, value->expr()).string()),
+    : mFormatted(std::string("(") + op + value->expr() + ")"),
       mType(kConstExprUnary),
       mValueKind(value->mValueKind) {
   if(value->mType == kConstExprUnknown) {
@@ -217,7 +216,8 @@ ConstantExpression::ConstantExpression(const char *op, const ConstantExpression 
 
 /* Binary operations. */
 ConstantExpression::ConstantExpression(const ConstantExpression *lval, const char *op, const ConstantExpression* rval)
-    : mFormatted(android::String8::format("(%s %s %s)", lval->expr(), op, rval->expr()).string()),
+    : mFormatted(std::string("(") + lval->expr() + " "
+                       + op + " " + rval->expr() + ")"),
       mType(kConstExprBinary)
 {
   if(lval->mType == kConstExprUnknown || rval->mType == kConstExprUnknown) {
@@ -277,8 +277,8 @@ ConstantExpression::ConstantExpression(const ConstantExpression *lval, const cha
 ConstantExpression::ConstantExpression(const ConstantExpression *cond,
                                        const ConstantExpression *trueVal,
                                        const ConstantExpression *falseVal)
-    : mFormatted(android::String8::format("(%s?%s:%s)",
-             cond->expr(), trueVal->expr(), falseVal->expr()).string()),
+    : mFormatted(std::string("(") + cond->expr() + "?" + trueVal->expr()
+                 + ":" + falseVal->expr() + ")"),
       mType(kConstExprTernary) {
   // note: for ?:, unlike arithmetic ops, integral promotion is not necessary.
   mValueKind = usualArithmeticConversion(trueVal->mValueKind,

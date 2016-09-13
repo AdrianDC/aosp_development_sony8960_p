@@ -27,8 +27,12 @@ Scope::Scope(const char *localName)
     : NamedType(localName) {
 }
 
-bool Scope::addType(const char *localName, Type *type, std::string *errorMsg) {
-    if (mTypeIndexByName.indexOfKey(localName) >= 0) {
+bool Scope::addType(NamedType *type, std::string *errorMsg) {
+    const std::string &localName = type->localName();
+
+    auto it = mTypeIndexByName.find(localName);
+
+    if (it != mTypeIndexByName.end()) {
         *errorMsg = "A type named '";
         (*errorMsg) += localName;
         (*errorMsg) += "' is already declared in the  current scope.";
@@ -38,16 +42,16 @@ bool Scope::addType(const char *localName, Type *type, std::string *errorMsg) {
 
     size_t index = mTypes.size();
     mTypes.push_back(type);
-    mTypeIndexByName.add(localName, index);
+    mTypeIndexByName[localName] = index;
 
     return true;
 }
 
-Type *Scope::lookupType(const char *name) const {
-    ssize_t index = mTypeIndexByName.indexOfKey(name);
+NamedType *Scope::lookupType(const char *name) const {
+    auto it = mTypeIndexByName.find(name);
 
-    if (index >= 0) {
-        return mTypes[mTypeIndexByName.valueAt(index)];
+    if (it != mTypeIndexByName.end()) {
+        return mTypes[it->second];
     }
 
     return NULL;
@@ -82,7 +86,9 @@ std::string Scope::pickUniqueAnonymousName() const {
     for (;;) {
         std::string anonName = "_hidl_Anon_" + std::to_string(sNextID++);
 
-        if (mTypeIndexByName.indexOfKey(anonName) < 0) {
+        auto it = mTypeIndexByName.find(anonName);
+
+        if (it == mTypeIndexByName.end()) {
             return anonName;
         }
     }
@@ -131,7 +137,7 @@ status_t Scope::emitTypeDefinitions(
     return OK;
 }
 
-const std::vector<Type *> &Scope::getSubTypes() const {
+const std::vector<NamedType *> &Scope::getSubTypes() const {
     return mTypes;
 }
 
@@ -153,15 +159,6 @@ bool Scope::isJavaCompatible() const {
     }
 
     return true;
-}
-
-size_t Scope::countTypes() const {
-    return mTypeIndexByName.size();
-}
-
-const Type *Scope::typeAt(size_t index, std::string *name) const {
-    *name = mTypeIndexByName.keyAt(index);
-    return mTypes[mTypeIndexByName.valueAt(index)];
 }
 
 }  // namespace android
