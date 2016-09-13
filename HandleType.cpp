@@ -84,6 +84,7 @@ void HandleType::emitReaderWriter(
 
 void HandleType::emitReaderWriterEmbedded(
         Formatter &out,
+        size_t /* depth */,
         const std::string &name,
         bool nameIsPointer,
         const std::string &parcelObj,
