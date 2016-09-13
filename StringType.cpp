@@ -16,7 +16,7 @@
 
 #include "StringType.h"
 
-#include "Formatter.h"
+#include <hidl-util/Formatter.h>
 
 namespace android {
 
