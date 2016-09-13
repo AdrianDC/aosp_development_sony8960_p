@@ -32,7 +32,6 @@
 #include "c2hal_y.h"
 
 #include <stdio.h>
-#include <utils/String8.h>
 #include <algorithm>
 
 using namespace android;
