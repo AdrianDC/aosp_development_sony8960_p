@@ -17,10 +17,10 @@
 #ifndef AST_H_
 #define AST_H_
 
-#include "../Formatter.h"
 #include "Scope.h"
 #include "Expression.h"
 
+#include <hidl-util/Formatter.h>
 #include <android-base/macros.h>
 #include <android-base/logging.h>
 #include <string>
