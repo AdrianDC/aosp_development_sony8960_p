@@ -46,9 +46,8 @@ status_t AST::generateJavaTypes(
         const std::string &outputPath, const char *limitToType) const {
     // Splits types.hal up into one java file per declared type.
 
-    for (size_t i = 0; i < mRootScope->countTypes(); ++i) {
-        std::string typeName;
-        const Type *type = mRootScope->typeAt(i, &typeName);
+    for (const auto &type : mRootScope->getSubTypes()) {
+        std::string typeName = type->localName();
 
         if (type->isTypeDef()) {
             continue;

@@ -21,8 +21,8 @@
 
 namespace android {
 
-TypeDef::TypeDef(Type *type)
-    : Type(),
+TypeDef::TypeDef(const char* localName, Type *type)
+    : NamedType(localName),
       mReferencedType(type) {
 }
 
