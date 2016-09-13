@@ -18,6 +18,7 @@
 
 #include "AST.h"
 
+#include <algorithm>
 #include <android-base/logging.h>
 #include <iterator>
 #include <sys/dir.h>
@@ -261,6 +262,17 @@ status_t Coordinator::getPackageInterfaceFiles(
 
     closedir(dir);
     dir = NULL;
+
+    std::sort(fileNames->begin(), fileNames->end(),
+              [](const std::string& lhs, const std::string& rhs) -> bool {
+                  if (lhs == "types") {
+                      return true;
+                  }
+                  if (rhs == "types") {
+                      return false;
+                  }
+                  return lhs < rhs;
+              });
 
     return OK;
 }
