@@ -471,13 +471,10 @@ static std::string vecToString(const hidl_vec<int32_t> &vec) {
     return arraylikeToString(vec, vec.size());
 }
 
-template <typename T>
-static inline void EXPECT_OK(::android::hardware::Return<T> ret) {
-    EXPECT_TRUE(ret.getStatus().isOk());
-}
+#define EXPECT_OK(ret) EXPECT_TRUE(ret.getStatus().isOk())
 
 template<typename T, typename S>
-static inline bool EXPECT_ARRAYEQ(const T arr1, const S arr2, size_t size) {
+static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
     for(size_t i = 0; i < size; i++)
         if(arr1[i] != arr2[i])
             return false;
@@ -607,7 +604,7 @@ TEST_F(HidlTest, FooDoSomethingElseTest) {
                   arraylikeToString(something, 32).c_str());
             int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,
                 26, 28, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1, 2};
-            EXPECT_ARRAYEQ(something, expect, 32);
+            EXPECT_TRUE(isArrayEqual(something, expect, 32));
         }));
 }
 
@@ -630,7 +627,7 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
             ALOGI("CLIENT mapThisVector returned %s.",
                   vecToString(something).c_str());
             int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
-            EXPECT_ARRAYEQ(something, expect, something.size());
+            EXPECT_TRUE(isArrayEqual(something, expect, something.size()));
         }));
 }
 
