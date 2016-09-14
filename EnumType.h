@@ -46,6 +46,8 @@ struct EnumType : public NamedType {
     std::string getJavaType() const override;
     std::string getJavaSuffix() const override;
 
+    std::string getJavaWrapperType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,

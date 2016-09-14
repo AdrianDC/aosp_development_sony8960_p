@@ -235,11 +235,15 @@ void VectorType::emitJavaReaderWriter(
 
 void VectorType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
+    const std::string wrapperType = mElementType->getJavaWrapperType();
+
     out << "final Vector<"
-        << mElementType->getJavaWrapperType()
+        << wrapperType
         << "> "
         << fieldName
-        << " = new Vector();\n";
+        << " = new Vector<"
+        << wrapperType
+        << ">();\n";
 }
 
 void VectorType::emitJavaFieldReaderWriter(
