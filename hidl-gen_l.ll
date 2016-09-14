@@ -58,6 +58,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wdeprecated-register"
 
 %}
 
