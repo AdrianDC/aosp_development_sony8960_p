@@ -52,11 +52,6 @@ bool TypeDef::isTypeDef() const {
     return true;
 }
 
-std::string TypeDef::getJavaType() const {
-    CHECK(!"Should not be here");
-    return std::string();
-}
-
 bool TypeDef::needsEmbeddedReadWrite() const {
     CHECK(!"Should not be here");
     return false;

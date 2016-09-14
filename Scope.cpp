@@ -94,11 +94,6 @@ std::string Scope::pickUniqueAnonymousName() const {
     }
 }
 
-std::string Scope::getJavaType() const {
-    CHECK(!"Should not be here");
-    return std::string();
-}
-
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
         status_t err = mTypes[i]->emitTypeDeclarations(out);
