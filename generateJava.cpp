@@ -43,7 +43,7 @@ void AST::emitJavaReaderWriter(
 }
 
 status_t AST::generateJavaTypes(
-        const std::string &outputPath, const char *limitToType) const {
+        const std::string &outputPath, const std::string &limitToType) const {
     // Splits types.hal up into one java file per declared type.
 
     for (const auto &type : mRootScope->getSubTypes()) {
@@ -53,7 +53,7 @@ status_t AST::generateJavaTypes(
             continue;
         }
 
-        if ((limitToType != nullptr) && typeName != limitToType) {
+        if (!limitToType.empty() && typeName != limitToType) {
             continue;
         }
 
@@ -101,7 +101,7 @@ status_t AST::generateJavaTypes(
 }
 
 status_t AST::generateJava(
-        const std::string &outputPath, const char *limitToType) const {
+        const std::string &outputPath, const std::string &limitToType) const {
     if (!isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
