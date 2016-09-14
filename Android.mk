@@ -73,7 +73,7 @@ LOCAL_SHARED_LIBRARIES :=       \
     libhidl-gen                 \
     libhidl-gen-utils           \
 
-LOCAL_CFLAGS := -O0 -g -Wno-deprecated-register
+LOCAL_CFLAGS := -O0 -g
 
 include $(BUILD_HOST_EXECUTABLE)
 
