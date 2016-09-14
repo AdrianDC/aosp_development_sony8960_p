@@ -191,16 +191,16 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
 
+        std::string prevEntryName;
         for (const auto &entry : type->values()) {
             out << "public static final "
                 << typeName
                 << " "
-                << entry->name();
+                << entry->name()
+                << " = ";
 
             const char *value = entry->javaValue(scalarType->getKind());
             if (value != NULL) {
-                out << " = ";
-
                 std::string convertedValue;
                 if (MakeSignedIntegerValue(typeName, value, &convertedValue)) {
                     out << convertedValue;
@@ -209,6 +209,10 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
                     // hopefully referring to some other enum name.
                     out << value;
                 }
+            } else if (prevEntryName.empty()) {
+                out << "0";
+            } else {
+                out << prevEntryName << " + 1";
             }
 
             out << ";";
@@ -219,6 +223,8 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
             }
 
             out << "\n";
+
+            prevEntryName = entry->name();
         }
     }
 
