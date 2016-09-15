@@ -53,12 +53,12 @@ static status_t generateSourcesForFile(
     CHECK(fqName.isFullyQualified());
 
     AST *ast;
-    const char *limitToType = nullptr;
+    std::string limitToType;
 
     if (fqName.name().find("types.") == 0) {
         CHECK(lang == "java");  // Already verified in validate().
 
-        limitToType = fqName.name().c_str() + strlen("types.");
+        limitToType = fqName.name().substr(strlen("types."));
 
         FQName typesName(fqName.package(), fqName.version(), "types");
         ast = coordinator->parse(typesName);

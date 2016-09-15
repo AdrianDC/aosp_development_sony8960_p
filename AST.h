@@ -74,10 +74,12 @@ struct AST {
     status_t generateCppImpl(const std::string &outputPath) const;
 
     status_t generateJava(
-            const std::string &outputPath, const char *limitToType) const;
+            const std::string &outputPath,
+            const std::string &limitToType) const;
 
     status_t generateJavaTypes(
-            const std::string &outputPath, const char *limitToType) const;
+            const std::string &outputPath,
+            const std::string &limitToType) const;
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
