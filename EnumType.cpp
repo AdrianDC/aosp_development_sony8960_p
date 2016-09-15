@@ -68,6 +68,10 @@ std::string EnumType::getJavaSuffix() const {
     return mStorageType->resolveToScalarType()->getJavaSuffix();
 }
 
+std::string EnumType::getJavaWrapperType() const {
+    return mStorageType->resolveToScalarType()->getJavaWrapperType();
+}
+
 void EnumType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
