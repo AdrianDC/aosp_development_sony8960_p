@@ -73,6 +73,8 @@ struct Interface : public Scope {
     status_t emitVtsAttributeDeclaration(Formatter &out) const;
     status_t emitVtsMethodDeclaration(Formatter &out) const;
 
+    bool hasOnewayMethods() const;
+
     bool isJavaCompatible() const override;
 
 private:
