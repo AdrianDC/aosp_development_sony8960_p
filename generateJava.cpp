@@ -33,7 +33,9 @@ void AST::emitJavaReaderWriter(
         const TypedVar *arg,
         bool isReader) const {
     if (isReader) {
-        out << arg->type().getJavaType()
+        std::string extra;
+        out << arg->type().getJavaType(&extra)
+            << extra
             << " "
             << arg->name()
             << " = ";
@@ -270,7 +272,9 @@ status_t AST::generateJava(
         }
 
         if (returnsValue && !needsCallback) {
-            out << method->results()[0]->type().getJavaType();
+            std::string extra;
+            out << method->results()[0]->type().getJavaType(&extra)
+                << extra;
         } else {
             out << "void";
         }
@@ -330,7 +334,9 @@ status_t AST::generateJava(
 
             out << "public ";
             if (returnsValue && !needsCallback) {
-                out << method->results()[0]->type().getJavaType();
+                std::string extra;
+                out << method->results()[0]->type().getJavaType(&extra)
+                    << extra;
             } else {
                 out << "void";
             }
@@ -491,8 +497,10 @@ status_t AST::generateJava(
 
             if (!needsCallback && returnsValue) {
                 const TypedVar *returnArg = method->results()[0];
+                std::string extra;
 
-                out << returnArg->type().getJavaType()
+                out << returnArg->type().getJavaType(&extra)
+                    << extra
                     << " "
                     << returnArg->name()
                     << " = ";

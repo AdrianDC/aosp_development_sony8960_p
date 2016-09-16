@@ -47,7 +47,9 @@ std::string StringType::getCppType(StorageMode mode,
     }
 }
 
-std::string StringType::getJavaType() const {
+std::string StringType::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
+    extra->clear();
     return "String";
 }
 
@@ -149,6 +151,7 @@ void StringType::emitJavaFieldInitializer(
 
 void StringType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t /* depth */,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,

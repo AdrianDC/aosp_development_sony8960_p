@@ -70,15 +70,21 @@ struct Type {
     virtual void addNamedTypesToSet(std::set<const FQName> &set) const = 0;
 
     // Convenience, gets StorageMode_Stack type.
-    std::string getCppType(std::string *extra,
-                           bool specifyNamespaces = true) const;
+    std::string getCppType(
+            std::string *extra, bool specifyNamespaces = true) const;
 
-    std::string getCppResultType(std::string *extra,
-                                 bool specifyNamespaces = true) const;
-    std::string getCppArgumentType(std::string *extra,
-                                   bool specifyNamespaces = true) const;
+    std::string getCppResultType(
+            std::string *extra, bool specifyNamespaces = true) const;
 
-    virtual std::string getJavaType() const = 0;
+    std::string getCppArgumentType(
+            std::string *extra, bool specifyNamespaces = true) const;
+
+    // For an array type, "extra" accumulates dimensionality information,
+    // if forInitializer == true, actual dimensions are included, i.e. [3][5],
+    // otherwise (and by default), they are omitted, i.e. [][].
+    virtual std::string getJavaType(
+            std::string *extra, bool forInitializer = false) const;
+
     virtual std::string getJavaWrapperType() const;
     virtual std::string getJavaSuffix() const;
 
@@ -120,6 +126,7 @@ struct Type {
 
     virtual void emitJavaFieldReaderWriter(
             Formatter &out,
+            size_t depth,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,

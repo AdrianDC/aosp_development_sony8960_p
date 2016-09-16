@@ -42,7 +42,8 @@ struct CompoundType : public Scope {
                            std::string *extra,
                            bool specifyNamespaces) const override;
 
-    std::string getJavaType() const override;
+    std::string getJavaType(
+            std::string *extra, bool forInitializer) const override;
 
     void emitReaderWriter(
             Formatter &out,
@@ -75,6 +76,7 @@ struct CompoundType : public Scope {
 
     void emitJavaFieldReaderWriter(
             Formatter &out,
+            size_t depth,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,

@@ -82,7 +82,9 @@ std::string CompoundType::getCppType(
     }
 }
 
-std::string CompoundType::getJavaType() const {
+std::string CompoundType::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
+    extra->clear();
     return fullJavaName();
 }
 
@@ -208,6 +210,7 @@ void CompoundType::emitJavaFieldInitializer(
 
 void CompoundType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t /* depth */,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
@@ -389,7 +392,13 @@ status_t CompoundType::emitJavaTypeDeclarations(
     out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
-            out, this, "_hidl_blob", "_hidl_vec", "0", true /* isReader */);
+            out,
+            0 /* depth */,
+            this,
+            "_hidl_blob",
+            "_hidl_vec",
+            "0",
+            true /* isReader */);
 
     out << "\nreturn _hidl_vec.toArray(new "
         << localName()
@@ -418,6 +427,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
         field->type().emitJavaFieldReaderWriter(
                 out,
+                0 /* depth */,
                 "_hidl_blob",
                 field->name(),
                 "_hidl_offset + " + std::to_string(offset),
@@ -495,7 +505,13 @@ status_t CompoundType::emitJavaTypeDeclarations(
     out << "HwBlob _hidl_blob = new HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
-            out, this, "_hidl_blob", "_hidl_vec", "0", false /* isReader */);
+            out,
+            0 /* depth */,
+            this,
+            "_hidl_blob",
+            "_hidl_vec",
+            "0",
+            false /* isReader */);
 
     out << "\nparcel.writeBuffer(_hidl_blob);\n";
 
@@ -522,6 +538,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
         field->type().emitJavaFieldReaderWriter(
                 out,
+                0 /* depth */,
                 "_hidl_blob",
                 field->name(),
                 "_hidl_offset + " + std::to_string(offset),

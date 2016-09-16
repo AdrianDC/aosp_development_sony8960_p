@@ -82,7 +82,9 @@ std::string Interface::getCppType(StorageMode mode,
     }
 }
 
-std::string Interface::getJavaType() const {
+std::string Interface::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
+    extra->clear();
     return fullJavaName();
 }
 
