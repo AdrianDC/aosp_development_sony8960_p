@@ -51,6 +51,10 @@ status_t AST::generateCpp(const std::string &outputPath) const {
         err = generateAllSource(outputPath);
     }
 
+    if (err == OK) {
+        generatePassthroughHeader(outputPath);
+    }
+
     return err;
 }
 
@@ -461,6 +465,61 @@ status_t AST::generateProxyDeclaration(Formatter &out,
     return OK;
 }
 
+
+status_t AST::generatePassthroughMethod(Formatter &out,
+                                        const std::string &className,
+                                        const Method *method,
+                                        bool specifyNamespaces) const {
+    method->generateCppSignature(out, className, specifyNamespaces);
+
+    out << " {\n";
+    out.indent();
+
+    const bool returnsValue = !method->results().empty();
+    const TypedVar *elidedReturn = method->canElideCallback();
+
+    out << "return ";
+
+    if (method->isOneway()) {
+        out << "addOnewayTask([this";
+        for (const auto &arg : method->args()) {
+            out << ", " << arg->name();
+        }
+        out << "] {this->";
+    }
+
+    out << "mImpl->"
+        << method->name()
+        << "(";
+
+    bool first = true;
+    for (const auto &arg : method->args()) {
+        if (!first) {
+            out << ", ";
+        }
+        first = false;
+        out << arg->name();
+    }
+    if (returnsValue && elidedReturn == nullptr) {
+        if (!method->args().empty()) {
+            out << ", ";
+        }
+
+        out << "_hidl_cb";
+    }
+    out << ")";
+
+    if (method->isOneway()) {
+        out << ";})";
+    }
+    out << ";\n";
+
+    out.unindent();
+    out << "}\n";
+
+    return OK;
+}
+
 status_t AST::generateMethods(
         Formatter &out,
         const std::string &className,
@@ -508,6 +567,12 @@ status_t AST::generateMethods(
                                                  className,
                                                  method,
                                                  specifyNamespaces);
+                    break;
+                case PASSTHROUGH_HEADER:
+                    err = generatePassthroughMethod(out,
+                                                    className,
+                                                    method,
+                                                    specifyNamespaces);
                     break;
                 default:
                     LOG(ERROR) << "Unkown method type: " << type;
@@ -739,6 +804,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     if (isInterface) {
         out << "#include <" << prefix << "/Bp" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bn" << baseName << ".h>\n";
+        out << "#include <" << prefix << "/Bs" << baseName << ".h>\n";
     } else {
         out << "#include <" << prefix << "types.h>\n";
     }
@@ -757,6 +823,10 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     if (err == OK && isInterface) {
         err = generateStubSource(out, baseName);
+    }
+
+    if (err == OK && isInterface) {
+        err = generatePassthroughSource(out);
     }
 
     if (err == OK && isInterface) {
@@ -1251,6 +1321,157 @@ status_t AST::generateStubSourceForMethod(
     }
 
     out << "break;\n";
+
+    return OK;
+}
+
+status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
+    std::string ifaceName;
+    if (!AST::isInterface(&ifaceName)) {
+        // types.hal does not get a stub header.
+        return OK;
+    }
+
+    const Interface *iface = mRootScope->getInterface();
+
+    const std::string baseName = iface->getBaseName();
+    const std::string klassName = "Bs" + baseName;
+
+    bool supportOneway = iface->hasOnewayMethods();
+
+    std::string path = outputPath;
+    path.append(mCoordinator->convertPackageRootToPath(mPackage));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
+    path.append(klassName);
+    path.append(".h");
+
+    CHECK(Coordinator::MakeParentHierarchy(path));
+    FILE *file = fopen(path.c_str(), "w");
+
+    if (file == NULL) {
+        return -errno;
+    }
+
+    Formatter out(file);
+
+    const std::string guard = makeHeaderGuard(klassName);
+
+    out << "#ifndef " << guard << "\n";
+    out << "#define " << guard << "\n\n";
+
+    std::vector<std::string> packageComponents;
+    getPackageAndVersionComponents(
+            &packageComponents, false /* cpp_compatible */);
+
+    out << "#include <future>\n";
+    out << "#include <";
+    for (const auto &component : packageComponents) {
+        out << component << "/";
+    }
+    out << ifaceName << ".h>\n\n";
+
+    if (supportOneway) {
+        out << "#include <hidl/SynchronizedQueue.h>\n";
+    }
+
+    enterLeaveNamespace(out, true /* enter */);
+    out << "\n";
+
+    out << "struct "
+        << klassName
+        << " : " << ifaceName
+        << " {\n";
+
+    out.indent();
+    out << "explicit "
+        << klassName
+        << "(const sp<"
+        << ifaceName
+        << "> impl);\n";
+
+    status_t err = generateMethods(out,
+                                   "" /* class name */,
+                                   MethodLocation::PASSTHROUGH_HEADER,
+                                   true /* specify namespaces */);
+
+    if (err != OK) {
+        return err;
+    }
+
+    out.unindent();
+    out << "private:\n";
+    out.indent();
+    out << "const sp<" << ifaceName << "> mImpl;\n";
+
+    if (supportOneway) {
+        out << "SynchronizedQueue<std::function<void(void)>> mOnewayQueue;\n";
+        out << "std::thread *mOnewayThread = nullptr;\n";
+
+        out << "\n";
+
+        out << "::android::hardware::Return<void> addOnewayTask("
+               "std::function<void(void)>);\n\n";
+
+        out << "static const int kOnewayQueueMaxSize = 3000;\n";
+    }
+
+    out.unindent();
+
+    out << "};\n\n";
+
+    enterLeaveNamespace(out, false /* enter */);
+
+    out << "\n#endif  // " << guard << "\n";
+
+    return OK;
+}
+
+
+status_t AST::generatePassthroughSource(Formatter &out) const {
+    const Interface *iface = mRootScope->getInterface();
+
+    const std::string baseName = iface->getBaseName();
+    const std::string klassName = "Bs" + baseName;
+
+    out << klassName
+        << "::"
+        << klassName
+        << "(const sp<"
+        << iface->fullName()
+        << "> impl) : mImpl(impl) {}\n\n";
+
+    if (iface->hasOnewayMethods()) {
+        out << "::android::hardware::Return<void> "
+            << klassName
+            << "::addOnewayTask(std::function<void(void)> fun) {\n";
+        out.indent();
+        out << "if (mOnewayThread == nullptr) {\n";
+        out.indent();
+        out << "mOnewayThread = new std::thread([this]() {\n";
+        out.indent();
+        out << "while(true) { (this->mOnewayQueue.wait_pop())(); }";
+        out.unindent();
+        out << "});\n";
+        out.unindent();
+        out << "}\n\n";
+
+        out << "if (mOnewayQueue.size() > kOnewayQueueMaxSize) {\n";
+        out.indent();
+        out << "return Status::fromExceptionCode(Status::EX_TRANSACTION_FAILED);\n";
+        out.unindent();
+        out << "} else {\n";
+        out.indent();
+        out << "mOnewayQueue.push(fun);\n";
+        out.unindent();
+        out << "}\n";
+
+        out << "return Status();\n";
+
+        out.unindent();
+        out << "}\n\n";
+
+
+    }
 
     return OK;
 }
