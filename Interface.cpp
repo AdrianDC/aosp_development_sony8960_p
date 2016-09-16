@@ -260,6 +260,23 @@ status_t Interface::emitVtsAttributeType(Formatter &out) const {
     return OK;
 }
 
+
+bool Interface::hasOnewayMethods() const {
+    for (auto const &method : mMethods) {
+        if (method->isOneway()) {
+            return true;
+        }
+    }
+
+    const Interface* superClass = superType();
+
+    if (superClass != nullptr) {
+        return superClass->hasOnewayMethods();
+    }
+
+    return false;
+}
+
 bool Interface::isJavaCompatible() const {
     if (mIsJavaCompatibleInProgress) {
         // We're currently trying to determine if this Interface is

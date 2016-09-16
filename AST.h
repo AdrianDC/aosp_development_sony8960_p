@@ -140,6 +140,7 @@ private:
     status_t generateStubHeader(const std::string &outputPath) const;
     status_t generateProxyHeader(const std::string &outputPath) const;
     status_t generateAllSource(const std::string &outputPath) const;
+    status_t generatePassthroughHeader(const std::string &outputPath) const;
 
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;
@@ -148,7 +149,8 @@ private:
         PROXY_HEADER,
         STUB_HEADER,
         IMPL_HEADER,
-        IMPL_SOURCE
+        IMPL_SOURCE,
+        PASSTHROUGH_HEADER
     };
 
     status_t generateStubImplHeader(const std::string &outputPath) const;
@@ -174,6 +176,10 @@ private:
                                     const std::string &className,
                                     const Method *method,
                                     bool specifyNamespaces) const;
+    status_t generatePassthroughMethod(Formatter &out,
+                                       const std::string &className,
+                                       const Method *method,
+                                       bool specifyNamespaces) const;
 
     void generateFetchSymbol(Formatter &out, const std::string &ifaceName) const;
 
@@ -185,6 +191,8 @@ private:
 
     status_t generateStubSourceForMethod(
             Formatter &out, const Interface *iface, const Method *method) const;
+
+    status_t generatePassthroughSource(Formatter &out) const;
 
     void declareCppReaderLocals(
             Formatter &out, const std::vector<TypedVar *> &arg) const;
