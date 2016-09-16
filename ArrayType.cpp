@@ -51,8 +51,19 @@ std::string ArrayType::getCppType(StorageMode mode,
     }
 }
 
-std::string ArrayType::getJavaType() const {
-    return mElementType->getJavaType() + "[]";
+std::string ArrayType::getJavaType(
+        std::string *extra, bool forInitializer) const {
+    std::string baseExtra;
+    const std::string base =
+        mElementType->getJavaType(&baseExtra, forInitializer);
+
+    *extra = "[";
+    if (forInitializer) {
+        (*extra) += mDimension;
+    }
+    (*extra) += "]" + baseExtra;
+
+    return base;
 }
 
 void ArrayType::emitReaderWriter(
@@ -185,16 +196,18 @@ void ArrayType::emitJavaReaderWriter(
         const std::string &parcelObj,
         const std::string &argName,
         bool isReader) const {
+    std::string extra;
+
     if (mElementType->isCompoundType()) {
         if (isReader) {
-            out << mElementType->getJavaType()
+            out << mElementType->getJavaType(&extra)
                 << ".readArrayFromParcel("
                 << parcelObj
                 << ", "
                 << mDimension
                 << ");\n";
         } else {
-            out << mElementType->getJavaType()
+            out << mElementType->getJavaType(&extra)
                 << ".writeArrayToParcel("
                 << parcelObj
                 << ", "
@@ -218,26 +231,41 @@ void ArrayType::emitJavaReaderWriter(
 
 void ArrayType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
+    std::string extra;
+    std::string typeName = getJavaType(&extra, false /* forInitializer */);
+
+    std::string extraInit;
+    getJavaType(&extraInit, true /* forInitializer */);
+
     out << "final "
-        << mElementType->getJavaType()
-        << "[] "
+        << typeName
+        << extra
+        << " "
         << fieldName
         << " = new "
-        << mElementType->getJavaType()
-        << "["
-        << mDimension
-        << "];\n";
+        << typeName
+        << extraInit
+        << ";\n";
 }
 
 void ArrayType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t depth,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
-    out << "for (int _hidl_index = 0; _hidl_index < "
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (int "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < "
         << mDimension
-        << "; ++_hidl_index) {\n";
+        << "; ++"
+        << iteratorName
+        << ") {\n";
 
     out.indent();
 
@@ -246,9 +274,10 @@ void ArrayType::emitJavaFieldReaderWriter(
 
     mElementType->emitJavaFieldReaderWriter(
             out,
+            depth + 1,
             blobName,
-            fieldName + "[_hidl_index]",
-            offset + " + _hidl_index * " + std::to_string(elementSize),
+            fieldName + "[" + iteratorName + "]",
+            offset + " + " + iteratorName + " * " + std::to_string(elementSize),
             isReader);
 
     out.unindent();

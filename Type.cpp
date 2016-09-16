@@ -73,8 +73,16 @@ std::string Type::getCppType(StorageMode, std::string *, bool) const {
     return std::string();
 }
 
+std::string Type::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
+    CHECK(!"Should not be here");
+    extra->clear();
+    return std::string();
+}
+
 std::string Type::getJavaWrapperType() const {
-    return getJavaType();
+    std::string extra;
+    return getJavaType(&extra);
 }
 
 std::string Type::getJavaSuffix() const {
@@ -123,7 +131,8 @@ void Type::emitJavaReaderWriter(
 void Type::emitJavaFieldInitializer(
         Formatter &out,
         const std::string &fieldName) const {
-    out << getJavaType()
+    std::string extra;
+    out << getJavaType(&extra)
         << " "
         << fieldName
         << ";\n";
@@ -131,6 +140,7 @@ void Type::emitJavaFieldInitializer(
 
 void Type::emitJavaFieldReaderWriter(
         Formatter &,
+        size_t,
         const std::string &,
         const std::string &,
         const std::string &,

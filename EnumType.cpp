@@ -60,8 +60,10 @@ std::string EnumType::getCppType(StorageMode,
     return specifyNamespaces ? fullName() : partialCppName();
 }
 
-std::string EnumType::getJavaType() const {
-    return mStorageType->resolveToScalarType()->getJavaType();
+std::string EnumType::getJavaType(
+        std::string *extra, bool forInitializer) const {
+    return mStorageType->resolveToScalarType()->getJavaType(
+            extra, forInitializer);
 }
 
 std::string EnumType::getJavaSuffix() const {
@@ -94,12 +96,13 @@ void EnumType::emitReaderWriter(
 
 void EnumType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t depth,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     return mStorageType->emitJavaFieldReaderWriter(
-            out, blobName, fieldName, offset, isReader);
+            out, depth, blobName, fieldName, offset, isReader);
 }
 
 status_t EnumType::emitTypeDeclarations(Formatter &out) const {
@@ -187,7 +190,9 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
 
     out.indent();
 
-    const std::string typeName = scalarType->getJavaType();
+    std::string extra;  // unused, because ScalarType leaves this empty.
+    const std::string typeName =
+        scalarType->getJavaType(&extra, false /* forInitializer */);
 
     std::vector<const EnumType *> chain;
     getTypeChain(&chain);

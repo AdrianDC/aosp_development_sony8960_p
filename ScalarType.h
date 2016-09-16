@@ -46,11 +46,14 @@ struct ScalarType : public Type {
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
-    std::string getCppType(StorageMode mode,
-                           std::string *extra,
-                           bool specifyNamespaces) const override;
+    std::string getCppType(
+            StorageMode mode,
+            std::string *extra,
+            bool specifyNamespaces) const override;
 
-    std::string getJavaType() const override;
+    std::string getJavaType(
+            std::string *extra, bool forInitializer) const override;
+
     std::string getJavaWrapperType() const override;
     std::string getJavaSuffix() const override;
 
@@ -73,6 +76,7 @@ struct ScalarType : public Type {
 
     void emitJavaFieldReaderWriter(
             Formatter &out,
+            size_t depth,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,

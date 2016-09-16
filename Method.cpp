@@ -123,10 +123,10 @@ std::string Method::GetJavaArgSignature(const std::vector<TypedVar *> &args) {
         }
 
         std::string extra;
-        out += arg->type().getJavaType();
+        out += arg->type().getJavaType(&extra);
+        out += extra;
         out += " ";
         out += arg->name();
-        out += extra;
 
         first = false;
     }

@@ -44,8 +44,6 @@ struct Scope : public NamedType {
 
     std::string pickUniqueAnonymousName() const;
 
-    std::string getJavaType() const override;
-
     status_t emitTypeDeclarations(Formatter &out) const override;
 
     status_t emitJavaTypeDeclarations(

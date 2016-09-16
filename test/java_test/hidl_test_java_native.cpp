@@ -47,6 +47,10 @@ struct Baz : public IBaz {
             const hidl_vec<IBaz::Foo> &fooInput,
             someMethodWithFooVectors_cb _hidl_cb) override;
 
+    Return<void> transpose(
+            const IBase::StringMatrix5x3 &in,
+            transpose_cb _hidl_cb) override;
+
     Return<bool> someBoolMethod(bool x) override;
 
     Return<void> someBoolArrayMethod(
@@ -99,6 +103,8 @@ static std::string to_string(const IBaz::Foo::Bar &bar);
 static std::string to_string(const IBaz::Foo &foo);
 static std::string to_string(const hidl_string &s);
 static std::string to_string(bool x);
+static std::string to_string(const IBase::StringMatrix5x3 &M);
+static std::string to_string(const IBase::StringMatrix3x5 &M);
 
 template<class T>
 static std::string array_to_string(const T *array, size_t size) {
@@ -149,6 +155,34 @@ static std::string to_string(const IBaz::Foo &foo) {
     return out;
 }
 
+static std::string to_string(const IBase::StringMatrix5x3 &M) {
+    std::string out;
+    out += "[";
+    for (int i = 0; i < 5; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += array_to_string(M.s[i], 3);
+    }
+    out += "]";
+
+    return out;
+}
+
+static std::string to_string(const IBase::StringMatrix3x5 &M) {
+    std::string out;
+    out += "[";
+    for (int i = 0; i < 3; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += array_to_string(M.s[i], 5);
+    }
+    out += "]";
+
+    return out;
+}
+
 Return<void> Baz::someOtherBaseMethod(
         const IBaz::Foo &foo, someOtherBaseMethod_cb _hidl_cb) {
     LOG(INFO) << "Baz::someOtherBaseMethod "
@@ -185,6 +219,22 @@ Return<void> Baz::someMethodWithFooVectors(
     fooOutput[1] = fooInput[0];
 
     _hidl_cb(fooOutput);
+
+    return Void();
+}
+
+Return<void> Baz::transpose(
+        const IBase::StringMatrix5x3 &in, transpose_cb _hidl_cb) {
+    LOG(INFO) << "Baz::transpose " << to_string(in);
+
+    IBase::StringMatrix3x5 out;
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j) {
+            out.s[i][j] = in.s[j][i];
+        }
+    }
+
+    _hidl_cb(out);
 
     return Void();
 }
@@ -512,6 +562,72 @@ TEST_F(HidlTest, BazSomeMethodWithFooVectorsTest) {
                                    "Bar(z = 1.020000, s = 'Hello, world 2'), "
                                    "Bar(z = 1.030000, s = 'Hello, world 3'), "
                                    "Bar(z = 1.040000, s = 'Hello, world 4')])]");
+                }));
+}
+
+static std::string numberToEnglish(int x) {
+    static const char *const kDigits[] = {
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    };
+
+    if (x < 0) {
+        return "negative " + numberToEnglish(-x);
+    }
+
+    if (x < 10) {
+        return kDigits[x];
+    }
+
+    if (x <= 15) {
+        static const char *const kSpecialTens[] = {
+            "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+        };
+
+        return kSpecialTens[x - 10];
+    }
+
+    if (x < 20) {
+        return std::string(kDigits[x % 10]) + "teen";
+    }
+
+    if (x < 100) {
+        static const char *const kDecades[] = {
+            "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
+            "eighty", "ninety",
+        };
+
+        return std::string(kDecades[x / 10 - 2]) + kDigits[x % 10];
+    }
+
+    return "positively huge!";
+}
+
+TEST_F(HidlTest, BazTransposeTest) {
+    IBase::StringMatrix5x3 in;
+
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            in.s[i][j] = numberToEnglish(3 * i + j + 1).c_str();
+        }
+    }
+
+    EXPECT_OK(baz->transpose(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(
+                        to_string(out),
+                        "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                         "['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                         "['three', 'six', 'nine', 'twelve', 'fifteen']]");
                 }));
 }
 

@@ -43,7 +43,9 @@ struct EnumType : public NamedType {
                            std::string *extra,
                            bool specifyNamespaces) const override;
 
-    std::string getJavaType() const override;
+    std::string getJavaType(
+            std::string *extra, bool forInitializer) const override;
+
     std::string getJavaSuffix() const override;
 
     std::string getJavaWrapperType() const override;
@@ -58,6 +60,7 @@ struct EnumType : public NamedType {
 
     void emitJavaFieldReaderWriter(
             Formatter &out,
+            size_t depth,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,
