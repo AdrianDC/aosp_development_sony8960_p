@@ -48,11 +48,6 @@ std::string PredefinedType::getCppType(
     }
 }
 
-std::string PredefinedType::getJavaType() const {
-    CHECK(!"Should not be here");
-    return std::string();
-}
-
 void PredefinedType::emitReaderWriter(
         Formatter &out,
         const std::string &name,

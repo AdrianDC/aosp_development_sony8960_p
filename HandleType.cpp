@@ -39,11 +39,6 @@ std::string HandleType::getCppType(StorageMode,
     return "const " + base + "*";
 }
 
-std::string HandleType::getJavaType() const {
-    CHECK(!"Should not be here");
-    return std::string();
-}
-
 void HandleType::emitReaderWriter(
         Formatter &out,
         const std::string &name,

@@ -58,7 +58,8 @@ std::string ScalarType::getCppType(StorageMode, std::string *extra, bool) const 
     return kName[mKind];
 }
 
-std::string ScalarType::getJavaType() const {
+std::string ScalarType::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
     static const char *const kName[] = {
         "boolean",
         "long",
@@ -74,6 +75,7 @@ std::string ScalarType::getJavaType() const {
         "double"
     };
 
+    extra->clear();
     return kName[mKind];
 }
 
@@ -184,6 +186,7 @@ void ScalarType::emitReaderWriterWithCast(
 
 void ScalarType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t /* depth */,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
