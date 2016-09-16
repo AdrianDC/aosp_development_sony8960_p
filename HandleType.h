@@ -27,10 +27,10 @@ struct HandleType : public Type {
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
-    std::string getCppType(StorageMode mode,
-                           std::string *extra,
-                           bool specifyNamespaces) const override;
-    std::string getJavaType() const override;
+    std::string getCppType(
+            StorageMode mode,
+            std::string *extra,
+            bool specifyNamespaces) const override;
 
     void emitReaderWriter(
             Formatter &out,

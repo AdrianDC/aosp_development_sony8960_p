@@ -179,6 +179,36 @@ public final class HidlTestJava {
         return "'" + s + "'";
     }
 
+    public static String toString(IBase.StringMatrix5x3 M) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("[");
+        for (int i = 0; i < 5; ++i) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(toString(M.s[i]));
+        }
+        builder.append("]");
+
+        return builder.toString();
+    }
+
+    public static String toString(IBase.StringMatrix3x5 M) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("[");
+        for (int i = 0; i < 3; ++i) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(toString(M.s[i]));
+        }
+        builder.append("]");
+
+        return builder.toString();
+    }
+
     private void ExpectTrue(boolean x) {
         if (x) {
             return;
@@ -212,6 +242,52 @@ public final class HidlTestJava {
 
             cb.heyItsMe(null);
         }
+    }
+
+    private String numberToEnglish(int x) {
+        final String[] kDigits = {
+            "zero",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+        };
+
+        if (x < 0) {
+            return "negative " + numberToEnglish(-x);
+        }
+
+        if (x < 10) {
+            return kDigits[x];
+        }
+
+        if (x <= 15) {
+            final String[] kSpecialTens = {
+                "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+            };
+
+            return kSpecialTens[x - 10];
+        }
+
+        if (x < 20) {
+            return kDigits[x % 10] + "teen";
+        }
+
+        if (x < 100) {
+            final String[] kDecades = {
+                "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
+                "eighty", "ninety",
+            };
+
+            return kDecades[x / 10 - 2] + kDigits[x % 10];
+        }
+
+        return "positively huge!";
     }
 
     private void client() {
@@ -351,6 +427,24 @@ public final class HidlTestJava {
                                 "Bar(z = 1.04, s = 'Hello, world 4')])]");
         }
 
+        {
+            IBase.StringMatrix5x3 in = new IBase.StringMatrix5x3();
+            for (int i = 0; i < 5; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    in.s[i][j] = numberToEnglish(3 * i + j + 1);
+                }
+            }
+
+            IBase.StringMatrix3x5 out = proxy.transpose(in);
+
+            // [[1 2 3] [4 5 6] [7 8 9] [10 11 12] [13 14 15]]^T
+            // = [[1 4 7 10 13] [2 5 8 11 14] [3 6 9 12 15]]
+            Expect(toString(out),
+                   "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                   +"['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                   +"['three', 'six', 'nine', 'twelve', 'fifteen']]");
+        }
+
         Expect(toString(proxy.someBoolMethod(true)), "false");
 
         {
@@ -447,6 +541,19 @@ public final class HidlTestJava {
             fooOutput[1] = fooInput[0];
 
             return fooOutput;
+        }
+
+        public IBase.StringMatrix3x5 transpose(IBase.StringMatrix5x3 in) {
+            Log.d(TAG, "Baz transpose " + HidlTestJava.toString(in));
+
+            IBase.StringMatrix3x5 out = new IBase.StringMatrix3x5();
+            for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 5; ++j) {
+                    out.s[i][j] = in.s[j][i];
+                }
+            }
+
+            return out;
         }
 
         public boolean someBoolMethod(boolean x) {

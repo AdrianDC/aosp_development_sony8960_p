@@ -53,8 +53,12 @@ std::string VectorType::getCppType(StorageMode mode,
     }
 }
 
-std::string VectorType::getJavaType() const {
-    return mElementType->getJavaType() + "[]";
+std::string VectorType::getJavaType(
+        std::string *extra, bool /* forInitializer */) const {
+    *extra = "[]";
+
+    std::string elementExtra;
+    return mElementType->getJavaType(&elementExtra) + elementExtra;
 }
 
 void VectorType::emitReaderWriter(
@@ -207,13 +211,15 @@ void VectorType::emitJavaReaderWriter(
         const std::string &argName,
         bool isReader) const {
     if (mElementType->isCompoundType()) {
+        std::string extra;  // unused, because CompoundType leaves this empty.
+
         if (isReader) {
-            out << mElementType->getJavaType()
+            out << mElementType->getJavaType(&extra)
                 << ".readVectorFromParcel("
                 << parcelObj
                 << ");\n";
         } else {
-            out << mElementType->getJavaType()
+            out << mElementType->getJavaType(&extra)
                 << ".writeVectorToParcel("
                 << parcelObj
                 << ", "
@@ -248,17 +254,19 @@ void VectorType::emitJavaFieldInitializer(
 
 void VectorType::emitJavaFieldReaderWriter(
         Formatter &out,
+        size_t depth,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     VectorType::EmitJavaFieldReaderWriterForElementType(
-            out, mElementType, blobName, fieldName, offset, isReader);
+            out, depth, mElementType, blobName, fieldName, offset, isReader);
 }
 
 // static
 void VectorType::EmitJavaFieldReaderWriterForElementType(
         Formatter &out,
+        size_t depth,
         const Type *elementType,
         const std::string &blobName,
         const std::string &fieldName,
@@ -287,8 +295,16 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
             << offset
             << " + 8 /* offsetof(hidl_vec<T>, mSize) */);\n";
 
-        out << "for (int _hidl_index = 0; _hidl_index < _hidl_vec_size; "
-            << "++_hidl_index) {\n";
+        std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+        out << "for (int "
+            << iteratorName
+            << " = 0; "
+            << iteratorName
+            << " < _hidl_vec_size; "
+            << "++"
+            << iteratorName
+            << ") {\n";
 
         out.indent();
 
@@ -299,9 +315,10 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
 
         elementType->emitJavaFieldReaderWriter(
                 out,
+                depth + 1,
                 "childBlob",
                 "_hidl_vec_element",
-                "_hidl_index * " + std::to_string(elementSize),
+                iteratorName + " * " + std::to_string(elementSize),
                 true /* isReader */);
 
         out << fieldName
@@ -342,16 +359,25 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         << elementSize
         << "));\n";
 
-    out << "for (int _hidl_index = 0; _hidl_index < _hidl_vec_size; "
-        << "++_hidl_index) {\n";
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (int "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < _hidl_vec_size; "
+        << "++"
+        << iteratorName
+        << ") {\n";
 
     out.indent();
 
     elementType->emitJavaFieldReaderWriter(
             out,
+            depth + 1,
             "childBlob",
-            fieldName + ".elementAt(_hidl_index)",
-            "_hidl_index * " + std::to_string(elementSize),
+            fieldName + ".elementAt(" + iteratorName + ")",
+            iteratorName + " * " + std::to_string(elementSize),
             false /* isReader */);
 
     out.unindent();
