@@ -98,8 +98,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     const Interface *iface = mRootScope->getInterface();
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
     path.append(baseName);
@@ -222,8 +221,8 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
         return OK;
     }
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const Interface *iface = mRootScope->getInterface();
+    const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
     path.append(baseName);
@@ -251,7 +250,6 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
                     MethodLocation::IMPL_SOURCE,
                     false /* specify namespaces */);
 
-    const Interface *iface = mRootScope->getInterface();
 
     out << ifaceName
         << "* ";

@@ -119,8 +119,7 @@ status_t AST::generateJava(
 
     const Interface *iface = mRootScope->getInterface();
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
