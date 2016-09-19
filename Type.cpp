@@ -54,6 +54,14 @@ bool Type::isCompoundType() const {
     return false;
 }
 
+bool Type::isArray() const {
+    return false;
+}
+
+bool Type::isVector() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
@@ -141,6 +149,7 @@ void Type::emitJavaFieldInitializer(
 void Type::emitJavaFieldReaderWriter(
         Formatter &,
         size_t,
+        const std::string &,
         const std::string &,
         const std::string &,
         const std::string &,
