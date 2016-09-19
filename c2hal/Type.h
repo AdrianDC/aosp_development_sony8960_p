@@ -83,7 +83,7 @@ struct Type {
         }
     }
 
-    void setArray(Expression *array);
+    void setArrays(std::vector<Expression *> *arrays);
 
     const std::string decorateName(const std::string &name) const;
 
@@ -101,7 +101,9 @@ private:
     const std::string getSpecialTypeName() const;
 
     std::vector<Qualifier*> *mQualifiers = NULL;
-    Expression *mArray = NULL;
+
+    /* [ expression ] [ expression ] ... [ expression ] */
+    std::vector<Expression*> *mArrays = NULL;
 
     DISALLOW_COPY_AND_ASSIGN(Type);
 };
