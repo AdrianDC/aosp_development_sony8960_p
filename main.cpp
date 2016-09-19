@@ -338,7 +338,8 @@ static status_t generateMakefileForPackage(
     out.indent();
     out << "\nlibhidl \\"
         << "\nlibhwbinder \\"
-        << "\nlibutils \\";
+        << "\nlibutils \\"
+        << "\nlibcutils \\";
 
     for (const auto &importedPackage : importedPackages) {
         out << "\n" << makeLibraryName(importedPackage) << " \\";
