@@ -85,7 +85,8 @@ status_t AST::generateVts(const std::string &outputPath) const {
         baseName = "types";
         isInterface = false;
     } else {
-        baseName = ifaceName.substr(1);  // cut off the leading 'I'.
+        const Interface *iface = mRootScope->getInterface();
+        baseName = iface->getBaseName();
     }
 
     path.append(baseName);

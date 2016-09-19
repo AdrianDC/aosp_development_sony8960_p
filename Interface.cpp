@@ -58,8 +58,7 @@ const std::vector<Annotation *> &Interface::annotations() const {
 }
 
 std::string Interface::getBaseName() const {
-    // cut off the leading 'I'.
-    return localName().substr(1);
+    return fqName().getInterfaceBaseName();
 }
 
 std::string Interface::getCppType(StorageMode mode,
