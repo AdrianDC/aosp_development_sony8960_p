@@ -162,9 +162,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
-
     if (isInterface) {
         out << "struct "
             << ifaceName;
@@ -194,6 +191,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     if (isInterface) {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
+        const std::string baseName = iface->getBaseName();
         out << "constexpr static hidl_version version = {"
             << mPackage.getPackageMajorVersion() << ","
             << mPackage.getPackageMinorVersion() << "};\n";
@@ -283,8 +281,8 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const Interface *iface = mRootScope->getInterface();
+    const std::string baseName = iface->getBaseName();
 
     const std::string klassName = "IHw" + baseName;
 
@@ -331,8 +329,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
             out << component << "/";
         }
 
-        // cut off the leading I
-        const std::string itemBaseName = item.name().substr(1);
+        const std::string itemBaseName = item.getInterfaceBaseName();
 
         out << "Bn"
             << itemBaseName
@@ -356,7 +353,6 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
         << " : public "
         << ifaceName;
 
-    const Interface *iface = mRootScope->getInterface();
     const Interface *superType = iface->superType();
 
     out << ", public ::android::hardware::IInterface";
@@ -597,8 +593,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const Interface *iface = mRootScope->getInterface();
+    const std::string baseName = iface->getBaseName();
     const std::string klassName = "Bn" + baseName;
 
     std::string path = outputPath;
@@ -684,8 +680,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    // cut off the leading 'I'.
-    const std::string baseName = ifaceName.substr(1);
+    const Interface *iface = mRootScope->getInterface();
+    const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
@@ -771,7 +767,8 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         baseName = "types";
         isInterface = false;
     } else {
-        baseName = ifaceName.substr(1); // cut off the leading 'I'.
+        const Interface *iface = mRootScope->getInterface();
+        baseName = iface->getBaseName();
     }
 
     path.append(baseName);
