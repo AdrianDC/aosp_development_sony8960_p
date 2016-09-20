@@ -255,12 +255,20 @@ void VectorType::emitJavaFieldInitializer(
 void VectorType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t depth,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     VectorType::EmitJavaFieldReaderWriterForElementType(
-            out, depth, mElementType, blobName, fieldName, offset, isReader);
+            out,
+            depth,
+            mElementType,
+            parcelName,
+            blobName,
+            fieldName,
+            offset,
+            isReader);
 }
 
 // static
@@ -268,6 +276,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         Formatter &out,
         size_t depth,
         const Type *elementType,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
@@ -276,7 +285,10 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out << "{\n";
         out.indent();
 
-        out << "HwBlob childBlob = parcel.readEmbeddedBuffer(\n";
+        out << "HwBlob childBlob = "
+            << parcelName
+            << ".readEmbeddedBuffer(\n";
+
         out.indent();
         out.indent();
 
@@ -316,6 +328,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         elementType->emitJavaFieldReaderWriter(
                 out,
                 depth + 1,
+                parcelName,
                 "childBlob",
                 "_hidl_vec_element",
                 iteratorName + " * " + std::to_string(elementSize),
@@ -375,6 +388,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
     elementType->emitJavaFieldReaderWriter(
             out,
             depth + 1,
+            parcelName,
             "childBlob",
             fieldName + ".elementAt(" + iteratorName + ")",
             iteratorName + " * " + std::to_string(elementSize),

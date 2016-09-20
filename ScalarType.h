@@ -77,6 +77,7 @@ struct ScalarType : public Type {
     void emitJavaFieldReaderWriter(
             Formatter &out,
             size_t depth,
+            const std::string &parcelName,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,
