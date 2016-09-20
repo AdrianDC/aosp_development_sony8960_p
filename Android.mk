@@ -50,6 +50,37 @@ LOCAL_SHARED_LIBRARIES :=       \
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 
+common_libhidl-gen-ast_src_files := \
+    Coordinator.cpp                 \
+    generateCpp.cpp                 \
+    generateCppImpl.cpp             \
+    generateJava.cpp                \
+    generateVts.cpp                 \
+    hidl-gen_y.yy                   \
+    hidl-gen_l.ll                   \
+    AST.cpp                         \
+
+#
+# libhidl-gen-ast
+#
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libhidl-gen-ast
+LOCAL_CFLAGS := -O0 -g
+LOCAL_SRC_FILES := $(common_libhidl-gen-ast_src_files)
+
+LOCAL_SHARED_LIBRARIES :=       \
+    libbase                     \
+    liblog                      \
+    libhidl-gen                 \
+    libhidl-gen-utils           \
+
+include $(BUILD_HOST_SHARED_LIBRARY)
+
+#
+# hidl-gen
+#
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := hidl-gen
@@ -57,20 +88,13 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_IS_HOST_MODULE := true
 
 LOCAL_SRC_FILES :=              \
-    Coordinator.cpp             \
-    generateCpp.cpp             \
-    generateCppImpl.cpp         \
-    generateJava.cpp            \
-    generateVts.cpp             \
-    hidl-gen_y.yy               \
-    hidl-gen_l.ll               \
-    AST.cpp                     \
     main.cpp                    \
 
 LOCAL_SHARED_LIBRARIES :=       \
     libbase                     \
     liblog                      \
     libhidl-gen                 \
+    libhidl-gen-ast             \
     libhidl-gen-utils           \
 
 LOCAL_CFLAGS := -O0 -g
