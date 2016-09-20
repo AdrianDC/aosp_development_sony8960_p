@@ -92,6 +92,9 @@ struct Type {
 
 private:
 
+    static std::map<std::string, std::string> kSignedToUnsignedMap;
+    static const std::string signedToUnsigned(const std::string &signedType);
+
     static std::map<std::string, std::string> kCToHidlMap;
     static const std::string cToHidlType(const std::string &cType);
 
