@@ -115,7 +115,8 @@ std::string get_last_comment() {
 %token<str> DEFINE_SLURP
 %token<str> OTHER_STATEMENT
 
-%type<expression> opt_array
+%type<expression> array
+%type<expressions> arrays
 %type<expression> expr
 %type<expressions> args
 %type<type> type
@@ -368,9 +369,9 @@ params
     ;
 
 param
-    : type opt_array
+    : type arrays
       {
-        $1->setArray($2);
+        $1->setArrays($2);
 
         // allow for either "const int myvar" or "const int"
         // as a parameter declaration
@@ -378,9 +379,9 @@ param
 
         $$ = new VarDeclaration($1, lastId);
       }
-    | type '(' '*' ID opt_array ')' '(' params ')'
+    | type '(' '*' ID arrays ')' '(' params ')'
       {
-        $1->setArray($5);
+        $1->setArrays($5);
         std::reverse($8->begin(), $8->end());
         $$ = new FunctionDeclaration($1, $4, $8);
       }
@@ -489,9 +490,16 @@ struct_or_union
     | UNION                   { $$ = android::Type::Qualifier::UNION; }
     ;
 
-opt_array
-    : /* empty */             { $$ = NULL; }
-    | '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKOWN, " "); }
+arrays
+    : /* empty */             { $$ = new std::vector<Expression *>; }
+    | array arrays            {
+                                $$ = $2;
+                                $$->push_back($1);
+                              }
+    ;
+
+array
+    : '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKOWN, " "); }
     | '[' expr ']'            { $$ = $2; }
     ;
 
