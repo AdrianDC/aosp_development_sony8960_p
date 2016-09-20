@@ -42,6 +42,8 @@ struct Type {
     virtual bool isBinder() const;
     virtual bool isNamedType() const;
     virtual bool isCompoundType() const;
+    virtual bool isArray() const;
+    virtual bool isVector() const;
 
     virtual const ScalarType *resolveToScalarType() const;
 
@@ -127,6 +129,7 @@ struct Type {
     virtual void emitJavaFieldReaderWriter(
             Formatter &out,
             size_t depth,
+            const std::string &parcelName,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,

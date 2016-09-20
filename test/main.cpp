@@ -169,6 +169,13 @@ struct Bar : public IBar {
             const MultiDimensional &in,
             callingDrWho_cb _hidl_cb) override;
 
+    Return<void> transpose(
+            const StringMatrix5x3 &in, transpose_cb _hidl_cb) override;
+
+    Return<void> transpose2(
+            const hidl_string *in /* hidl_string[5][3] */,
+            transpose2_cb _hidl_cb) override;
+
     Return<void> thisIsNew() override;
 };
 
@@ -407,18 +414,20 @@ static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
     s += "MultiDimensional(";
 
     s += "quuxMatrix=[";
+
+    size_t k = 0;
     for (size_t i = 0; i < 5; ++i) {
         if (i > 0) {
             s += ", ";
         }
 
         s += "[";
-        for (size_t j = 0; j < 3; ++j) {
+        for (size_t j = 0; j < 3; ++j, ++k) {
             if (j > 0) {
                 s += ", ";
             }
 
-            s += QuuxToString(val.quuxMatrix[i][j]);
+            s += QuuxToString(val.quuxMatrix[k]);
         }
     }
     s += "]";
@@ -433,14 +442,97 @@ Return<void> Bar::callingDrWho(
     ALOGI("SERVER(Bar) callingDrWho(%s)", MultiDimensionalToString(in).c_str());
 
     MultiDimensional out;
+    size_t k = 0;
     for (size_t i = 0; i < 5; ++i) {
-        for (size_t j = 0; j < 3; ++j) {
-            out.quuxMatrix[i][j].first = in.quuxMatrix[4 - i][2 - j].last;
-            out.quuxMatrix[i][j].last = in.quuxMatrix[4 - i][2 - j].first;
+        for (size_t j = 0; j < 3; ++j, ++k) {
+            size_t k_prime = (4 - i) * 3 + (2 - j);
+
+            out.quuxMatrix[k].first = in.quuxMatrix[k_prime].last;
+            out.quuxMatrix[k].last = in.quuxMatrix[k_prime].first;
         }
     }
 
     _hidl_cb(out);
+
+    return Void();
+}
+
+using std::to_string;
+
+static std::string to_string(const IFoo::StringMatrix5x3 &M);
+static std::string to_string(const IFoo::StringMatrix3x5 &M);
+static std::string to_string(const hidl_string &s);
+
+template<class T>
+static std::string array_to_string(const T *array, size_t size) {
+    std::string out;
+    out = "[";
+    for (size_t i = 0; i < size; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += to_string(array[i]);
+    }
+    out += "]";
+
+    return out;
+}
+
+template<class T>
+static std::string matrix_to_string(const T *array, size_t dim1, size_t dim2) {
+    std::string out;
+    out = "[";
+    for (size_t i = 0; i < dim1; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += array_to_string(&array[dim2 * i], dim2);
+    }
+    out += "]";
+
+    return out;
+}
+
+static std::string to_string(const IFoo::StringMatrix5x3 &M) {
+    return matrix_to_string(M.s, 5, 3);
+}
+
+static std::string to_string(const IFoo::StringMatrix3x5 &M) {
+    return matrix_to_string(M.s, 3, 5);
+}
+
+static std::string to_string(const hidl_string &s) {
+    return std::string("'") + s.c_str() + "'";
+}
+
+Return<void> Bar::transpose(const StringMatrix5x3 &in, transpose_cb _hidl_cb) {
+    LOG(INFO) << "SERVER(Bar) transpose " << to_string(in);
+
+    StringMatrix3x5 out;
+    size_t k = 0;
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j, ++k) {
+            out.s[k] = in.s[j * 3 + i];
+        }
+    }
+
+    _hidl_cb(out);
+
+    return Void();
+}
+
+Return<void> Bar::transpose2(
+        const hidl_string *in /* hidl_string[5][3] */, transpose2_cb _hidl_cb) {
+    LOG(INFO) << "SERVER(Bar) transpose2 " << matrix_to_string(in, 5, 3);
+
+    hidl_string out[3][5];
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j) {
+            out[i][j] = in[j * 3 + i];
+        }
+    }
+
+    _hidl_cb(&out[0][0]);
 
     return Void();
 }
@@ -784,8 +876,8 @@ TEST_F(HidlTest, FooCallingDrWhoTest) {
     size_t k = 0;
     for (size_t i = 0; i < 5; ++i) {
         for (size_t j = 0; j < 3; ++j, ++k) {
-            in.quuxMatrix[i][j].first = ("First " + std::to_string(k)).c_str();
-            in.quuxMatrix[i][j].last = ("Last " + std::to_string(15-k)).c_str();
+            in.quuxMatrix[k].first = ("First " + std::to_string(k)).c_str();
+            in.quuxMatrix[k].last = ("Last " + std::to_string(15-k)).c_str();
         }
     }
 
@@ -798,17 +890,108 @@ TEST_F(HidlTest, FooCallingDrWhoTest) {
                     ALOGI("CLIENT callingDrWho returned %s.",
                           MultiDimensionalToString(out).c_str());
 
+                    size_t k = 0;
                     for (size_t i = 0; i < 5; ++i) {
-                        for (size_t j = 0; j < 3; ++j) {
-                            EXPECT_STREQ(
-                                out.quuxMatrix[i][j].first.c_str(),
-                                in.quuxMatrix[4-i][2-j].last.c_str());
+                        for (size_t j = 0; j < 3; ++j, ++k) {
+                            size_t k_prime = (4 - i) * 3 + (2 - j);
 
                             EXPECT_STREQ(
-                                out.quuxMatrix[i][j].last.c_str(),
-                                in.quuxMatrix[4-i][2-j].first.c_str());
+                                out.quuxMatrix[k].first.c_str(),
+                                in.quuxMatrix[k_prime].last.c_str());
+
+                            EXPECT_STREQ(
+                                out.quuxMatrix[k].last.c_str(),
+                                in.quuxMatrix[k_prime].first.c_str());
                         }
                     }
+                }));
+}
+
+static std::string numberToEnglish(int x) {
+    static const char *const kDigits[] = {
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    };
+
+    if (x < 0) {
+        return "negative " + numberToEnglish(-x);
+    }
+
+    if (x < 10) {
+        return kDigits[x];
+    }
+
+    if (x <= 15) {
+        static const char *const kSpecialTens[] = {
+            "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+        };
+
+        return kSpecialTens[x - 10];
+    }
+
+    if (x < 20) {
+        return std::string(kDigits[x % 10]) + "teen";
+    }
+
+    if (x < 100) {
+        static const char *const kDecades[] = {
+            "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
+            "eighty", "ninety",
+        };
+
+        return std::string(kDecades[x / 10 - 2]) + kDigits[x % 10];
+    }
+
+    return "positively huge!";
+}
+
+TEST_F(HidlTest, FooTransposeTest) {
+    IFoo::StringMatrix5x3 in;
+
+    int k = 0;
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 3; ++j, ++k) {
+            in.s[k] = numberToEnglish(3 * i + j + 1).c_str();
+        }
+    }
+
+    EXPECT_OK(foo->transpose(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(
+                        to_string(out),
+                        "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                         "['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                         "['three', 'six', 'nine', 'twelve', 'fifteen']]");
+                }));
+}
+
+TEST_F(HidlTest, FooTranspose2Test) {
+    hidl_string in[5 * 3];
+
+    int k = 0;
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 3; ++j, ++k) {
+            in[k] = numberToEnglish(3 * i + j + 1).c_str();
+        }
+    }
+
+    EXPECT_OK(foo->transpose2(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(
+                        matrix_to_string(out, 3, 5),
+                        "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                         "['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                         "['three', 'six', 'nine', 'twelve', 'fifteen']]");
                 }));
 }
 

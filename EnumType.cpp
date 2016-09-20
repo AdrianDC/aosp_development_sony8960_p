@@ -97,12 +97,13 @@ void EnumType::emitReaderWriter(
 void EnumType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t depth,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     return mStorageType->emitJavaFieldReaderWriter(
-            out, depth, blobName, fieldName, offset, isReader);
+            out, depth, parcelName, blobName, fieldName, offset, isReader);
 }
 
 status_t EnumType::emitTypeDeclarations(Formatter &out) const {
