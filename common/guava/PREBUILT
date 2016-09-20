@@ -1,5 +1,8 @@
 copy of prebuilts/tools/common/m2/repository/com/google/guava/guava/15.0/guava-15.0.jar
 f54daebf34dd5ba1087f576cc5f2df16c2328d35
 
+copy of prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0/guava-18.0.jar
+020290b665d84fea1c19b55c842b2e978a5018d3
+
 TODO: delete this copy and just rely on above. This copy is here
 so projects that do not have prebuilts/tools can build against this jar.
