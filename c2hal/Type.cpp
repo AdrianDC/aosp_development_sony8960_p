@@ -59,10 +59,35 @@ const std::string Type::decorateName(const std::string &name) const {
 }
 
 // static
+std::map<std::string, std::string> Type::kSignedToUnsignedMap = {
+    { "char", "uint8_t" },
+    { "short", "int16_t" },
+    { "int", "uint32_t" },
+    { "long", "uint64_t" },
+    { "int8_t", "uint8_t" },
+    { "int16_t", "uint16_t" },
+    { "int32_t", "uint32_t" },
+    { "int64_t", "uint64_t" },
+};
+
+// static
+const std::string Type::signedToUnsigned(const std::string &signedType) {
+    auto it = kSignedToUnsignedMap.find(signedType);
+
+    if (it == kCToHidlMap.end()) {
+        return "";
+    }
+
+    return (*it).second;
+}
+
+// static
 std::map<std::string, std::string> Type::kCToHidlMap = {
+    { "char", "int8_t /* NOTE: char */" },
+    { "short", "int16_t" },
     { "int", "int32_t" },
+    { "long", "int64_t"},
     { "native_handle_t", "handle" },
-    { "char", "uint8_t /* NOTE: char */" },
 
     // { "hidl_string", "string" },
     // { "hidl_vec", "vec"},
@@ -96,19 +121,37 @@ const std::string Type::getHidlType() const {
             case Type::Qualifier::UNION:
             case Type::Qualifier::ENUM:
             case Type::Qualifier::POINTER:
-            case Type::Qualifier::CONST:
+            case Type::Qualifier::CONST: {
                 ss << "/* "
                    << Type::qualifierText((*it)->qualification)
                    << " */";
                 break;
-            case Type::Qualifier::ID:
+            }
+            case Type::Qualifier::ID: {
                 ss << cToHidlType((*it)->id);
                 break;
-            case Type::Qualifier::GENERICS:
+            }
+            case Type::Qualifier::GENERICS: {
                 ss << "<"
                    << (*it)->generics->decorateName("")
                    << ">";
                 break;
+            }
+            case Type::Qualifier::UNSIGNED: {
+                auto next = it + 1;
+                if (next == mQualifiers->end()) {
+                    ss << "uint32_t"; // 'unsigned a' -> 'uint32_t a'
+                    break;
+                }
+                std::string unsignedType = signedToUnsigned((*next)->id);
+                if(unsignedType.empty()) {
+                    ss << Type::qualifierText((*it)->qualification);
+                } else {
+                    ss << unsignedType;
+                    ++it;
+                }
+                break;
+            }
             default: {
                 ss << Type::qualifierText((*it)->qualification);
             }
