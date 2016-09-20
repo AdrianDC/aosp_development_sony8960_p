@@ -243,6 +243,15 @@ typedef int context_hub_callback(uint32_t hub_id, const struct hub_message_t *rx
 
 typedef struct my_other_t {
 
+    int a;
+    int b[];
+    int c[3];
+    int d[][];
+    int e[3][];
+    int f[3][5];
+    int g[4+4][6 * 6][];
+    int h[1][2][][3][4][5][6][7][8];
+
     int (*store_meta_data_in_buffers)(struct camera_device *, int enable);
 
     typedef void (*scan_result_callback)(bt_bdaddr_t* bda, int rssi, vector<uint8_t> adv_data);
@@ -253,7 +262,7 @@ typedef struct my_other_t {
 
     void (*p2)(struct framebuffer_device_t* dev, char *buff, int buff_len);
 
-    int (*p3)(struct framebuffer_device_t* dev, int enable);
+    int (*p3)(struct framebuffer_device_t* dev, int enable[3][4][5]);
 
 
     int (*get_supported_activities_list)(struct activity_recognition_module* module,
