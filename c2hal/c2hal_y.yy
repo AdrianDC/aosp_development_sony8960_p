@@ -316,10 +316,24 @@ enum_vars
         $$ = new std::vector<Declaration *>;
         $$->push_back($1);
       }
+    | OTHER_STATEMENT
+      {
+        $$ = new std::vector<Declaration *>;
+        Note *note = new Note($1);
+        note->setComment(get_last_comment());
+        $$->push_back(note);
+      }
     | enum_var ',' enum_vars
       {
         $$ = $3;
         $$->push_back($1);
+      }
+    | OTHER_STATEMENT enum_vars
+      {
+        $$ = $2;
+        Note *note = new Note($1);
+        note->setComment(get_last_comment());
+        $$->push_back(note);
       }
     ;
 

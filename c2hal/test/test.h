@@ -57,7 +57,9 @@ typedef enum {
     A = 47,
     /* B is a very important value */
     B,
+#ifdef UNHAPPY
     C = 1 + test(19) + test2[21],
+#endif
     D = 1 ? 1 : 2
 } onehere;
 
