@@ -252,6 +252,21 @@ typedef struct my_other_t {
     int g[4+4][6 * 6][];
     int h[1][2][][3][4][5][6][7][8];
 
+    unsigned int i;
+    unsigned int8_t j;
+    unsigned int16_t k;
+    unsigned int32_t l;
+    unsigned int64_t m;
+    unsigned int32_t * n;
+    const unsigned int32_t *** o;
+    unsigned p;
+    short q;
+    long r;
+    unsigned short s;
+    unsigned long t;
+    unsigned char u;
+    char v;
+
     int (*store_meta_data_in_buffers)(struct camera_device *, int enable);
 
     typedef void (*scan_result_callback)(bt_bdaddr_t* bda, int rssi, vector<uint8_t> adv_data);
