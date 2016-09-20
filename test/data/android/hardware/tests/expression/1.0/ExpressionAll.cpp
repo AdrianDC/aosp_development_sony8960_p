@@ -1,11 +1,15 @@
 #include <android/hardware/tests/expression/1.0//BpExpression.h>
 #include <android/hardware/tests/expression/1.0//BnExpression.h>
+#include <android/hardware/tests/expression/1.0//BsExpression.h>
+#include <cutils/properties.h>
 
 namespace android {
 namespace hardware {
 namespace tests {
 namespace expression {
 namespace V1_0 {
+
+constexpr hidl_version IExpression::version;
 
 BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder> &_hidl_impl)
     : BpInterface<IHwExpression>(_hidl_impl) {
@@ -15,6 +19,8 @@ IMPLEMENT_HWBINDER_META_INTERFACE(Expression, "android.hardware.tests.expression
 
 BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
     : BnInterface<IExpression, IHwExpression>(_hidl_impl) {
+    enableInstrumentation = property_get_bool("hal.instrumentation.enable", false);
+    registerInstrumentationCallbacks("android.hardware.tests.expression@1.0::IExpression", &instrumentationCallbacks);
 }
 
 ::android::status_t BnExpression::onTransact(
@@ -42,7 +48,9 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
   return _hidl_err;
 }
 
-IMPLEMENT_REGISTER_AND_GET_SERVICE(Expression)
+BsExpression::BsExpression(const sp<IExpression> impl) : mImpl(impl) {}
+
+IMPLEMENT_REGISTER_AND_GET_SERVICE(Expression, "android.hardware.tests.expression@1.0-impl.so")
 }  // namespace V1_0
 }  // namespace expression
 }  // namespace tests

@@ -662,6 +662,11 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         return err;
     }
 
+    // Generated code for instrumentation.
+    out << "// for hidl instrumentation.\n";
+    out << "std::vector<InstrumentationCallback> instrumentationCallbacks;\n\n";
+    out << "bool enableInstrumentation = false;\n";
+
     out.unindent();
 
     out << "};\n\n";
@@ -802,6 +807,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "#include <" << prefix << "/Bp" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bn" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bs" << baseName << ".h>\n";
+        out << "#include <cutils/properties.h>\n";
     } else {
         out << "#include <" << prefix << "types.h>\n";
     }
@@ -1065,6 +1071,13 @@ status_t AST::generateStubSource(
         << baseName
         << ">(_hidl_impl) {\n";
 
+    out << "enableInstrumentation = "
+           "property_get_bool(\"hal.instrumentation.enable\", false);\n";
+    out << "registerInstrumentationCallbacks(\""
+        << mPackage.string()
+        << "::I"
+        << baseName
+        << "\", &instrumentationCallbacks);\n";
     out.unindent();
     out.unindent();
     out << "}\n\n";
@@ -1193,6 +1206,27 @@ status_t AST::generateStubSourceForMethod(
                 Type::ErrorMode_Break);
     }
 
+    out << "if (UNLIKELY(enableInstrumentation)) {\n";
+    out.indent();
+    out << "std::vector<void *> args;\n";
+    for (const auto &arg : method->args()) {
+        out << "args.push_back((void *)"
+            << (arg->type().resultNeedsDeref() ? "" : "&")
+            << arg->name()
+            << ");\n";
+    }
+
+    out << "for (auto callback: instrumentationCallbacks) {\n";
+    out.indent();
+    out << "callback(InstrumentationEvent::SERVER_API_ENTRY, \""
+        << mPackage.package()
+        << "\", \"" << mPackage.version().substr(1) << "\", \""
+        << iface->localName() << "\", \"" << method->name() << "\", &args);\n";
+    out.unindent();
+    out << "}\n";
+    out.unindent();
+    out << "}\n\n";
+
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
 
@@ -1229,6 +1263,23 @@ status_t AST::generateStubSourceForMethod(
                 true, /* parcelObjIsPointer */
                 false, /* isReader */
                 Type::ErrorMode_Ignore);
+
+        out << "if (UNLIKELY(enableInstrumentation)) {\n";
+        out.indent();
+        out << "std::vector<void *> results;\n";
+        out << "results.push_back((void *)&" << elidedReturn->name() << ");\n";
+
+        out << "for (auto callback: instrumentationCallbacks) {\n";
+        out.indent();
+        out << "callback(InstrumentationEvent::SERVER_API_EXIT, \""
+            << mPackage.package()
+            << "\", \"" << mPackage.version().substr(1) << "\", \""
+            << iface->localName() << "\", \"" << method->name()
+            << "\", &results);\n";
+        out.unindent();
+        out << "}\n";
+        out.unindent();
+        out << "}\n\n";
 
         out << "_hidl_cb(*_hidl_reply);\n";
     } else {
@@ -1287,6 +1338,25 @@ status_t AST::generateStubSourceForMethod(
                         false /* reader */,
                         Type::ErrorMode_Ignore);
             }
+
+            out << "if (UNLIKELY(enableInstrumentation)) {\n";
+            out.indent();
+            out << "std::vector<void *> results;\n";
+            for (const auto &arg : method->results()) {
+                out << "results.push_back((void *)&" << arg->name() << ");\n";
+            }
+
+            out << "for (auto callback: instrumentationCallbacks) {\n";
+            out.indent();
+            out << "callback(InstrumentationEvent::SERVER_API_EXIT, \""
+                << mPackage.package()
+                << "\", \"" << mPackage.version().substr(1) << "\", \""
+                << iface->localName() << "\", \"" << method->name()
+                << "\", &results);\n";
+            out.unindent();
+            out << "}\n";
+            out.unindent();
+            out << "}\n\n";
 
             out << "_hidl_cb(*_hidl_reply);\n";
 
