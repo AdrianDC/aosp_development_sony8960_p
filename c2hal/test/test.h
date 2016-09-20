@@ -125,6 +125,8 @@ typedef struct framebuffer_device_t {
         double halfLongitude;
     };
 
+    char here;
+
     /* flags describing some attributes of the framebuffer */
     const uint32_t  flags;
 

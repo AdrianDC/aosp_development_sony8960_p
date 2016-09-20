@@ -58,6 +58,7 @@ const std::string Type::decorateName(const std::string &name) const {
 std::map<std::string, std::string> Type::kCToHidlMap = {
     { "int", "int32_t" },
     { "native_handle_t", "handle" },
+    { "char", "uint8_t /* NOTE: char */" },
 
     // { "hidl_string", "string" },
     // { "hidl_vec", "vec"},
