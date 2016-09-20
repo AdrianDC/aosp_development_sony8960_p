@@ -51,6 +51,10 @@ struct Baz : public IBaz {
             const IBase::StringMatrix5x3 &in,
             transpose_cb _hidl_cb) override;
 
+    Return<void> transpose2(
+            const hidl_string *in /* hidl_string[5][3] */,
+            transpose2_cb _hidl_cb) override;
+
     Return<bool> someBoolMethod(bool x) override;
 
     Return<void> someBoolArrayMethod(
@@ -122,6 +126,21 @@ static std::string array_to_string(const T *array, size_t size) {
 }
 
 template<class T>
+static std::string matrix_to_string(const T *array, size_t dim1, size_t dim2) {
+    std::string out;
+    out = "[";
+    for (size_t i = 0; i < dim1; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += array_to_string(&array[dim2 * i], dim2);
+    }
+    out += "]";
+
+    return out;
+}
+
+template<class T>
 static std::string to_string(const hidl_vec<T> &vec) {
     return array_to_string(&vec[0], vec.size());
 }
@@ -162,7 +181,7 @@ static std::string to_string(const IBase::StringMatrix5x3 &M) {
         if (i > 0) {
             out += ", ";
         }
-        out += array_to_string(M.s[i], 3);
+        out += array_to_string(&M.s[3 * i], 3);
     }
     out += "]";
 
@@ -176,7 +195,7 @@ static std::string to_string(const IBase::StringMatrix3x5 &M) {
         if (i > 0) {
             out += ", ";
         }
-        out += array_to_string(M.s[i], 5);
+        out += array_to_string(&M.s[5 * i], 5);
     }
     out += "]";
 
@@ -228,13 +247,31 @@ Return<void> Baz::transpose(
     LOG(INFO) << "Baz::transpose " << to_string(in);
 
     IBase::StringMatrix3x5 out;
+    size_t k = 0;
     for (size_t i = 0; i < 3; ++i) {
-        for (size_t j = 0; j < 5; ++j) {
-            out.s[i][j] = in.s[j][i];
+        for (size_t j = 0; j < 5; ++j, ++k) {
+            out.s[k] = in.s[j * 3 + i];
         }
     }
 
     _hidl_cb(out);
+
+    return Void();
+}
+
+Return<void> Baz::transpose2(
+        const hidl_string *in /* hidl_string[5][3] */,
+        transpose2_cb _hidl_cb) {
+    LOG(INFO) << "Baz::transpose2 " << matrix_to_string(in, 5, 3);
+
+    hidl_string out[3][5];
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j) {
+            out[i][j] = in[j * 3 + i];
+        }
+    }
+
+    _hidl_cb(&out[0][0]);
 
     return Void();
 }
@@ -614,9 +651,10 @@ static std::string numberToEnglish(int x) {
 TEST_F(HidlTest, BazTransposeTest) {
     IBase::StringMatrix5x3 in;
 
+    int k = 0;
     for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            in.s[i][j] = numberToEnglish(3 * i + j + 1).c_str();
+        for (int j = 0; j < 3; ++j, ++k) {
+            in.s[k] = numberToEnglish(3 * i + j + 1).c_str();
         }
     }
 
@@ -625,6 +663,27 @@ TEST_F(HidlTest, BazTransposeTest) {
                 [&](const auto &out) {
                     EXPECT_EQ(
                         to_string(out),
+                        "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                         "['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                         "['three', 'six', 'nine', 'twelve', 'fifteen']]");
+                }));
+}
+
+TEST_F(HidlTest, BazTranspose2Test) {
+    hidl_string in[5 * 3];
+
+    int k = 0;
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 3; ++j, ++k) {
+            in[k] = numberToEnglish(3 * i + j + 1).c_str();
+        }
+    }
+
+    EXPECT_OK(baz->transpose2(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(
+                        matrix_to_string(out, 3, 5),
                         "[['one', 'four', 'seven', 'ten', 'thirteen'], "
                          "['two', 'five', 'eight', 'eleven', 'fourteen'], "
                          "['three', 'six', 'nine', 'twelve', 'fifteen']]");
