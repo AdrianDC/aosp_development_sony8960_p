@@ -21,6 +21,10 @@ struct BnExpression : public ::android::hardware::BnInterface<IExpression, IHwEx
 
   // Methods from IExpression follow.
 
+  // for hidl instrumentation.
+  std::vector<InstrumentationCallback> instrumentationCallbacks;
+
+  bool enableInstrumentation = false;
 };
 
 }  // namespace V1_0
