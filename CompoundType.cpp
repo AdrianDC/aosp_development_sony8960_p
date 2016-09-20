@@ -211,13 +211,16 @@ void CompoundType::emitJavaFieldInitializer(
 void CompoundType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t /* depth */,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     if (isReader) {
         out << fieldName
-            << ".readEmbeddedFromParcel(parcel, "
+            << ".readEmbeddedFromParcel("
+            << parcelName
+            << ", "
             << blobName
             << ", "
             << offset
@@ -342,46 +345,6 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out << "public static final "
         << localName()
-        << "[] readArrayFromParcel(HwParcel parcel, int size) {\n";
-    out.indent();
-
-    out << localName()
-        << "[] _hidl_array = new "
-        << localName()
-        << "[size];\n";
-
-    out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
-
-    out << "for (int _hidl_index = 0; _hidl_index < size; ++_hidl_index) {\n";
-    out.indent();
-
-    out << "_hidl_array[_hidl_index] = new "
-        << localName()
-        << "();\n";
-
-    size_t structAlign, structSize;
-    getAlignmentAndSize(&structAlign, &structSize);
-
-    out << "_hidl_array[_hidl_index].readEmbeddedFromParcel(\n";
-    out.indent();
-    out.indent();
-    out << "parcel, _hidl_blob, _hidl_index * "
-        << structSize
-        << " /* parentOffset */);\n";
-
-    out.unindent();
-    out.unindent();
-    out.unindent();
-
-    out << "}\nreturn _hidl_array;\n";
-
-    out.unindent();
-    out << "}\n\n";
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    out << "public static final "
-        << localName()
         << "[] readVectorFromParcel(HwParcel parcel) {\n";
     out.indent();
 
@@ -395,6 +358,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
             out,
             0 /* depth */,
             this,
+            "parcel",
             "_hidl_blob",
             "_hidl_vec",
             "0",
@@ -428,6 +392,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
         field->type().emitJavaFieldReaderWriter(
                 out,
                 0 /* depth */,
+                "parcel",
                 "_hidl_blob",
                 field->name(),
                 "_hidl_offset + " + std::to_string(offset),
@@ -441,6 +406,9 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     ////////////////////////////////////////////////////////////////////////////
 
+    size_t structAlign, structSize;
+    getAlignmentAndSize(&structAlign, &structSize);
+
     out << "public final void writeToParcel(HwParcel parcel) {\n";
     out.indent();
 
@@ -450,40 +418,6 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out << "writeEmbeddedToBlob(_hidl_blob, 0 /* parentOffset */);\n"
         << "parcel.writeBuffer(_hidl_blob);\n";
-
-    out.unindent();
-    out << "}\n\n";
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    out << "public static final void writeArrayToParcel(\n";
-    out.indent();
-    out.indent();
-    out << "HwParcel parcel, int size, "
-        << localName()
-        << "[] _hidl_array) {\n";
-    out.unindent();
-
-    out << "HwBlob _hidl_blob = new HwBlob("
-        << "size * "
-        << structSize
-        << " /* size */);\n";
-
-    out << "for (int _hidl_index = 0; _hidl_index < size; ++_hidl_index) {\n";
-    out.indent();
-
-    out << "_hidl_array[_hidl_index].writeEmbeddedToBlob(\n";
-    out.indent();
-    out.indent();
-    out << "_hidl_blob, _hidl_index * "
-        << structSize
-        << " /* parentOffset */);\n";
-
-    out.unindent();
-    out.unindent();
-    out.unindent();
-
-    out << "}\nparcel.writeBuffer(_hidl_blob);\n";
 
     out.unindent();
     out << "}\n\n";
@@ -508,6 +442,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
             out,
             0 /* depth */,
             this,
+            "parcel",
             "_hidl_blob",
             "_hidl_vec",
             "0",
@@ -539,6 +474,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
         field->type().emitJavaFieldReaderWriter(
                 out,
                 0 /* depth */,
+                "parcel",
                 "_hidl_blob",
                 field->name(),
                 "_hidl_offset + " + std::to_string(offset),

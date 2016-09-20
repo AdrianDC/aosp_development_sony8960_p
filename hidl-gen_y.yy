@@ -29,6 +29,7 @@
 
 #include "hidl-gen_y.h"
 
+#include <android-base/logging.h>
 #include <stdio.h>
 
 using namespace android;
@@ -600,7 +601,15 @@ type
               YYERROR;
           }
 
-          $$ = new ArrayType($1, $3);
+          char *end;
+          unsigned long size = strtoul($3, &end, 10);
+          CHECK(end > $3 && *end == '\0');
+
+          if ($1->isArray()) {
+              $$ = new ArrayType(static_cast<ArrayType *>($1), size);
+          } else {
+              $$ = new ArrayType($1, size);
+          }
       }
     | VEC '<' fqname '>'
       {
