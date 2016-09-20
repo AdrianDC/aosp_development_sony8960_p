@@ -21,21 +21,43 @@
 
 namespace android {
 
-ArrayType::ArrayType(Type *elementType, const char *dimension)
-    : mElementType(elementType),
-      mDimension(dimension) {
+ArrayType::ArrayType(ArrayType *srcArray, size_t size)
+    : mElementType(srcArray->mElementType),
+      mSizes(srcArray->mSizes) {
+    addDimension(size);
+}
+
+ArrayType::ArrayType(Type *elementType, size_t size)
+    : mElementType(elementType) {
+    addDimension(size);
+}
+
+void ArrayType::addDimension(size_t size) {
+    mSizes.insert(mSizes.begin(), size);
 }
 
 void ArrayType::addNamedTypesToSet(std::set<const FQName> &set) const {
     mElementType->addNamedTypesToSet(set);
 }
 
+bool ArrayType::isArray() const {
+    return true;
+}
+
 std::string ArrayType::getCppType(StorageMode mode,
                                   std::string *extra,
                                   bool specifyNamespaces) const {
     const std::string base = mElementType->getCppType(extra, specifyNamespaces);
+    CHECK(extra->empty());
 
-    *extra = "[" + mDimension + "]" + (*extra);
+    size_t numArrayElements = 1;
+    for (auto size : mSizes) {
+        numArrayElements *= size;
+    }
+
+    *extra += "[";
+    *extra += std::to_string(numArrayElements);
+    *extra += "]";
 
     switch (mode) {
         case StorageMode_Stack:
@@ -44,7 +66,11 @@ std::string ArrayType::getCppType(StorageMode mode,
         case StorageMode_Argument:
         case StorageMode_Result:
         {
-            *extra = " /* " + base + (*extra) + " */";
+            *extra = " /* " + base;
+            for (auto size : mSizes) {
+                *extra += "[" + std::to_string(size) + "]";
+            }
+            *extra += " */";
 
             return "const " + base + "*";
         }
@@ -57,11 +83,19 @@ std::string ArrayType::getJavaType(
     const std::string base =
         mElementType->getJavaType(&baseExtra, forInitializer);
 
-    *extra = "[";
-    if (forInitializer) {
-        (*extra) += mDimension;
+    CHECK(baseExtra.empty());
+
+    extra->clear();
+
+    for (auto size : mSizes) {
+        *extra += "[";
+
+        if (forInitializer) {
+            *extra += std::to_string(size);
+        }
+
+        *extra += "]";
     }
-    (*extra) += "]" + baseExtra;
 
     return base;
 }
@@ -75,6 +109,7 @@ void ArrayType::emitReaderWriter(
         ErrorMode mode) const {
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
+    CHECK(baseExtra.empty());
 
     const std::string parentName = "_hidl_" + name + "_parent";
 
@@ -107,11 +142,14 @@ void ArrayType::emitReaderWriter(
             << parcelObjDeref
             << "writeBuffer("
             << name
-            << ", "
-            << mDimension
-            << " * sizeof("
+            << ", ";
+
+        for (auto size : mSizes) {
+            out << size << " * ";
+        }
+
+        out << "sizeof("
             << baseType
-            << baseExtra
             << "), &"
             << parentName
             << ");\n";
@@ -151,15 +189,21 @@ void ArrayType::emitReaderWriterEmbedded(
 
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
+    CHECK(baseExtra.empty());
 
     std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    size_t numArrayElements = 1;
+    for (auto size : mSizes) {
+        numArrayElements *= size;
+    }
 
     out << "for (size_t "
         << iteratorName
         << " = 0; "
         << iteratorName
         << " < "
-        << mDimension
+        << numArrayElements
         << "; ++"
         << iteratorName
         << ") {\n";
@@ -179,7 +223,6 @@ void ArrayType::emitReaderWriterEmbedded(
             offsetText
                 + " + " + iteratorName + " * sizeof("
                 + baseType
-                + baseExtra
                 + ")");
 
     out.unindent();
@@ -196,37 +239,46 @@ void ArrayType::emitJavaReaderWriter(
         const std::string &parcelObj,
         const std::string &argName,
         bool isReader) const {
-    std::string extra;
-
-    if (mElementType->isCompoundType()) {
-        if (isReader) {
-            out << mElementType->getJavaType(&extra)
-                << ".readArrayFromParcel("
-                << parcelObj
-                << ", "
-                << mDimension
-                << ");\n";
-        } else {
-            out << mElementType->getJavaType(&extra)
-                << ".writeArrayToParcel("
-                << parcelObj
-                << ", "
-                << mDimension
-                << ", "
-                << argName
-                << ");\n";
-        }
-
-        return;
+    if (isReader) {
+        std::string extra;
+        out << "new "
+            << getJavaType(&extra, true /* forInitializer */)
+            << extra
+            << ";\n";
     }
 
-    emitJavaReaderWriterWithSuffix(
+    out << "{\n";
+    out.indent();
+
+    out << "HwBlob _hidl_blob = ";
+
+    if (isReader) {
+        out << parcelObj
+            << ".readBuffer();\n";
+    } else {
+        size_t align, size;
+        getAlignmentAndSize(&align, &size);
+
+        out << "new HwBlob("
+            << size
+            << " /* size */);\n";
+    }
+
+    emitJavaFieldReaderWriter(
             out,
+            0 /* depth */,
             parcelObj,
+            "_hidl_blob",
             argName,
-            isReader,
-            mElementType->getJavaSuffix() + "Array",
-            mDimension);
+            "0 /* offset */",
+            isReader);
+
+    if (!isReader) {
+        out << parcelObj << ".writeBuffer(_hidl_blob);\n";
+    }
+
+    out.unindent();
+    out << "}\n";
 }
 
 void ArrayType::emitJavaFieldInitializer(
@@ -251,43 +303,77 @@ void ArrayType::emitJavaFieldInitializer(
 void ArrayType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t depth,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
-    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+    std::string offsetName = "_hidl_array_offset_" + std::to_string(depth);
+    out << "long " << offsetName << " = " << offset << ";\n";
 
-    out << "for (int "
-        << iteratorName
-        << " = 0; "
-        << iteratorName
-        << " < "
-        << mDimension
-        << "; ++"
-        << iteratorName
-        << ") {\n";
+    std::string indexString;
+    for (size_t dim = 0; dim < mSizes.size(); ++dim) {
+        std::string iteratorName =
+            "_hidl_index_" + std::to_string(depth) + "_" + std::to_string(dim);
 
-    out.indent();
+        out << "for (int "
+            << iteratorName
+            << " = 0; "
+            << iteratorName
+            << " < "
+            << mSizes[dim]
+            << "; ++"
+            << iteratorName
+            << ") {\n";
 
-    size_t elementAlign, elementSize;
-    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+        out.indent();
+
+        indexString += "[" + iteratorName + "]";
+    }
+
+    if (isReader && mElementType->isCompoundType()) {
+        std::string extra;
+        std::string typeName =
+            mElementType->getJavaType(&extra, false /* forInitializer */);
+
+        CHECK(extra.empty());
+
+        out << fieldName
+            << indexString
+            << " = new "
+            << typeName
+            << "();\n";
+    }
 
     mElementType->emitJavaFieldReaderWriter(
             out,
             depth + 1,
+            parcelName,
             blobName,
-            fieldName + "[" + iteratorName + "]",
-            offset + " + " + iteratorName + " * " + std::to_string(elementSize),
+            fieldName + indexString,
+            offsetName,
             isReader);
 
-    out.unindent();
-    out << "}\n";
+    size_t elementAlign, elementSize;
+    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
+    out << offsetName << " += " << std::to_string(elementSize) << ";\n";
+
+    for (size_t dim = 0; dim < mSizes.size(); ++dim) {
+        out.unindent();
+        out << "}\n";
+    }
 }
 
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
+    if (mSizes.size() > 1) {
+        // Multi-dimensional arrays are yet to be supported in VTS.
+        return UNKNOWN_ERROR;
+    }
+
     out << "type: TYPE_ARRAY\n" << "vector_value: {\n";
     out.indent();
-    out << "size: " << mDimension << "\n";
+    out << "size: " << mSizes[0] << "\n";
     status_t err = mElementType->emitVtsTypeDeclarations(out);
     if (err != OK) {
         return err;
@@ -304,11 +390,9 @@ bool ArrayType::isJavaCompatible() const {
 void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {
     mElementType->getAlignmentAndSize(align, size);
 
-    char *end;
-    unsigned long dim = strtoul(mDimension.c_str(), &end, 10);
-    CHECK(end > mDimension.c_str() && *end == '\0');
-
-    (*size) *= dim;
+    for (auto sizeInDimension : mSizes) {
+        (*size) *= sizeInDimension;
+    }
 }
 
 }  // namespace android

@@ -179,34 +179,27 @@ public final class HidlTestJava {
         return "'" + s + "'";
     }
 
-    public static String toString(IBase.StringMatrix5x3 M) {
+    public static String toString(String[][] M) {
         StringBuilder builder = new StringBuilder();
 
         builder.append("[");
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < M.length; ++i) {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append(toString(M.s[i]));
+            builder.append(toString(M[i]));
         }
         builder.append("]");
 
         return builder.toString();
     }
 
+    public static String toString(IBase.StringMatrix5x3 M) {
+        return toString(M.s);
+    }
+
     public static String toString(IBase.StringMatrix3x5 M) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("[");
-        for (int i = 0; i < 3; ++i) {
-            if (i > 0) {
-                builder.append(", ");
-            }
-            builder.append(toString(M.s[i]));
-        }
-        builder.append("]");
-
-        return builder.toString();
+        return toString(M.s);
     }
 
     private void ExpectTrue(boolean x) {
@@ -445,6 +438,24 @@ public final class HidlTestJava {
                    +"['three', 'six', 'nine', 'twelve', 'fifteen']]");
         }
 
+        {
+            String[][] in = new String[5][3];
+            for (int i = 0; i < 5; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    in[i][j] = numberToEnglish(3 * i + j + 1);
+                }
+            }
+
+            String[][] out = proxy.transpose2(in);
+
+            // [[1 2 3] [4 5 6] [7 8 9] [10 11 12] [13 14 15]]^T
+            // = [[1 4 7 10 13] [2 5 8 11 14] [3 6 9 12 15]]
+            Expect(toString(out),
+                   "[['one', 'four', 'seven', 'ten', 'thirteen'], "
+                   +"['two', 'five', 'eight', 'eleven', 'fourteen'], "
+                   +"['three', 'six', 'nine', 'twelve', 'fifteen']]");
+        }
+
         Expect(toString(proxy.someBoolMethod(true)), "false");
 
         {
@@ -550,6 +561,19 @@ public final class HidlTestJava {
             for (int i = 0; i < 3; ++i) {
                 for (int j = 0; j < 5; ++j) {
                     out.s[i][j] = in.s[j][i];
+                }
+            }
+
+            return out;
+        }
+
+        public String[][] transpose2(String[][] in) {
+            Log.d(TAG, "Baz transpose2 " + HidlTestJava.toString(in));
+
+            String[][] out = new String[3][5];
+            for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 5; ++j) {
+                    out[i][j] = in[j][i];
                 }
             }
 

@@ -152,12 +152,15 @@ void StringType::emitJavaFieldInitializer(
 void StringType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t /* depth */,
+        const std::string &parcelName,
         const std::string &blobName,
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
     if (isReader) {
-        out << "\nparcel.readEmbeddedBuffer(\n";
+        out << "\n"
+            << parcelName
+            << ".readEmbeddedBuffer(\n";
 
         out.indent();
         out.indent();

@@ -20,12 +20,21 @@
 
 #include "Type.h"
 
-#include <string>
+#include <vector>
 
 namespace android {
 
 struct ArrayType : public Type {
-    ArrayType(Type *elementType, const char *dimension);
+    // Extends existing array by adding another dimension.
+    ArrayType(ArrayType *srcArray, size_t size);
+
+    ArrayType(Type *elementType, size_t size);
+
+    static ArrayType *AddDimension(ArrayType *base, size_t size);
+
+    bool isArray() const override;
+
+    void addDimension(size_t size);
 
     std::string getCppType(StorageMode mode,
                            std::string *extra,
@@ -70,6 +79,7 @@ struct ArrayType : public Type {
     void emitJavaFieldReaderWriter(
             Formatter &out,
             size_t depth,
+            const std::string &parcelName,
             const std::string &blobName,
             const std::string &fieldName,
             const std::string &offset,
@@ -83,7 +93,7 @@ struct ArrayType : public Type {
 
 private:
     Type *mElementType;
-    std::string mDimension;
+    std::vector<size_t> mSizes;
 
     DISALLOW_COPY_AND_ASSIGN(ArrayType);
 };
