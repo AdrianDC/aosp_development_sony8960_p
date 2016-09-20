@@ -24,7 +24,11 @@ Type::Type(std::vector<Qualifier*> *qualifiers)
     {}
 
 Type::~Type() {
-    delete mArray;
+    if(mArrays != NULL) {
+        for(auto* array : *mArrays) {
+            delete array;
+        }
+    }
 
     if(mQualifiers != NULL) {
         for(auto* qual : *mQualifiers) {
@@ -34,8 +38,8 @@ Type::~Type() {
     delete mQualifiers;}
 
 
-void Type::setArray(Expression *array) {
-    mArray = array;
+void Type::setArrays(std::vector<Expression*> *arrays) {
+    mArrays = arrays;
 }
 
 const std::string Type::decorateName(const std::string &name) const {
@@ -82,7 +86,7 @@ const std::string Type::getHidlType() const {
 
     std::stringstream ss;
 
-    for(auto it = mQualifiers->begin(); it != mQualifiers->end(); ++it) {
+    for (auto it = mQualifiers->begin(); it != mQualifiers->end(); ++it) {
         if (it != mQualifiers->begin()) {
             ss << " ";
         }
@@ -111,8 +115,10 @@ const std::string Type::getHidlType() const {
         }
     }
 
-    if (mArray != NULL) {
-        ss << "[" << mArray->toString() << "]";
+    if (mArrays != NULL) {
+        for (const auto &array : *mArrays) {
+            ss << "[" << array->toString() << "]";
+        }
     }
 
     return ss.str();
