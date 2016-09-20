@@ -17,6 +17,8 @@
 #include "Type.h"
 #include <sstream>
 
+#include <hidl-util/StringHelper.h>
+
 namespace android {
 
 Type::Type(std::vector<Qualifier*> *qualifiers)
@@ -98,7 +100,7 @@ const std::string Type::cToHidlType(const std::string &cType) {
     auto it = kCToHidlMap.find(cType);
 
     if (it == kCToHidlMap.end()) {
-        return cType;
+        return "";
     }
 
     return (*it).second;
@@ -128,7 +130,19 @@ const std::string Type::getHidlType() const {
                 break;
             }
             case Type::Qualifier::ID: {
-                ss << cToHidlType((*it)->id);
+                std::string id = (*it)->id;
+                std::string conversion = cToHidlType(id);
+                if (!conversion.empty()) {
+                    ss << conversion;
+                } else if (!StringHelper::StartsWith(id, "int") &&
+                           !StringHelper::StartsWith(id, "uint") &&
+                           !StringHelper::StartsWith(id, "size") &&
+                           id.find("_") != std::string::npos) {
+                    std::string baseName = StringHelper::RTrim(id, "_t");
+                    ss << StringHelper::SnakeCaseToPascalCase(baseName);
+                } else {
+                    ss << id;
+                }
                 break;
             }
             case Type::Qualifier::GENERICS: {

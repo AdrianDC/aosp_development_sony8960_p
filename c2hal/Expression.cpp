@@ -108,7 +108,7 @@ struct AtomExpression : Expression {
 
     virtual Type getType(const AST &ast) {
         if (mType != Type::UNKOWN) {
-            return mType; 
+            return mType;
         }
 
         Define *define = ast.getDefinesScope().lookup(mValue);
