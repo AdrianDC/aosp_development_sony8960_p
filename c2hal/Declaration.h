@@ -32,7 +32,10 @@ struct Declaration {
     virtual ~Declaration();
 
     const std::string &getName() const;
-    void setName(const std::string &name);
+    virtual void setName(const std::string &name);
+
+    void forceCamelCase();
+    void forcePascalCase();
 
     const std::string& getComment() const;
     void setComment(const std::string &comment);

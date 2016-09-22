@@ -26,6 +26,8 @@ struct VarDeclaration : Declaration{
     VarDeclaration(Type *type, const std::string &name);
     ~VarDeclaration();
 
+    void setName(const std::string &name) override;
+
     Type* getType() const;
 
     static std::string type() { return "var"; }
