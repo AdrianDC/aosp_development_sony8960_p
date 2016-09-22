@@ -18,6 +18,7 @@
 
 #include "ScalarType.h"
 
+#include <assert.h>
 #include <inttypes.h>
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
