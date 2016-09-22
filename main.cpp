@@ -230,6 +230,10 @@ static void generateMakefileSectionForLanguage(
             Scope *rootScope = typesAST->scope();
 
             for (const auto &type : rootScope->getSubTypes()) {
+                if (type->isTypeDef()) {
+                    continue;
+                }
+
                 generateMakefileSectionForLanguageAndType(
                         out,
                         coordinator,
