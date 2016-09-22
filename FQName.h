@@ -30,9 +30,11 @@ struct FQName {
 
     FQName(const std::string &package,
            const std::string &version,
-           const std::string &name);
+           const std::string &name,
+           const std::string &valueName = "");
 
     bool isValid() const;
+    bool isIdentifier() const;
     bool setTo(const std::string &s);
 
     void applyDefaults(
@@ -69,7 +71,17 @@ struct FQName {
     std::string name() const;
     std::vector<std::string> names() const;
 
+    // The next two methods returns two parts of the FQName, that is,
+    // the first part package + version + name, the second part valueName.
+    FQName typeName() const;
+    std::string valueName() const;
+
     bool isFullyQualified() const;
+
+    // true if:
+    // 1. (package)?(version)?(name):(valueName)
+    // 2. (valueName), aka a single identifier
+    bool isValidValueName() const;
 
     void print() const;
     std::string string() const;
@@ -126,10 +138,11 @@ struct FQName {
     std::string getPackageMinorVersion() const;
 
 private:
-    bool mValid;
+    bool mValid, mIsIdentifier;
     std::string mPackage;
     std::string mVersion;
     std::string mName;
+    std::string mValueName;
 };
 
 }  // namespace android
