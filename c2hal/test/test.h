@@ -74,6 +74,9 @@ extern "C" {
 
 static void fun1() { }
 
+typedef int my_int_type;
+typedef my_int_type my_type_two;
+
 namespace MyNamespace {
     static void fun2() { }
 }
@@ -140,7 +143,7 @@ typedef struct framebuffer_device_t {
     const int       stride;
 
     /* framebuffer pixel format */
-    const int       format;
+    const int       format_type;
 
     /* resolution of the framebuffer's display panel in pixel per inch*/
     const float     xdpi;

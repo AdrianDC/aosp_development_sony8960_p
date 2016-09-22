@@ -32,6 +32,8 @@ struct FunctionDeclaration : Declaration {
                   std::vector<Declaration *> *params);
     ~FunctionDeclaration();
 
+    void setName(const std::string &name) override;
+
     const Type * getType() const;
 
     static std::string type() { return "function"; }

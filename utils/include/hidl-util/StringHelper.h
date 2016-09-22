@@ -29,6 +29,12 @@ struct StringHelper {
     static std::string Upcase(const std::string &in);
     static std::string Capitalize(const std::string &in);
     static std::string SnakeCaseToCamelCase(const std::string &in);
+    static std::string SnakeCaseToPascalCase(const std::string &in);
+
+    static bool StartsWith(const std::string &in, const std::string &prefix);
+
+    /* removes end from the end of in if in ends with end */
+    static std::string RTrim(const std::string &in, const std::string &end);
 
     static void SplitString(
         const std::string &s,

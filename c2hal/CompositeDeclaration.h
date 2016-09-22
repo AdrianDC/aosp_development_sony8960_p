@@ -29,6 +29,8 @@ struct CompositeDeclaration : Declaration {
         std::vector<android::Declaration *> *fieldDeclarations);
     ~CompositeDeclaration();
 
+    void setName(const std::string &name) override;
+
     const Type::Qualifier::Qualification &getQualifier() const;
     const std::vector<android::Declaration *>* getFieldDeclarations() const;
 
