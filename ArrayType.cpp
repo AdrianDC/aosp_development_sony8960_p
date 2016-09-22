@@ -308,6 +308,9 @@ void ArrayType::emitJavaFieldReaderWriter(
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) const {
+    out << "{\n";
+    out.indent();
+
     std::string offsetName = "_hidl_array_offset_" + std::to_string(depth);
     out << "long " << offsetName << " = " << offset << ";\n";
 
@@ -363,6 +366,9 @@ void ArrayType::emitJavaFieldReaderWriter(
         out.unindent();
         out << "}\n";
     }
+
+    out.unindent();
+    out << "}\n";
 }
 
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
