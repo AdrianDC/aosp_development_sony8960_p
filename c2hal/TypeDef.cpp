@@ -20,7 +20,9 @@ namespace android {
 
 TypeDef::TypeDef(const std::string &name, Declaration* declaration)
     : Declaration(name), mDeclaration(declaration)
-    {}
+    {
+        mDeclaration->forcePascalCase();
+    }
 
 TypeDef::~TypeDef() {}
 

@@ -48,11 +48,48 @@ std::string StringHelper::SnakeCaseToCamelCase(const std::string &in) {
     std::string word;
     std::string out;
 
+    bool first = true;
+
+    while (std::getline(ss, word, '_')) {
+        if (first) {
+            out += word;
+            first = false;
+        } else {
+            out += Capitalize(word);
+        }
+    }
+
+    return out;
+}
+
+// static
+std::string StringHelper::SnakeCaseToPascalCase(const std::string &in) {
+    std::istringstream ss(in);
+    std::string word;
+    std::string out;
+
     while (std::getline(ss, word, '_')) {
         out += Capitalize(word);
     }
 
     return out;
+}
+
+// static
+bool StringHelper::StartsWith(const std::string &in, const std::string &prefix) {
+    return in.size() >= prefix.size() &&
+           in.substr(0, prefix.size()) == prefix;
+}
+
+// static
+std::string StringHelper::RTrim(const std::string &in, const std::string &end) {
+    if (in.size() >= end.size() &&
+        in.substr(in.size() - end.size()) == end) {
+
+        return in.substr(0, in.size() - end.size());
+    }
+
+    return in;
 }
 
 // static
