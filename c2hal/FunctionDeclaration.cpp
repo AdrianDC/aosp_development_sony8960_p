@@ -18,15 +18,19 @@
 #include "VarDeclaration.h"
 #include "Type.h"
 
+#include <hidl-util/StringHelper.h>
+
 namespace android {
 
 FunctionDeclaration::FunctionDeclaration(Type* type,
                   const std::string &name,
                   std::vector<Declaration *> *params)
-    : Declaration(name),
+    : Declaration(""),
       mType(type),
       mParams(params)
-    {}
+    {
+        setName(name);
+    }
 
 FunctionDeclaration::~FunctionDeclaration() {
     delete mType;
@@ -39,6 +43,10 @@ FunctionDeclaration::~FunctionDeclaration() {
     delete mParams;
 }
 
+void FunctionDeclaration::setName(const std::string &name) {
+    Declaration::setName(name);
+    forceCamelCase();
+}
 
 const Type* FunctionDeclaration::getType() const {
     return mType;
@@ -51,7 +59,7 @@ void FunctionDeclaration::generateSource(Formatter &out) const {
 
     if (!getType()->isVoid()) {
         out << " generates ("
-            << getType()->decorateName(getName() + "_ret")
+            << getType()->decorateName(getName() + "Ret")
             << ")";
     }
 

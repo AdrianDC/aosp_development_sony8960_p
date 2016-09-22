@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <hidl-util/StringHelper.h>
 
 namespace android {
 
@@ -29,8 +28,12 @@ CompositeDeclaration::CompositeDeclaration(
         const Type::Qualifier::Qualification qualifier,
         const std::string &name,
         std::vector<android::Declaration *> *fieldDeclarations)
-    : Declaration(name), mQualifier(qualifier), mFieldDeclarations(fieldDeclarations)
-    {}
+    : Declaration(""),
+      mQualifier(qualifier),
+      mFieldDeclarations(fieldDeclarations)
+    {
+        setName(name);
+    }
 
 CompositeDeclaration::~CompositeDeclaration() {
     if(mFieldDeclarations != NULL) {
@@ -41,6 +44,10 @@ CompositeDeclaration::~CompositeDeclaration() {
     delete mFieldDeclarations;
 }
 
+void CompositeDeclaration::setName(const std::string &name) {
+    Declaration::setName(name);
+    forcePascalCase();
+}
 
 const Type::Qualifier::Qualification &CompositeDeclaration::getQualifier() const {
     return mQualifier;
@@ -127,15 +134,7 @@ void CompositeDeclaration::processContents(AST &ast) {
 }
 
 std::string CompositeDeclaration::getInterfaceName() const {
-    std::string baseName{getName()};
-
-    if (baseName.length() > 2 &&
-        baseName.substr(baseName.length() - 2) == "_t") {
-
-        baseName = baseName.substr(0, baseName.length() - 2);
-    }
-
-    return "I" + StringHelper::SnakeCaseToCamelCase(baseName);
+    return "I" + getName();
 }
 
 bool CompositeDeclaration::isInterface() const {
