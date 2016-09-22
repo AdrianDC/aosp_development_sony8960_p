@@ -655,7 +655,7 @@ public:
         } else {
             int status;
             ALOGI("Waiting for fooCallbackServer to exit...");
-            waitpid(barServerPid, &status, 0);
+            waitpid(fooCallbackServerPid, &status, 0);
             ALOGI("Continuing...");
         }
         ALOGI("Servers all killed.");
