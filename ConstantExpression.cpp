@@ -294,11 +294,11 @@ ConstantExpression::ConstantExpression(const ConstantExpression *cond,
     SWITCH_KIND(mValueKind, CASE_TERNARY, mType = kConstExprUnknown; return;)
 }
 
-const char *ConstantExpression::expr() const {
-    return mFormatted.c_str();
+std::string ConstantExpression::expr() const {
+        return mFormatted;
 }
 
-const char *ConstantExpression::description() const {
+std::string ConstantExpression::description() const {
     static const char *const kName[] = {
         "bool",
         "void *",
@@ -317,14 +317,14 @@ const char *ConstantExpression::description() const {
         return expr();
     std::ostringstream os;
     os << "(" << kName[mValueKind] << ")" << expr();
-    return strdup(os.str().c_str());
+    return os.str();
 }
 
-const char *ConstantExpression::value() const {
+std::string ConstantExpression::value() const {
     return value0(mValueKind);
 }
 
-const char *ConstantExpression::cppValue(ScalarType::Kind castKind) const {
+std::string ConstantExpression::cppValue(ScalarType::Kind castKind) const {
     std::string literal(value0(castKind));
     // this is a hack to translate
     //       enum x : int64_t {  y = 1l << 63 };
@@ -347,10 +347,10 @@ const char *ConstantExpression::cppValue(ScalarType::Kind castKind) const {
     // add suffix if necessary.
     if(castKind == SK(UINT32) || castKind == SK(UINT64)) literal += "u";
     if(castKind == SK(UINT64) || castKind == SK(INT64)) literal += "ll";
-    return strdup(literal.c_str());
+    return literal;
 }
 
-const char *ConstantExpression::javaValue(ScalarType::Kind castKind) const {
+std::string ConstantExpression::javaValue(ScalarType::Kind castKind) const {
     switch(castKind) {
         case SK(UINT64): return value0(SK(INT64));
         case SK(UINT32): return value0(SK(INT32));
@@ -359,17 +359,17 @@ const char *ConstantExpression::javaValue(ScalarType::Kind castKind) const {
         case SK(BOOL)  :
             if(mType == kConstExprUnknown)
                 return expr();
-            return this->cast<bool>() ? strdup("true") : strdup("false");
+            return this->cast<bool>() ? "true" : "false";
         default: break;
     }
     return value0(castKind);
 }
 
-const char *ConstantExpression::value0(ScalarType::Kind castKind) const {
+std::string ConstantExpression::value0(ScalarType::Kind castKind) const {
     if(mType == kConstExprUnknown)
         return expr();
 
-#define CASE_STR(__type__) return strdup(std::to_string(this->cast<__type__>()).c_str());
+#define CASE_STR(__type__) return std::to_string(this->cast<__type__>());
 
     SWITCH_KIND(castKind, CASE_STR, return expr(); );
 }

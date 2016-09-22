@@ -50,15 +50,15 @@ struct ConstantExpression {
                        const ConstantExpression *falseVal);
 
     /* Original expression. */
-    const char *expr() const;
+    std::string expr() const;
     /* Evaluated result in a string form. */
-    const char *value() const;
+    std::string value() const;
     /* Evaluated result in a string form, with given contextual kind. */
-    const char *cppValue(ScalarType::Kind castKind) const;
+    std::string cppValue(ScalarType::Kind castKind) const;
     /* Evaluated result in a string form, with given contextual kind. */
-    const char *javaValue(ScalarType::Kind castKind) const;
+    std::string javaValue(ScalarType::Kind castKind) const;
     /* Original expression with type. */
-    const char *description() const;
+    std::string description() const;
 
 private:
     /* The formatted expression. */
@@ -76,7 +76,7 @@ private:
      * Assumes mType != kConstExprUnknown */
     template <typename T> T cast() const;
     /* Helper function for value(ScalarType::Kind) */
-    const char *value0(ScalarType::Kind castKind) const;
+    std::string value0(ScalarType::Kind castKind) const;
 
     DISALLOW_COPY_AND_ASSIGN(ConstantExpression);
 };

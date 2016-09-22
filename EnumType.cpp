@@ -130,15 +130,15 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
         for (const auto &entry : type->values()) {
             out << entry->name();
 
-            const char *value = entry->cppValue(scalarType->getKind());
-            if (value != NULL) {
+            std::string value = entry->cppValue(scalarType->getKind());
+            if (!value.empty()) {
                 out << " = " << value;
             }
 
             out << ",";
 
-            const char *comment = entry->comment();
-            if (comment != NULL && strcmp(comment, value) != 0) {
+            std::string comment = entry->comment();
+            if (!comment.empty() && comment != value) {
                 out << " // " << comment;
             }
 
@@ -210,10 +210,10 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
                 << entry->name()
                 << " = ";
 
-            const char *value = entry->javaValue(scalarType->getKind());
-            if (value != NULL) {
+            std::string value = entry->javaValue(scalarType->getKind());
+            if (!value.empty()) {
                 std::string convertedValue;
-                if (MakeSignedIntegerValue(typeName, value, &convertedValue)) {
+                if (MakeSignedIntegerValue(typeName, value.c_str(), &convertedValue)) {
                     out << convertedValue;
                 } else {
                     // The value is not an integer, but some other string,
@@ -228,8 +228,8 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
 
             out << ";";
 
-            const char *comment = entry->comment();
-            if (comment != NULL && strcmp(comment, value) != 0) {
+            std::string comment = entry->comment();
+            if (!comment.empty() && comment != value) {
                 out << " // " << comment;
             }
 
@@ -260,8 +260,8 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
         for (const auto &entry : type->values()) {
             out << "enumerator: \"" << entry->name() << "\"\n";
 
-            const char *value = entry->value();
-            if (value != NULL) {
+            std::string value = entry->value();
+            if (!value.empty()) {
                 out << "value: " << value << "\n";
             }
         }
@@ -310,19 +310,19 @@ std::string EnumValue::name() const {
     return mName;
 }
 
-const char *EnumValue::value() const {
-    return mValue ? mValue->value() : nullptr;
+std::string EnumValue::value() const {
+    return mValue ? mValue->value() : "";
 }
 
-const char *EnumValue::cppValue(ScalarType::Kind castKind) const {
-    return mValue ? mValue->cppValue(castKind) : nullptr;
+std::string EnumValue::cppValue(ScalarType::Kind castKind) const {
+    return mValue ? mValue->cppValue(castKind) : "";
 }
-const char *EnumValue::javaValue(ScalarType::Kind castKind) const {
-    return mValue ? mValue->javaValue(castKind) : nullptr;
+std::string EnumValue::javaValue(ScalarType::Kind castKind) const {
+    return mValue ? mValue->javaValue(castKind) : "";
 }
 
-const char *EnumValue::comment() const {
-    return mValue ? mValue->description() : nullptr;
+std::string EnumValue::comment() const {
+    return mValue ? mValue->description() : "";
 }
 
 }  // namespace android
