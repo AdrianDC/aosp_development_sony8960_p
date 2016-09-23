@@ -19,12 +19,19 @@
 namespace android {
 
 VarDeclaration::VarDeclaration(Type *type, const std::string &name)
-    : Declaration(name),
+    : Declaration(""),
       mType(type)
-    {}
+    {
+        setName(name);
+    }
 
 VarDeclaration::~VarDeclaration() {
     delete mType;
+}
+
+void VarDeclaration::setName(const std::string &name) {
+    Declaration::setName(name);
+    forceCamelCase();
 }
 
 Type* VarDeclaration::getType() const {

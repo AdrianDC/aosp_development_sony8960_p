@@ -16,6 +16,7 @@
 
 #include "Declaration.h"
 
+#include <hidl-util/StringHelper.h>
 #include <regex>
 
 namespace android {
@@ -33,6 +34,16 @@ const std::string& Declaration::getName() const {
 }
 void Declaration::setName(const std::string &name) {
     mName = name;
+}
+
+void Declaration::forceCamelCase() {
+    mName = StringHelper::RTrim(mName, "_t");
+    mName = StringHelper::SnakeCaseToCamelCase(mName);
+}
+
+void Declaration::forcePascalCase() {
+    mName = StringHelper::RTrim(mName, "_t");
+    mName = StringHelper::SnakeCaseToPascalCase(mName);
 }
 
 const std::string& Declaration::getComment() const {
