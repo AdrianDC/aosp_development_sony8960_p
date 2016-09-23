@@ -355,40 +355,62 @@ static status_t generateMakefileForPackage(
     out << "\ninclude $(BUILD_SHARED_LIBRARY)\n";
 
     if (packageIsJavaCompatible) {
-        out << "\n"
-            << "########################################"
-            << "########################################\n\n";
+        enum LibraryStyle {
+            LIBRARY_STYLE_REGULAR,
+            LIBRARY_STYLE_STATIC,
+            LIBRARY_STYLE_END,
+        };
 
-        out << "include $(CLEAR_VARS)\n"
-            << "LOCAL_MODULE := "
-            << libraryName
-            << "-java\n"
-            << "LOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
-            << "intermediates := $(local-generated-sources-dir)\n\n"
-            << "HIDL := $(HOST_OUT_EXECUTABLES)/"
-            << hidl_gen
-            << "$(HOST_EXECUTABLE_SUFFIX)";
+        for (int style = LIBRARY_STYLE_REGULAR; style != LIBRARY_STYLE_END;
+                ++style) {
+            const std::string staticSuffix =
+                (style == LIBRARY_STYLE_STATIC) ? "-static" : "";
 
-        if (!importedPackages.empty()) {
             out << "\n"
-                << "\nLOCAL_JAVA_LIBRARIES := \\";
-            out.indent();
-            for (const auto &importedPackage : importedPackages) {
-                out << "\n" << makeLibraryName(importedPackage) << "-java \\";
+                << "########################################"
+                << "########################################\n\n";
+
+            out << "include $(CLEAR_VARS)\n"
+                << "LOCAL_MODULE := "
+                << libraryName
+                << "-java"
+                << staticSuffix
+                << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
+                << "intermediates := $(local-generated-sources-dir)\n\n"
+                << "HIDL := $(HOST_OUT_EXECUTABLES)/"
+                << hidl_gen
+                << "$(HOST_EXECUTABLE_SUFFIX)";
+
+            if (!importedPackages.empty()) {
+                out << "\n"
+                    << "\nLOCAL_"
+                    << ((style == LIBRARY_STYLE_STATIC) ? "STATIC_" : "")
+                    << "JAVA_LIBRARIES := \\";
+
+                out.indent();
+                for (const auto &importedPackage : importedPackages) {
+                    out << "\n"
+                        << makeLibraryName(importedPackage)
+                        << "-java"
+                        << staticSuffix
+                        << " \\";
+                }
+                out << "\n";
+                out.unindent();
             }
-            out << "\n";
-            out.unindent();
+
+            generateMakefileSectionForLanguage(
+                    out,
+                    coordinator,
+                    packageFQName,
+                    packageInterfaces,
+                    typesAST,
+                    true /* forJava */);
+
+            out << "\ninclude $(BUILD_"
+                << ((style == LIBRARY_STYLE_STATIC) ? "STATIC_" : "")
+                << "JAVA_LIBRARY)\n\n";
         }
-
-        generateMakefileSectionForLanguage(
-                out,
-                coordinator,
-                packageFQName,
-                packageInterfaces,
-                typesAST,
-                true /* forJava */);
-
-        out << "\ninclude $(BUILD_JAVA_LIBRARY)\n";
     }
 
     out << "\n\n"
