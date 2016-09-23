@@ -26,6 +26,7 @@ namespace android {
 Scope::Scope(const char *localName)
     : NamedType(localName) {
 }
+Scope::~Scope(){}
 
 bool Scope::addType(NamedType *type, std::string *errorMsg) {
     const std::string &localName = type->localName();
@@ -54,6 +55,10 @@ NamedType *Scope::lookupType(const FQName &fqName) const {
         return mTypes[it->second];
     }
 
+    return NULL;
+}
+
+LocalIdentifier *Scope::lookupIdentifier(const std::string & /*name*/) const {
     return NULL;
 }
 
@@ -154,6 +159,13 @@ bool Scope::isJavaCompatible() const {
     }
 
     return true;
+}
+
+LocalIdentifier::LocalIdentifier(){}
+LocalIdentifier::~LocalIdentifier(){}
+
+bool LocalIdentifier::isEnumValue() const {
+    return false;
 }
 
 }  // namespace android

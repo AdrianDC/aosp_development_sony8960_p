@@ -27,13 +27,17 @@ namespace android {
 
 struct Formatter;
 struct Interface;
+struct LocalIdentifier;
 
 struct Scope : public NamedType {
     Scope(const char *localName);
+    virtual ~Scope();
 
     bool addType(NamedType *type, std::string *errorMsg);
 
     NamedType *lookupType(const FQName &fqName) const;
+
+    virtual LocalIdentifier *lookupIdentifier(const std::string &name) const;
 
     bool isScope() const override;
 
@@ -63,6 +67,12 @@ private:
     std::map<std::string, size_t> mTypeIndexByName;
 
     DISALLOW_COPY_AND_ASSIGN(Scope);
+};
+
+struct LocalIdentifier {
+    LocalIdentifier();
+    virtual ~LocalIdentifier();
+    virtual bool isEnumValue() const;
 };
 
 }  // namespace android

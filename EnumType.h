@@ -19,7 +19,7 @@
 #define ENUM_TYPE_H_
 
 #include "ConstantExpression.h"
-#include "NamedType.h"
+#include "Scope.h"
 
 #include <vector>
 
@@ -27,13 +27,15 @@ namespace android {
 
 struct EnumValue;
 
-struct EnumType : public NamedType {
+struct EnumType : public Scope {
     EnumType(const char *localName,
-             std::vector<EnumValue *> *values,
              Type *storageType = NULL);
 
     const Type *storageType() const;
     const std::vector<EnumValue *> &values() const;
+    void addValue(EnumValue *value);
+
+    LocalIdentifier *lookupIdentifier(const std::string &name) const override;
 
     const ScalarType *resolveToScalarType() const override;
 
@@ -79,24 +81,30 @@ struct EnumType : public NamedType {
 
 private:
     void getTypeChain(std::vector<const EnumType *> *out) const;
-    std::vector<EnumValue *> *mValues;
+    std::vector<EnumValue *> mValues;
     Type *mStorageType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };
 
-struct EnumValue {
-    EnumValue(const char *name, const ConstantExpression *value = nullptr);
+struct EnumValue : public LocalIdentifier {
+    EnumValue(const char *name, ConstantExpression *value = nullptr);
 
     std::string name() const;
     std::string value() const;
     std::string cppValue(ScalarType::Kind castKind) const;
     std::string javaValue(ScalarType::Kind castKind) const;
     std::string comment() const;
+    void autofill(const EnumValue *prev, const ScalarType *type);
+    ConstantExpression *constExpr() const;
 
-private:
+    bool isAutoFill() const;
+    bool isEnumValue() const override;
+
+
     std::string mName;
-    const ConstantExpression *mValue;
+    ConstantExpression *mValue;
+    bool mIsAutoFill;
 
     DISALLOW_COPY_AND_ASSIGN(EnumValue);
 };
