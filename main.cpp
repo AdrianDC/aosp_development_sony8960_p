@@ -391,6 +391,9 @@ static status_t generateMakefileForPackage(
         out << "\ninclude $(BUILD_JAVA_LIBRARY)\n";
     }
 
+    out << "\n\n"
+        << "include $(call all-makefiles-under,$(LOCAL_PATH))\n";
+
     return OK;
 }
 
