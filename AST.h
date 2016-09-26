@@ -66,7 +66,7 @@ struct AST {
     // Look up a type by FQName, "pure" names, i.e. those without package
     // or version are first looked up in the current scope chain.
     // After that lookup proceeds to imports.
-    Type *lookupType(const char *name);
+    Type *lookupType(const FQName &fqName);
 
     void addImportedAST(AST *ast);
 
