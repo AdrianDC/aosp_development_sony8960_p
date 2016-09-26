@@ -47,8 +47,8 @@ bool Scope::addType(NamedType *type, std::string *errorMsg) {
     return true;
 }
 
-NamedType *Scope::lookupType(const char *name) const {
-    auto it = mTypeIndexByName.find(name);
+NamedType *Scope::lookupType(const FQName &fqName) const {
+    auto it = mTypeIndexByName.find(fqName.string().c_str());
 
     if (it != mTypeIndexByName.end()) {
         return mTypes[it->second];
