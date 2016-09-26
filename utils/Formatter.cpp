@@ -50,7 +50,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
 
         if (pos == std::string::npos) {
             if (mAtStartOfLine) {
-                fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
                 mAtStartOfLine = false;
             }
 
@@ -63,7 +63,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
             mAtStartOfLine = true;
         } else if (pos > start) {
             if (mAtStartOfLine) {
-                fprintf(mFile, "%*s", (int)(2 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
             }
 
             output(out.substr(start, pos - start + 1));
