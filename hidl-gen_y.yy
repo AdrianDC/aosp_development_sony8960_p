@@ -50,7 +50,10 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %parse-param { android::AST *ast }
 %lex-param { void *scanner }
 %pure-parser
+%glr-parser
 %skeleton "glr.cc"
+
+%expect-rr 0
 
 %token<str> ENUM
 %token<str> EXTENDS
