@@ -368,10 +368,13 @@ typedef_declaration
 
 const_expr
     : INTEGER                   { $$ = new ConstantExpression($1, ConstantExpression::kConstExprLiteral); }
-    | IDENTIFIER                { $$ = new ConstantExpression($1, ConstantExpression::kConstExprUnknown); }
+    | fqname
+      {
+          $$ = new ConstantExpression($1->string().c_str(), ConstantExpression::kConstExprUnknown);
+      }
     | const_expr '?' const_expr ':' const_expr
       {
-        $$ = new ConstantExpression($1, $3, $5);
+          $$ = new ConstantExpression($1, $3, $5);
       }
     | const_expr LOGICAL_OR const_expr  { $$ = new ConstantExpression($1, "||", $3); }
     | const_expr LOGICAL_AND const_expr { $$ = new ConstantExpression($1, "&&", $3); }
