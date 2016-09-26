@@ -147,6 +147,10 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 {COMPONENT}({DOT}{COMPONENT})+  { yylval->str = strdup(yytext); return token::FQNAME; }
 {COMPONENT}                     { yylval->str = strdup(yytext); return token::IDENTIFIER; }
 
+{PATH}{VERSION}?"::"{PATH}":"{COMPONENT}      { yylval->str = strdup(yytext); return token::FQNAME; }
+{VERSION}"::"{PATH}":"{COMPONENT}             { yylval->str = strdup(yytext); return token::FQNAME; }
+{PATH}":"{COMPONENT}                          { yylval->str = strdup(yytext); return token::FQNAME; }
+
 0[xX]{H}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
 0{D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
 {D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
