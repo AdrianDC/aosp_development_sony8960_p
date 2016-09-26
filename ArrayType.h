@@ -24,17 +24,19 @@
 
 namespace android {
 
+struct ConstantExpression;
+
 struct ArrayType : public Type {
     // Extends existing array by adding another dimension.
-    ArrayType(ArrayType *srcArray, size_t size);
+    ArrayType(ArrayType *srcArray, ConstantExpression *size);
 
-    ArrayType(Type *elementType, size_t size);
+    ArrayType(Type *elementType, ConstantExpression *size);
 
-    static ArrayType *AddDimension(ArrayType *base, size_t size);
+    static ArrayType *AddDimension(ArrayType *base, ConstantExpression *size);
 
     bool isArray() const override;
 
-    void addDimension(size_t size);
+    void addDimension(ConstantExpression *size);
 
     std::string getCppType(StorageMode mode,
                            std::string *extra,
@@ -94,6 +96,7 @@ struct ArrayType : public Type {
 private:
     Type *mElementType;
     std::vector<size_t> mSizes;
+    std::vector<std::string> mSizeComments;
 
     DISALLOW_COPY_AND_ASSIGN(ArrayType);
 };
