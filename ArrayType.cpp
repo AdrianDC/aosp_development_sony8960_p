@@ -19,21 +19,25 @@
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
+#include "ConstantExpression.h"
+
 namespace android {
 
-ArrayType::ArrayType(ArrayType *srcArray, size_t size)
+ArrayType::ArrayType(ArrayType *srcArray, ConstantExpression *size)
     : mElementType(srcArray->mElementType),
-      mSizes(srcArray->mSizes) {
+      mSizes(srcArray->mSizes),
+      mSizeComments(srcArray->mSizeComments) {
     addDimension(size);
 }
 
-ArrayType::ArrayType(Type *elementType, size_t size)
+ArrayType::ArrayType(Type *elementType, ConstantExpression *size)
     : mElementType(elementType) {
     addDimension(size);
 }
 
-void ArrayType::addDimension(size_t size) {
-    mSizes.insert(mSizes.begin(), size);
+void ArrayType::addDimension(ConstantExpression *size) {
+    mSizes.insert(mSizes.begin(), size->cast<size_t>());
+    mSizeComments.insert(mSizeComments.begin(), size->description());
 }
 
 void ArrayType::addNamedTypesToSet(std::set<const FQName> &set) const {
@@ -55,23 +59,26 @@ std::string ArrayType::getCppType(StorageMode mode,
         numArrayElements *= size;
     }
 
-    *extra += "[";
-    *extra += std::to_string(numArrayElements);
-    *extra += "]";
+    std::string sizeComments = " /* " + base;
+    for (auto e : mSizeComments) {
+        sizeComments += "[" + e + "]";
+    }
+    sizeComments += " */";
 
     switch (mode) {
         case StorageMode_Stack:
+        {
+            *extra += "[";
+            *extra += std::to_string(numArrayElements);
+            *extra += "]";
+            *extra += sizeComments;
             return base;
+        }
 
         case StorageMode_Argument:
         case StorageMode_Result:
         {
-            *extra = " /* " + base;
-            for (auto size : mSizes) {
-                *extra += "[" + std::to_string(size) + "]";
-            }
-            *extra += " */";
-
+            *extra += sizeComments;
             return "const " + base + "*";
         }
     }
@@ -87,12 +94,16 @@ std::string ArrayType::getJavaType(
 
     extra->clear();
 
-    for (auto size : mSizes) {
+    CHECK(mSizes.size() == mSizeComments.size());
+    for (size_t i = 0; i < mSizes.size(); ++i) {
         *extra += "[";
 
         if (forInitializer) {
-            *extra += std::to_string(size);
+            *extra += std::to_string(mSizes[i]);
+            *extra += " ";
         }
+
+        *extra += "/* " + mSizeComments[i] + " */";
 
         *extra += "]";
     }

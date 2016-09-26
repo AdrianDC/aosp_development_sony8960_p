@@ -22,6 +22,8 @@
 #include <map>
 #include <string>
 
+#include "ConstantExpression.h"
+
 namespace android {
 
 struct Formatter;
@@ -29,6 +31,8 @@ struct Formatter;
 struct AnnotationParam {
     AnnotationParam(const std::string &name,
                     std::vector<std::string> *values);
+    AnnotationParam(const std::string &name,
+                    std::vector<ConstantExpression *> *values);
 
     const std::string &getName() const;
     const std::vector<std::string> *getValues() const;

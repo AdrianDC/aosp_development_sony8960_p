@@ -36,6 +36,7 @@ struct Method;
 struct NamedType;
 struct TypedVar;
 struct Scope;
+struct EnumValue;
 
 struct AST {
     AST(Coordinator *coordinator, const std::string &path);
@@ -62,6 +63,9 @@ struct AST {
     void setScanner(void *scanner);
 
     const std::string &getFilename() const;
+
+    // Look up an enum value by "FQName:valueName".
+    EnumValue *lookupEnumValue(const FQName &fqName, std::string *errorMsg);
 
     // Look up a type by FQName, "pure" names, i.e. those without package
     // or version are first looked up in the current scope chain.

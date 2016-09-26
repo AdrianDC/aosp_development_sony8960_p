@@ -26,6 +26,15 @@ AnnotationParam::AnnotationParam(const std::string &name,
                 std::vector<std::string> *values)
 : mName(name), mValues(values) {}
 
+AnnotationParam::AnnotationParam(const std::string &name,
+                std::vector<ConstantExpression *> *values)
+        : mName(name) {
+    mValues = new std::vector<std::string>();
+    for(ConstantExpression *ce : *values) {
+        mValues->push_back(ce->value() + " /* " + ce->description() + " */");
+    }
+}
+
 const std::string &AnnotationParam::getName() const {
     return mName;
 }
