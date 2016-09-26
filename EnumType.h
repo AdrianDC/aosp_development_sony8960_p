@@ -89,10 +89,10 @@ struct EnumValue {
     EnumValue(const char *name, const ConstantExpression *value = nullptr);
 
     std::string name() const;
-    const char *value() const;
-    const char *cppValue(ScalarType::Kind castKind) const;
-    const char *javaValue(ScalarType::Kind castKind) const;
-    const char *comment() const;
+    std::string value() const;
+    std::string cppValue(ScalarType::Kind castKind) const;
+    std::string javaValue(ScalarType::Kind castKind) const;
+    std::string comment() const;
 
 private:
     std::string mName;
