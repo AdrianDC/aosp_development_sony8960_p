@@ -400,6 +400,10 @@ T ConstantExpression::cast() const {
     SWITCH_KIND(mValueKind, CASE_CAST_T, SHOULD_NOT_REACH(); return 0; );
 }
 
+size_t ConstantExpression::castSizeT() const {
+    return this->cast<size_t>();
+}
+
 /*
 
 Evaluating expressions in HIDL language

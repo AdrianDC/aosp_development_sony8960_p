@@ -73,12 +73,8 @@ struct ConstantExpression {
     ConstantExpression addOne() const;
     /* Assignment operator. */
     ConstantExpression& operator=(const ConstantExpression& other);
-    /*
-     * Return the value casted to the given type.
-     * First cast it according to mValueKind, then cast it to T.
-     * Assumes !containsIdentifiers()
-     */
-    template <typename T> T cast() const;
+
+    size_t castSizeT() const;
 
 private:
     /* The formatted expression. */
@@ -98,6 +94,13 @@ private:
     std::string rawValue(ScalarType::Kind castKind) const;
     /* Trim unnecessary information. Only mValue and mValueKind is kept. */
     ConstantExpression &toLiteral();
+
+    /*
+     * Return the value casted to the given type.
+     * First cast it according to mValueKind, then cast it to T.
+     * Assumes !containsIdentifiers()
+     */
+    template <typename T> T cast() const;
 };
 
 }  // namespace android

@@ -36,7 +36,7 @@ ArrayType::ArrayType(Type *elementType, ConstantExpression *size)
 }
 
 void ArrayType::addDimension(ConstantExpression *size) {
-    mSizes.insert(mSizes.begin(), size->cast<size_t>());
+    mSizes.insert(mSizes.begin(), size->castSizeT());
     mSizeComments.insert(mSizeComments.begin(), size->description());
 }
 
