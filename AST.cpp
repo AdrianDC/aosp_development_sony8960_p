@@ -17,6 +17,7 @@
 #include "AST.h"
 
 #include "Coordinator.h"
+#include "EnumType.h"
 #include "FQName.h"
 #include "HandleType.h"
 #include "Interface.h"
@@ -173,6 +174,33 @@ bool AST::addScopedTypeInternal(
     mDefinedTypesByFullName[fqName] = type;
 
     return true;
+}
+
+EnumValue *AST::lookupEnumValue(const FQName &fqName, std::string *errorMsg) {
+
+    FQName enumTypeName = fqName.typeName();
+    std::string enumValueName = fqName.valueName();
+
+    CHECK(enumTypeName.isValid());
+    CHECK(!enumValueName.empty());
+
+    Type *type = lookupType(enumTypeName);
+    if(type == nullptr) {
+        *errorMsg = "Cannot find type " + enumTypeName.string();
+        return nullptr;
+    }
+    if(!type->isEnum()) {
+        *errorMsg = "Type " + enumTypeName.string() + " is not an enum type";
+        return nullptr;
+    }
+
+    EnumType *enumType = static_cast<EnumType *>(type);
+    EnumValue *v = static_cast<EnumValue *>(enumType->lookupIdentifier(enumValueName));
+    if(v == nullptr) {
+        *errorMsg = "Enum type " + enumTypeName.string() + " does not have " + enumValueName;
+        return nullptr;
+    }
+    return v;
 }
 
 Type *AST::lookupType(const FQName &fqName) {
