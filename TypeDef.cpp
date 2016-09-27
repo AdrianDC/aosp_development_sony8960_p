@@ -26,10 +26,6 @@ TypeDef::TypeDef(const char* localName, Type *type)
       mReferencedType(type) {
 }
 
-void TypeDef::addNamedTypesToSet(std::set<const FQName> &set) const {
-    mReferencedType->addNamedTypesToSet(set);
-}
-
 const ScalarType *TypeDef::resolveToScalarType() const {
     CHECK(!"Should not be here");
     return NULL;
@@ -60,6 +56,14 @@ bool TypeDef::needsEmbeddedReadWrite() const {
 bool TypeDef::resultNeedsDeref() const {
     CHECK(!"Should not be here");
     return false;
+}
+
+status_t TypeDef::emitTypeDeclarations(Formatter &out) const {
+    std::string extra;
+    std::string type{mReferencedType->getCppType(&extra)};
+    out << "typedef " << type << " " << localName() << extra << ";\n\n";
+
+    return OK;
 }
 
 }  // namespace android
