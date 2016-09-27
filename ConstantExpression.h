@@ -31,14 +31,19 @@ struct ConstantExpression {
 
     enum ConstExprType {
         kConstExprLiteral,
-        kConstExprUnknown,
         kConstExprUnary,
         kConstExprBinary,
         kConstExprTernary
     };
 
-    /* Literals, identifiers */
-    ConstantExpression(const char *value, ConstExprType type);
+    /* Default constructor. */
+    ConstantExpression();
+    /* Copy constructor. */
+    ConstantExpression(const ConstantExpression& other);
+    /* Copy constructor, with the expr overriden. */
+    ConstantExpression(const ConstantExpression& other, std::string expr);
+    /* Literals */
+    ConstantExpression(const char *value);
     /* binary operations */
     ConstantExpression(const ConstantExpression *value1,
         const char *op, const ConstantExpression* value2);
@@ -49,36 +54,50 @@ struct ConstantExpression {
                        const ConstantExpression *trueVal,
                        const ConstantExpression *falseVal);
 
-    /* Original expression. */
-    std::string expr() const;
+    static ConstantExpression Zero(ScalarType::Kind kind);
+    static ConstantExpression One(ScalarType::Kind kind);
+
     /* Evaluated result in a string form. */
     std::string value() const;
+    /* Evaluated result in a string form. */
+    std::string cppValue() const;
+    /* Evaluated result in a string form. */
+    std::string javaValue() const;
     /* Evaluated result in a string form, with given contextual kind. */
     std::string cppValue(ScalarType::Kind castKind) const;
     /* Evaluated result in a string form, with given contextual kind. */
     std::string javaValue(ScalarType::Kind castKind) const;
     /* Original expression with type. */
-    std::string description() const;
+    const std::string &description() const;
+    /* Return a ConstantExpression that is 1 plus the original. */
+    ConstantExpression addOne() const;
+    /* Assignment operator. */
+    ConstantExpression& operator=(const ConstantExpression& other);
+    /*
+     * Return the value casted to the given type.
+     * First cast it according to mValueKind, then cast it to T.
+     * Assumes !containsIdentifiers()
+     */
+    template <typename T> T cast() const;
 
 private:
     /* The formatted expression. */
-    std::string mFormatted;
+    std::string mExpr;
     /* The type of the expression. Hints on its original form. */
     ConstExprType mType;
-    /* The kind of the result value.
-     * Is valid only when mType != kConstExprUnknown. */
+    /* The kind of the result value. */
     ScalarType::Kind mValueKind;
-    /* The stored result value.
-     * Is valid only when mType != kConstExprUnknown. */
+    /* The stored result value. */
     uint64_t mValue;
-    /* Return the value casted to the given type.
-     * First cast it according to mValueKind, then cast it to T.
-     * Assumes mType != kConstExprUnknown */
-    template <typename T> T cast() const;
-    /* Helper function for value(ScalarType::Kind) */
-    std::string value0(ScalarType::Kind castKind) const;
 
-    DISALLOW_COPY_AND_ASSIGN(ConstantExpression);
+    /*
+     * Helper function for all cpp/javaValue methods.
+     * Returns a plain string (without any prefixes or suffixes, just the
+     * digits) converted from mValue.
+     */
+    std::string rawValue(ScalarType::Kind castKind) const;
+    /* Trim unnecessary information. Only mValue and mValueKind is kept. */
+    ConstantExpression &toLiteral();
 };
 
 }  // namespace android

@@ -22,6 +22,7 @@
 #include "CompoundType.h"
 #include "ConstantExpression.h"
 #include "EnumType.h"
+#include "FQName.h"
 #include "GenericBinder.h"
 #include "Interface.h"
 #include "Method.h"
@@ -106,12 +107,13 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %type<fields> field_declarations struct_or_union_body
 %type<constantExpression> const_expr
 %type<enumValue> enum_value
-%type<enumValues> enum_values
+%type<enumValues> enum_values enum_declaration_body
 %type<typedVars> typed_vars
 %type<typedVar> typed_var
 %type<method> method_declaration
 %type<compoundStyle> struct_or_union_keyword
-%type<stringVec> annotation_string_values annotation_value
+%type<stringVec> annotation_string_values annotation_string_value
+%type<constExprVec> annotation_const_expr_values annotation_const_expr_value
 %type<annotationParam> annotation_param
 %type<annotationParams> opt_annotation_params annotation_params
 %type<annotation> annotation
@@ -134,6 +136,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
     android::Method *method;
     android::CompoundType::Style compoundStyle;
     std::vector<std::string> *stringVec;
+    std::vector<android::ConstantExpression *> *constExprVec;
     android::AnnotationParam *annotationParam;
     android::AnnotationParamVector *annotationParams;
     android::Annotation *annotation;
@@ -186,13 +189,17 @@ annotation_params
     ;
 
 annotation_param
-    : IDENTIFIER '=' annotation_value
+    : IDENTIFIER '=' annotation_string_value
+      {
+          $$ = new AnnotationParam($1, $3);
+      }
+    | IDENTIFIER '=' annotation_const_expr_value
       {
           $$ = new AnnotationParam($1, $3);
       }
     ;
 
-annotation_value
+annotation_string_value
     : STRING_LITERAL
       {
           $$ = new std::vector<std::string>;
@@ -208,6 +215,28 @@ annotation_string_values
           $$->push_back($1);
       }
     | annotation_string_values ',' STRING_LITERAL
+      {
+          $$ = $1;
+          $$->push_back($3);
+      }
+    ;
+
+annotation_const_expr_value
+    : const_expr
+      {
+          $$ = new std::vector<ConstantExpression *>;
+          $$->push_back($1);
+      }
+    | '{' annotation_const_expr_values '}' { $$ = $2; }
+    ;
+
+annotation_const_expr_values
+    : const_expr
+      {
+          $$ = new std::vector<ConstantExpression *>;
+          $$->push_back($1);
+      }
+    | annotation_const_expr_values ',' const_expr
       {
           $$ = $1;
           $$->push_back($3);
@@ -367,10 +396,39 @@ typedef_declaration
     ;
 
 const_expr
-    : INTEGER                   { $$ = new ConstantExpression($1, ConstantExpression::kConstExprLiteral); }
+    : INTEGER                   { $$ = new ConstantExpression($1); }
     | fqname
       {
-          $$ = new ConstantExpression($1->string().c_str(), ConstantExpression::kConstExprUnknown);
+          if(!$1->isValidValueName()) {
+              std::cerr << "ERROR: '" << $1->string()
+                        << "' does not refer to an enum value at "
+                        << @1 << ".\n";
+              YYERROR;
+          }
+          if($1->isIdentifier()) {
+              std::string identifier = $1->name();
+              LocalIdentifier *iden = ast->scope()->lookupIdentifier(identifier);
+              if(!iden) {
+                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1
+                            << " could not be found.\n";
+                  YYERROR;
+              }
+              if(!iden->isEnumValue()) {
+                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1
+                            << " is not an enum value.\n";
+                  YYERROR;
+              }
+              $$ = new ConstantExpression(
+                      *(static_cast<EnumValue *>(iden)->constExpr()), $1->string());
+          } else {
+              std::string errorMsg;
+              EnumValue *v = ast->lookupEnumValue(*($1), &errorMsg);
+              if(v == nullptr) {
+                  std::cerr << "ERROR: " << errorMsg << " at " << @1 << ".\n";
+                  YYERROR;
+              }
+              $$ = new ConstantExpression(*(v->constExpr()), $1->string());
+          }
       }
     | const_expr '?' const_expr ':' const_expr
       {
@@ -544,9 +602,14 @@ opt_comma
     ;
 
 named_enum_declaration
-    : ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
+    : ENUM IDENTIFIER opt_storage_type
       {
-          EnumType *enumType = new EnumType($2, $5, $3);
+          ast->enterScope(new EnumType($2, $3));
+      }
+      enum_declaration_body
+      {
+          EnumType *enumType = static_cast<EnumType *>(ast->scope());
+          ast->leaveScope();
 
           std::string errorMsg;
           if (!ast->addScopedType(enumType, &errorMsg)) {
@@ -557,11 +620,16 @@ named_enum_declaration
     ;
 
 enum_declaration
-    : ENUM '{' enum_values opt_comma '}'
+    : ENUM
       {
           std::string anonName = ast->scope()->pickUniqueAnonymousName();
+          ast->enterScope(new EnumType(anonName.c_str()));
+      }
+      enum_declaration_body
+      {
 
-          EnumType *enumType = new EnumType(anonName.c_str(), $3);
+          EnumType *enumType = static_cast<EnumType *>(ast->scope());
+          ast->leaveScope();
 
           std::string errorMsg;
           if (!ast->addScopedType(enumType, &errorMsg)) {
@@ -572,9 +640,14 @@ enum_declaration
 
           $$ = enumType->ref();
       }
-    | ENUM IDENTIFIER opt_storage_type '{' enum_values opt_comma '}'
+    | ENUM IDENTIFIER opt_storage_type
       {
-          EnumType *enumType = new EnumType($2, $5, $3);
+          ast->enterScope(new EnumType($2, $3));
+      }
+      enum_declaration_body
+      {
+          EnumType *enumType = static_cast<EnumType *>(ast->scope());
+          ast->leaveScope();
 
           std::string errorMsg;
           if (!ast->addScopedType(enumType, &errorMsg)) {
@@ -586,6 +659,10 @@ enum_declaration
       }
     ;
 
+enum_declaration_body
+    : '{' enum_values opt_comma '}' { $$ = $2; }
+    ;
+
 enum_value
     : IDENTIFIER { $$ = new EnumValue($1); }
     | IDENTIFIER '=' const_expr { $$ = new EnumValue($1, $3); }
@@ -593,24 +670,20 @@ enum_value
 
 enum_values
     : /* empty */
-      {
-          $$ = new std::vector<EnumValue *>;
-      }
+      { /* do nothing */ }
     | enum_value
       {
-          $$ = new std::vector<EnumValue *>;
-          $$->push_back($1);
+          static_cast<EnumType *>(ast->scope())->addValue($1);
       }
     | enum_values ',' enum_value
       {
-          $$ = $1;
-          $$->push_back($3);
+          static_cast<EnumType *>(ast->scope())->addValue($3);
       }
     ;
 
 type
     : fqtype { $$ = $1; }
-    | fqtype '[' INTEGER ']'
+    | fqtype '[' const_expr ']'
       {
           if ($1->isBinder()) {
               std::cerr << "ERROR: Arrays of interface types are not supported."
@@ -619,14 +692,10 @@ type
               YYERROR;
           }
 
-          char *end;
-          unsigned long size = strtoul($3, &end, 10);
-          CHECK(end > $3 && *end == '\0');
-
           if ($1->isArray()) {
-              $$ = new ArrayType(static_cast<ArrayType *>($1), size);
+              $$ = new ArrayType(static_cast<ArrayType *>($1), $3);
           } else {
-              $$ = new ArrayType($1, size);
+              $$ = new ArrayType($1, $3);
           }
       }
     | VEC '<' fqtype '>'

@@ -60,6 +60,15 @@ FQName::FQName(
       mValueName(valueName) {
 }
 
+FQName::FQName(const FQName& other)
+    : mValid(other.mValid),
+      mIsIdentifier(other.mIsIdentifier),
+      mPackage(other.mPackage),
+      mVersion(other.mVersion),
+      mName(other.mName),
+      mValueName(other.mValueName) {
+}
+
 bool FQName::isValid() const {
     return mValid;
 }

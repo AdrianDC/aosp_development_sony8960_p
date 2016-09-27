@@ -33,6 +33,8 @@ struct FQName {
            const std::string &name,
            const std::string &valueName = "");
 
+    FQName(const FQName& other);
+
     bool isValid() const;
     bool isIdentifier() const;
     bool setTo(const std::string &s);
@@ -138,7 +140,8 @@ struct FQName {
     std::string getPackageMinorVersion() const;
 
 private:
-    bool mValid, mIsIdentifier;
+    bool mValid;
+    bool mIsIdentifier;
     std::string mPackage;
     std::string mVersion;
     std::string mName;

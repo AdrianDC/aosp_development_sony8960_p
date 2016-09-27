@@ -18,7 +18,6 @@
 
 #include "ScalarType.h"
 
-#include <assert.h>
 #include <inttypes.h>
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
@@ -27,10 +26,9 @@ namespace android {
 
 EnumType::EnumType(
         const char *localName,
-        std::vector<EnumValue *> *values,
         Type *storageType)
-    : NamedType(localName),
-      mValues(values),
+    : Scope(localName),
+      mValues(),
       mStorageType(
               storageType != NULL
                 ? storageType
@@ -42,7 +40,25 @@ const Type *EnumType::storageType() const {
 }
 
 const std::vector<EnumValue *> &EnumType::values() const {
-    return *mValues;
+    return mValues;
+}
+
+void EnumType::addValue(EnumValue *value) {
+    CHECK(value != nullptr);
+
+    EnumValue *prev = nullptr;
+    std::vector<const EnumType *> chain;
+    getTypeChain(&chain);
+    for (auto it = chain.begin(); it != chain.end(); ++it) {
+        const auto &type = *it;
+        if(!type->values().empty()) {
+            prev = type->values().back();
+            break;
+        }
+    }
+
+    value->autofill(prev, resolveToScalarType());
+    mValues.push_back(value);
 }
 
 const ScalarType *EnumType::resolveToScalarType() const {
@@ -73,6 +89,20 @@ std::string EnumType::getJavaSuffix() const {
 
 std::string EnumType::getJavaWrapperType() const {
     return mStorageType->resolveToScalarType()->getJavaWrapperType();
+}
+
+LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
+    std::vector<const EnumType *> chain;
+    getTypeChain(&chain);
+    for (auto it = chain.begin(); it != chain.end(); ++it) {
+        const auto &type = *it;
+        for(EnumValue *v : type->values()) {
+            if(v->name() == name) {
+                return v;
+            }
+        }
+    }
+    return nullptr;
 }
 
 void EnumType::emitReaderWriter(
@@ -131,9 +161,8 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
             out << entry->name();
 
             std::string value = entry->cppValue(scalarType->getKind());
-            if (!value.empty()) {
-                out << " = " << value;
-            }
+            CHECK(!value.empty()); // use autofilled values for c++.
+            out << " = " << value;
 
             out << ",";
 
@@ -150,36 +179,6 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     out << "};\n\n";
 
     return OK;
-}
-
-// Attempt to convert enum value literals into their signed equivalents,
-// i.e. if an enum value is stored in typeName 'byte', the value "192"
-// will be converted to the output "-64".
-static bool MakeSignedIntegerValue(
-        const std::string &typeName, const char *value, std::string *output) {
-    output->clear();
-
-    char *end;
-    long long x = strtoll(value, &end, 10);
-
-    if (end > value && *end == '\0' && errno != ERANGE) {
-        char out[32];
-        if (typeName == "byte") {
-            sprintf(out, "%d", (int)(int8_t)x);
-        } else if (typeName == "short") {
-            sprintf(out, "%d", (int)(int16_t)x);
-        } else if (typeName == "int") {
-            sprintf(out, "%d", (int)(int32_t)x);
-        } else {
-            assert(typeName == "long");
-            sprintf(out, "%" PRId64 "L", (int64_t)x);
-        }
-
-        *output = out;
-        return true;
-    }
-
-    return false;
 }
 
 status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
@@ -202,7 +201,6 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
 
-        std::string prevEntryName;
         for (const auto &entry : type->values()) {
             out << "public static final "
                 << typeName
@@ -210,21 +208,10 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
                 << entry->name()
                 << " = ";
 
+            // javaValue will make the number signed.
             std::string value = entry->javaValue(scalarType->getKind());
-            if (!value.empty()) {
-                std::string convertedValue;
-                if (MakeSignedIntegerValue(typeName, value.c_str(), &convertedValue)) {
-                    out << convertedValue;
-                } else {
-                    // The value is not an integer, but some other string,
-                    // hopefully referring to some other enum name.
-                    out << value;
-                }
-            } else if (prevEntryName.empty()) {
-                out << "0";
-            } else {
-                out << prevEntryName << " + 1";
-            }
+            CHECK(!value.empty()); // use autofilled values for java.
+            out << value;
 
             out << ";";
 
@@ -234,8 +221,6 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
             }
 
             out << "\n";
-
-            prevEntryName = entry->name();
         }
     }
 
@@ -260,8 +245,10 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
         for (const auto &entry : type->values()) {
             out << "enumerator: \"" << entry->name() << "\"\n";
 
-            std::string value = entry->value();
-            if (!value.empty()) {
+            if (!entry->isAutoFill()) {
+                // don't autofill values for vts.
+                std::string value = entry->value();
+                CHECK(!value.empty());
                 out << "value: " << value << "\n";
             }
         }
@@ -301,9 +288,10 @@ void EnumType::getAlignmentAndSize(size_t *align, size_t *size) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-EnumValue::EnumValue(const char *name, const ConstantExpression *value)
+EnumValue::EnumValue(const char *name, ConstantExpression *value)
     : mName(name),
-      mValue(value) {
+      mValue(value),
+      mIsAutoFill(false) {
 }
 
 std::string EnumValue::name() const {
@@ -311,18 +299,49 @@ std::string EnumValue::name() const {
 }
 
 std::string EnumValue::value() const {
-    return mValue ? mValue->value() : "";
+    CHECK(mValue != nullptr);
+    return mValue->value();
 }
 
 std::string EnumValue::cppValue(ScalarType::Kind castKind) const {
-    return mValue ? mValue->cppValue(castKind) : "";
+    CHECK(mValue != nullptr);
+    return mValue->cppValue(castKind);
 }
 std::string EnumValue::javaValue(ScalarType::Kind castKind) const {
-    return mValue ? mValue->javaValue(castKind) : "";
+    CHECK(mValue != nullptr);
+    return mValue->javaValue(castKind);
 }
 
 std::string EnumValue::comment() const {
-    return mValue ? mValue->description() : "";
+    CHECK(mValue != nullptr);
+    return mValue->description();
+}
+
+ConstantExpression *EnumValue::constExpr() const {
+    CHECK(mValue != nullptr);
+    return mValue;
+}
+
+void EnumValue::autofill(const EnumValue *prev, const ScalarType *type) {
+    if(mValue != nullptr)
+        return;
+    mIsAutoFill = true;
+    ConstantExpression *value = new ConstantExpression();
+    if(prev == nullptr) {
+        *value = ConstantExpression::Zero(type->getKind());
+    } else {
+        CHECK(prev->mValue != nullptr);
+        *value = prev->mValue->addOne();
+    }
+    mValue = value;
+}
+
+bool EnumValue::isAutoFill() const {
+    return mIsAutoFill;
+}
+
+bool EnumValue::isEnumValue() const {
+    return true;
 }
 
 }  // namespace android
