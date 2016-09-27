@@ -75,6 +75,13 @@ std::string get_last_comment() {
 %pure-parser
 %glr-parser
 
+/* These have to do with the fact that
+ * struct_or_enum_declaration and enum_declaration
+ * both start with STRUCT/UNION/ENUM opt_id
+ * and type_qualifiers contain these.
+ */
+%expect 3
+
 %token START_HEADER
 %token START_EXPR
 
