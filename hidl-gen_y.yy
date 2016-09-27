@@ -412,12 +412,12 @@ const_expr
               std::string identifier = $1->name();
               LocalIdentifier *iden = ast->scope()->lookupIdentifier(identifier);
               if(!iden) {
-                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1
+                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1->string()
                             << " could not be found.\n";
                   YYERROR;
               }
               if(!iden->isEnumValue()) {
-                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1
+                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1->string()
                             << " is not an enum value.\n";
                   YYERROR;
               }
