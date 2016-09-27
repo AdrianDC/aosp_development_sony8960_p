@@ -275,7 +275,7 @@ status_t Coordinator::getPackageInterfaceFiles(
     return OK;
 }
 
-status_t Coordinator::appendPackageInterfacesToSet(
+status_t Coordinator::appendPackageInterfacesToVector(
         const FQName &package,
         std::vector<FQName> *packageInterfaces) const {
     packageInterfaces->clear();

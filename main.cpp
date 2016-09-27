@@ -103,8 +103,8 @@ static status_t generateSourcesForPackage(
     std::vector<FQName> packageInterfaces;
 
     status_t err =
-        coordinator->appendPackageInterfacesToSet(packageFQName,
-                                                  &packageInterfaces);
+        coordinator->appendPackageInterfacesToVector(packageFQName,
+                                                     &packageInterfaces);
 
     if (err != OK) {
         return err;
@@ -269,8 +269,8 @@ static status_t generateMakefileForPackage(
     std::vector<FQName> packageInterfaces;
 
     status_t err =
-        coordinator->appendPackageInterfacesToSet(packageFQName,
-                                                  &packageInterfaces);
+        coordinator->appendPackageInterfacesToVector(packageFQName,
+                                                     &packageInterfaces);
 
     if (err != OK) {
         return err;
@@ -451,8 +451,8 @@ static status_t generateMakefileImplForPackage(
     std::vector<FQName> packageInterfaces;
 
     status_t err =
-        coordinator->appendPackageInterfacesToSet(packageFQName,
-                                                  &packageInterfaces);
+        coordinator->appendPackageInterfacesToVector(packageFQName,
+                                                     &packageInterfaces);
 
     if (err != OK) {
         return err;
