@@ -94,8 +94,8 @@ bool AST::addImport(const char *import) {
         std::vector<FQName> packageInterfaces;
 
         status_t err =
-            mCoordinator->appendPackageInterfacesToSet(fqName,
-                                                       &packageInterfaces);
+            mCoordinator->appendPackageInterfacesToVector(fqName,
+                                                          &packageInterfaces);
 
         if (err != OK) {
             return false;
