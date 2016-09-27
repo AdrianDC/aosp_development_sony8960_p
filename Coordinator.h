@@ -78,7 +78,7 @@ struct Coordinator {
             const FQName &package,
             std::vector<std::string> *fileNames) const;
 
-    status_t appendPackageInterfacesToSet(
+    status_t appendPackageInterfacesToVector(
             const FQName &package,
             std::vector<FQName> *packageInterfaces) const;
 
