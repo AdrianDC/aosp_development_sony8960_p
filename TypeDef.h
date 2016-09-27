@@ -27,8 +27,6 @@ struct TypeDef : public NamedType {
 
     const ScalarType *resolveToScalarType() const override;
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     Type *referencedType() const;
 
     bool isInterface() const override;
@@ -36,6 +34,8 @@ struct TypeDef : public NamedType {
     bool isTypeDef() const override;
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
+
+    status_t emitTypeDeclarations(Formatter &out) const override;
 
 private:
     Type *mReferencedType;
