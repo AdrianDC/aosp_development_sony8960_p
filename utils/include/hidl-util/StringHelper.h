@@ -31,10 +31,14 @@ struct StringHelper {
     static std::string SnakeCaseToCamelCase(const std::string &in);
     static std::string SnakeCaseToPascalCase(const std::string &in);
 
+    static bool EndsWith(const std::string &in, const std::string &suffix);
     static bool StartsWith(const std::string &in, const std::string &prefix);
 
-    /* removes end from the end of in if in ends with end */
-    static std::string RTrim(const std::string &in, const std::string &end);
+    /* removes suffix from in if in ends with suffix */
+    static std::string RTrim(const std::string &in, const std::string &suffix);
+
+    /* removes prefix from in if in starts with prefix */
+    static std::string LTrim(const std::string &in, const std::string &prefix);
 
     static void SplitString(
         const std::string &s,
