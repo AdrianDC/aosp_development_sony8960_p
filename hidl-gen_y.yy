@@ -94,7 +94,8 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %left UNARY_MINUS UNARY_PLUS '!' '~'
 
 %type<str> optIdentifier package
-%type<type> fqname
+%type<fqName> fqname
+%type<type> fqtype
 
 %type<type> type opt_storage_type
 %type<type> enum_declaration
@@ -121,6 +122,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %union {
     const char *str;
     android::Type *type;
+    android::FQName *fqName;
     android::CompoundType *compoundType;
     android::CompoundField *field;
     std::vector<android::CompoundField *> *fields;
@@ -219,20 +221,33 @@ program
 fqname
     : FQNAME
       {
-          $$ = ast->lookupType($1);
-          if ($$ == NULL) {
-              std::cerr << "ERROR: Failed to lookup type '" << $1 << "' at "
+          $$ = new FQName($1);
+          if(!$$->isValid()) {
+              std::cerr << "ERROR: FQName '" << $1 << "' is not valid at "
                         << @1
-                        << "\n";
-
+                        << ".\n";
               YYERROR;
           }
       }
     | IDENTIFIER
       {
-          $$ = ast->lookupType($1);
+          $$ = new FQName($1);
+          if(!$$->isValid()) {
+              std::cerr << "ERROR: FQName '" << $1 << "' is not valid at "
+                        << @1
+                        << ".\n";
+              YYERROR;
+          }
+      }
+    ;
+
+fqtype
+    : fqname
+      {
+          $$ = ast->lookupType(*($1));
           if ($$ == NULL) {
-              std::cerr << "Failed to lookup type '" << $1 << "' at " << @1
+              std::cerr << "ERROR: Failed to lookup type '" << $1->string() << "' at "
+                        << @1
                         << "\n";
 
               YYERROR;
@@ -279,7 +294,7 @@ imports
 
 opt_extends
     : /* empty */ { $$ = NULL; }
-    | EXTENDS fqname { $$ = $2; }
+    | EXTENDS fqtype { $$ = $2; }
 
 body
     : opt_annotations INTERFACE IDENTIFIER opt_extends
@@ -507,7 +522,7 @@ field_declaration
 
 opt_storage_type
     : /* empty */ { $$ = NULL; }
-    | ':' fqname
+    | ':' fqtype
       {
           $$ = $2;
 
@@ -591,8 +606,8 @@ enum_values
     ;
 
 type
-    : fqname { $$ = $1; }
-    | fqname '[' INTEGER ']'
+    : fqtype { $$ = $1; }
+    | fqtype '[' INTEGER ']'
       {
           if ($1->isBinder()) {
               std::cerr << "ERROR: Arrays of interface types are not supported."
@@ -611,7 +626,7 @@ type
               $$ = new ArrayType($1, size);
           }
       }
-    | VEC '<' fqname '>'
+    | VEC '<' fqtype '>'
       {
           if ($3->isBinder()) {
               std::cerr << "ERROR: Vectors of interface types are not "
