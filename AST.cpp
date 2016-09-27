@@ -175,8 +175,7 @@ bool AST::addScopedTypeInternal(
     return true;
 }
 
-Type *AST::lookupType(const char *name) {
-    FQName fqName(name);
+Type *AST::lookupType(const FQName &fqName) {
     CHECK(fqName.isValid());
 
     if (fqName.name().empty()) {
@@ -188,7 +187,7 @@ Type *AST::lookupType(const char *name) {
         // This is just a plain identifier, resolve locally first if possible.
 
         for (size_t i = mScopePath.size(); i-- > 0;) {
-            Type *type = mScopePath[i]->lookupType(name);
+            Type *type = mScopePath[i]->lookupType(fqName);
 
             if (type != NULL) {
                 // Resolve typeDefs to the target type.

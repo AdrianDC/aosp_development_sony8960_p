@@ -33,7 +33,7 @@ struct Scope : public NamedType {
 
     bool addType(NamedType *type, std::string *errorMsg);
 
-    NamedType *lookupType(const char *name) const;
+    NamedType *lookupType(const FQName &fqName) const;
 
     bool isScope() const override;
 
