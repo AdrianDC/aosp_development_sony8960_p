@@ -29,35 +29,52 @@
 static const std::regex kRE1("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH ")");
 static const std::regex kRE2("(" RE_VERSION ")::(" RE_PATH ")");
 static const std::regex kRE3("(" RE_PATH ")(" RE_VERSION ")");
-static const std::regex kRE4(RE_PATH);
+static const std::regex kRE4("(" RE_COMPONENT ")([.]" RE_COMPONENT ")+");
+static const std::regex kRE5("(" RE_COMPONENT ")");
+
+static const std::regex kRE6("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH "):(" RE_COMPONENT ")");
+static const std::regex kRE7("(" RE_VERSION ")::(" RE_PATH "):(" RE_COMPONENT ")");
+static const std::regex kRE8("(" RE_PATH "):(" RE_COMPONENT ")");
 
 namespace android {
 
 FQName::FQName()
-    : mValid(false) {
+    : mValid(false), mIsIdentifier(false) {
 }
 
 FQName::FQName(const std::string &s)
-    : mValid(false) {
+    : mValid(false), mIsIdentifier(false) {
     setTo(s);
 }
 
 FQName::FQName(
         const std::string &package,
         const std::string &version,
-        const std::string &name)
+        const std::string &name,
+        const std::string &valueName)
     : mValid(true),
+      mIsIdentifier(false),
       mPackage(package),
       mVersion(version),
-      mName(name) {
+      mName(name),
+      mValueName(valueName) {
 }
 
 bool FQName::isValid() const {
     return mValid;
 }
 
+bool FQName::isIdentifier() const {
+    return mIsIdentifier;
+}
+
 bool FQName::isFullyQualified() const {
     return !mPackage.empty() && !mVersion.empty() && !mName.empty();
+}
+
+bool FQName::isValidValueName() const {
+    return mIsIdentifier
+        || (!mName.empty() && !mValueName.empty());
 }
 
 bool FQName::setTo(const std::string &s) {
@@ -86,8 +103,34 @@ bool FQName::setTo(const std::string &s) {
         mVersion = match.str(3);
     } else if (std::regex_match(s, match, kRE4)) {
         mName = match.str(0);
+    } else if (std::regex_match(s, match, kRE5)) {
+        mIsIdentifier = true;
+        mName = match.str(0);
+    } else if (std::regex_match(s, match, kRE6)) {
+        CHECK_EQ(match.size(), 7u);
+
+        mPackage = match.str(1);
+        mVersion = match.str(3);
+        mName = match.str(4);
+        mValueName = match.str(6);
+    } else if (std::regex_match(s, match, kRE7)) {
+        CHECK_EQ(match.size(), 5u);
+
+        mVersion = match.str(1);
+        mName = match.str(2);
+        mValueName = match.str(4);
+    } else if (std::regex_match(s, match, kRE8)) {
+        CHECK_EQ(match.size(), 4u);
+
+        mName = match.str(1);
+        mValueName = match.str(3);
     } else {
         mValid = false;
+    }
+
+    // mValueName must go with mName.
+    if (!mValueName.empty()) {
+        CHECK(!mName.empty());
     }
 
     return isValid();
@@ -115,6 +158,14 @@ std::vector<std::string> FQName::names() const {
     return res;
 }
 
+std::string FQName::valueName() const {
+    return mValueName;
+}
+
+FQName FQName::typeName() const {
+    return FQName(mPackage, mVersion, mName);
+}
+
 void FQName::applyDefaults(
         const std::string &defaultPackage,
         const std::string &defaultVersion) {
@@ -138,6 +189,11 @@ std::string FQName::string() const {
             out.append("::");
         }
         out.append(mName);
+
+        if (!mValueName.empty()) {
+            out.append(":");
+            out.append(mValueName);
+        }
     }
 
     return out;
@@ -204,7 +260,8 @@ std::string FQName::cppLocalName() const {
     std::vector<std::string> components;
     StringHelper::SplitString(mName, '.', &components);
 
-    return StringHelper::JoinStrings(components, "::");
+    return StringHelper::JoinStrings(components, "::")
+            + (mValueName.empty() ? "" : ("::" + mValueName));
 }
 
 std::string FQName::cppName() const {
@@ -214,6 +271,9 @@ std::string FQName::cppName() const {
     StringHelper::SplitString(name(), '.', &components);
     out += "::";
     out += StringHelper::JoinStrings(components, "::");
+    if (!mValueName.empty()) {
+        out  += "::" + mValueName;
+    }
 
     return out;
 }
@@ -226,7 +286,8 @@ std::string FQName::javaPackage() const {
 }
 
 std::string FQName::javaName() const {
-    return javaPackage() + "." + name();
+    return javaPackage() + "." + name()
+            + (mValueName.empty() ? "" : ("." + mValueName));
 }
 
 void FQName::getPackageComponents(std::vector<std::string> *components) const {
