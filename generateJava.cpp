@@ -107,7 +107,9 @@ status_t AST::generateJava(
     if (!isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
-                " does NOT support union types or native handles.\n");
+                " does NOT support union types nor native handles. "
+                "In addition, vectors of arrays are limited to at most "
+                "one-dimensional arrays.\n");
 
         return UNKNOWN_ERROR;
     }
