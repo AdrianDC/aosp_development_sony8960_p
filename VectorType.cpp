@@ -248,12 +248,12 @@ void VectorType::emitJavaFieldInitializer(
 
     const std::string wrapperType = mElementType->getJavaWrapperType();
 
-    out << "final Vector<"
+    out << "final ArrayList<"
         << wrapperType
         << extra
         << "> "
         << fieldName
-        << " = new Vector<"
+        << " = new ArrayList<"
         << wrapperType
         << extra
         << ">();\n";
@@ -405,7 +405,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
             depth + 1,
             parcelName,
             "childBlob",
-            fieldName + ".elementAt(" + iteratorName + ")",
+            fieldName + ".get(" + iteratorName + ")",
             iteratorName + " * " + std::to_string(elementSize),
             false /* isReader */);
 

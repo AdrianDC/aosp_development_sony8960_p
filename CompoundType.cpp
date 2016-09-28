@@ -348,9 +348,9 @@ status_t CompoundType::emitJavaTypeDeclarations(
         << "[] readVectorFromParcel(HwParcel parcel) {\n";
     out.indent();
 
-    out << "Vector<"
+    out << "ArrayList<"
         << localName()
-        << "> _hidl_vec = new Vector();\n";
+        << "> _hidl_vec = new ArrayList();\n";
 
     out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
 
@@ -432,9 +432,9 @@ status_t CompoundType::emitJavaTypeDeclarations(
         << "[] _hidl_array) {\n";
     out.unindent();
 
-    out << "Vector<"
+    out << "ArrayList<"
         << localName()
-        << "> _hidl_vec = new Vector(Arrays.asList(_hidl_array));\n";
+        << "> _hidl_vec = new ArrayList(Arrays.asList(_hidl_array));\n";
 
     out << "HwBlob _hidl_blob = new HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
 
