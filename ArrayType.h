@@ -36,7 +36,10 @@ struct ArrayType : public Type {
 
     bool isArray() const override;
 
+    Type *getElementType() const;
+
     void addDimension(ConstantExpression *size);
+    size_t countDimensions() const;
 
     std::string getCppType(StorageMode mode,
                            std::string *extra,
@@ -46,6 +49,8 @@ struct ArrayType : public Type {
 
     std::string getJavaType(
             std::string *extra, bool forInitializer) const override;
+
+    std::string getJavaWrapperType() const override;
 
     void emitReaderWriter(
             Formatter &out,
@@ -68,6 +73,7 @@ struct ArrayType : public Type {
             const std::string &offsetText) const override;
 
     bool needsEmbeddedReadWrite() const override;
+    bool resultNeedsDeref() const override;
 
     void emitJavaReaderWriter(
             Formatter &out,

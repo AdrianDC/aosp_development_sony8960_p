@@ -202,6 +202,34 @@ public final class HidlTestJava {
         return toString(M.s);
     }
 
+    public static String toString(IBase.VectorOfArray vec) {
+        StringBuilder out = new StringBuilder();
+
+        out.append("VectorOfArray(");
+        for (int i = 0; i < vec.addresses.size(); ++i) {
+            if (i > 0) {
+                out.append(", ");
+            }
+
+            Byte[] address = vec.addresses.elementAt(i);
+
+            for (int j = 0; j < 6; ++j) {
+                if (j > 0) {
+                    out.append(":");
+                }
+
+                byte b = address[j];
+                if (b < 16) {
+                    out.append("0");
+                }
+                out.append(Integer.toHexString(b));
+            }
+        }
+
+        out.append(")");
+        return out.toString();
+    }
+
     private void ExpectTrue(boolean x) {
         if (x) {
             return;
@@ -421,6 +449,28 @@ public final class HidlTestJava {
         }
 
         {
+            IBase.VectorOfArray in = new IBase.VectorOfArray();
+
+            int k = 0;
+            for (int i = 0; i < 3; ++i) {
+                Byte[] mac = new Byte[6];
+                for (int j = 0; j < 6; ++j, ++k) {
+                    mac[j] = (byte)k;
+                }
+
+                in.addresses.add(mac);
+            }
+
+            IBase.VectorOfArray out = proxy.someMethodWithVectorOfArray(in);
+
+            Expect(toString(out),
+                   "VectorOfArray("
+                     + "0c:0d:0e:0f:10:11, "
+                     + "06:07:08:09:0a:0b, "
+                     + "00:01:02:03:04:05)");
+        }
+
+        {
             IBase.StringMatrix5x3 in = new IBase.StringMatrix5x3();
             for (int i = 0; i < 5; ++i) {
                 for (int j = 0; j < 3; ++j) {
@@ -552,6 +602,19 @@ public final class HidlTestJava {
             fooOutput[1] = fooInput[0];
 
             return fooOutput;
+        }
+
+        public IBase.VectorOfArray someMethodWithVectorOfArray(
+                IBase.VectorOfArray in) {
+            Log.d(TAG, "Baz someMethodWithVectorOfArray " + HidlTestJava.toString(in));
+
+            IBase.VectorOfArray out = new IBase.VectorOfArray();
+            int n = in.addresses.size();
+            for (int i = 0; i < n; ++i) {
+                out.addresses.add(in.addresses.elementAt(n - i - 1));
+            }
+
+            return out;
         }
 
         public IBase.StringMatrix3x5 transpose(IBase.StringMatrix5x3 in) {

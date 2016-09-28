@@ -40,6 +40,10 @@ void ArrayType::addDimension(ConstantExpression *size) {
     mSizeComments.insert(mSizeComments.begin(), size->description());
 }
 
+size_t ArrayType::countDimensions() const {
+    return mSizes.size();
+}
+
 void ArrayType::addNamedTypesToSet(std::set<const FQName> &set) const {
     mElementType->addNamedTypesToSet(set);
 }
@@ -48,40 +52,41 @@ bool ArrayType::isArray() const {
     return true;
 }
 
+Type *ArrayType::getElementType() const {
+    return mElementType;
+}
+
 std::string ArrayType::getCppType(StorageMode mode,
                                   std::string *extra,
                                   bool specifyNamespaces) const {
     const std::string base = mElementType->getCppType(extra, specifyNamespaces);
     CHECK(extra->empty());
 
-    size_t numArrayElements = 1;
-    for (auto size : mSizes) {
-        numArrayElements *= size;
+    std::string arrayType = "hidl_array<" + base;
+
+    for (size_t i = 0; i < mSizes.size(); ++i) {
+        arrayType += ", ";
+        arrayType += std::to_string(mSizes[i]);
+
+        arrayType += " /* ";
+        arrayType += mSizeComments[i];
+        arrayType += " */";
     }
 
-    std::string sizeComments = " /* " + base;
-    for (auto e : mSizeComments) {
-        sizeComments += "[" + e + "]";
-    }
-    sizeComments += " */";
+    arrayType += ">";
 
     switch (mode) {
         case StorageMode_Stack:
-        {
-            *extra += "[";
-            *extra += std::to_string(numArrayElements);
-            *extra += "]";
-            *extra += sizeComments;
-            return base;
-        }
+            return arrayType;
 
         case StorageMode_Argument:
+            return "const " + arrayType + "&";
+
         case StorageMode_Result:
-        {
-            *extra += sizeComments;
-            return "const " + base + "*";
-        }
+            return "const " + arrayType + "*";
     }
+
+    CHECK(!"Should not be here");
 }
 
 std::string ArrayType::getJavaType(
@@ -111,6 +116,10 @@ std::string ArrayType::getJavaType(
     return base;
 }
 
+std::string ArrayType::getJavaWrapperType() const {
+    return mElementType->getJavaWrapperType();
+}
+
 void ArrayType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -130,10 +139,12 @@ void ArrayType::emitReaderWriter(
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
     if (isReader) {
+        std::string extra;
+
         out << name
-            << " = (const "
-            << baseType
-            << " *)"
+            << " = ("
+            << getCppResultType(&extra)
+            << ")"
             << parcelObjDeref
             << "readBuffer(&"
             << parentName
@@ -149,17 +160,18 @@ void ArrayType::emitReaderWriter(
         out.unindent();
         out << "}\n\n";
     } else {
+        size_t numArrayElements = 1;
+        for (auto size : mSizes) {
+            numArrayElements *= size;
+        }
+
         out << "_hidl_err = "
             << parcelObjDeref
             << "writeBuffer("
             << name
-            << ", ";
-
-        for (auto size : mSizes) {
-            out << size << " * ";
-        }
-
-        out << "sizeof("
+            << ".data(), "
+            << numArrayElements
+            << " * sizeof("
             << baseType
             << "), &"
             << parentName
@@ -224,7 +236,7 @@ void ArrayType::emitReaderWriterEmbedded(
     mElementType->emitReaderWriterEmbedded(
             out,
             depth + 1,
-            name + "[" + iteratorName + "]",
+            nameDeref + "data()[" + iteratorName + "]",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
@@ -243,6 +255,10 @@ void ArrayType::emitReaderWriterEmbedded(
 
 bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
+}
+
+bool ArrayType::resultNeedsDeref() const {
+    return true;
 }
 
 void ArrayType::emitJavaReaderWriter(
