@@ -34,6 +34,7 @@ using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
+using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::sp;
@@ -41,19 +42,19 @@ using ::android::Mutex;
 using ::android::Condition;
 
 struct FooCallback : public IFooCallback {
-    FooCallback() : invokeInfo{}, mLock{}, mCond{} {}
+    FooCallback() : mLock{}, mCond{} {}
     Return<void> heyItsYou(const sp<IFooCallback> &cb) override;
     Return<bool> heyItsYouIsntIt(const sp<IFooCallback> &cb) override;
     Return<void> heyItsTheMeaningOfLife(uint8_t tmol) override;
     Return<void> reportResults(int64_t ns, reportResults_cb cb) override;
-    Return<void> youBlockedMeFor(const int64_t ns[3]) override;
+    Return<void> youBlockedMeFor(const hidl_array<int64_t, 3> &ns) override;
 
     static constexpr nsecs_t DELAY_S = 1;
     static constexpr nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
     static constexpr nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
     static constexpr nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
 
-    InvokeInfo invokeInfo[3];
+    hidl_array<InvokeInfo, 3> invokeInfo;
     Mutex mLock;
     Condition mCond;
 };
@@ -116,7 +117,7 @@ Return<void> FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
     return Void();
 }
 
-Return<void> FooCallback::youBlockedMeFor(const int64_t ns[3]) {
+Return<void> FooCallback::youBlockedMeFor(const hidl_array<int64_t, 3> &ns) {
     for (size_t i = 0; i < 3; i++) {
         invokeInfo[i].callerBlockedNs = ns[i];
     }
@@ -135,7 +136,8 @@ struct Bar : public IBar {
             double d) override;
 
     Return<void> doSomethingElse(
-            const int32_t param[15], doSomethingElse_cb _cb) override;
+            const hidl_array<int32_t, 15> &param,
+            doSomethingElse_cb _cb) override;
 
     Return<void> doStuffAndReturnAString(
             doStuffAndReturnAString_cb _cb) override;
@@ -150,12 +152,12 @@ struct Bar : public IBar {
 
     Return<void> haveAGooberVec(const hidl_vec<Goober>& param) override;
     Return<void> haveAGoober(const Goober &g) override;
-    Return<void> haveAGooberArray(const Goober lots[20]) override;
+    Return<void> haveAGooberArray(const hidl_array<Goober, 20> &lots) override;
 
     Return<void> haveATypeFromAnotherFile(const Abc &def) override;
 
     Return<void> haveSomeStrings(
-            const hidl_string array[3],
+            const hidl_array<hidl_string, 3> &array,
             haveSomeStrings_cb _cb) override;
 
     Return<void> haveAStringVec(
@@ -163,7 +165,7 @@ struct Bar : public IBar {
             haveAStringVec_cb _cb) override;
 
     Return<void> transposeMe(
-            const float *in /* float[3][5] */, transposeMe_cb _cb) override;
+            const hidl_array<float, 3, 5> &in, transposeMe_cb _cb) override;
 
     Return<void> callingDrWho(
             const MultiDimensional &in,
@@ -173,7 +175,7 @@ struct Bar : public IBar {
             const StringMatrix5x3 &in, transpose_cb _hidl_cb) override;
 
     Return<void> transpose2(
-            const hidl_string *in /* hidl_string[5][3] */,
+            const hidl_array<hidl_string, 5, 3> &in,
             transpose2_cb _hidl_cb) override;
 
     Return<void> thisIsNew() override;
@@ -203,10 +205,10 @@ Return<double> Bar::doQuiteABit(
 }
 
 Return<void> Bar::doSomethingElse(
-        const int32_t param[15], doSomethingElse_cb _cb) {
+        const hidl_array<int32_t, 15> &param, doSomethingElse_cb _cb) {
     ALOGI("SERVER(Bar) doSomethingElse(...)");
 
-    int32_t result[32] = { 0 };
+    hidl_array<int32_t, 32> result;
     for (size_t i = 0; i < 15; ++i) {
         result[i] = 2 * param[i];
         result[15 + i] = param[i];
@@ -253,7 +255,7 @@ Return<void> Bar::callMe(
 
     if (cb != NULL) {
 
-        nsecs_t c[3];
+        hidl_array<nsecs_t, 3> c;
         ALOGI("SERVER(Bar) callMe %p calling IFooCallback::heyItsYou, " \
               "should return immediately", cb.get());
         c[0] = systemTime();
@@ -309,8 +311,8 @@ Return<void> Bar::haveAGoober(const Goober &g) {
     return Void();
 }
 
-Return<void> Bar::haveAGooberArray(const Goober lots[20]) {
-    ALOGI("SERVER(Bar) haveAGooberArray lots = %p", lots);
+Return<void> Bar::haveAGooberArray(const hidl_array<Goober, 20> & /* lots */) {
+    ALOGI("SERVER(Bar) haveAGooberArray");
 
     return Void();
 }
@@ -322,14 +324,14 @@ Return<void> Bar::haveATypeFromAnotherFile(const Abc &def) {
 }
 
 Return<void> Bar::haveSomeStrings(
-        const hidl_string array[3],
+        const hidl_array<hidl_string, 3> &array,
         haveSomeStrings_cb _cb) {
     ALOGI("SERVER(Bar) haveSomeStrings([\"%s\", \"%s\", \"%s\"])",
           array[0].c_str(),
           array[1].c_str(),
           array[2].c_str());
 
-    hidl_string result[2];
+    hidl_array<hidl_string, 2> result;
     result[0] = "Hello";
     result[1] = "World";
 
@@ -357,41 +359,62 @@ Return<void> Bar::haveAStringVec(
     return Void();
 }
 
-static std::string FloatArray2DToString(const float *x, size_t n1, size_t n2) {
-    std::string s;
-    s += "[";
-    for (size_t i = 0; i < n1; ++i) {
+using std::to_string;
+
+static std::string to_string(const IFoo::StringMatrix5x3 &M);
+static std::string to_string(const IFoo::StringMatrix3x5 &M);
+static std::string to_string(const hidl_string &s);
+
+template<typename T, size_t SIZE1, size_t SIZE2>
+static std::string to_string(const hidl_array<T, SIZE1, SIZE2> &array) {
+    std::string out;
+    out = "[";
+    for (size_t i = 0; i < SIZE1; ++i) {
         if (i > 0) {
-            s += ", ";
+            out += ", ";
         }
 
-        s += "[";
-        for (size_t j = 0; j < n2; ++j) {
+        out += "[";
+        for (size_t j = 0; j < SIZE2; ++j) {
             if (j > 0) {
-                s += ", ";
+                out += ", ";
             }
-            s += std::to_string(x[i * n2 + j]);
-        }
-        s += "]";
-    }
-    s += "]";
 
-    return s;
+            out += to_string(array[i][j]);
+        }
+        out += "]";
+    }
+    out += "]";
+
+    return out;
+}
+
+static std::string to_string(const IFoo::StringMatrix5x3 &M) {
+    return to_string(M.s);
+}
+
+static std::string to_string(const IFoo::StringMatrix3x5 &M) {
+    return to_string(M.s);
+}
+
+static std::string to_string(const hidl_string &s) {
+    return std::string("'") + s.c_str() + "'";
 }
 
 Return<void> Bar::transposeMe(
-        const float *in /* float[3][5] */, transposeMe_cb _cb) {
-    ALOGI("SERVER(Bar) transposeMe(%s)",
-          FloatArray2DToString(in, 3, 5).c_str());
+        const hidl_array<float, 3, 5> &in, transposeMe_cb _cb) {
+    ALOGI("SERVER(Bar) transposeMe(%s)", to_string(in).c_str());
 
-    float out[5][3];
+    hidl_array<float, 5, 3> out;
     for (size_t i = 0; i < 5; ++i) {
         for (size_t j = 0; j < 3; ++j) {
-            out[i][j] = in[5 * j + i];
+            out[i][j] = in[j][i];
         }
     }
 
-    _cb(&out[0][0]);
+    ALOGI("SERVER(Bar) transposeMe returning %s", to_string(out).c_str());
+
+    _cb(out);
 
     return Void();
 }
@@ -427,7 +450,7 @@ static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
                 s += ", ";
             }
 
-            s += QuuxToString(val.quuxMatrix[k]);
+            s += QuuxToString(val.quuxMatrix[i][j]);
         }
     }
     s += "]";
@@ -442,13 +465,10 @@ Return<void> Bar::callingDrWho(
     ALOGI("SERVER(Bar) callingDrWho(%s)", MultiDimensionalToString(in).c_str());
 
     MultiDimensional out;
-    size_t k = 0;
     for (size_t i = 0; i < 5; ++i) {
-        for (size_t j = 0; j < 3; ++j, ++k) {
-            size_t k_prime = (4 - i) * 3 + (2 - j);
-
-            out.quuxMatrix[k].first = in.quuxMatrix[k_prime].last;
-            out.quuxMatrix[k].last = in.quuxMatrix[k_prime].first;
+        for (size_t j = 0; j < 3; ++j) {
+            out.quuxMatrix[i][j].first = in.quuxMatrix[4 - i][2 - j].last;
+            out.quuxMatrix[i][j].last = in.quuxMatrix[4 - i][2 - j].first;
         }
     }
 
@@ -457,62 +477,13 @@ Return<void> Bar::callingDrWho(
     return Void();
 }
 
-using std::to_string;
-
-static std::string to_string(const IFoo::StringMatrix5x3 &M);
-static std::string to_string(const IFoo::StringMatrix3x5 &M);
-static std::string to_string(const hidl_string &s);
-
-template<class T>
-static std::string array_to_string(const T *array, size_t size) {
-    std::string out;
-    out = "[";
-    for (size_t i = 0; i < size; ++i) {
-        if (i > 0) {
-            out += ", ";
-        }
-        out += to_string(array[i]);
-    }
-    out += "]";
-
-    return out;
-}
-
-template<class T>
-static std::string matrix_to_string(const T *array, size_t dim1, size_t dim2) {
-    std::string out;
-    out = "[";
-    for (size_t i = 0; i < dim1; ++i) {
-        if (i > 0) {
-            out += ", ";
-        }
-        out += array_to_string(&array[dim2 * i], dim2);
-    }
-    out += "]";
-
-    return out;
-}
-
-static std::string to_string(const IFoo::StringMatrix5x3 &M) {
-    return matrix_to_string(M.s, 5, 3);
-}
-
-static std::string to_string(const IFoo::StringMatrix3x5 &M) {
-    return matrix_to_string(M.s, 3, 5);
-}
-
-static std::string to_string(const hidl_string &s) {
-    return std::string("'") + s.c_str() + "'";
-}
-
 Return<void> Bar::transpose(const StringMatrix5x3 &in, transpose_cb _hidl_cb) {
     LOG(INFO) << "SERVER(Bar) transpose " << to_string(in);
 
     StringMatrix3x5 out;
-    size_t k = 0;
     for (size_t i = 0; i < 3; ++i) {
-        for (size_t j = 0; j < 5; ++j, ++k) {
-            out.s[k] = in.s[j * 3 + i];
+        for (size_t j = 0; j < 5; ++j) {
+            out.s[i][j] = in.s[j][i];
         }
     }
 
@@ -522,17 +493,17 @@ Return<void> Bar::transpose(const StringMatrix5x3 &in, transpose_cb _hidl_cb) {
 }
 
 Return<void> Bar::transpose2(
-        const hidl_string *in /* hidl_string[5][3] */, transpose2_cb _hidl_cb) {
-    LOG(INFO) << "SERVER(Bar) transpose2 " << matrix_to_string(in, 5, 3);
+        const hidl_array<hidl_string, 5, 3> &in, transpose2_cb _hidl_cb) {
+    LOG(INFO) << "SERVER(Bar) transpose2 " << to_string(in);
 
-    hidl_string out[3][5];
+    hidl_array<hidl_string, 3, 5> out;
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 5; ++j) {
-            out[i][j] = in[j * 3 + i];
+            out[i][j] = in[j][i];
         }
     }
 
-    _hidl_cb(&out[0][0]);
+    _hidl_cb(out);
 
     return Void();
 }
@@ -687,7 +658,7 @@ TEST_F(HidlTest, FooDoQuiteABitTest) {
 TEST_F(HidlTest, FooDoSomethingElseTest) {
 
     ALOGI("CLIENT call doSomethingElse");
-    int32_t param[15];
+    hidl_array<int32_t, 15> param;
     for (size_t i = 0; i < sizeof(param) / sizeof(param[0]); ++i) {
         param[i] = i;
     }
@@ -759,7 +730,7 @@ TEST_F(HidlTest, ForReportResultsTest) {
 
     fooCb->reportResults(reportResultsNs,
                 [&](int64_t timeLeftNs,
-                    const IFooCallback::InvokeInfo invokeResults[3]) {
+                    const hidl_array<IFooCallback::InvokeInfo, 3> &invokeResults) {
         ALOGI("CLIENT: FooCallback::reportResults() is returning data.");
         ALOGI("CLIENT: Waited for %" PRId64 " milliseconds.",
               nanoseconds_to_milliseconds(reportResultsNs - timeLeftNs));
@@ -806,7 +777,7 @@ TEST_F(HidlTest, FooHaveAGooberTest) {
     ALOGI("CLIENT haveaGoober returned.");
 
     ALOGI("CLIENT call haveAGooberArray.");
-    IFoo::Goober gooberArrayParam[20];
+    hidl_array<IFoo::Goober, 20> gooberArrayParam;
     EXPECT_OK(foo->haveAGooberArray(gooberArrayParam));
     ALOGI("CLIENT haveAGooberArray returned.");
 }
@@ -825,7 +796,7 @@ TEST_F(HidlTest, FooHaveATypeFromAnotherFileTest) {
 
 TEST_F(HidlTest, FooHaveSomeStringsTest) {
     ALOGI("CLIENT call haveSomeStrings.");
-    hidl_string stringArrayParam[3];
+    hidl_array<hidl_string, 3> stringArrayParam;
     stringArrayParam[0] = "What";
     stringArrayParam[1] = "a";
     stringArrayParam[2] = "disaster";
@@ -845,7 +816,7 @@ TEST_F(HidlTest, FooHaveAStringVecTest) {
 }
 
 TEST_F(HidlTest, FooTransposeMeTest) {
-    float in[3][5];
+    hidl_array<float, 3, 5> in;
     float k = 1.0f;
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 5; ++j, ++k) {
@@ -853,18 +824,17 @@ TEST_F(HidlTest, FooTransposeMeTest) {
         }
     }
 
-    ALOGI("CLIENT call transposeMe(%s).",
-          FloatArray2DToString(&in[0][0], 3, 5).c_str());
+    ALOGI("CLIENT call transposeMe(%s).", to_string(in).c_str());
 
     EXPECT_OK(foo->transposeMe(
-                &in[0][0],
+                in,
                 [&](const auto &out) {
                     ALOGI("CLIENT transposeMe returned %s.",
-                          FloatArray2DToString(out, 5, 3).c_str());
+                          to_string(out).c_str());
 
                     for (size_t i = 0; i < 3; ++i) {
                         for (size_t j = 0; j < 5; ++j) {
-                            EXPECT_EQ(out[3 * j + i], in[i][j]);
+                            EXPECT_EQ(out[j][i], in[i][j]);
                         }
                     }
                 }));
@@ -876,8 +846,8 @@ TEST_F(HidlTest, FooCallingDrWhoTest) {
     size_t k = 0;
     for (size_t i = 0; i < 5; ++i) {
         for (size_t j = 0; j < 3; ++j, ++k) {
-            in.quuxMatrix[k].first = ("First " + std::to_string(k)).c_str();
-            in.quuxMatrix[k].last = ("Last " + std::to_string(15-k)).c_str();
+            in.quuxMatrix[i][j].first = ("First " + std::to_string(k)).c_str();
+            in.quuxMatrix[i][j].last = ("Last " + std::to_string(15-k)).c_str();
         }
     }
 
@@ -893,15 +863,13 @@ TEST_F(HidlTest, FooCallingDrWhoTest) {
                     size_t k = 0;
                     for (size_t i = 0; i < 5; ++i) {
                         for (size_t j = 0; j < 3; ++j, ++k) {
-                            size_t k_prime = (4 - i) * 3 + (2 - j);
+                            EXPECT_STREQ(
+                                out.quuxMatrix[i][j].first.c_str(),
+                                in.quuxMatrix[4 - i][2 - j].last.c_str());
 
                             EXPECT_STREQ(
-                                out.quuxMatrix[k].first.c_str(),
-                                in.quuxMatrix[k_prime].last.c_str());
-
-                            EXPECT_STREQ(
-                                out.quuxMatrix[k].last.c_str(),
-                                in.quuxMatrix[k_prime].first.c_str());
+                                out.quuxMatrix[i][j].last.c_str(),
+                                in.quuxMatrix[4 - i][2 - j].first.c_str());
                         }
                     }
                 }));
@@ -956,10 +924,9 @@ static std::string numberToEnglish(int x) {
 TEST_F(HidlTest, FooTransposeTest) {
     IFoo::StringMatrix5x3 in;
 
-    int k = 0;
     for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 3; ++j, ++k) {
-            in.s[k] = numberToEnglish(3 * i + j + 1).c_str();
+        for (int j = 0; j < 3; ++j) {
+            in.s[i][j] = numberToEnglish(3 * i + j + 1).c_str();
         }
     }
 
@@ -975,12 +942,11 @@ TEST_F(HidlTest, FooTransposeTest) {
 }
 
 TEST_F(HidlTest, FooTranspose2Test) {
-    hidl_string in[5 * 3];
+    hidl_array<hidl_string, 5, 3> in;
 
-    int k = 0;
     for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 3; ++j, ++k) {
-            in[k] = numberToEnglish(3 * i + j + 1).c_str();
+        for (int j = 0; j < 3; ++j) {
+            in[i][j] = numberToEnglish(3 * i + j + 1).c_str();
         }
     }
 
@@ -988,7 +954,7 @@ TEST_F(HidlTest, FooTranspose2Test) {
                 in,
                 [&](const auto &out) {
                     EXPECT_EQ(
-                        matrix_to_string(out, 3, 5),
+                        to_string(out),
                         "[['one', 'four', 'seven', 'ten', 'thirteen'], "
                          "['two', 'five', 'eight', 'eleven', 'fourteen'], "
                          "['three', 'six', 'nine', 'twelve', 'fifteen']]");
