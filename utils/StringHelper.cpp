@@ -76,21 +76,35 @@ std::string StringHelper::SnakeCaseToPascalCase(const std::string &in) {
 }
 
 // static
+bool StringHelper::EndsWith(const std::string &in, const std::string &suffix) {
+    return in.size() >= suffix.size() &&
+           in.substr(in.size() - suffix.size()) == suffix;
+}
+
+// static
 bool StringHelper::StartsWith(const std::string &in, const std::string &prefix) {
     return in.size() >= prefix.size() &&
            in.substr(0, prefix.size()) == prefix;
 }
 
 // static
-std::string StringHelper::RTrim(const std::string &in, const std::string &end) {
-    if (in.size() >= end.size() &&
-        in.substr(in.size() - end.size()) == end) {
-
-        return in.substr(0, in.size() - end.size());
+std::string StringHelper::RTrim(const std::string &in, const std::string &suffix) {
+    if (EndsWith(in, suffix)) {
+        return in.substr(0, in.size() - suffix.size());
     }
 
     return in;
 }
+
+// static
+std::string StringHelper::LTrim(const std::string &in, const std::string &prefix) {
+    if (StartsWith(in, prefix)) {
+        return in.substr(prefix.size());
+    }
+
+    return in;
+}
+
 
 // static
 void StringHelper::SplitString(
