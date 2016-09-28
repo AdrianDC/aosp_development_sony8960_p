@@ -853,7 +853,9 @@ status_t AST::generateTypeSource(
 }
 
 void AST::declareCppReaderLocals(
-        Formatter &out, const std::vector<TypedVar *> &args) const {
+        Formatter &out,
+        const std::vector<TypedVar *> &args,
+        bool forResults) const {
     if (args.empty()) {
         return;
     }
@@ -864,6 +866,7 @@ void AST::declareCppReaderLocals(
         std::string extra;
         out << type.getCppResultType(&extra)
             << " "
+            << (forResults ? "_hidl_out_" : "")
             << arg->name()
             << extra
             << ";\n";
@@ -878,12 +881,13 @@ void AST::emitCppReaderWriter(
         bool parcelObjIsPointer,
         const TypedVar *arg,
         bool isReader,
-        Type::ErrorMode mode) const {
+        Type::ErrorMode mode,
+        bool addPrefixToName) const {
     const Type &type = arg->type();
 
     type.emitReaderWriter(
             out,
-            arg->name(),
+            addPrefixToName ? ("_hidl_out_" + arg->name()) : arg->name(),
             parcelObj,
             parcelObjIsPointer,
             isReader,
@@ -938,7 +942,9 @@ status_t AST::generateProxySource(
             out << "::android::hardware::Parcel _hidl_reply;\n";
             out << "::android::status_t _hidl_err;\n";
             out << "::android::hardware::Status _hidl_status;\n\n";
-            declareCppReaderLocals(out, method->results());
+
+            declareCppReaderLocals(
+                    out, method->results(), true /* forResults */);
 
             out << "_hidl_err = _hidl_data.writeInterfaceToken("
                 << superInterface->fqName().cppNamespace()
@@ -955,7 +961,8 @@ status_t AST::generateProxySource(
                         false /* parcelObjIsPointer */,
                         arg,
                         false /* reader */,
-                        Type::ErrorMode_Goto);
+                        Type::ErrorMode_Goto,
+                        false /* addPrefixToName */);
             }
 
             out << "_hidl_err = remote()->transact("
@@ -984,7 +991,8 @@ status_t AST::generateProxySource(
                             false /* parcelObjIsPointer */,
                             arg,
                             true /* reader */,
-                            Type::ErrorMode_Goto);
+                            Type::ErrorMode_Goto,
+                            true /* addPrefixToName */);
                 }
 
                 if (returnsValue && elidedReturn == nullptr) {
@@ -1001,7 +1009,7 @@ status_t AST::generateProxySource(
                         if (arg->type().resultNeedsDeref()) {
                             out << "*";
                         }
-                        out << arg->name();
+                        out << "_hidl_out_" << arg->name();
 
                         first = false;
                     }
@@ -1017,7 +1025,7 @@ status_t AST::generateProxySource(
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
                 out << "return ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType(&extra)
-                    << ">(" << elidedReturn->name() << ");\n\n";
+                    << ">(_hidl_out_" << elidedReturn->name() << ");\n\n";
             } else {
                 out << "_hidl_status.setFromStatusT(_hidl_err);\n";
                 out << "return ::android::hardware::Return<void>();\n\n";
@@ -1194,7 +1202,7 @@ status_t AST::generateStubSourceForMethod(
     out.unindent();
     out << "}\n\n";
 
-    declareCppReaderLocals(out, method->args());
+    declareCppReaderLocals(out, method->args(), false /* forResults */);
 
     for (const auto &arg : method->args()) {
         emitCppReaderWriter(
@@ -1203,7 +1211,8 @@ status_t AST::generateStubSourceForMethod(
                 false /* parcelObjIsPointer */,
                 arg,
                 true /* reader */,
-                Type::ErrorMode_Break);
+                Type::ErrorMode_Break,
+                false /* addPrefixToName */);
     }
 
     out << "if (UNLIKELY(enableInstrumentation)) {\n";
@@ -1336,7 +1345,8 @@ status_t AST::generateStubSourceForMethod(
                         true /* parcelObjIsPointer */,
                         arg,
                         false /* reader */,
-                        Type::ErrorMode_Ignore);
+                        Type::ErrorMode_Ignore,
+                        false /* addPrefixToName */);
             }
 
             out << "if (UNLIKELY(enableInstrumentation)) {\n";
