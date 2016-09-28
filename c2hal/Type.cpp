@@ -63,7 +63,7 @@ const std::string Type::decorateName(const std::string &name) const {
 // static
 std::map<std::string, std::string> Type::kSignedToUnsignedMap = {
     { "char", "uint8_t" },
-    { "short", "int16_t" },
+    { "short", "uint16_t" },
     { "int", "uint32_t" },
     { "long", "uint64_t" },
     { "int8_t", "uint8_t" },
