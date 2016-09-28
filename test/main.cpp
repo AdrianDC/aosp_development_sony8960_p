@@ -178,6 +178,9 @@ struct Bar : public IBar {
             const hidl_array<hidl_string, 5, 3> &in,
             transpose2_cb _hidl_cb) override;
 
+    Return<void> sendVec(
+            const hidl_vec<uint8_t> &data, sendVec_cb _hidl_cb) override;
+
     Return<void> thisIsNew() override;
 };
 
@@ -365,6 +368,26 @@ static std::string to_string(const IFoo::StringMatrix5x3 &M);
 static std::string to_string(const IFoo::StringMatrix3x5 &M);
 static std::string to_string(const hidl_string &s);
 
+template<typename T>
+static std::string to_string(const T *elems, size_t n) {
+    std::string out;
+    out = "[";
+    for (size_t i = 0; i < n; ++i) {
+        if (i > 0) {
+            out += ", ";
+        }
+        out += to_string(elems[i]);
+    }
+    out += "]";
+
+    return out;
+}
+
+template<typename T, size_t SIZE>
+static std::string to_string(const hidl_array<T, SIZE> &array) {
+    return to_string(&array[0], SIZE);
+}
+
 template<typename T, size_t SIZE1, size_t SIZE2>
 static std::string to_string(const hidl_array<T, SIZE1, SIZE2> &array) {
     std::string out;
@@ -387,6 +410,11 @@ static std::string to_string(const hidl_array<T, SIZE1, SIZE2> &array) {
     out += "]";
 
     return out;
+}
+
+template<typename T>
+static std::string to_string(const hidl_vec<T> &vec) {
+    return to_string(&vec[0], vec.size());
 }
 
 static std::string to_string(const IFoo::StringMatrix5x3 &M) {
@@ -508,30 +536,17 @@ Return<void> Bar::transpose2(
     return Void();
 }
 
-Return<void> Bar::thisIsNew() {
-    ALOGI("SERVER(Bar) thisIsNew");
+Return<void> Bar::sendVec(
+        const hidl_vec<uint8_t> &data, sendVec_cb _hidl_cb) {
+    _hidl_cb(data);
 
     return Void();
 }
 
-template<typename I>
-static std::string arraylikeToString(const I data, size_t size) {
-    std::string out = "[";
-    for (size_t i = 0; i < size; ++i) {
-        if (i > 0) {
-            out += ", ";
-        }
+Return<void> Bar::thisIsNew() {
+    ALOGI("SERVER(Bar) thisIsNew");
 
-        out += ::android::String8::format("%d", data[i]).string();
-    }
-    out += "]";
-
-    return out;
-}
-
-
-static std::string vecToString(const hidl_vec<int32_t> &vec) {
-    return arraylikeToString(vec, vec.size());
+    return Void();
 }
 
 #define EXPECT_OK(ret) EXPECT_TRUE(ret.getStatus().isOk())
@@ -664,7 +679,7 @@ TEST_F(HidlTest, FooDoSomethingElseTest) {
     }
     EXPECT_OK(foo->doSomethingElse(param, [&](const auto &something) {
             ALOGI("CLIENT doSomethingElse returned %s.",
-                  arraylikeToString(something, 32).c_str());
+                  to_string(something).c_str());
             int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,
                 26, 28, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1, 2};
             EXPECT_TRUE(isArrayEqual(something, expect, 32));
@@ -688,7 +703,7 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
     }
     EXPECT_OK(foo->mapThisVector(vecParam, [&](const auto &something) {
             ALOGI("CLIENT mapThisVector returned %s.",
-                  vecToString(something).c_str());
+                  to_string(something).c_str());
             int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
             EXPECT_TRUE(isArrayEqual(something, expect, something.size()));
         }));
@@ -958,6 +973,20 @@ TEST_F(HidlTest, FooTranspose2Test) {
                         "[['one', 'four', 'seven', 'ten', 'thirteen'], "
                          "['two', 'five', 'eight', 'eleven', 'fourteen'], "
                          "['three', 'six', 'nine', 'twelve', 'fifteen']]");
+                }));
+}
+
+TEST_F(HidlTest, FooSendVecTest) {
+    hidl_vec<uint8_t> in;
+    in.resize(16);
+    for (size_t i = 0; i < in.size(); ++i) {
+        in[i] = i;
+    }
+
+    EXPECT_OK(foo->sendVec(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(to_string(in), to_string(out));
                 }));
 }
 
