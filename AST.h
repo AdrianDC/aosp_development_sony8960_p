@@ -199,7 +199,9 @@ private:
     status_t generatePassthroughSource(Formatter &out) const;
 
     void declareCppReaderLocals(
-            Formatter &out, const std::vector<TypedVar *> &arg) const;
+            Formatter &out,
+            const std::vector<TypedVar *> &arg,
+            bool forResults) const;
 
     void emitCppReaderWriter(
             Formatter &out,
@@ -207,7 +209,8 @@ private:
             bool parcelObjIsPointer,
             const TypedVar *arg,
             bool isReader,
-            Type::ErrorMode mode) const;
+            Type::ErrorMode mode,
+            bool addPrefixToName) const;
 
     void emitJavaReaderWriter(
             Formatter &out,
