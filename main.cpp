@@ -229,7 +229,15 @@ static void generateMakefileSectionForLanguage(
 
             Scope *rootScope = typesAST->scope();
 
-            for (const auto &type : rootScope->getSubTypes()) {
+            std::vector<NamedType *> subTypes = rootScope->getSubTypes();
+            std::sort(
+                    subTypes.begin(),
+                    subTypes.end(),
+                    [](const NamedType *a, const NamedType *b) -> bool {
+                        return a->fqName() < b->fqName();
+                    });
+
+            for (const auto &type : subTypes) {
                 if (type->isTypeDef()) {
                     continue;
                 }
