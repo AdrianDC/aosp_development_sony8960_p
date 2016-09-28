@@ -16,6 +16,8 @@
 
 #include "VectorType.h"
 
+#include "ArrayType.h"
+
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -241,14 +243,19 @@ void VectorType::emitJavaReaderWriter(
 
 void VectorType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
+    std::string extra;
+    mElementType->getJavaType(&extra);
+
     const std::string wrapperType = mElementType->getJavaWrapperType();
 
     out << "final Vector<"
         << wrapperType
+        << extra
         << "> "
         << fieldName
         << " = new Vector<"
         << wrapperType
+        << extra
         << ">();\n";
 }
 
@@ -334,8 +341,16 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
                 iteratorName + " * " + std::to_string(elementSize),
                 true /* isReader */);
 
-        out << fieldName
-            << ".add(_hidl_vec_element);\n";
+        out << fieldName;
+
+        if (elementType->isArray()
+                && static_cast<const ArrayType *>(
+                    elementType)->getElementType()->resolveToScalarType()
+                        != nullptr) {
+            out << ".add(HwBlob.wrapArray(_hidl_vec_element));\n";
+        } else {
+            out << ".add(_hidl_vec_element);\n";
+        }
 
         out.unindent();
 
@@ -440,7 +455,15 @@ status_t VectorType::emitVtsAttributeType(Formatter &out) const {
 }
 
 bool VectorType::isJavaCompatible() const {
-    return mElementType->isJavaCompatible();
+    if (!mElementType->isJavaCompatible()) {
+        return false;
+    }
+
+    if (mElementType->isArray()) {
+        return static_cast<ArrayType *>(mElementType)->countDimensions() == 1;
+    }
+
+    return true;
 }
 
 void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
