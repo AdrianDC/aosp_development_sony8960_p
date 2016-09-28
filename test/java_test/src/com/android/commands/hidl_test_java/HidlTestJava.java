@@ -22,7 +22,7 @@ import android.hardware.tests.baz.V1_0.IBazCallback;
 import android.os.HwBinder;
 import android.util.Log;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public final class HidlTestJava {
     private static final String TAG = "HidlTestJava";
@@ -79,14 +79,14 @@ public final class HidlTestJava {
         return builder.toString();
     }
 
-    public static String toString(Vector<IBase.Foo.Bar> vec) {
+    public static String toString(ArrayList<IBase.Foo.Bar> vec) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         for (int i = 0; i < vec.size(); ++i) {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append(toString(vec.elementAt(i)));
+            builder.append(toString(vec.get(i)));
         }
         builder.append("]");
 
@@ -211,7 +211,7 @@ public final class HidlTestJava {
                 out.append(", ");
             }
 
-            Byte[] address = vec.addresses.elementAt(i);
+            Byte[] address = vec.addresses.get(i);
 
             for (int j = 0; j < 6; ++j) {
                 if (j > 0) {
@@ -611,7 +611,7 @@ public final class HidlTestJava {
             IBase.VectorOfArray out = new IBase.VectorOfArray();
             int n = in.addresses.size();
             for (int i = 0; i < n; ++i) {
-                out.addresses.add(in.addresses.elementAt(n - i - 1));
+                out.addresses.add(in.addresses.get(n - i - 1));
             }
 
             return out;
