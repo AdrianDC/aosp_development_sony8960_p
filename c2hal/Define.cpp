@@ -48,7 +48,7 @@ void Define::processContents(AST &ast) {
     status_t res = parseExpression(&ast, mSlurp);
 
     if (res != 0) {
-        mExpressionType = Expression::Type::UNKOWN;
+        mExpressionType = Expression::Type::UNKNOWN;
         return;
     }
 

@@ -36,7 +36,7 @@ struct Expression {
         S64 = 1, // 0b01
         U32 = 2, // 0b10
         U64 = 3, // 0b11
-        UNKOWN = -1
+        UNKNOWN = -1
     };
 
     static std::string getTypeDescription(Type type) {
@@ -45,9 +45,9 @@ struct Expression {
             case S64: return "S64";
             case U32: return "U32";
             case U64: return "U64";
-            case UNKOWN:
+            case UNKNOWN:
             default:
-                return "UNKOWN";
+                return "UNKNOWN";
         }
     }
 
@@ -57,9 +57,9 @@ struct Expression {
             case S64: return "int64_t";
             case U32: return "uint32_t";
             case U64: return "uint64_t";
-            case UNKOWN:
+            case UNKNOWN:
             default:
-                return "/* UNKOWN */";
+                return "/* UNKNOWN */";
         }
     }
 

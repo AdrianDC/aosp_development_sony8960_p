@@ -47,9 +47,9 @@ Expression::Type Expression::integralType(std::string integer) {
         return Type::U64;
     }
 
-    LOG(WARNING) << "UNKOWN INTEGER LITERAL: " << integer;
+    LOG(WARNING) << "UNKNOWN INTEGER LITERAL: " << integer;
 
-    return Type::UNKOWN;
+    return Type::UNKNOWN;
 }
 
 // static
@@ -74,7 +74,7 @@ Expression::Type Expression::coalesceTypes(Type lhs, Type rhs) {
         return S64;
     }
 
-    return Type::UNKOWN;
+    return Type::UNKNOWN;
 
 #undef SIGNED
 #undef MAX_RANK
@@ -107,14 +107,14 @@ struct AtomExpression : Expression {
     {}
 
     virtual Type getType(const AST &ast) {
-        if (mType != Type::UNKOWN) {
+        if (mType != Type::UNKNOWN) {
             return mType;
         }
 
         Define *define = ast.getDefinesScope().lookup(mValue);
 
         if (define == NULL) {
-            return Type::UNKOWN;
+            return Type::UNKNOWN;
         }
 
         return define->getExpressionType();
@@ -212,7 +212,7 @@ struct ArraySubscript : Expression {
     }
 
     virtual Type getType(const AST &) {
-        return Type::UNKOWN;
+        return Type::UNKNOWN;
     }
     virtual std::string toString(StringHelper::Case atomCase) {
         return mId + "[" + mSubscript->toString(atomCase) + "]";
@@ -239,7 +239,7 @@ struct FunctionCall : Expression {
     }
 
     virtual Type getType(const AST &) {
-        return Type::UNKOWN;
+        return Type::UNKNOWN;
     }
     virtual std::string toString(StringHelper::Case atomCase) {
         std::string out = mId + "(";
