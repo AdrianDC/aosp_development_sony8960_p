@@ -48,6 +48,7 @@ struct AST {
     // package and version really.
     FQName package() const;
     bool isInterface(std::string *ifaceName) const;
+    bool containsInterfaces() const;
 
     void enterScope(Scope *container);
     void leaveScope();
