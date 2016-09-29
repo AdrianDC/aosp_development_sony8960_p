@@ -140,7 +140,7 @@ const std::string Type::getHidlType() const {
                            !StringHelper::StartsWith(id, "size") &&
                            id.find("_") != std::string::npos) {
                     std::string baseName = StringHelper::RTrim(id, "_t");
-                    ss << StringHelper::SnakeCaseToPascalCase(baseName);
+                    ss << StringHelper::ToPascalCase(baseName);
                 } else {
                     ss << id;
                 }

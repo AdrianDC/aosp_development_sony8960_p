@@ -38,12 +38,17 @@ void Declaration::setName(const std::string &name) {
 
 void Declaration::forceCamelCase() {
     mName = StringHelper::RTrim(mName, "_t");
-    mName = StringHelper::SnakeCaseToCamelCase(mName);
+    mName = StringHelper::ToCamelCase(mName);
 }
 
 void Declaration::forcePascalCase() {
     mName = StringHelper::RTrim(mName, "_t");
-    mName = StringHelper::SnakeCaseToPascalCase(mName);
+    mName = StringHelper::ToPascalCase(mName);
+}
+
+void Declaration::forceUpperSnakeCase() {
+    mName = StringHelper::RTrim(mName, "_t");
+    mName = StringHelper::ToUpperSnakeCase(mName);
 }
 
 const std::string& Declaration::getComment() const {

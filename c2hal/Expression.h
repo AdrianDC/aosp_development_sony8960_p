@@ -19,6 +19,7 @@
 
 #include <android-base/macros.h>
 #include <android-base/logging.h>
+#include <hidl-util/StringHelper.h>
 #include <string>
 
 namespace android {
@@ -66,7 +67,7 @@ struct Expression {
     static Type coalesceTypes(Type lhs, Type rhs);
 
     static Expression *parenthesize(Expression *inner);
-    static Expression *atom(Type type, const std::string &value);
+    static Expression *atom(Type type, const std::string &value, bool isId = false);
     static Expression *unary(std::string op, Expression *rhs);
     static Expression *binary(Expression *lhs, std::string op, Expression *rhs);
     static Expression *ternary(Expression *lhs, Expression *mhs, Expression *rhs);
@@ -74,7 +75,11 @@ struct Expression {
     static Expression *functionCall(std::string id, std::vector<Expression *> *args);
 
     virtual Type getType(const AST &scope) = 0;
-    virtual std::string toString() = 0;
+
+    // convert this expression to a string.
+    // atomCase: when it comes to atoms, force identifiers into a certain case.
+    //           numerical values are not affected.
+    virtual std::string toString(StringHelper::Case atomCase = StringHelper::kNoCase) = 0;
 
 private:
 

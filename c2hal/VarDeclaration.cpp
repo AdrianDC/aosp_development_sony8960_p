@@ -31,6 +31,9 @@ VarDeclaration::~VarDeclaration() {
 
 void VarDeclaration::setName(const std::string &name) {
     Declaration::setName(name);
+    // special case for varargs
+    if(getName() == "...")
+        return;
     forceCamelCase();
 }
 

@@ -368,7 +368,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 
     bool first = true;
     for (const auto &method : iface->methods()) {
-        out << StringHelper::Upcase(method->name());
+        out << StringHelper::Uppercase(method->name());
 
         if (first) {
             out << " = ";
@@ -1004,7 +1004,7 @@ status_t AST::generateProxySource(
                       << "::IHw"
                       << superInterface->getBaseName()
                       << "::Call::"
-                      << StringHelper::Upcase(method->name())
+                      << StringHelper::Uppercase(method->name())
                       << ", _hidl_data, &_hidl_reply";
             if (method->isOneway()) {
                 out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
@@ -1172,7 +1172,7 @@ status_t AST::generateStubSource(
                 << "::IHw"
                 << superInterface->getBaseName()
                 << "::Call::"
-                << StringHelper::Upcase(method->name())
+                << StringHelper::Uppercase(method->name())
                 << ":\n{\n";
 
             out.indent();

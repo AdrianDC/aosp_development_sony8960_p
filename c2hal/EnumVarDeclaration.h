@@ -31,6 +31,7 @@ struct EnumVarDeclaration : Declaration {
     EnumVarDeclaration(const std::string &name, Expression *expression);
     ~EnumVarDeclaration();
 
+    void setName(const std::string &name) override;
     static std::string type() { return "enum"; }
     const std::string decType() const override { return type(); }
 

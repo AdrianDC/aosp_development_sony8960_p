@@ -231,7 +231,7 @@ status_t AST::generateJava(
     size_t index = 0;
     for (const auto &method : iface->methods()) {
         out << "public static final int kOp_"
-            << StringHelper::Upcase(method->name())
+            << StringHelper::Uppercase(method->name())
             << " = "
             << base;
 
@@ -374,7 +374,7 @@ status_t AST::generateJava(
 
             out << "\nHwParcel reply = new HwParcel();\n"
                 << "mRemote.transact(kOp_"
-                << StringHelper::Upcase(method->name())
+                << StringHelper::Uppercase(method->name())
                 << ", request, reply, ";
 
             if (method->isOneway()) {
@@ -479,7 +479,7 @@ status_t AST::generateJava(
                 << superInterface->fullJavaName()
                 << ".kOp_"
                 <<
-                StringHelper::Upcase(method->name())
+                StringHelper::Uppercase(method->name())
                 << ":\n{\n";
 
             out.indent();

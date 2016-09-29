@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
+#include <hidl-util/StringHelper.h>
+
 #include "EnumVarDeclaration.h"
 #include "Expression.h"
 
 namespace android {
 
 EnumVarDeclaration::EnumVarDeclaration(const std::string &name, Expression *expression)
-    : Declaration(name), mExpression(expression)
-    {}
+    : Declaration(""), mExpression(expression)
+{
+    setName(name);
+}
 
 EnumVarDeclaration::~EnumVarDeclaration() {
     delete mExpression;
+}
+
+void EnumVarDeclaration::setName(const std::string &name) {
+    Declaration::setName(name);
+    forceUpperSnakeCase();
 }
 
 Expression *EnumVarDeclaration::getExpression() const {
@@ -35,7 +44,7 @@ void EnumVarDeclaration::generateSource(Formatter &out) const {
     out << getName();
 
     if(mExpression != NULL) {
-        out << " = " << mExpression->toString();
+        out << " = " << mExpression->toString(StringHelper::kUpperSnakeCase);
     }
 
     out << ",\n";

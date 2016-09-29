@@ -36,6 +36,7 @@ struct Declaration {
 
     void forceCamelCase();
     void forcePascalCase();
+    void forceUpperSnakeCase();
 
     const std::string& getComment() const;
     void setComment(const std::string &comment);

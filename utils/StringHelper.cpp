@@ -17,15 +17,37 @@
 #include "StringHelper.h"
 
 #include <sstream>
+#include <regex>
+
+#include <android-base/macros.h>
+#include <android-base/logging.h>
+
+#define UPPERCASE  "[A-Z0-9]+"
+#define LOWERCASE "[a-z0-9]+"
+#define CAPCASE "[A-Z0-9][a-z0-9]*"
+static const std::regex kStartUppercase("^" UPPERCASE);
+static const std::regex kStartLowercase("^" LOWERCASE);
+static const std::regex kStartCapcase("^" CAPCASE);
 
 namespace android {
 
 // static
-std::string StringHelper::Upcase(const std::string &in) {
+std::string StringHelper::Uppercase(const std::string &in) {
     std::string out{in};
 
     for (auto &ch : out) {
         ch = toupper(ch);
+    }
+
+    return out;
+}
+
+// static
+std::string StringHelper::Lowercase(const std::string &in) {
+    std::string out{in};
+
+    for (auto &ch : out) {
+        ch = tolower(ch);
     }
 
     return out;
@@ -43,36 +65,105 @@ std::string StringHelper::Capitalize(const std::string &in) {
 }
 
 // static
-std::string StringHelper::SnakeCaseToCamelCase(const std::string &in) {
-    std::istringstream ss(in);
-    std::string word;
-    std::string out;
+void StringHelper::Tokenize(const std::string &in,
+        std::vector<std::string> *vec) {
 
-    bool first = true;
-
-    while (std::getline(ss, word, '_')) {
-        if (first) {
-            out += word;
-            first = false;
-        } else {
-            out += Capitalize(word);
-        }
+    std::smatch match;
+    if (in.empty()) {
+        vec->clear();
+        return;
     }
+    std::string copy(in);
+    vec->clear();
+    std::vector<std::string> matches;
 
-    return out;
+    copy = RTrimAll(copy, "_");
+    while(!copy.empty()) {
+        copy = LTrimAll(copy, "_");
+        if (std::regex_search(copy, match, kStartLowercase))
+            matches.push_back(match.str(0));
+        if (std::regex_search(copy, match, kStartCapcase))
+            matches.push_back(match.str(0));
+        if (std::regex_search(copy, match, kStartUppercase))
+            matches.push_back(match.str(0));
+        if (!matches.empty()) {
+            std::string &maxmatch = matches[0];
+            for (std::string &match : matches)
+                if(match.length() > maxmatch.length())
+                    maxmatch = match;
+            vec->push_back(maxmatch);
+            copy = copy.substr(maxmatch.length());
+            matches.clear();
+            continue;
+        }
+        LOG(WARNING) << "Could not stylize \"" << in << "\"";
+        // don't know what to do, so push back the rest of the string.
+        vec->push_back(copy);
+    }
 }
 
 // static
-std::string StringHelper::SnakeCaseToPascalCase(const std::string &in) {
-    std::istringstream ss(in);
-    std::string word;
-    std::string out;
-
-    while (std::getline(ss, word, '_')) {
-        out += Capitalize(word);
+std::string StringHelper::ToCamelCase(const std::string &in) {
+    std::vector<std::string> components;
+    Tokenize(in, &components);
+    if (components.empty()) {
+        if (!in.empty())
+            LOG(WARNING) << "Could not stylize \"" << in << "\"";
+        return in;
     }
+    components[0] = Lowercase(components[0]);
+    for (size_t i = 1; i < components.size(); i++) {
+        components[i] = Capitalize(components[i]);
+    }
+    return JoinStrings(components, "");
+}
 
-    return out;
+// static
+std::string StringHelper::ToPascalCase(const std::string &in) {
+    std::vector<std::string> components;
+    Tokenize(in, &components);
+    for (size_t i = 0; i < components.size(); i++) {
+        components[i] = Capitalize(components[i]);
+    }
+    return JoinStrings(components, "");
+}
+
+// static
+std::string StringHelper::ToUpperSnakeCase(const std::string &in) {
+    std::vector<std::string> components;
+    Tokenize(in, &components);
+    for (size_t i = 0; i < components.size(); i++) {
+        components[i] = Uppercase(components[i]);
+    }
+    return JoinStrings(components, "_");
+}
+
+// static
+std::string StringHelper::ToLowerSnakeCase(const std::string &in) {
+    std::vector<std::string> components;
+    Tokenize(in, &components);
+    for (size_t i = 0; i < components.size(); i++) {
+        components[i] = Lowercase(components[i]);
+    }
+    return JoinStrings(components, "_");
+}
+
+// static
+std::string StringHelper::ToCase(StringHelper::Case c, const std::string &in) {
+    switch(c) {
+    case kCamelCase:
+        return ToCamelCase(in);
+    case kPascalCase:
+        return ToPascalCase(in);
+    case kUpperSnakeCase:
+        return ToUpperSnakeCase(in);
+    case kLowerSnakeCase:
+        return ToLowerSnakeCase(in);
+    case kNoCase:
+        return in;
+    }
+    LOG(FATAL) << "Should not reach here.";
+    return in;
 }
 
 // static
@@ -105,6 +196,25 @@ std::string StringHelper::LTrim(const std::string &in, const std::string &prefix
     return in;
 }
 
+// static
+std::string StringHelper::RTrimAll(const std::string &in, const std::string &suffix) {
+    std::string copy(in);
+    while (EndsWith(copy, suffix)) {
+        copy = copy.substr(0, copy.size() - suffix.size());
+    }
+
+    return copy;
+}
+
+// static
+std::string StringHelper::LTrimAll(const std::string &in, const std::string &prefix) {
+    std::string copy(in);
+    while (StartsWith(copy, prefix)) {
+        copy = copy.substr(prefix.size());
+    }
+
+    return copy;
+}
 
 // static
 void StringHelper::SplitString(
