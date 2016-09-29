@@ -997,6 +997,16 @@ TEST_F(HidlTest, BarThisIsNewTest) {
     ALOGI("CLIENT thisIsNew returned.");
 }
 
+TEST_F(HidlTest, TestArrayDimensionality) {
+    hidl_array<int, 2> oneDim;
+    hidl_array<int, 2, 3> twoDim;
+    hidl_array<int, 2, 3, 4> threeDim;
+
+    EXPECT_EQ(oneDim.size(), 2u);
+    EXPECT_EQ(twoDim.size(), std::make_tuple(2u, 3u));
+    EXPECT_EQ(threeDim.size(), std::make_tuple(2u, 3u, 4u));
+}
+
 int main(int argc, char **argv) {
 
     ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
