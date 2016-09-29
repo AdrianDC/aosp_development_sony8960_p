@@ -82,6 +82,10 @@ bool AST::isInterface(std::string *ifaceName) const {
     return mRootScope->containsSingleInterface(ifaceName);
 }
 
+bool AST::containsInterfaces() const {
+    return mRootScope->containsInterfaces();
+}
+
 bool AST::addImport(const char *import) {
     FQName fqName(import);
     CHECK(fqName.isValid());
