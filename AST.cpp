@@ -259,8 +259,9 @@ Type *AST::lookupType(const FQName &fqName) {
     if (resolvedType == nullptr
             && fqName.package().empty()
             && fqName.version().empty()
-            && fqName.name() == "MQDescriptor") {
-        return new PredefinedType("::android::hardware::MQDescriptor");
+            && fqName.name() == "MQDescriptorSync") {
+        return new PredefinedType(
+          "::android::hardware::MQDescriptorSync");
     }
 
     if (resolvedType) {
