@@ -23,7 +23,7 @@
 #include <sstream>
 
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
-#define RE_PATH         RE_COMPONENT "([.]" RE_COMPONENT ")*"
+#define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
 #define RE_VERSION      "@[0-9]+[.][0-9]+"
 
 static const std::regex kRE1("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH ")");
@@ -95,44 +95,44 @@ bool FQName::setTo(const std::string &s) {
 
     std::smatch match;
     if (std::regex_match(s, match, kRE1)) {
-        CHECK_EQ(match.size(), 6u);
+        CHECK_EQ(match.size(), 4u);
 
         mPackage = match.str(1);
-        mVersion = match.str(3);
-        mName = match.str(4);
+        mVersion = match.str(2);
+        mName = match.str(3);
     } else if (std::regex_match(s, match, kRE2)) {
-        CHECK_EQ(match.size(), 4u);
+        CHECK_EQ(match.size(), 3u);
 
         mVersion = match.str(1);
         mName = match.str(2);
     } else if (std::regex_match(s, match, kRE3)) {
-        CHECK_EQ(match.size(), 4u);
+        CHECK_EQ(match.size(), 3u);
 
         mPackage = match.str(1);
-        mVersion = match.str(3);
+        mVersion = match.str(2);
     } else if (std::regex_match(s, match, kRE4)) {
         mName = match.str(0);
     } else if (std::regex_match(s, match, kRE5)) {
         mIsIdentifier = true;
         mName = match.str(0);
     } else if (std::regex_match(s, match, kRE6)) {
-        CHECK_EQ(match.size(), 7u);
+        CHECK_EQ(match.size(), 5u);
 
         mPackage = match.str(1);
-        mVersion = match.str(3);
-        mName = match.str(4);
-        mValueName = match.str(6);
+        mVersion = match.str(2);
+        mName = match.str(3);
+        mValueName = match.str(4);
     } else if (std::regex_match(s, match, kRE7)) {
-        CHECK_EQ(match.size(), 5u);
+        CHECK_EQ(match.size(), 4u);
 
         mVersion = match.str(1);
         mName = match.str(2);
-        mValueName = match.str(4);
+        mValueName = match.str(3);
     } else if (std::regex_match(s, match, kRE8)) {
-        CHECK_EQ(match.size(), 4u);
+        CHECK_EQ(match.size(), 3u);
 
         mName = match.str(1);
-        mValueName = match.str(3);
+        mValueName = match.str(2);
     } else {
         mValid = false;
     }
