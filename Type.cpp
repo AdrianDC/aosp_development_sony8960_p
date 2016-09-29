@@ -16,6 +16,7 @@
 
 #include "Type.h"
 
+#include "Annotation.h"
 #include "ScalarType.h"
 
 #include <hidl-util/Formatter.h>
@@ -23,8 +24,19 @@
 
 namespace android {
 
-Type::Type() {}
+Type::Type()
+    : mAnnotations(nullptr) {
+}
+
 Type::~Type() {}
+
+void Type::setAnnotations(std::vector<Annotation *> *annotations) {
+    mAnnotations = annotations;
+}
+
+const std::vector<Annotation *> &Type::annotations() const {
+    return *mAnnotations;
+}
 
 bool Type::isScope() const {
     return false;

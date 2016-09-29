@@ -45,6 +45,7 @@ struct Scope : public NamedType {
     Interface *getInterface() const;
 
     bool containsSingleInterface(std::string *ifaceName) const;
+    bool containsInterfaces() const;
 
     std::string pickUniqueAnonymousName() const;
 

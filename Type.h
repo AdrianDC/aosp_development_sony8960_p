@@ -21,10 +21,12 @@
 #include <android-base/macros.h>
 #include <string>
 #include <utils/Errors.h>
+#include <vector>
 #include <set>
 
 namespace android {
 
+struct Annotation;
 struct Formatter;
 struct ScalarType;
 struct FQName;
@@ -158,6 +160,9 @@ struct Type {
 
     virtual void getAlignmentAndSize(size_t *align, size_t *size) const;
 
+    void setAnnotations(std::vector<Annotation *> *annotations);
+    const std::vector<Annotation *> &annotations() const;
+
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
     void handleError2(Formatter &out, ErrorMode mode) const;
@@ -184,6 +189,8 @@ protected:
             const std::string &extra) const;
 
 private:
+    std::vector<Annotation *> *mAnnotations;
+
     DISALLOW_COPY_AND_ASSIGN(Type);
 };
 
