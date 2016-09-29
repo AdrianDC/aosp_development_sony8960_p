@@ -20,18 +20,12 @@
 
 #include "Scope.h"
 
-#include <vector>
-
 namespace android {
 
-struct Annotation;
 struct Method;
 
 struct Interface : public Scope {
-    Interface(
-            const char *localName,
-            Interface *super,
-            std::vector<Annotation *> *annotations);
+    Interface(const char *localName, Interface *super);
 
     void addMethod(Method *method);
 
@@ -41,8 +35,6 @@ struct Interface : public Scope {
     const Interface *superType() const;
 
     const std::vector<Method *> &methods() const;
-
-    const std::vector<Annotation *> &annotations() const;
 
     std::string getBaseName() const;
 
@@ -80,7 +72,6 @@ struct Interface : public Scope {
 private:
     Interface *mSuperType;
     std::vector<Method *> mMethods;
-    std::vector<Annotation *> *mAnnotations;
     mutable bool mIsJavaCompatibleInProgress;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);

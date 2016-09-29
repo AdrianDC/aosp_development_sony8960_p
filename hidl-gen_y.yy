@@ -105,6 +105,9 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %type<type> enum_declaration
 %type<type> struct_or_union_declaration
 %type<type> opt_extends
+%type<type> type_declaration_body interface_declaration typedef_declaration
+%type<type> named_struct_or_union_declaration named_enum_declaration
+%type<type> compound_declaration annotated_compound_declaration
 
 %type<field> field_declaration
 %type<fields> field_declarations struct_or_union_body
@@ -329,41 +332,7 @@ opt_extends
     | EXTENDS fqtype { $$ = $2; }
 
 body
-    : opt_annotations INTERFACE IDENTIFIER opt_extends
-      {
-          if ($4 != NULL && !$4->isInterface()) {
-              std::cerr << "ERROR: You can only extend interfaces. at" << @4
-                        << "\n";
-
-              YYERROR;
-          }
-
-          if ($3[0] != 'I') {
-              std::cerr << "ERROR: All interface names must start with an 'I' "
-                        << "prefix. at " << @3 << "\n";
-
-              YYERROR;
-          }
-
-          Interface *iface = new Interface($3, static_cast<Interface *>($4), $1);
-
-          // Register interface immediately so it can be referenced inside
-          // definition.
-          std::string errorMsg;
-          if (!ast->addScopedType(iface, &errorMsg)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
-              YYERROR;
-          }
-
-          ast->enterScope(iface);
-      }
-      '{' interface_declarations '}' ';'
-      {
-          Interface *iface = static_cast<Interface *>(ast->scope());
-
-          ast->leaveScope();
-      }
-    | type_declarations
+    : type_declarations
     ;
 
 interface_declarations
@@ -382,9 +351,66 @@ type_declarations
     ;
 
 type_declaration
+    : opt_annotations type_declaration_body
+      {
+          if ($2 != nullptr) {
+              $2->setAnnotations($1);
+          } else if (!$1->empty()) {
+              // Since typedefs are always resolved to their target it makes
+              // little sense to annotate them and have their annotations
+              // impose semantics other than their target type.
+              std::cerr << "ERROR: typedefs cannot be annotated. at " << @2
+                        << "\n";
+
+              YYERROR;
+          }
+      }
+    ;
+
+type_declaration_body
     : named_struct_or_union_declaration ';'
     | named_enum_declaration ';'
     | typedef_declaration ';'
+    | interface_declaration ';'
+    ;
+
+interface_declaration
+    : INTERFACE IDENTIFIER opt_extends
+      {
+          if ($3 != NULL && !$3->isInterface()) {
+              std::cerr << "ERROR: You can only extend interfaces. at" << @3
+                        << "\n";
+
+              YYERROR;
+          }
+
+          if ($2[0] != 'I') {
+              std::cerr << "ERROR: All interface names must start with an 'I' "
+                        << "prefix. at " << @2 << "\n";
+
+              YYERROR;
+          }
+
+          Interface *iface = new Interface($2, static_cast<Interface *>($3));
+
+          // Register interface immediately so it can be referenced inside
+          // definition.
+          std::string errorMsg;
+          if (!ast->addScopedType(iface, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
+              YYERROR;
+          }
+
+          ast->enterScope(iface);
+      }
+      '{' interface_declarations '}'
+      {
+          Interface *iface = static_cast<Interface *>(ast->scope());
+
+          ast->leaveScope();
+
+          $$ = iface;
+      }
     ;
 
 typedef_declaration
@@ -395,6 +421,8 @@ typedef_declaration
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
+
+          $$ = nullptr;
       }
     ;
 
@@ -525,6 +553,8 @@ named_struct_or_union_declaration
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
+
+          $$ = container;
       }
     ;
 
@@ -580,8 +610,20 @@ field_declarations
 
 field_declaration
     : type IDENTIFIER ';' { $$ = new CompoundField($2, $1); }
-    | struct_or_union_declaration ';' { $$ = NULL; }
-    | enum_declaration ';' { $$ = NULL; }
+    | annotated_compound_declaration ';' { $$ = NULL; }
+    ;
+
+annotated_compound_declaration
+    : opt_annotations compound_declaration
+      {
+          $2->setAnnotations($1);
+          $$ = $2;
+      }
+    ;
+
+compound_declaration
+    : struct_or_union_declaration { $$ = $1; }
+    | enum_declaration { $$ = $1; }
     ;
 
 opt_storage_type
@@ -619,6 +661,8 @@ named_enum_declaration
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
+
+          $$ = enumType;
       }
     ;
 
@@ -712,8 +756,7 @@ type
 
           $$ = new VectorType($3);
       }
-    | struct_or_union_declaration { $$ = $1; }
-    | enum_declaration { $$ = $1; }
+    | annotated_compound_declaration { $$ = $1; }
     | INTERFACE { $$ = new GenericBinder; }
     ;
 

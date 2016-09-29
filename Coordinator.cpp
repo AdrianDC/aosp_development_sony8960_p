@@ -127,6 +127,13 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
                     fqName.name().c_str());
 
             err = UNKNOWN_ERROR;
+        } else if (ast->containsInterfaces()) {
+            fprintf(stderr,
+                    "ERROR: types.hal file at '%s' declares at least one "
+                    "interface type.\n",
+                    path.c_str());
+
+            err = UNKNOWN_ERROR;
         }
     }
 
