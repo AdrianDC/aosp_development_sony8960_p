@@ -431,9 +431,9 @@ opt_id
 expr
     : ID
       {
-        $$ = Expression::atom(Expression::Type::UNKOWN, $1, true /* isId*/ );
+        $$ = Expression::atom(Expression::Type::UNKNOWN, $1, true /* isId*/ );
       }
-    | VALUE                   { $$ = Expression::atom(Expression::Type::UNKOWN, $1); }
+    | VALUE                   { $$ = Expression::atom(Expression::Type::UNKNOWN, $1); }
     | INTEGRAL_VALUE          { $$ = Expression::atom(Expression::integralType($1), $1); }
     | '(' expr ')'            { $$ = Expression::parenthesize($2); }
     | ID '[' expr ']' %prec ARRAY_SUBSCRIPT {
@@ -502,7 +502,7 @@ arrays
     ;
 
 array
-    : '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKOWN, " "); }
+    : '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKNOWN, " "); }
     | '[' expr ']'            { $$ = $2; }
     ;
 
