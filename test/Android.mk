@@ -18,6 +18,7 @@ LOCAL_SHARED_LIBRARIES :=       	\
     libutils                    	\
     android.hardware.tests.foo@1.0	\
     android.hardware.tests.bar@1.0	\
+    android.hardware.tests.pointer@1.0	\
 
 LOCAL_STATIC_LIBRARIES := \
     libgtest

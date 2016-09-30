@@ -23,8 +23,7 @@
 
 namespace android {
 
-VectorType::VectorType(Type *elementType)
-    : mElementType(elementType) {
+VectorType::VectorType() {
 }
 
 void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
@@ -34,6 +33,9 @@ void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
 std::string VectorType::getCppType(StorageMode mode,
                                    std::string *extra,
                                    bool specifyNamespaces) const {
+    std::string elementExtra;
+    const std::string elementBase = mElementType->getCppType(&elementExtra, specifyNamespaces);
+
     const std::string base =
           std::string(specifyNamespaces ? "::android::hardware::" : "")
         + "hidl_vec<"
@@ -201,6 +203,111 @@ void VectorType::emitReaderWriterEmbedded(
             mode,
             childName,
             iteratorName + " * sizeof(" + baseType + baseExtra + ")");
+
+    out.unindent();
+
+    out << "}\n\n";
+}
+
+void VectorType::emitResolveReferences(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const {
+    emitResolveReferencesEmbeddedHelper(
+        out,
+        0, /* depth */
+        name,
+        name /* sanitizedName */,
+        nameIsPointer,
+        parcelObj,
+        parcelObjIsPointer,
+        isReader,
+        mode,
+        "_hidl_" + name + "_child",
+        "0 /* parentOffset */");
+}
+
+void VectorType::emitResolveReferencesEmbedded(
+            Formatter &out,
+            size_t depth,
+            const std::string &name,
+            const std::string &sanitizedName,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string & /* parentName */,
+            const std::string & /* offsetText */) const {
+    emitResolveReferencesEmbeddedHelper(
+        out, depth, name, sanitizedName, nameIsPointer, parcelObj,
+        parcelObjIsPointer, isReader, mode, "", "");
+}
+
+void VectorType::emitResolveReferencesEmbeddedHelper(
+            Formatter &out,
+            size_t depth,
+            const std::string &name,
+            const std::string &sanitizedName,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &childName,
+            const std::string &childOffsetText) const {
+    CHECK(needsResolveReferences() && mElementType->needsResolveReferences());
+
+    const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+    std::string elementExtra;
+    std::string elementType = mElementType->getCppType(&elementExtra);
+
+    std::string myChildName = childName, myChildOffset = childOffsetText;
+
+    if(myChildName.empty() && myChildOffset.empty()) {
+        myChildName = "_hidl_" + sanitizedName + "_child";
+        myChildOffset = "0";
+
+        out << "size_t " << myChildName << ";\n";
+        out << "_hidl_err = " << nameDeref << "findInParcel("
+            << (parcelObjIsPointer ? "*" : "") << parcelObj << ", "
+            << "&" << myChildName
+            << ");\n";
+
+        handleError(out, mode);
+    }
+
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (size_t "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < "
+        << nameDeref
+        << "size(); ++"
+        << iteratorName
+        << ") {\n";
+
+    out.indent();
+
+    mElementType->emitResolveReferencesEmbedded(
+        out,
+        depth + 1,
+        (nameIsPointer ? "(*" + name + ")" : name) + "[" + iteratorName + "]",
+        sanitizedName + (nameIsPointer ? "_deref" : "") + "_indexed",
+        false /* nameIsPointer */,
+        parcelObj,
+        parcelObjIsPointer,
+        isReader,
+        mode,
+        myChildName,
+        myChildOffset + " + " +
+                iteratorName + " * sizeof(" + elementType + elementExtra + ")");
 
     out.unindent();
 
@@ -424,6 +531,10 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
 
 bool VectorType::needsEmbeddedReadWrite() const {
     return true;
+}
+
+bool VectorType::needsResolveReferences() const {
+    return mElementType->needsResolveReferences();
 }
 
 bool VectorType::resultNeedsDeref() const {

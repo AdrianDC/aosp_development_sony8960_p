@@ -894,6 +894,27 @@ void AST::emitCppReaderWriter(
             mode);
 }
 
+void AST::emitCppResolveReferences(
+        Formatter &out,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        const TypedVar *arg,
+        bool isReader,
+        Type::ErrorMode mode,
+        bool addPrefixToName) const {
+    const Type &type = arg->type();
+    if(type.needsResolveReferences()) {
+        type.emitResolveReferences(
+                out,
+                addPrefixToName ? ("_hidl_out_" + arg->name()) : arg->name(),
+                isReader, // nameIsPointer
+                parcelObj,
+                parcelObjIsPointer,
+                isReader,
+                mode);
+    }
+}
+
 status_t AST::generateProxySource(
         Formatter &out, const std::string &baseName) const {
     const std::string klassName = "Bp" + baseName;
@@ -954,8 +975,21 @@ status_t AST::generateProxySource(
 
             out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
+            // First DFS: write all buffers and resolve pointers for parent
             for (const auto &arg : method->args()) {
                 emitCppReaderWriter(
+                        out,
+                        "_hidl_data",
+                        false /* parcelObjIsPointer */,
+                        arg,
+                        false /* reader */,
+                        Type::ErrorMode_Goto,
+                        false /* addPrefixToName */);
+            }
+
+            // Second DFS: resolve references.
+            for (const auto &arg : method->args()) {
+                emitCppResolveReferences(
                         out,
                         "_hidl_data",
                         false /* parcelObjIsPointer */,
@@ -984,8 +1018,22 @@ status_t AST::generateProxySource(
                 out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
                 out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
 
+
+                // First DFS: write all buffers and resolve pointers for parent
                 for (const auto &arg : method->results()) {
                     emitCppReaderWriter(
+                            out,
+                            "_hidl_reply",
+                            false /* parcelObjIsPointer */,
+                            arg,
+                            true /* reader */,
+                            Type::ErrorMode_Goto,
+                            true /* addPrefixToName */);
+                }
+
+                // Second DFS: resolve references.
+                for (const auto &arg : method->results()) {
+                    emitCppResolveReferences(
                             out,
                             "_hidl_reply",
                             false /* parcelObjIsPointer */,
@@ -1204,8 +1252,21 @@ status_t AST::generateStubSourceForMethod(
 
     declareCppReaderLocals(out, method->args(), false /* forResults */);
 
+    // First DFS: write buffers
     for (const auto &arg : method->args()) {
         emitCppReaderWriter(
+                out,
+                "_hidl_data",
+                false /* parcelObjIsPointer */,
+                arg,
+                true /* reader */,
+                Type::ErrorMode_Break,
+                false /* addPrefixToName */);
+    }
+
+    // Second DFS: resolve references
+    for (const auto &arg : method->args()) {
+        emitCppResolveReferences(
                 out,
                 "_hidl_data",
                 false /* parcelObjIsPointer */,
@@ -1273,6 +1334,15 @@ status_t AST::generateStubSourceForMethod(
                 false, /* isReader */
                 Type::ErrorMode_Ignore);
 
+        emitCppResolveReferences(
+                out,
+                "_hidl_reply",
+                true /* parcelObjIsPointer */,
+                elidedReturn,
+                false /* reader */,
+                Type::ErrorMode_Ignore,
+                false /* addPrefixToName */);
+
         out << "if (UNLIKELY(enableInstrumentation)) {\n";
         out.indent();
         out << "std::vector<void *> results;\n";
@@ -1338,8 +1408,21 @@ status_t AST::generateStubSourceForMethod(
             out << "::android::hardware::Status::ok()"
                       << ".writeToParcel(_hidl_reply);\n\n";
 
+            // First DFS: buffers
             for (const auto &arg : method->results()) {
                 emitCppReaderWriter(
+                        out,
+                        "_hidl_reply",
+                        true /* parcelObjIsPointer */,
+                        arg,
+                        false /* reader */,
+                        Type::ErrorMode_Ignore,
+                        false /* addPrefixToName */);
+            }
+
+            // Second DFS: resolve references
+            for (const auto &arg : method->results()) {
+                emitCppResolveReferences(
                         out,
                         "_hidl_reply",
                         true /* parcelObjIsPointer */,
