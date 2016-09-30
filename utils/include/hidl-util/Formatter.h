@@ -37,12 +37,21 @@ struct Formatter {
     // Any substrings matching "space" will be stripped out of the output.
     void setNamespace(const std::string &space);
 
+    // Puts a prefix before each line. This is useful if
+    // you want to start a // comment block, for example.
+    // The prefix will be put before the indentation.
+    // Will be effective the next time cursor is at the start of line.
+    void setLinePrefix(const std::string& prefix);
+    // Remove the line prefix.
+    void unsetLinePrefix();
+
 private:
     FILE *mFile;
     size_t mIndentDepth;
     bool mAtStartOfLine;
 
     std::string mSpace;
+    std::string mLinePrefix;
 
     void output(const std::string &text) const;
 

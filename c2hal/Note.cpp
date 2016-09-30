@@ -25,13 +25,15 @@ Note::Note(const std::string &name)
 Note::~Note() {}
 
 void Note::generateSource(Formatter &out) const {
-    out << "/* NOTE:\n";
+    out.setLinePrefix("//");
+    out << "NOTE:\n";
 
     out.indent();
     out << getName();
     out.unindent();
 
-    out << "\n*/\n";
+    out.unsetLinePrefix();
+    out << "\n";
 }
 
 void Note::processContents(AST &) {
