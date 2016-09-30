@@ -72,7 +72,30 @@ struct ArrayType : public Type {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    void emitResolveReferences(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const override;
+
+    void emitResolveReferencesEmbedded(
+            Formatter &out,
+            size_t depth,
+            const std::string &name,
+            const std::string &sanitizedName,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &parentName,
+            const std::string &offsetText) const override;
+
     bool needsEmbeddedReadWrite() const override;
+    bool needsResolveReferences() const override;
     bool resultNeedsDeref() const override;
 
     void emitJavaReaderWriter(
@@ -103,6 +126,8 @@ private:
     Type *mElementType;
     std::vector<size_t> mSizes;
     std::vector<std::string> mSizeComments;
+
+    size_t dimension() const;
 
     DISALLOW_COPY_AND_ASSIGN(ArrayType);
 };

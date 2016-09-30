@@ -4,6 +4,8 @@
 #include <android/hardware/tests/foo/1.0/BnFoo.h>
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
 #include <android/hardware/tests/bar/1.0/BnBar.h>
+#include <android/hardware/tests/pointer/1.0/BnGraph.h>
+#include <android/hardware/tests/pointer/1.0/BnPointer.h>
 
 #include <gtest/gtest.h>
 #include <inttypes.h>
@@ -16,6 +18,9 @@
 #error "GTest did not detect pthread library."
 #endif
 
+#include <vector>
+#include <sstream>
+
 #include <hidl/IServiceManager.h>
 #include <hidl/Status.h>
 #include <hwbinder/IPCThreadState.h>
@@ -24,14 +29,20 @@
 #include <utils/Condition.h>
 #include <utils/Timers.h>
 
-using ::android::hardware::tests::foo::V1_0::BnFoo;
-using ::android::hardware::tests::foo::V1_0::BnFooCallback;
-using ::android::hardware::tests::bar::V1_0::BnBar;
+#define PUSH_ERROR_IF(__cond__) if(__cond__) { errors.push_back(std::to_string(__LINE__) + ": " + #__cond__); }
+#define EXPECT_OK(__ret__) EXPECT_TRUE(isOk(__ret__))
+#define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(IsArrayEq(__a1__, __a2__, __size__))
+
+// TODO uncomment this when kernel is patched with pointer changes.
+//#define HIDL_RUN_POINTER_TESTS 1
+
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
+using ::android::hardware::tests::pointer::V1_0::IGraph;
+using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
@@ -40,6 +51,426 @@ using ::android::hardware::hidl_string;
 using ::android::sp;
 using ::android::Mutex;
 using ::android::Condition;
+
+template <typename T>
+static inline ::testing::AssertionResult isOk(::android::hardware::Return<T> ret) {
+    return ret.getStatus().isOk()
+        ? (::testing::AssertionSuccess() << ret.getStatus())
+        : (::testing::AssertionFailure() << ret.getStatus());
+}
+
+template<typename T, typename S>
+static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
+    for(size_t i = 0; i < size; i++)
+        if(arr1[i] != arr2[i])
+            return false;
+    return true;
+}
+
+static void simpleGraph(IGraph::Graph& g) {
+    g.nodes.resize(2);
+    g.edges.resize(1);
+    g.nodes[0].data = 10;
+    g.nodes[1].data = 20;
+    g.edges[0].left = &g.nodes[0];
+    g.edges[0].right = &g.nodes[1];
+}
+static bool isSimpleGraph(const IGraph::Graph &g) {
+    if(g.nodes.size() != 2) return false;
+    if(g.edges.size() != 1) return false;
+    if(g.nodes[0].data != 10) return false;
+    if(g.nodes[1].data != 20) return false;
+    if(g.edges[0].left != &g.nodes[0]) return false;
+    if(g.edges[0].right != &g.nodes[1]) return false;
+    return true;
+}
+
+static void logSimpleGraph(const char *prefix, const IGraph::Graph& g) {
+    ALOGI("%s Graph %p, %d nodes, %d edges", prefix, &g, (int)g.nodes.size(), (int)g.edges.size());
+    std::ostringstream os;
+    for(size_t i = 0; i < g.nodes.size(); i++)
+      os << &g.nodes[i] << " = " << g.nodes[i].data << ", ";
+    ALOGI("%s Nodes: [%s]", prefix, os.str().c_str());
+    os.str("");
+    os.clear();
+    for(size_t i = 0; i < g.edges.size(); i++)
+      os << g.edges[i].left << " -> " << g.edges[i].right << ", ";
+    ALOGI("%s Edges: [%s]", prefix, os.str().c_str());
+}
+
+struct GraphInterface : public IGraph {
+    Return<void> passAGraph(const Graph& e) override;
+    Return<void> giveAGraph(giveAGraph_cb _cb) override;
+    Return<void> passANode(const IGraph::Node& n) override;
+    Return<void> passTwoGraphs(IGraph::Graph const* g1, IGraph::Graph const* g2) override;
+    Return<void> passAGamma(const IGraph::Gamma& c) override;
+    Return<void> passASimpleRef(const IGraph::Alpha * a) override;
+    Return<void> giveASimpleRef(giveASimpleRef_cb _hidl_cb) override;
+    Return<void> passASimpleRefS(const IGraph::Theta * s) override;
+    Return<int32_t> getErrors() override;
+private:
+    std::vector<std::string> errors;
+};
+
+Return<void> GraphInterface::passAGraph(const Graph& g) {
+    ALOGI("SERVER(Graph) passAGraph start.");
+    PUSH_ERROR_IF(!isSimpleGraph(g));
+    // logSimpleGraph("SERVER(Graph) passAGraph:", g);
+    return Void();
+}
+
+Return<void> GraphInterface::giveAGraph(giveAGraph_cb _cb) {
+    IGraph::Graph g;
+    simpleGraph(g);
+    _cb(g);
+    return Void();
+}
+
+Return<void> GraphInterface::passANode(const IGraph::Node& n) {
+    PUSH_ERROR_IF(n.data != 10);
+    return Void();
+}
+
+Return<void> GraphInterface::passTwoGraphs(IGraph::Graph const* g1, IGraph::Graph const* g2) {
+    PUSH_ERROR_IF(g1 != g2);
+    PUSH_ERROR_IF(!isSimpleGraph(*g1));
+    logSimpleGraph("SERVER(Graph): passTwoGraphs", *g2);
+    return Void();
+}
+
+Return<void> GraphInterface::passAGamma(const IGraph::Gamma& c) {
+    if(c.a_ptr == nullptr && c.b_ptr == nullptr)
+      return Void();
+    ALOGI("SERVER(Graph) passAGamma received c.a = %p, c.b = %p, c.a->s = %p, c.b->s = %p",
+        c.a_ptr, c.b_ptr, c.a_ptr->s_ptr, c.b_ptr->s_ptr);
+    ALOGI("SERVER(Graph) passAGamma received data %d, %d",
+        (int)c.a_ptr->s_ptr->data, (int)c.b_ptr->s_ptr->data);
+    PUSH_ERROR_IF(c.a_ptr->s_ptr != c.b_ptr->s_ptr);
+    return Void();
+}
+Return<void> GraphInterface::passASimpleRef(const IGraph::Alpha * a_ptr) {
+    ALOGI("SERVER(Graph) passASimpleRef received %d", a_ptr->s_ptr->data);
+    PUSH_ERROR_IF(a_ptr->s_ptr->data != 500);
+    return Void();
+}
+Return<void> GraphInterface::passASimpleRefS(const IGraph::Theta * s_ptr) {
+    ALOGI("SERVER(Graph) passASimpleRefS received %d @ %p", s_ptr->data, s_ptr);
+    PUSH_ERROR_IF(s_ptr->data == 10);
+    return Void();
+}
+Return<void> GraphInterface::giveASimpleRef(giveASimpleRef_cb _cb) {
+    IGraph::Theta s; s.data = 500;
+    IGraph::Alpha a; a.s_ptr = &s;
+    _cb(&a);
+    return Void();
+}
+
+Return<int32_t> GraphInterface::getErrors() {
+    if(!errors.empty()) {
+        for(const auto& e : errors)
+            ALOGW("SERVER(Graph) error: %s", e.c_str());
+    }
+    return errors.size();
+}
+
+struct PointerInterface : public IPointer {
+private:
+    std::vector<std::string> errors;
+public:
+    Return<int32_t> getErrors() {
+        if(!errors.empty()) {
+            for(const auto& e : errors)
+                ALOGW("SERVER(Pointer) error: %s", e.c_str());
+        }
+        return errors.size();
+    }
+    Return<void> foo1(const IPointer::Sam& s, IPointer::Sam const* s_ptr) override {
+        PUSH_ERROR_IF(!(&s == s_ptr));
+        return Void();
+    }
+    Return<void> foo2(const IPointer::Sam& s, const IPointer::Ada& a) override {
+        PUSH_ERROR_IF(!(&s == a.s_ptr));
+        return Void();
+    }
+    Return<void> foo3(const IPointer::Sam& s, const IPointer::Ada& a, const IPointer::Bob& b) override {
+        PUSH_ERROR_IF(!(&a == b.a_ptr && a.s_ptr == b.s_ptr && a.s_ptr == &s));
+        return Void();
+    }
+    Return<void> foo4(IPointer::Sam const* s_ptr) override {
+        PUSH_ERROR_IF(!(s_ptr->data == 500));
+        return Void();
+    }
+    Return<void> foo5(const IPointer::Ada& a, const IPointer::Bob& b) override {
+        PUSH_ERROR_IF(!(a.s_ptr == b.s_ptr && b.a_ptr == &a));
+        return Void();
+    }
+    Return<void> foo6(IPointer::Ada const* a_ptr) override {
+        PUSH_ERROR_IF(!(a_ptr->s_ptr->data == 500));
+        return Void();
+    }
+    Return<void> foo7(IPointer::Ada const* a_ptr, IPointer::Bob const* b_ptr) override {
+        PUSH_ERROR_IF(!(a_ptr->s_ptr == b_ptr->s_ptr && a_ptr == b_ptr->a_ptr && a_ptr->s_ptr->data == 500));
+        return Void();
+    }
+    Return<void> foo8(const IPointer::Dom& d) override {
+        const IPointer::Cin& c = d.c;
+        PUSH_ERROR_IF(&c.a != c.b_ptr->a_ptr);
+        PUSH_ERROR_IF(c.a.s_ptr != c.b_ptr->s_ptr);
+        PUSH_ERROR_IF(c.a.s_ptr->data != 500);
+        return Void();
+    }
+    Return<void> foo9(::android::hardware::hidl_string const* str_ref) override {
+        ALOGI("SERVER(Pointer) foo9 got string @ %p (size = %ld) \"%s\"",
+            str_ref->c_str(),
+            (unsigned long) str_ref->size(), str_ref->c_str());
+        PUSH_ERROR_IF(!(strcmp(str_ref->c_str(), "meowmeowmeow") == 0));
+        return Void();
+    }
+    Return<void> foo10(const ::android::hardware::hidl_vec<IPointer::Sam const*>& s_ptr_vec) override {
+        PUSH_ERROR_IF(s_ptr_vec[0]->data != 500);
+        if(s_ptr_vec.size() != 5) {
+            errors.push_back("foo10: s_ptr_vec.size() != 5");
+            return Void();
+        }
+        for(size_t i = 0; i < s_ptr_vec.size(); i++)
+            PUSH_ERROR_IF(s_ptr_vec[0] != s_ptr_vec[i]);
+        return Void();
+    }
+    Return<void> foo11(::android::hardware::hidl_vec<IPointer::Sam> const* s_vec_ptr) override {
+        if(s_vec_ptr->size() != 5) {
+            errors.push_back("foo11: s_vec_ptr->size() != 5");
+            return Void();
+        }
+        for(size_t i = 0; i < 5; i++)
+            PUSH_ERROR_IF((*s_vec_ptr)[i].data != 500);
+        return Void();
+    }
+    Return<void> foo12(hidl_array<IPointer::Sam, 5> const* s_array_ref) override {
+        for(size_t i = 0; i < 5; ++i)
+            PUSH_ERROR_IF((*s_array_ref)[i].data != 500);
+        return Void();
+    }
+    Return<void> foo13(const hidl_array<IPointer::Sam const*, 5>& s_ref_array) override {
+        PUSH_ERROR_IF(s_ref_array[0]->data != 500)
+        for(size_t i = 0; i < 5; i++)
+            PUSH_ERROR_IF(s_ref_array[i] != s_ref_array[0])
+        return Void();
+    }
+    Return<void> foo14(IPointer::Sam const* const* const* s_3ptr) override {
+        PUSH_ERROR_IF(!((***s_3ptr).data == 500))
+        return Void();
+    }
+    Return<void> foo15(int32_t const* const* const* i_3ptr) override {
+        PUSH_ERROR_IF(!((***i_3ptr) == 500))
+        return Void();
+    }
+
+    Return<void> foo16(const IPointer::Ptr& p) override {
+        PUSH_ERROR_IF((*p.array_ptr)[0].s_ptr->data != 500);
+        for(size_t i = 0; i < 5; i++) PUSH_ERROR_IF((*p.array_ptr)[i].s_ptr != (*p.array_ptr)[0].s_ptr);
+        PUSH_ERROR_IF(*(p.int_ptr) != 500);
+        for(size_t i = 0; i < 5; i++) PUSH_ERROR_IF((*p.int_array_ptr)[i] != 500);
+        for(size_t i = 0; i < 5; i++) PUSH_ERROR_IF(p.int_ptr_array[i] != p.int_ptr);
+        PUSH_ERROR_IF(p.a_ptr_vec.size() != 5);
+        PUSH_ERROR_IF(p.a_ptr_vec[0]->s_ptr->data != 500);
+        for(size_t i = 0; i < 5; i++) PUSH_ERROR_IF(p.a_ptr_vec[i]->s_ptr != p.a_ptr_vec[0]->s_ptr);
+        PUSH_ERROR_IF(strcmp(p.str_ref->c_str(), "meowmeowmeow") != 0);
+        PUSH_ERROR_IF(p.a_vec_ptr->size() != 5);
+        PUSH_ERROR_IF((*p.a_vec_ptr)[0].s_ptr->data != 500);
+        for(size_t i = 0; i < 5; i++) PUSH_ERROR_IF((*p.a_vec_ptr)[i].s_ptr != (*p.a_vec_ptr)[0].s_ptr);
+        return Void();
+    };
+    Return<void> foo17(IPointer::Ptr const* p) override {
+        return foo16(*p);
+    };
+    Return<void> foo18(hidl_string const* str_ref, hidl_string const* str_ref2, const hidl_string& str) override {
+        PUSH_ERROR_IF(&str != str_ref);
+        PUSH_ERROR_IF(str_ref != str_ref2);
+        PUSH_ERROR_IF(strcmp(str.c_str(), "meowmeowmeow") != 0)
+        return Void();
+    };
+    Return<void> foo19(
+                hidl_vec<IPointer::Ada> const* a_vec_ref,
+                const hidl_vec<IPointer::Ada>& a_vec,
+                hidl_vec<IPointer::Ada> const* a_vec_ref2) {
+        PUSH_ERROR_IF(&a_vec != a_vec_ref);
+        PUSH_ERROR_IF(a_vec_ref2 != a_vec_ref);
+        PUSH_ERROR_IF(a_vec.size() != 5);
+        PUSH_ERROR_IF(a_vec[0].s_ptr->data != 500);
+        for(size_t i = 0; i < 5; i++)
+            PUSH_ERROR_IF(a_vec[i].s_ptr != a_vec[0].s_ptr);
+        return Void();
+    };
+
+    Return<void> foo21(hidl_array<IPointer::Ada, 3, 2, 1> const* a_array_ptr) override {
+        const hidl_array<IPointer::Ada, 3, 2, 1>& a_array = *a_array_ptr;
+        PUSH_ERROR_IF(a_array[0][0][0].s_ptr->data != 500);
+        for(size_t i = 0; i < 3; i++)
+            for(size_t j = 0; j < 2; j++)
+                for(size_t k = 0; k < 1; k++)
+                    PUSH_ERROR_IF(a_array[i][j][k].s_ptr != a_array[0][0][0].s_ptr);
+        return Void();
+    }
+    Return<void> foo22(const hidl_array<IPointer::Ada const*, 3, 2, 1>& a_ptr_array) override {
+        PUSH_ERROR_IF(a_ptr_array[0][0][0]->s_ptr->data != 500);
+        for(size_t i = 0; i < 3; i++)
+            for(size_t j = 0; j < 2; j++)
+                for(size_t k = 0; k < 1; k++)
+                    PUSH_ERROR_IF(a_ptr_array[i][j][k] != a_ptr_array[0][0][0]);
+        return Void();
+    }
+
+    IPointer::Sam *s;
+    IPointer::Ada *a;
+    IPointer::Bob *b;
+    IPointer::Cin *c;
+    IPointer::Dom *d;
+
+    IPointer::Ptr p;
+    hidl_array<IPointer::Ada, 5> a_array;
+    int32_t someInt;
+    hidl_array<int32_t, 5> someIntArray;
+    hidl_string str;
+    hidl_vec<IPointer::Ada> a_vec;
+    PointerInterface() {
+        d = new IPointer::Dom();
+        s = new IPointer::Sam();
+        b = new IPointer::Bob();
+        c = &d->c;
+        a = &c->a;
+        b->s_ptr = a->s_ptr = s;
+        b->a_ptr = a;
+        c->b_ptr = b;
+        s->data = 500;
+
+        someInt = 500;
+        for(size_t i = 0; i < 5; i++) someIntArray[i] = 500;
+
+        for(size_t i = 0; i < 5; i++) a_array[i] = *a;
+
+        for(size_t i = 0; i < 5; i++) p.ptr_array[i] = a;
+        p.array_ptr = &a_array;
+        p.int_ptr = &someInt;
+        p.int_array_ptr = &someIntArray;
+        for(size_t i = 0; i < 5; i++) p.int_ptr_array[i] = &someInt;
+        p.a_ptr_vec.resize(5);
+        for(size_t i = 0; i < 5; i++) p.a_ptr_vec[i] = a;
+        str = "meowmeowmeow";
+        p.str_ref = &str;
+        a_vec.resize(5);
+        for(size_t i = 0; i < 5; i++) a_vec[i].s_ptr = s;
+        p.a_vec_ptr = &a_vec;
+    }
+    ~PointerInterface() {
+        delete d; delete s; delete b;
+    }
+    Return<void> bar1(bar1_cb _cb) override {
+        _cb(*s, s);
+        return Void();
+    }
+    Return<void> bar2(bar2_cb _cb) override {
+        _cb(*s, *a);
+        return Void();
+    }
+    Return<void> bar3(bar3_cb _cb) override {
+        _cb(*s, *a, *b);
+        return Void();
+    }
+    Return<void> bar4(bar4_cb _cb) override {
+        _cb(s);
+        return Void();
+    }
+    Return<void> bar5(bar5_cb _cb) override {
+        _cb(*a, *b);
+        return Void();
+    }
+    Return<void> bar6(bar6_cb _cb) override {
+        _cb(a);
+        return Void();
+    }
+    Return<void> bar7(bar7_cb _cb) override {
+        _cb(a, b);
+        return Void();
+    }
+    Return<void> bar8(bar8_cb _cb) override {
+        _cb(*d);
+        return Void();
+    }
+    Return<void> bar9(bar9_cb _cb) override {
+        _cb(&str);
+        return Void();
+    }
+    Return<void> bar10(bar10_cb _cb) override {
+        hidl_vec<const IPointer::Sam *> v; v.resize(5);
+        for(size_t i = 0; i < 5; i++) v[i] = s;
+        _cb(v);
+        return Void();
+    }
+    Return<void> bar11(bar11_cb _cb) override {
+        hidl_vec<IPointer::Sam> v; v.resize(5);
+        for(size_t i = 0; i < 5; i++) v[i].data = 500;
+            _cb(&v);
+        return Void();
+    }
+    Return<void> bar12(bar12_cb _cb) override {
+        hidl_array<IPointer::Sam, 5> array;
+        for(size_t i = 0; i < 5; i++) array[i] = *s;
+        _cb(&array);
+        return Void();
+    }
+    Return<void> bar13(bar13_cb _cb) override {
+        hidl_array<const IPointer::Sam *, 5> array;
+        for(size_t i = 0; i < 5; i++) array[i] = s;
+        _cb(array);
+        return Void();
+    }
+    Return<void> bar14(bar14_cb _cb) override {
+        IPointer::Sam const* p1 = s;
+        IPointer::Sam const* const* p2 = &p1;
+        _cb(&p2);
+        return Void();
+    }
+    Return<void> bar15(bar15_cb _cb) override {
+        int32_t const* p1 = &someInt;
+        int32_t const* const* p2 = &p1;
+        _cb(&p2);
+        return Void();
+    }
+    Return<void> bar16(bar16_cb _cb) override {
+        _cb(p);
+        return Void();
+    }
+    Return<void> bar17(bar17_cb _cb) override {
+        _cb(&p);
+        return Void();
+    }
+    Return<void> bar18(bar18_cb _cb) override {
+        _cb(&str, &str, str);
+        return Void();
+    }
+    Return<void> bar19(bar19_cb _cb) override {
+        _cb(&a_vec, a_vec, &a_vec);
+        return Void();
+    }
+    Return<void> bar21(bar21_cb _cb) override {
+        hidl_array<IPointer::Ada, 3, 2, 1> a_array;
+        for(size_t i = 0; i < 3; i++)
+            for(size_t j = 0; j < 2; j++)
+                for(size_t k = 0; k < 1; k++)
+                    a_array[i][j][k] = *a;
+        _cb(&a_array);
+        return Void();
+    }
+    Return<void> bar22(bar22_cb _cb) override {
+        hidl_array<const IPointer::Ada *, 3, 2, 1> a_ptr_array;
+        for(size_t i = 0; i < 3; i++)
+            for(size_t j = 0; j < 2; j++)
+                for(size_t k = 0; k < 1; k++)
+                    a_ptr_array[i][j][k] = a;
+        _cb(a_ptr_array);
+        return Void();
+    }
+};
 
 struct FooCallback : public IFooCallback {
     FooCallback() : mLock{}, mCond{} {}
@@ -549,17 +980,6 @@ Return<void> Bar::thisIsNew() {
     return Void();
 }
 
-#define EXPECT_OK(ret) EXPECT_TRUE(ret.getStatus().isOk())
-
-template<typename T, typename S>
-static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
-    for(size_t i = 0; i < size; i++)
-        if(arr1[i] != arr2[i])
-            return false;
-    return true;
-}
-
-
 template <class T>
 static void startServer(T server,
                         const char *serviceName,
@@ -574,14 +994,27 @@ static void startServer(T server,
     ALOGI("SERVER(%s) ends.", tag);
 }
 
+static void killServer(pid_t pid, const char *serverName) {
+    if(kill(pid, SIGTERM)) {
+        ALOGE("Could not kill %s; errno = %d", serverName, errno);
+    } else {
+        int status;
+        ALOGI("Waiting for %s to exit...", serverName);
+        waitpid(pid, &status, 0);
+        ALOGI("Continuing...");
+    }
+}
+
 
 class HidlTest : public ::testing::Test {
 public:
-    sp<::android::hardware::IBinder> service;
     sp<IFoo> foo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
-    sp<::android::hardware::IBinder> cbService;
+    sp<IGraph> graphInterface;
+    sp<IPointer> pointerInterface;
+    PointerInterface validationPointerInterface;
+
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
         using namespace android::hardware;
@@ -594,6 +1027,12 @@ public:
         fooCb = IFooCallback::getService("foo callback");
         CHECK(fooCb != NULL);
 
+        graphInterface = IGraph::getService("graph");
+        CHECK(graphInterface != NULL);
+
+        pointerInterface = IPointer::getService("pointer");
+        CHECK(graphInterface != NULL);
+
         ALOGI("Test setup complete");
     }
     virtual void TearDown() override {
@@ -602,7 +1041,7 @@ public:
 
 class HidlEnvironment : public ::testing::Environment {
 private:
-    pid_t fooCallbackServerPid, barServerPid;
+    pid_t fooCallbackServerPid, barServerPid, graphServerPid, pointerServerPid;
 public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
@@ -619,6 +1058,18 @@ public:
             return;
         }
 
+        if ((graphServerPid = fork()) == 0) {
+            // Fear me, I am a third child.
+            startServer(new GraphInterface, "graph", "Graph"); // never returns
+            return;
+        }
+
+        if ((pointerServerPid = fork()) == 0) {
+            // Fear me, I am a forth child.
+            startServer(new PointerInterface, "pointer", "Pointer"); // never returns
+            return;
+        }
+
         // Fear you not, I am parent.
         sleep(1);
         ALOGI("Environment setup complete.");
@@ -628,22 +1079,10 @@ public:
         // clean up by killing server processes.
         ALOGI("Environment tear-down beginning...");
         ALOGI("Killing servers...");
-        if(kill(barServerPid, SIGTERM)) {
-            ALOGE("Could not kill barServer; errno = %d", errno);
-        } else {
-            int status;
-            ALOGI("Waiting for barServer to exit...");
-            waitpid(barServerPid, &status, 0);
-            ALOGI("Continuing...");
-        }
-        if(kill(fooCallbackServerPid, SIGTERM)) {
-            ALOGE("Could not kill fooCallbackServer; errno = %d", errno);
-        } else {
-            int status;
-            ALOGI("Waiting for fooCallbackServer to exit...");
-            waitpid(fooCallbackServerPid, &status, 0);
-            ALOGI("Continuing...");
-        }
+        killServer(barServerPid, "barServer");
+        killServer(fooCallbackServerPid, "fooCallbackServer");
+        killServer(graphServerPid, "graphServer");
+        killServer(pointerServerPid, "pointerServer");
         ALOGI("Servers all killed.");
         ALOGI("Environment tear-down complete.");
     }
@@ -1007,8 +1446,288 @@ TEST_F(HidlTest, TestArrayDimensionality) {
     EXPECT_EQ(threeDim.size(), std::make_tuple(2u, 3u, 4u));
 }
 
-int main(int argc, char **argv) {
+#if HIDL_RUN_POINTER_TESTS
 
+TEST_F(HidlTest, PassAGraphTest) {
+    IGraph::Graph g;
+    simpleGraph(g);
+    logSimpleGraph("CLIENT", g);
+    ALOGI("CLIENT call passAGraph");
+    EXPECT_OK(graphInterface->passAGraph(g));
+}
+
+TEST_F(HidlTest, GiveAGraphTest) {
+    EXPECT_OK(graphInterface->giveAGraph([&](const auto &newGraph) {
+        logSimpleGraph("CLIENT", newGraph);
+        EXPECT_TRUE(isSimpleGraph(newGraph));
+    }));
+}
+TEST_F(HidlTest, PassANodeTest) {
+    IGraph::Node node; node.data = 10;
+    EXPECT_OK(graphInterface->passANode(node));
+}
+TEST_F(HidlTest, PassTwoGraphsTest) {
+    IGraph::Graph g;
+    simpleGraph(g);
+    EXPECT_OK(graphInterface->passTwoGraphs(&g, &g));
+}
+TEST_F(HidlTest, PassAGammaTest) {
+    IGraph::Theta s; s.data = 500;
+    IGraph::Alpha a; a.s_ptr = &s;
+    IGraph::Beta  b; b.s_ptr = &s;
+    IGraph::Gamma c; c.a_ptr = &a; c.b_ptr = &b;
+    ALOGI("CLIENT calling passAGamma: c.a = %p, c.b = %p, c.a->s = %p, c.b->s = %p",
+        c.a_ptr, c.b_ptr, c.a_ptr->s_ptr, c.b_ptr->s_ptr);
+    EXPECT_OK(graphInterface->passAGamma(c));
+}
+TEST_F(HidlTest, PassNullTest) {
+    IGraph::Gamma c;
+    c.a_ptr = nullptr;
+    c.b_ptr = nullptr;
+    EXPECT_OK(graphInterface->passAGamma(c));
+}
+TEST_F(HidlTest, PassASimpleRefTest) {
+    IGraph::Theta s;
+    s.data = 500;
+    IGraph::Alpha a;
+    a.s_ptr = &s;
+    EXPECT_OK(graphInterface->passASimpleRef(&a));
+}
+TEST_F(HidlTest, PassASimpleRefSTest) {
+    IGraph::Theta s;
+    s.data = 500;
+    ALOGI("CLIENT call passASimpleRefS with %p", &s);
+    EXPECT_OK(graphInterface->passASimpleRefS(&s));
+}
+TEST_F(HidlTest, GiveASimpleRefTest) {
+    EXPECT_OK(graphInterface->giveASimpleRef([&](const auto & a_ptr) {
+        EXPECT_EQ(a_ptr->s_ptr->data, 500);
+    }));
+}
+TEST_F(HidlTest, GraphReportErrorsTest) {
+    Return<int32_t> ret = graphInterface->getErrors();
+    EXPECT_OK(ret);
+    EXPECT_EQ(int32_t(ret), 0);
+}
+
+TEST_F(HidlTest, PointerPassOldBufferTest) {
+    EXPECT_OK(validationPointerInterface.bar1([&](const auto& sptr, const auto& s) {
+        EXPECT_OK(pointerInterface->foo1(sptr, s));
+    }));
+}
+TEST_F(HidlTest, PointerPassOldBufferTest2) {
+    EXPECT_OK(validationPointerInterface.bar2([&](const auto& s, const auto& a) {
+        EXPECT_OK(pointerInterface->foo2(s, a));
+    }));
+}
+TEST_F(HidlTest, PointerPassSameOldBufferPointerTest) {
+    EXPECT_OK(validationPointerInterface.bar3([&](const auto& s, const auto& a, const auto& b) {
+        EXPECT_OK(pointerInterface->foo3(s, a, b));
+    }));
+}
+TEST_F(HidlTest, PointerPassOnlyTest) {
+    EXPECT_OK(validationPointerInterface.bar4([&](const auto& s) {
+        EXPECT_OK(pointerInterface->foo4(s));
+    }));
+}
+TEST_F(HidlTest, PointerPassTwoEmbeddedTest) {
+    EXPECT_OK(validationPointerInterface.bar5([&](const auto& a, const auto& b) {
+        EXPECT_OK(pointerInterface->foo5(a, b));
+    }));
+}
+TEST_F(HidlTest, PointerPassIndirectBufferHasDataTest) {
+    EXPECT_OK(validationPointerInterface.bar6([&](const auto& a) {
+        EXPECT_OK(pointerInterface->foo6(a));
+    }));
+}
+TEST_F(HidlTest, PointerPassTwoIndirectBufferTest) {
+    EXPECT_OK(validationPointerInterface.bar7([&](const auto& a, const auto& b) {
+        EXPECT_OK(pointerInterface->foo7(a, b));
+    }));
+}
+TEST_F(HidlTest, PointerPassDeeplyIndirectTest) {
+    EXPECT_OK(validationPointerInterface.bar8([&](const auto& d) {
+        EXPECT_OK(pointerInterface->foo8(d));
+    }));
+}
+TEST_F(HidlTest, PointerPassStringRefTest) {
+    EXPECT_OK(validationPointerInterface.bar9([&](const auto& str) {
+        EXPECT_OK(pointerInterface->foo9(str));
+    }));
+}
+TEST_F(HidlTest, PointerPassRefVecTest) {
+    EXPECT_OK(validationPointerInterface.bar10([&](const auto& v) {
+        EXPECT_OK(pointerInterface->foo10(v));
+    }));
+}
+TEST_F(HidlTest, PointerPassVecRefTest) {
+    EXPECT_OK(validationPointerInterface.bar11([&](const auto& v) {
+        EXPECT_OK(pointerInterface->foo11(v));
+    }));
+}
+TEST_F(HidlTest, PointerPassArrayRefTest) {
+    EXPECT_OK(validationPointerInterface.bar12([&](const auto& array) {
+        EXPECT_OK(pointerInterface->foo12(array));
+    }));
+}
+TEST_F(HidlTest, PointerPassRefArrayTest) {
+    EXPECT_OK(validationPointerInterface.bar13([&](const auto& array) {
+        EXPECT_OK(pointerInterface->foo13(array));
+    }));
+}
+TEST_F(HidlTest, PointerPass3RefTest) {
+    EXPECT_OK(validationPointerInterface.bar14([&](const auto& p3) {
+        EXPECT_OK(pointerInterface->foo14(p3));
+    }));
+}
+TEST_F(HidlTest, PointerPassInt3RefTest) {
+    EXPECT_OK(validationPointerInterface.bar15([&](const auto& p3) {
+        EXPECT_OK(pointerInterface->foo15(p3));
+    }));
+}
+TEST_F(HidlTest, PointerPassEmbeddedPointersTest) {
+    EXPECT_OK(validationPointerInterface.bar16([&](const auto& p) {
+        EXPECT_OK(pointerInterface->foo16(p));
+    }));
+}
+TEST_F(HidlTest, PointerPassEmbeddedPointers2Test) {
+    EXPECT_OK(validationPointerInterface.bar17([&](const auto& p) {
+        EXPECT_OK(pointerInterface->foo17(p));
+    }));
+}
+TEST_F(HidlTest, PointerPassCopiedStringTest) {
+    EXPECT_OK(validationPointerInterface.bar18([&](const auto& str_ref, const auto& str_ref2, const auto& str) {
+        EXPECT_OK(pointerInterface->foo18(str_ref, str_ref2, str));
+    }));
+}
+TEST_F(HidlTest, PointerPassCopiedVecTest) {
+    EXPECT_OK(validationPointerInterface.bar19([&](const auto& a_vec_ref, const auto& a_vec, const auto& a_vec_ref2) {
+        EXPECT_OK(pointerInterface->foo19(a_vec_ref, a_vec, a_vec_ref2));
+    }));
+}
+TEST_F(HidlTest, PointerPassMultidimArrayRefTest) {
+    EXPECT_OK(validationPointerInterface.bar21([&](const auto& v) {
+        EXPECT_OK(pointerInterface->foo21(v));
+    }));
+}
+TEST_F(HidlTest, PointerPassRefMultidimArrayTest) {
+    EXPECT_OK(validationPointerInterface.bar22([&](const auto& v) {
+        EXPECT_OK(pointerInterface->foo22(v));
+    }));
+}
+TEST_F(HidlTest, PointerGiveOldBufferTest) {
+    EXPECT_OK(pointerInterface->bar1([&](const auto& sptr, const auto& s) {
+        EXPECT_OK(validationPointerInterface.foo1(sptr, s));
+    }));
+}
+TEST_F(HidlTest, PointerGiveOldBufferTest2) {
+    EXPECT_OK(pointerInterface->bar2([&](const auto& s, const auto& a) {
+        EXPECT_OK(validationPointerInterface.foo2(s, a));
+    }));
+}
+TEST_F(HidlTest, PointerGiveSameOldBufferPointerTest) {
+    EXPECT_OK(pointerInterface->bar3([&](const auto& s, const auto& a, const auto& b) {
+        EXPECT_OK(validationPointerInterface.foo3(s, a, b));
+    }));
+}
+TEST_F(HidlTest, PointerGiveOnlyTest) {
+    EXPECT_OK(pointerInterface->bar4([&](const auto& s) {
+        EXPECT_OK(validationPointerInterface.foo4(s));
+    }));
+}
+TEST_F(HidlTest, PointerGiveTwoEmbeddedTest) {
+    EXPECT_OK(pointerInterface->bar5([&](const auto& a, const auto& b) {
+        EXPECT_OK(validationPointerInterface.foo5(a, b));
+    }));
+}
+TEST_F(HidlTest, PointerGiveIndirectBufferHasDataTest) {
+    EXPECT_OK(pointerInterface->bar6([&](const auto& a) {
+        EXPECT_OK(validationPointerInterface.foo6(a));
+    }));
+}
+TEST_F(HidlTest, PointerGiveTwoIndirectBufferTest) {
+    EXPECT_OK(pointerInterface->bar7([&](const auto& a, const auto& b) {
+        EXPECT_OK(validationPointerInterface.foo7(a, b));
+    }));
+}
+TEST_F(HidlTest, PointerGiveDeeplyIndirectTest) {
+    EXPECT_OK(pointerInterface->bar8([&](const auto& d) {
+        EXPECT_OK(validationPointerInterface.foo8(d));
+    }));
+}
+TEST_F(HidlTest, PointerGiveStringRefTest) {
+    EXPECT_OK(pointerInterface->bar9([&](const auto& str) {
+        EXPECT_OK(validationPointerInterface.foo9(str));
+    }));
+}
+TEST_F(HidlTest, PointerGiveRefVecTest) {
+    EXPECT_OK(pointerInterface->bar10([&](const auto& v) {
+        EXPECT_OK(validationPointerInterface.foo10(v));
+    }));
+}
+TEST_F(HidlTest, PointerGiveVecRefTest) {
+    EXPECT_OK(pointerInterface->bar11([&](const auto& v) {
+        EXPECT_OK(validationPointerInterface.foo11(v));
+    }));
+}
+TEST_F(HidlTest, PointerGiveArrayRefTest) {
+    EXPECT_OK(pointerInterface->bar12([&](const auto& array) {
+        EXPECT_OK(validationPointerInterface.foo12(array));
+    }));
+}
+TEST_F(HidlTest, PointerGiveRefArrayTest) {
+    EXPECT_OK(pointerInterface->bar13([&](const auto& array) {
+        EXPECT_OK(validationPointerInterface.foo13(array));
+    }));
+}
+TEST_F(HidlTest, PointerGive3RefTest) {
+    EXPECT_OK(pointerInterface->bar14([&](const auto& p3) {
+        EXPECT_OK(validationPointerInterface.foo14(p3));
+    }));
+}
+TEST_F(HidlTest, PointerGiveInt3RefTest) {
+    EXPECT_OK(pointerInterface->bar15([&](const auto& p3) {
+        EXPECT_OK(validationPointerInterface.foo15(p3));
+    }));
+}
+TEST_F(HidlTest, PointerGiveEmbeddedPointersTest) {
+    EXPECT_OK(pointerInterface->bar16([&](const auto& p) {
+        EXPECT_OK(validationPointerInterface.foo16(p));
+    }));
+}
+TEST_F(HidlTest, PointerGiveEmbeddedPointers2Test) {
+    EXPECT_OK(pointerInterface->bar17([&](const auto& p) {
+        EXPECT_OK(validationPointerInterface.foo17(p));
+    }));
+}
+TEST_F(HidlTest, PointerGiveCopiedStringTest) {
+    EXPECT_OK(pointerInterface->bar18([&](const auto& str_ref, const auto& str_ref2, const auto& str) {
+        EXPECT_OK(validationPointerInterface.foo18(str_ref, str_ref2, str));
+    }));
+}
+TEST_F(HidlTest, PointerGiveCopiedVecTest) {
+    EXPECT_OK(pointerInterface->bar19([&](const auto& a_vec_ref, const auto& a_vec, const auto& a_vec_ref2) {
+        EXPECT_OK(validationPointerInterface.foo19(a_vec_ref, a_vec, a_vec_ref2));
+    }));
+}
+TEST_F(HidlTest, PointerGiveMultidimArrayRefTest) {
+    EXPECT_OK(pointerInterface->bar21([&](const auto& v) {
+        EXPECT_OK(validationPointerInterface.foo21(v));
+    }));
+}
+TEST_F(HidlTest, PointerGiveRefMultidimArrayTest) {
+    EXPECT_OK(pointerInterface->bar22([&](const auto& v) {
+        EXPECT_OK(validationPointerInterface.foo22(v));
+    }));
+}
+TEST_F(HidlTest, PointerReportErrorsTest) {
+    Return<int32_t> ret = pointerInterface->getErrors();
+    EXPECT_OK(ret);
+    EXPECT_EQ(int32_t(ret), 0);
+}
+#endif
+
+int main(int argc, char **argv) {
     ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
     ::testing::InitGoogleTest(&argc, argv);
     int status = RUN_ALL_TESTS();
