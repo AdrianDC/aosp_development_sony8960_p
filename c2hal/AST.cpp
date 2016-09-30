@@ -21,8 +21,10 @@
 #include "Scope.h"
 #include "Declaration.h"
 #include "CompositeDeclaration.h"
+#include "VarDeclaration.h"
 #include "Define.h"
 #include "Include.h"
+#include "Note.h"
 
 #include <string>
 #include <algorithm>
@@ -85,6 +87,13 @@ const std::string& AST::getFilename() const {
 }
 
 void AST::setDeclarations(std::vector<Declaration *> *declarations) {
+    // on the top level, no var declarations are allowed.
+    for(size_t i = 0; i < declarations->size(); i++) {
+        if(declarations->at(i)->decType() == VarDeclaration::type()) {
+            declarations->at(i) = new Note(declarations->at(i));
+        }
+    }
+
     mDeclarations = declarations;
 }
 

@@ -22,22 +22,37 @@ Note::Note(const std::string &name)
     : Declaration(name)
     {}
 
-Note::~Note() {}
+Note::Note(Declaration *decl)
+    : Declaration(""),
+      mDecl(decl)
+    {}
+
+Note::~Note() {
+    if(mDecl) {
+        delete mDecl;
+    }
+}
 
 void Note::generateSource(Formatter &out) const {
     out.setLinePrefix("//");
     out << "NOTE:\n";
 
     out.indent();
-    out << getName();
+    if(mDecl) {
+        mDecl->generateSource(out);
+    } else {
+        out << getName();
+    }
     out.unindent();
 
     out.unsetLinePrefix();
     out << "\n";
 }
 
-void Note::processContents(AST &) {
-    // nothing to do
+void Note::processContents(AST &ast) {
+    if (mDecl) {
+        mDecl->processContents(ast);
+    }
 }
 
 } //namespace android
