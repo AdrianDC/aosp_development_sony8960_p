@@ -31,6 +31,7 @@
 
 #define PUSH_ERROR_IF(__cond__) if(__cond__) { errors.push_back(std::to_string(__LINE__) + ": " + #__cond__); }
 #define EXPECT_OK(__ret__) EXPECT_TRUE(isOk(__ret__))
+#define EXPECT_FAIL(__ret__) EXPECT_FALSE(isOk(__ret__))
 #define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(IsArrayEq(__a1__, __a2__, __size__))
 
 // TODO uncomment this when kernel is patched with pointer changes.
@@ -302,6 +303,9 @@ public:
         return Void();
     };
 
+    Return<void> foo20(const hidl_vec<IPointer::Sam const*>&) override {
+        return Void();
+    }
     Return<void> foo21(hidl_array<IPointer::Ada, 3, 2, 1> const* a_array_ptr) override {
         const hidl_array<IPointer::Ada, 3, 2, 1>& a_array = *a_array_ptr;
         PUSH_ERROR_IF(a_array[0][0][0].s_ptr->data != 500);
@@ -450,6 +454,14 @@ public:
     }
     Return<void> bar19(bar19_cb _cb) override {
         _cb(&a_vec, a_vec, &a_vec);
+        return Void();
+    }
+    Return<void> bar20(bar20_cb _cb) override {
+        // 1026 == PARCEL_REF_CAP + 2.
+        // 1026 means 1 writeBuffer and 1025 writeReferences. 1025 > PARCEL_REF_CAP.
+        hidl_vec<const IPointer::Sam *> v; v.resize(1026);
+        for(size_t i = 0; i < 1026; i++) v[i] = s;
+        _cb(v);
         return Void();
     }
     Return<void> bar21(bar21_cb _cb) override {
@@ -1605,6 +1617,11 @@ TEST_F(HidlTest, PointerPassCopiedVecTest) {
         EXPECT_OK(pointerInterface->foo19(a_vec_ref, a_vec, a_vec_ref2));
     }));
 }
+TEST_F(HidlTest, PointerPassBigRefVecTest) {
+    EXPECT_OK(validationPointerInterface.bar20([&](const auto& v) {
+        EXPECT_FAIL(pointerInterface->foo20(v));
+    }));
+}
 TEST_F(HidlTest, PointerPassMultidimArrayRefTest) {
     EXPECT_OK(validationPointerInterface.bar21([&](const auto& v) {
         EXPECT_OK(pointerInterface->foo21(v));
@@ -1710,6 +1727,12 @@ TEST_F(HidlTest, PointerGiveCopiedVecTest) {
         EXPECT_OK(validationPointerInterface.foo19(a_vec_ref, a_vec, a_vec_ref2));
     }));
 }
+// This cannot be enabled until _hidl_error is not ignored when
+// the remote writeEmbeddedReferencesToParcel.
+// TEST_F(HidlTest, PointerGiveBigRefVecTest) {
+//     EXPECT_FAIL(pointerInterface->bar20([&](const auto& v) {
+//     }));
+// }
 TEST_F(HidlTest, PointerGiveMultidimArrayRefTest) {
     EXPECT_OK(pointerInterface->bar21([&](const auto& v) {
         EXPECT_OK(validationPointerInterface.foo21(v));
