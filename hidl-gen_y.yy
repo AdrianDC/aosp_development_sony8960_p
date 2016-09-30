@@ -27,6 +27,7 @@
 #include "Interface.h"
 #include "Method.h"
 #include "VectorType.h"
+#include "RefType.h"
 
 #include "hidl-gen_y.h"
 
@@ -70,7 +71,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %token<str> STRING_LITERAL
 %token<str> TYPEDEF
 %token<str> UNION
-%token<str> VEC
+%token<templatedType> TEMPLATED
 %token<void> ONEWAY
 
 /* Operator precedence and associativity, as per
@@ -130,6 +131,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %union {
     const char *str;
     android::Type *type;
+    android::TemplatedType *templatedType;
     android::FQName *fqName;
     android::CompoundType *compoundType;
     android::CompoundField *field;
@@ -730,7 +732,7 @@ enum_values
 
 type
     : fqtype { $$ = $1; }
-    | fqtype '[' const_expr ']'
+    | type '[' const_expr ']'
       {
           if ($1->isBinder()) {
               std::cerr << "ERROR: Arrays of interface types are not supported."
@@ -745,16 +747,28 @@ type
               $$ = new ArrayType($1, $3);
           }
       }
-    | VEC '<' fqtype '>'
+    | TEMPLATED '<' type '>'
       {
           if ($3->isBinder()) {
-              std::cerr << "ERROR: Vectors of interface types are not "
+              std::cerr << "ERROR: TemplatedType of interface types are not "
                         << "supported. at " << @3 << "\n";
 
               YYERROR;
           }
+          $1->setElementType($3);
+          $$ = $1;
+      }
+    | TEMPLATED '<' TEMPLATED '<' type RSHIFT
+      {
+          if ($5->isBinder()) {
+              std::cerr << "ERROR: TemplatedType of interface types are not "
+                        << "supported. at " << @5 << "\n";
 
-          $$ = new VectorType($3);
+              YYERROR;
+          }
+          $3->setElementType($5);
+          $1->setElementType($3);
+          $$ = $1;
       }
     | annotated_compound_declaration { $$ = $1; }
     | INTERFACE { $$ = new GenericBinder; }

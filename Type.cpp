@@ -120,6 +120,32 @@ void Type::emitReaderWriter(
     CHECK(!"Should not be here");
 }
 
+void Type::emitResolveReferences(
+        Formatter &,
+        const std::string &,
+        bool,
+        const std::string &,
+        bool,
+        bool,
+        ErrorMode) const {
+    CHECK(!"Should not be here");
+}
+
+void Type::emitResolveReferencesEmbedded(
+        Formatter &,
+        size_t,
+        const std::string &,
+        const std::string &,
+        bool,
+        const std::string &,
+        bool,
+        bool,
+        ErrorMode,
+        const std::string &,
+        const std::string &) const {
+    CHECK(!"Should not be here");
+}
+
 void Type::emitReaderWriterEmbedded(
         Formatter &,
         size_t,
@@ -298,6 +324,10 @@ bool Type::needsEmbeddedReadWrite() const {
     return false;
 }
 
+bool Type::needsResolveReferences() const {
+    return false;
+}
+
 bool Type::resultNeedsDeref() const {
     return false;
 }
@@ -354,6 +384,15 @@ bool Type::isJavaCompatible() const {
 
 void Type::getAlignmentAndSize(size_t *, size_t *) const {
     CHECK(!"Should not be here");
+}
+
+////////////////////////////////////////
+
+TemplatedType::TemplatedType() : mElementType(nullptr) {
+}
+void TemplatedType::setElementType(Type *elementType) {
+    CHECK(mElementType == nullptr); // can only be set once.
+    mElementType = elementType;
 }
 
 }  // namespace android
