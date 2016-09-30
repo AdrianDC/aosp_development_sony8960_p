@@ -24,12 +24,9 @@
 
 namespace android {
 
-Interface::Interface(
-        const char *localName, Interface *super,
-        std::vector<Annotation *> *annotations)
+Interface::Interface(const char *localName, Interface *super)
     : Scope(localName),
       mSuperType(super),
-      mAnnotations(annotations),
       mIsJavaCompatibleInProgress(false) {
 }
 
@@ -51,10 +48,6 @@ bool Interface::isBinder() const {
 
 const std::vector<Method *> &Interface::methods() const {
     return mMethods;
-}
-
-const std::vector<Annotation *> &Interface::annotations() const {
-    return *mAnnotations;
 }
 
 std::string Interface::getBaseName() const {

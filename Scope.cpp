@@ -85,6 +85,16 @@ bool Scope::containsSingleInterface(std::string *ifaceName) const {
     return false;
 }
 
+bool Scope::containsInterfaces() const {
+    for (const NamedType *type : mTypes) {
+        if (type->isInterface()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::string Scope::pickUniqueAnonymousName() const {
     static size_t sNextID = 0;
 
