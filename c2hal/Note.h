@@ -30,6 +30,8 @@ namespace android {
  */
 struct Note : Declaration {
     Note(const std::string &name);
+    // assume ownership on decl
+    Note(Declaration *decl);
     ~Note();
 
     static std::string type() { return "note"; }
@@ -39,7 +41,7 @@ struct Note : Declaration {
     void processContents(AST &ast) override;
 
 private:
-    std::string mExpression;
+    Declaration *mDecl = nullptr;
 
     DISALLOW_COPY_AND_ASSIGN(Note);
 };
