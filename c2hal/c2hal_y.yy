@@ -429,8 +429,11 @@ opt_id
     ;
 
 expr
-    : ID                      { $$ = Expression::atom(Expression::Type::UNKOWN, $1); }
-    | VALUE                   { $$ = Expression::atom(Expression::Type::UNKOWN, $1); }
+    : ID
+      {
+        $$ = Expression::atom(Expression::Type::UNKNOWN, $1, true /* isId*/ );
+      }
+    | VALUE                   { $$ = Expression::atom(Expression::Type::UNKNOWN, $1); }
     | INTEGRAL_VALUE          { $$ = Expression::atom(Expression::integralType($1), $1); }
     | '(' expr ')'            { $$ = Expression::parenthesize($2); }
     | ID '[' expr ']' %prec ARRAY_SUBSCRIPT {
@@ -492,14 +495,14 @@ struct_or_union
 
 arrays
     : /* empty */             { $$ = new std::vector<Expression *>; }
-    | array arrays            {
-                                $$ = $2;
-                                $$->push_back($1);
+    | arrays array            {
+                                $$ = $1;
+                                $$->push_back($2);
                               }
     ;
 
 array
-    : '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKOWN, " "); }
+    : '[' ']'                 { $$ = Expression::atom(Expression::Type::UNKNOWN, " "); }
     | '[' expr ']'            { $$ = $2; }
     ;
 

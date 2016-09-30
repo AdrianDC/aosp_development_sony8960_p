@@ -42,6 +42,14 @@ void Formatter::unindent() {
     --mIndentDepth;
 }
 
+void Formatter::setLinePrefix(const std::string &prefix) {
+    mLinePrefix = prefix;
+}
+
+void Formatter::unsetLinePrefix() {
+    mLinePrefix = "";
+}
+
 Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
     size_t start = 0;
@@ -50,6 +58,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
 
         if (pos == std::string::npos) {
             if (mAtStartOfLine) {
+                fprintf(mFile, "%s", mLinePrefix.c_str());
                 fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
                 mAtStartOfLine = false;
             }
@@ -63,6 +72,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
             mAtStartOfLine = true;
         } else if (pos > start) {
             if (mAtStartOfLine) {
+                fprintf(mFile, "%s", mLinePrefix.c_str());
                 fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
             }
 

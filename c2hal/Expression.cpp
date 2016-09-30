@@ -47,9 +47,9 @@ Expression::Type Expression::integralType(std::string integer) {
         return Type::U64;
     }
 
-    LOG(WARNING) << "UNKOWN INTEGER LITERAL: " << integer;
+    LOG(WARNING) << "UNKNOWN INTEGER LITERAL: " << integer;
 
-    return Type::UNKOWN;
+    return Type::UNKNOWN;
 }
 
 // static
@@ -74,7 +74,7 @@ Expression::Type Expression::coalesceTypes(Type lhs, Type rhs) {
         return S64;
     }
 
-    return Type::UNKOWN;
+    return Type::UNKNOWN;
 
 #undef SIGNED
 #undef MAX_RANK
@@ -91,8 +91,8 @@ struct ParenthesizedExpression : Expression {
     virtual Type getType(const AST &ast) {
         return mInner->getType(ast);
     }
-    virtual std::string toString() {
-        return "(" + mInner->toString() + ")";
+    virtual std::string toString(StringHelper::Case atomCase) {
+        return "(" + mInner->toString(atomCase) + ")";
     }
 
 private:
@@ -102,30 +102,32 @@ private:
 };
 
 struct AtomExpression : Expression {
-    AtomExpression(Type type, const std::string &value)
-    : mType(type), mValue(value)
+    AtomExpression(Type type, const std::string &value, bool isId)
+    : mType(type), mValue(value), mIsId(isId)
     {}
 
     virtual Type getType(const AST &ast) {
-        if (mType != Type::UNKOWN) {
+        if (mType != Type::UNKNOWN) {
             return mType;
         }
 
         Define *define = ast.getDefinesScope().lookup(mValue);
 
         if (define == NULL) {
-            return Type::UNKOWN;
+            return Type::UNKNOWN;
         }
 
         return define->getExpressionType();
     }
-    virtual std::string toString() {
-        return mValue;
+    virtual std::string toString(StringHelper::Case atomCase) {
+        // do not enforce case if it is not an identifier.
+        return mIsId ? StringHelper::ToCase(atomCase, mValue) : mValue;
     }
 
 private:
     Type mType;
     std::string mValue;
+    bool mIsId;
 
     DISALLOW_COPY_AND_ASSIGN(AtomExpression);
 };
@@ -141,8 +143,8 @@ struct UnaryExpression : Expression {
     virtual Type getType(const AST &ast) {
         return mRhs->getType(ast);
     }
-    virtual std::string toString() {
-        return mOp + mRhs->toString();
+    virtual std::string toString(StringHelper::Case atomCase) {
+        return mOp + mRhs->toString(atomCase);
     }
 
 private:
@@ -164,8 +166,8 @@ struct BinaryExpression : Expression {
     virtual Type getType(const AST &ast) {
         return coalesceTypes(mLhs->getType(ast), mRhs->getType(ast));
     }
-    virtual std::string toString() {
-        return mLhs->toString() + " " + mOp + " " + mRhs->toString();
+    virtual std::string toString(StringHelper::Case atomCase) {
+        return mLhs->toString(atomCase) + " " + mOp + " " + mRhs->toString(atomCase);
     }
 
 private:
@@ -189,8 +191,8 @@ struct TernaryExpression : Expression {
     virtual Type getType(const AST &ast) {
         return coalesceTypes(mMhs->getType(ast), mRhs->getType(ast));
     }
-    virtual std::string toString() {
-        return mLhs->toString() + " ? " + mMhs->toString() + " : " + mRhs->toString();
+    virtual std::string toString(StringHelper::Case atomCase) {
+        return mLhs->toString(atomCase) + " ? " + mMhs->toString(atomCase) + " : " + mRhs->toString(atomCase);
     }
 
 private:
@@ -210,10 +212,10 @@ struct ArraySubscript : Expression {
     }
 
     virtual Type getType(const AST &) {
-        return Type::UNKOWN;
+        return Type::UNKNOWN;
     }
-    virtual std::string toString() {
-        return mId + "[" + mSubscript->toString() + "]";
+    virtual std::string toString(StringHelper::Case atomCase) {
+        return mId + "[" + mSubscript->toString(atomCase) + "]";
     }
 
 private:
@@ -237,9 +239,9 @@ struct FunctionCall : Expression {
     }
 
     virtual Type getType(const AST &) {
-        return Type::UNKOWN;
+        return Type::UNKNOWN;
     }
-    virtual std::string toString() {
+    virtual std::string toString(StringHelper::Case atomCase) {
         std::string out = mId + "(";
 
         for (auto it = mArgs->begin(); it != mArgs->end(); ++it) {
@@ -247,8 +249,10 @@ struct FunctionCall : Expression {
                 out += ", ";
             }
 
-            out += (*it)->toString();
+            out += (*it)->toString(atomCase);
         }
+
+        out += ")";
 
         return out;
     }
@@ -266,8 +270,8 @@ Expression *Expression::parenthesize(Expression *inner) {
 }
 
 // static
-Expression *Expression::atom(Type type, const std::string &value) {
-    return new AtomExpression(type, value);
+Expression *Expression::atom(Type type, const std::string &value, bool isId) {
+    return new AtomExpression(type, value, isId);
 }
 
 // static
