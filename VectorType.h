@@ -77,6 +77,8 @@ struct VectorType : public TemplatedType {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    bool useParentInEmitResolveReferencesEmbedded() const override;
+
     void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
