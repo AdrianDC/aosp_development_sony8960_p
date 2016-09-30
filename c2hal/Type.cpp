@@ -90,6 +90,7 @@ std::map<std::string, std::string> Type::kCToHidlMap = {
     { "int", "int32_t" },
     { "long", "int64_t"},
     { "native_handle_t", "handle" },
+    { "size_t", "uint64_t" },
 
     // { "hidl_string", "string" },
     // { "hidl_vec", "vec"},
