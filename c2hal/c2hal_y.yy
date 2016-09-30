@@ -429,7 +429,10 @@ opt_id
     ;
 
 expr
-    : ID                      { $$ = Expression::atom(Expression::Type::UNKOWN, $1); }
+    : ID
+      {
+        $$ = Expression::atom(Expression::Type::UNKOWN, $1, true /* isId*/ );
+      }
     | VALUE                   { $$ = Expression::atom(Expression::Type::UNKOWN, $1); }
     | INTEGRAL_VALUE          { $$ = Expression::atom(Expression::integralType($1), $1); }
     | '(' expr ')'            { $$ = Expression::parenthesize($2); }

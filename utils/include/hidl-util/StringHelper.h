@@ -26,19 +26,49 @@ namespace android {
 
 struct StringHelper {
 
-    static std::string Upcase(const std::string &in);
+    enum Case {
+        // return original string
+        kNoCase = 0,
+        // use camelCase
+        kCamelCase = 1,
+        // use PascalCase
+        kPascalCase = 2,
+        // use UP_SNAKE_CASE
+        kUpperSnakeCase = 3,
+        // use low_snake_case
+        kLowerSnakeCase = 4
+    };
+
+    // methods for a single word, like device
+    // UPPERCASE
+    static std::string Uppercase(const std::string &in);
+    // lowercase
+    static std::string Lowercase(const std::string &in);
+    // Capitalize
     static std::string Capitalize(const std::string &in);
-    static std::string SnakeCaseToCamelCase(const std::string &in);
-    static std::string SnakeCaseToPascalCase(const std::string &in);
+
+    // methods for a multi-word identifier, like framebuffer_device
+    static std::string ToCamelCase(const std::string &in);
+    static std::string ToPascalCase(const std::string &in);
+    static std::string ToUpperSnakeCase(const std::string &in);
+    static std::string ToLowerSnakeCase(const std::string &in);
+    static std::string ToCase(Case c, const std::string &in);
 
     static bool EndsWith(const std::string &in, const std::string &suffix);
     static bool StartsWith(const std::string &in, const std::string &prefix);
 
-    /* removes suffix from in if in ends with suffix */
+    /* removes suffix once from in if in ends with suffix */
     static std::string RTrim(const std::string &in, const std::string &suffix);
 
-    /* removes prefix from in if in starts with prefix */
+    /* removes prefix once from in if in starts with prefix */
     static std::string LTrim(const std::string &in, const std::string &prefix);
+
+    /* removes suffix repeatedly from in if in ends with suffix */
+    static std::string RTrimAll(const std::string &in, const std::string &suffix);
+
+    /* removes prefix repeatedly from in if in starts with prefix */
+    static std::string LTrimAll(const std::string &in, const std::string &prefix);
+
 
     static void SplitString(
         const std::string &s,
@@ -51,6 +81,9 @@ struct StringHelper {
 
 private:
     StringHelper() {}
+
+    static void Tokenize(const std::string &in,
+        std::vector<std::string> *vec);
 
     DISALLOW_COPY_AND_ASSIGN(StringHelper);
 };
