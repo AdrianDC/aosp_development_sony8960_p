@@ -250,6 +250,8 @@ struct FunctionCall : Expression {
             out += (*it)->toString();
         }
 
+        out += ")";
+
         return out;
     }
 
