@@ -216,17 +216,12 @@ void ArrayType::emitReaderWriterEmbedded(
 
     std::string iteratorName = "_hidl_index_" + std::to_string(depth);
 
-    size_t numArrayElements = 1;
-    for (auto size : mSizes) {
-        numArrayElements *= size;
-    }
-
     out << "for (size_t "
         << iteratorName
         << " = 0; "
         << iteratorName
         << " < "
-        << numArrayElements
+        << dimension()
         << "; ++"
         << iteratorName
         << ") {\n";
@@ -253,8 +248,88 @@ void ArrayType::emitReaderWriterEmbedded(
     out << "}\n\n";
 }
 
+void ArrayType::emitResolveReferences(
+            Formatter &out,
+            const std::string &name,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const {
+    emitResolveReferencesEmbedded(
+        out,
+        0 /* depth */,
+        name,
+        name /* sanitizedName */,
+        nameIsPointer,
+        parcelObj,
+        parcelObjIsPointer,
+        isReader,
+        mode,
+        "_hidl_" + name + "_parent",
+        "0 /* parentOffset */");
+}
+
+void ArrayType::emitResolveReferencesEmbedded(
+            Formatter &out,
+            size_t depth,
+            const std::string &name,
+            const std::string &sanitizedName,
+            bool nameIsPointer,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode,
+            const std::string &parentName,
+            const std::string &offsetText) const {
+    CHECK(needsResolveReferences() && mElementType->needsResolveReferences());
+
+    const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+
+    std::string baseExtra;
+    std::string baseType = mElementType->getCppType(&baseExtra);
+
+    std::string iteratorName = "_hidl_index_" + std::to_string(depth);
+
+    out << "for (size_t "
+        << iteratorName
+        << " = 0; "
+        << iteratorName
+        << " < "
+        << dimension()
+        << "; ++"
+        << iteratorName
+        << ") {\n";
+
+    out.indent();
+
+    mElementType->emitResolveReferencesEmbedded(
+        out,
+        depth + 1,
+        nameDeref + "data()[" + iteratorName + "]",
+        sanitizedName + "_indexed",
+        false /* nameIsPointer */,
+        parcelObj,
+        parcelObjIsPointer,
+        isReader,
+        mode,
+        parentName,
+        offsetText + " + " + iteratorName + " * sizeof("
+        + baseType
+        + ")");
+
+    out.unindent();
+
+    out << "}\n\n";
+}
+
+
 bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
+}
+
+bool ArrayType::needsResolveReferences() const {
+    return mElementType->needsResolveReferences();
 }
 
 bool ArrayType::resultNeedsDeref() const {
@@ -426,6 +501,14 @@ void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {
     for (auto sizeInDimension : mSizes) {
         (*size) *= sizeInDimension;
     }
+}
+
+size_t ArrayType::dimension() const {
+    size_t numArrayElements = 1;
+    for (auto size : mSizes) {
+        numArrayElements *= size;
+    }
+    return numArrayElements;
 }
 
 }  // namespace android

@@ -38,6 +38,8 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "Method.h"
 #include "ScalarType.h"
 #include "StringType.h"
+#include "VectorType.h"
+#include "RefType.h"
 
 #include "hidl-gen_y.h"
 
@@ -88,7 +90,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "struct"		{ return token::STRUCT; }
 "typedef"		{ return token::TYPEDEF; }
 "union"			{ return token::UNION; }
-"vec"			{ return token::VEC; }
+"vec"			{ yylval->templatedType = new VectorType; return token::TEMPLATED; }
+"ref"			{ yylval->templatedType = new RefType; return token::TEMPLATED; }
 "oneway"		{ return token::ONEWAY; }
 
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
