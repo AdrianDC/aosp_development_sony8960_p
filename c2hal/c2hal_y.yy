@@ -492,9 +492,9 @@ struct_or_union
 
 arrays
     : /* empty */             { $$ = new std::vector<Expression *>; }
-    | array arrays            {
-                                $$ = $2;
-                                $$->push_back($1);
+    | arrays array            {
+                                $$ = $1;
+                                $$->push_back($2);
                               }
     ;
 
