@@ -296,6 +296,9 @@ typedef struct my_other_t {
 typedef struct {
     /** set to sizeof(GpsCallbacks_v1) */
     size_t      size;
+    myWierdSize mySize;
+    wchar_t     MyWideChar;
+
     gps_location_callback location_cb;
     gps_status_callback status_cb;
     gps_sv_status_callback sv_status_cb;
