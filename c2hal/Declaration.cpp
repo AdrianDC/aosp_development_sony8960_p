@@ -66,7 +66,7 @@ void Declaration::generateCommentText(Formatter &out) const {
 }
 
 void Declaration::generateParameterSource(Formatter &out) const {
-    out << "/* UNKOWN PARAMTER */" << "\n";
+    out << "/* UNKNOWN PARAMTER */" << "\n";
 }
 
 } //namespace android
