@@ -91,7 +91,18 @@ std::map<std::string, std::string> Type::kCToHidlMap = {
     { "long", "int64_t"},
     { "native_handle_t", "handle" },
     { "size_t", "uint64_t" },
-
+    { "int8_t", "int8_t" },
+    { "uint8_t", "uint8_t" },
+    { "int16_t", "int16_t" },
+    { "uint16_t", "uint16_t" },
+    { "int32_t", "int32_t" },
+    { "uint32_t", "uint32_t" },
+    { "int64_t", "int64_t" },
+    { "uint64_t", "uint64_t" },
+    { "float", "float" },
+    { "double", "double" },
+    { "bool", "bool" },
+    { "wchar_t", "int32_t /* NOTE: wchar_t */"},
     // { "hidl_string", "string" },
     // { "hidl_vec", "vec"},
 };
@@ -135,14 +146,9 @@ const std::string Type::getHidlType() const {
                 std::string conversion = cToHidlType(id);
                 if (!conversion.empty()) {
                     ss << conversion;
-                } else if (!StringHelper::StartsWith(id, "int") &&
-                           !StringHelper::StartsWith(id, "uint") &&
-                           !StringHelper::StartsWith(id, "size") &&
-                           id.find("_") != std::string::npos) {
+                } else {
                     std::string baseName = StringHelper::RTrim(id, "_t");
                     ss << StringHelper::ToPascalCase(baseName);
-                } else {
-                    ss << id;
                 }
                 break;
             }
