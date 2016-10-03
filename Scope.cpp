@@ -18,8 +18,9 @@
 
 #include "Interface.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
+#include <hidl-util/Formatter.h>
+#include <vector>
 
 namespace android {
 
@@ -49,13 +50,32 @@ bool Scope::addType(NamedType *type, std::string *errorMsg) {
 }
 
 NamedType *Scope::lookupType(const FQName &fqName) const {
-    auto it = mTypeIndexByName.find(fqName.string().c_str());
+    CHECK(fqName.package().empty() && fqName.version().empty());
+    if (!fqName.valueName().empty()) {
+        LOG(WARNING) << fqName.string() << " does not refer to a type.";
+        return nullptr;
+    }
+    std::vector<std::string> names = fqName.names();
+    CHECK_GT(names.size(), 0u);
+    auto it = mTypeIndexByName.find(names[0]);
 
-    if (it != mTypeIndexByName.end()) {
-        return mTypes[it->second];
+    if (it == mTypeIndexByName.end()) {
+        return nullptr;
     }
 
-    return NULL;
+    NamedType *outerType = mTypes[it->second];
+    if (names.size() == 1) {
+        return outerType;
+    }
+    if (!outerType->isScope()) {
+        // more than one names, but the first name is not a scope
+        return nullptr;
+    }
+    Scope *outerScope = static_cast<Scope *>(outerType);
+    // *slowly* pop first element
+    names.erase(names.begin());
+    FQName innerName(names);
+    return outerScope->lookupType(innerName);
 }
 
 LocalIdentifier *Scope::lookupIdentifier(const std::string & /*name*/) const {
