@@ -78,6 +78,7 @@ typedef int my_int_type;
 typedef my_int_type my_type_two;
 
 namespace MyNamespace {
+    static void fun1() { }
     static void fun2() { }
 }
 
