@@ -248,6 +248,11 @@ void VectorType::emitResolveReferencesEmbedded(
         parcelObjIsPointer, isReader, mode, "", "");
 }
 
+bool VectorType::useParentInEmitResolveReferencesEmbedded() const {
+    // parentName and offsetText is not used in emitResolveReferencesEmbedded
+    return false;
+}
+
 void VectorType::emitResolveReferencesEmbeddedHelper(
             Formatter &out,
             size_t depth,

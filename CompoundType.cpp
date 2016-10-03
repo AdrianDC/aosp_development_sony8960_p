@@ -654,17 +654,31 @@ void CompoundType::emitResolveReferenceDef(
               << (prefix.empty() ? "" : (prefix + "::"))
               << localName();
 
+
+    bool useParent = false;
+    for (const auto &field : *mFields) {
+        if (field->type().useParentInEmitResolveReferencesEmbedded()) {
+            useParent = true;
+            break;
+        }
+    }
+
+    std::string parentHandleName = useParent ? "parentHandle" : "/* parentHandle */";
+    std::string parentOffsetName = useParent ? "parentOffset" : "/* parentOffset */";
+
     if (isReader) {
         out << "::readEmbeddedReferenceFromParcel(\n";
         out.indent(); out.indent();
         out << "const ::android::hardware::Parcel &parcel,\n"
-            << "size_t parentHandle, size_t parentOffset)\n";
+            << "size_t " << parentHandleName << ", "
+            << "size_t " << parentOffsetName << ")\n";
         out.unindent(); out.unindent();
     } else {
         out << "::writeEmbeddedReferenceToParcel(\n";
         out.indent(); out.indent();
         out << "::android::hardware::Parcel *parcel,\n"
-            << "size_t parentHandle, size_t parentOffset) const\n";
+            << "size_t " << parentHandleName << ", "
+            << "size_t " << parentOffsetName << ") const\n";
         out.unindent(); out.unindent();
     }
 
@@ -673,6 +687,10 @@ void CompoundType::emitResolveReferenceDef(
     out.indent();
 
     out << "::android::status_t _hidl_err = ::android::OK;\n\n";
+
+    // if not useParent, then parentName and offsetText
+    // should not be used at all, then the #error should not be emitted.
+    std::string error = useParent ? "" : "\n#error\n";
 
     for (const auto &field : *mFields) {
         if (!field->type().needsResolveReferences()) {
@@ -689,12 +707,14 @@ void CompoundType::emitResolveReferenceDef(
             !isReader, // bool parcelObjIsPointer,
             isReader, // bool isReader,
             ErrorMode_Return,
-            "parentHandle",
-            "parentOffset + offsetof("
+            parentHandleName + error,
+            parentOffsetName
+                + " + offsetof("
                 + fullName()
                 + ", "
                 + field->name()
-                + ")"); // ErrorMode mode
+                + ")"
+                + error);
     }
 
     out.unindent();

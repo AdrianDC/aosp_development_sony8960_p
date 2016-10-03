@@ -140,6 +140,8 @@ struct Type {
             const std::string &parentName,
             const std::string &offsetText) const;
 
+    virtual bool useParentInEmitResolveReferencesEmbedded() const;
+
     virtual void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
