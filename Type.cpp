@@ -146,6 +146,10 @@ void Type::emitResolveReferencesEmbedded(
     CHECK(!"Should not be here");
 }
 
+bool Type::useParentInEmitResolveReferencesEmbedded() const {
+    return true;
+}
+
 void Type::emitReaderWriterEmbedded(
         Formatter &,
         size_t,
