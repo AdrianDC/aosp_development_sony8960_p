@@ -99,7 +99,9 @@ static void applyPackageRootPath(
         }
     }
 
-    CHECK(false) << "No package root path provided for package: " << package;
+    CHECK(!outputPath.empty()) << "No package root path provided for: " << package;
+
+    outputPath += '/';
 }
 
 int main(int argc, char **argv) {
