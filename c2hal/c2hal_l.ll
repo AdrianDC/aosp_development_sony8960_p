@@ -191,6 +191,7 @@ extern bool isOpenGl;
 "struct"                          { return STRUCT; }
 "union"                           { return UNION; }
 "enum"                            { return ENUM; }
+"class"                           { return CLASS; }
 "const"                           { return CONST; }
 "typedef"                         { return TYPEDEF; }
 "void"                            { return VOID; }

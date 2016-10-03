@@ -76,7 +76,7 @@ std::string get_last_comment() {
 %glr-parser
 
 /* These have to do with the fact that
- * struct_or_enum_declaration and enum_declaration
+ * struct_or_union_declaration and enum_declaration
  * both start with STRUCT/UNION/ENUM opt_id
  * and type_qualifiers contain these.
  */
@@ -88,6 +88,7 @@ std::string get_last_comment() {
 %token STRUCT
 %token UNION
 %token ENUM
+%token CLASS
 %token CONST
 %token VOID
 %token INCLUDE
@@ -113,6 +114,8 @@ std::string get_last_comment() {
 %right '~' '!' UMINUS UPLUS
 %left ARRAY_SUBSCRIPT FUNCTION_CALL
 
+%right STRUCT ENUM
+
 %token<str> ID
 %token<str> COMMENT
 %token<str> VALUE
@@ -127,6 +130,7 @@ std::string get_last_comment() {
 %type<expression> expr
 %type<expressions> args
 %type<type> type
+%type<type> opt_enum_base_type
 %type<qualifier> type_qualifier
 %type<qualifiers> type_qualifiers
 %type<declaration> declaration
@@ -301,18 +305,34 @@ opt_comma
     | ','
     ;
 
+enum_key
+    : ENUM
+    | ENUM CLASS  /* c++11 */
+    | ENUM STRUCT /* c++11 */
+    ;
+
+opt_enum_base_type
+    : /* EMPTY */ { $$ = NULL; }
+    | ':' type    { $$ = $2; }
+    ;
+
 enum_declaration
-    : ENUM opt_id
+    : enum_key opt_id
       {
         $<str>$ = strdup(get_last_comment().c_str());
       }
-                           '{' enum_vars '}' opt_id
+                        opt_enum_base_type '{' enum_vars '}' opt_id
       {
-        $$ = new CompositeDeclaration(Type::Qualifier::ENUM, $2, $5);
+        $$ = new CompositeDeclaration(Type::Qualifier::ENUM, $2, $6);
         $$->setComment($<str>3);
 
-        if(!std::string($7).empty()) {
-          $$->setName($7);
+        if($4) {
+          $$->setEnumTypeName($4->decorateName(""));
+          delete $4;
+        }
+
+        if(!std::string($8).empty()) {
+          $$->setName($8);
         }
       }
     ;
@@ -499,7 +519,7 @@ type_qualifier
     | CONST                   { $$ = new Type::Qualifier(Type::Qualifier::CONST); }
     | ID                      { $$ = new Type::Qualifier(Type::Qualifier::ID, $1); }
     | '<' type '>'            { $$ = new Type::Qualifier(Type::Qualifier::GENERICS, $2); }
-    | ENUM                    { $$ = new Type::Qualifier(Type::Qualifier::ENUM); }
+    | enum_key                { $$ = new Type::Qualifier(Type::Qualifier::ENUM); }
     | struct_or_union         { $$ = new Type::Qualifier($1); }
     ;
 
