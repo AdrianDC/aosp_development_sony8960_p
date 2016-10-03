@@ -139,7 +139,8 @@ std::string get_last_comment() {
 %type<str> opt_id
 %type<include> include
 %type<enum_var> enum_var
-%type<declarations> enum_vars
+%type<declarations> enum_vars enum_vars_all_but_last
+%type<declaration> enum_var_line enum_var_last_line
 
 %start parse_selector
 
@@ -179,7 +180,6 @@ expr_parser
 header
     : declarations /* well, we are a header file */
       {
-        std::reverse($1->begin(), $1->end());
         ast->setDeclarations($1);
       }
     ;
@@ -189,19 +189,19 @@ declarations
       {
         $$ = new std::vector<Declaration *>;
       }
-    | declaration declarations
+    | declarations declaration
       {
-        $$ = $2;
-        $$->push_back($1);
+        $$ = $1;
+        $$->push_back($2);
       }
-    | EXTERN C_STRING '{' declarations '}' declarations
+    | declarations EXTERN C_STRING '{' declarations '}'
       {
-        $6->push_back(new Note("} // end of extern C"));
-        $6->insert($6->end(), $4->begin(), $4->end());
-        $6->push_back(new Note("extern \"C\" { "));
-        delete $4;
+        $1->push_back(new Note("extern \"C\" { "));
+        $1->insert($1->end(), $5->begin(), $5->end());
+        $1->push_back(new Note("} // end of extern C"));
+        delete $5;
 
-        $$ = $6;
+        $$ = $1;
       }
     ;
 
@@ -287,7 +287,6 @@ struct_or_union_declaration
       }
                              '{' declarations '}' opt_id
       {
-        std::reverse($5->begin(), $5->end());
         $$ = new CompositeDeclaration($1, $2, $5);
         $$->setComment($<str>3);
 
@@ -297,6 +296,11 @@ struct_or_union_declaration
       }
     ;
 
+opt_comma
+    : /* EMPTY */
+    | ','
+    ;
+
 enum_declaration
     : ENUM opt_id
       {
@@ -304,7 +308,6 @@ enum_declaration
       }
                            '{' enum_vars '}' opt_id
       {
-        std::reverse($5->begin(), $5->end());
         $$ = new CompositeDeclaration(Type::Qualifier::ENUM, $2, $5);
         $$->setComment($<str>3);
 
@@ -319,22 +322,39 @@ enum_vars
       {
         $$ = new std::vector<Declaration *>;
       }
-    | enum_var /* a comma is optional on the last item */
+    | enum_vars_all_but_last enum_var_last_line
+      {
+        $$ = $1;
+        $$->push_back($2);
+      }
+
+enum_vars_all_but_last
+    : /* EMPTY */
       {
         $$ = new std::vector<Declaration *>;
-        $$->push_back($1);
       }
-    | enum_var ',' enum_vars
+    | enum_vars_all_but_last enum_var_line
       {
-        $$ = $3;
-        $$->push_back($1);
+        $$ = $1;
+        $$->push_back($2);
       }
-    | OTHER_STATEMENT enum_vars
+    ;
+
+enum_var_last_line
+    : enum_var opt_comma { $$ = $1; }
+    | OTHER_STATEMENT
       {
-        $$ = $2;
-        Note *note = new Note($1);
-        note->setComment(get_last_comment());
-        $$->push_back(note);
+        $$ = new Note($1);
+        $$->setComment(get_last_comment());
+      }
+    ;
+
+enum_var_line
+    : enum_var ',' { $$ = $1; }
+    | OTHER_STATEMENT
+      {
+        $$ = new Note($1);
+        $$->setComment(get_last_comment());
       }
     ;
 
@@ -361,10 +381,10 @@ params
         $$ = new std::vector<Declaration *>;
         $$->push_back($1);
       }
-    | param ',' params
+    | params ',' param
       {
-        $$ = $3;
-        $$->push_back($1);
+        $$ = $1;
+        $$->push_back($3);
       }
     ;
 
@@ -382,17 +402,14 @@ param
     | type '(' '*' ID arrays ')' '(' params ')'
       {
         $1->setArrays($5);
-        std::reverse($8->begin(), $8->end());
         $$ = new FunctionDeclaration($1, $4, $8);
       }
     | type ID '(' params ')'
       {
-        std::reverse($4->begin(), $4->end());
         $$ = new FunctionDeclaration($1, $2, $4);
       }
     | type '(' ID ')' '(' params ')'
       {
-        std::reverse($6->begin(), $6->end());
         $$ = new FunctionDeclaration($1, $3, $6);
       }
     | VARARGS
@@ -404,7 +421,6 @@ param
 type
     : type_qualifiers
       {
-        std::reverse($1->begin(), $1->end());
         $$ = new Type($1);
       }
     ;
@@ -415,10 +431,10 @@ type_qualifiers
         $$ = new std::vector<Type::Qualifier *>;
         $$->push_back($1);
      }
-    | type_qualifier type_qualifiers
+    | type_qualifiers type_qualifier
      {
-        $$ = $2;
-        $$->push_back($1);
+        $$ = $1;
+        $$->push_back($2);
      }
     ;
 
@@ -440,7 +456,6 @@ expr
                                 $$ = Expression::arraySubscript($1, $3);
                               }
     | ID '(' args ')' %prec FUNCTION_CALL {
-                                std::reverse($3->begin(), $3->end());
                                 $$ = Expression::functionCall($1, $3);
                               }
     | expr '?' expr ':' expr  { $$ = Expression::ternary($1, $3, $5); }
@@ -469,10 +484,10 @@ args
         $$ = new std::vector<Expression *>;
         $$->push_back($1);
       }
-    | expr ',' args
+    | args ',' expr
       {
-        $$ = $3;
-        $$->push_back($1);
+        $$ = $1;
+        $$->push_back($3);
       }
     ;
 
