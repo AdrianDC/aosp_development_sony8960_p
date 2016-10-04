@@ -367,6 +367,18 @@ enum effect_command_e {
    EFFECT_CMD_FIRST_PROPRIETARY = 0x10000 // first proprietary command code
 };
 
+
+namespace myspace {
+enum class enum_class : int32_t {
+    great,
+};
+} // namespace myspace
+
+enum struct enum_struct {
+    great,
+};
+
+
 __END_DECLS
 
 #endif
