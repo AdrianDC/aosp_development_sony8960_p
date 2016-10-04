@@ -35,6 +35,8 @@ struct Scope : public NamedType {
 
     bool addType(NamedType *type, std::string *errorMsg);
 
+    // lookup a type given an FQName.
+    // Assume fqName.package(), fqName.version(), fqName.valueName() is empty.
     NamedType *lookupType(const FQName &fqName) const;
 
     virtual LocalIdentifier *lookupIdentifier(const std::string &name) const;

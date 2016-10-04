@@ -39,11 +39,13 @@ static const std::regex kRE8("(" RE_PATH "):(" RE_COMPONENT ")");
 namespace android {
 
 FQName::FQName()
-    : mValid(false), mIsIdentifier(false) {
+    : mValid(false),
+      mIsIdentifier(false) {
 }
 
 FQName::FQName(const std::string &s)
-    : mValid(false), mIsIdentifier(false) {
+    : mValid(false),
+      mIsIdentifier(false) {
     setTo(s);
 }
 
@@ -67,6 +69,12 @@ FQName::FQName(const FQName& other)
       mVersion(other.mVersion),
       mName(other.mName),
       mValueName(other.mValueName) {
+}
+
+FQName::FQName(const std::vector<std::string> &names)
+    : mValid(false),
+      mIsIdentifier(false) {
+    setTo(StringHelper::JoinStrings(names, "."));
 }
 
 bool FQName::isValid() const {
