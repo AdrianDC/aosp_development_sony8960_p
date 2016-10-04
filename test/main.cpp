@@ -635,7 +635,7 @@ Return<void> Bar::doThis(float param) {
 
 Return<int32_t> Bar::doThatAndReturnSomething(
         int64_t param) {
-    ALOGI("SERVER(Bar) doThatAndReturnSomething(%ld)", param);
+    LOG(INFO) << "SERVER(Bar) doThatAndReturnSomething(" << param << ")";
 
     return 666;
 }
@@ -645,7 +645,15 @@ Return<double> Bar::doQuiteABit(
         int64_t b,
         float c,
         double d) {
-    ALOGI("SERVER(Bar) doQuiteABit(%d, %ld, %.2f, %.2f)", a, b, c, d);
+    LOG(INFO) << "SERVER(Bar) doQuiteABit("
+              << a
+              << ", "
+              << b
+              << ", "
+              << c
+              << ", "
+              << d
+              << ")";
 
     return 666.5;
 }
