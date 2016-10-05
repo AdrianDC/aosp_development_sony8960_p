@@ -251,7 +251,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                     out << ", ";
                 }
 
-                out << method->name() << "_cb _hidl_cb = nullptr";
+                out << method->name() << "_cb _hidl_cb";
             }
 
             out << ") = 0;\n";
@@ -473,6 +473,10 @@ status_t AST::generatePassthroughMethod(Formatter &out,
 
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
+
+    if (returnsValue && elidedReturn == nullptr) {
+        generateCheckNonNull(out, "_hidl_cb");
+    }
 
     out << "return ";
 
@@ -847,6 +851,20 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     return err;
 }
 
+// static
+void AST::generateCheckNonNull(Formatter &out, const std::string &nonNull) {
+    out << "if (" << nonNull << " == nullptr) {\n";
+    out.indent();
+    out << "return ::android::hardware::Status::fromExceptionCode(\n";
+    out.indent();
+    out.indent();
+    out << "::android::hardware::Status::EX_ILLEGAL_ARGUMENT);\n";
+    out.unindent();
+    out.unindent();
+    out.unindent();
+    out << "}\n\n";
+}
+
 status_t AST::generateTypeSource(
         Formatter &out, const std::string &ifaceName) const {
     return mRootScope->emitTypeDefinitions(out, ifaceName);
@@ -959,6 +977,10 @@ status_t AST::generateProxySource(
 
             out.indent();
 
+            if (returnsValue && elidedReturn == nullptr) {
+                generateCheckNonNull(out, "_hidl_cb");
+            }
+
             out << "::android::hardware::Parcel _hidl_data;\n";
             out << "::android::hardware::Parcel _hidl_reply;\n";
             out << "::android::status_t _hidl_err;\n";
@@ -1044,8 +1066,6 @@ status_t AST::generateProxySource(
                 }
 
                 if (returnsValue && elidedReturn == nullptr) {
-                    out << "if (_hidl_cb != nullptr) {\n";
-                    out.indent();
                     out << "_hidl_cb(";
 
                     bool first = true;
@@ -1062,9 +1082,7 @@ status_t AST::generateProxySource(
                         first = false;
                     }
 
-                    out << ");\n";
-                    out.unindent();
-                    out << "}\n\n";
+                    out << ");\n\n";
                 }
             }
 
@@ -1617,7 +1635,12 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
 
         out << "if (mOnewayQueue.size() > kOnewayQueueMaxSize) {\n";
         out.indent();
-        out << "return Status::fromExceptionCode(Status::EX_TRANSACTION_FAILED);\n";
+        out << "return ::android::hardware::Status::fromExceptionCode(\n";
+        out.indent();
+        out.indent();
+        out << "::android::hardware::Status::EX_TRANSACTION_FAILED);\n";
+        out.unindent();
+        out.unindent();
         out.unindent();
         out << "} else {\n";
         out.indent();
