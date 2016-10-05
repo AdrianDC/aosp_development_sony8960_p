@@ -140,6 +140,8 @@ private:
     std::string makeHeaderGuard(const std::string &baseName) const;
     void enterLeaveNamespace(Formatter &out, bool enter) const;
 
+    static void generateCheckNonNull(Formatter &out, const std::string &nonNull);
+
     status_t generateInterfaceHeader(const std::string &outputPath) const;
     status_t generateHwBinderHeader(const std::string &outputPath) const;
     status_t generateStubHeader(const std::string &outputPath) const;
