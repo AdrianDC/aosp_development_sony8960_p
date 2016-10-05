@@ -99,6 +99,9 @@ struct AST {
         return mImportedNames;
     }
 
+    void appendToExportedTypesVector(
+            std::vector<const Type *> *exportedTypes) const;
+
 private:
     Coordinator *mCoordinator;
     std::string mPath;

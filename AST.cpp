@@ -393,4 +393,9 @@ bool AST::isJavaCompatible() const {
     return iface->isJavaCompatible();
 }
 
+void AST::appendToExportedTypesVector(
+        std::vector<const Type *> *exportedTypes) const {
+    mRootScope->appendToExportedTypesVector(exportedTypes);
+}
+
 }  // namespace android;

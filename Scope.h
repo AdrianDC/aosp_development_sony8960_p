@@ -65,6 +65,9 @@ struct Scope : public NamedType {
 
     bool isJavaCompatible() const override;
 
+    void appendToExportedTypesVector(
+            std::vector<const Type *> *exportedTypes) const override;
+
 private:
     std::vector<NamedType *> mTypes;
     std::map<std::string, size_t> mTypeIndexByName;
