@@ -146,6 +146,7 @@ void CompoundType::emitReaderWriter(
             out,
             0 /* depth */,
             name,
+            name, /* sanitizedName */
             isReader /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
@@ -159,6 +160,7 @@ void CompoundType::emitReaderWriterEmbedded(
         Formatter &out,
         size_t /* depth */,
         const std::string &name,
+        const std::string & /*sanitizedName */,
         bool nameIsPointer,
         const std::string &parcelObj,
         bool parcelObjIsPointer,
@@ -626,6 +628,7 @@ void CompoundType::emitStructReaderWriter(
                 out,
                 0 /* depth */,
                 field->name(),
+                field->name() /* sanitizedName */,
                 false /* nameIsPointer */,
                 "parcel",
                 !isReader /* parcelObjIsPointer */,
