@@ -44,6 +44,7 @@ struct PredefinedType : public Type {
             Formatter &out,
             size_t depth,
             const std::string &name,
+            const std::string &sanitizedName,
             bool nameIsPointer,
             const std::string &parcelObj,
             bool parcelObjIsPointer,

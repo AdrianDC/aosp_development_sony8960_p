@@ -171,6 +171,7 @@ void RefType::emitResolveReferencesEmbedded(
             out,
             0 /* depth */,
             name,
+            name /* sanitizedName */,
             true /* nameIsPointer */, // for element type, name is a pointer.
             parcelObj,
             parcelObjIsPointer,
