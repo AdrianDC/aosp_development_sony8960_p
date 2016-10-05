@@ -191,6 +191,13 @@ bool Scope::isJavaCompatible() const {
     return true;
 }
 
+void Scope::appendToExportedTypesVector(
+        std::vector<const Type *> *exportedTypes) const {
+    for (const NamedType *type : mTypes) {
+        type->appendToExportedTypesVector(exportedTypes);
+    }
+}
+
 LocalIdentifier::LocalIdentifier(){}
 LocalIdentifier::~LocalIdentifier(){}
 

@@ -188,6 +188,11 @@ struct Type {
     void setAnnotations(std::vector<Annotation *> *annotations);
     const std::vector<Annotation *> &annotations() const;
 
+    virtual void appendToExportedTypesVector(
+            std::vector<const Type *> *exportedTypes) const;
+
+    virtual status_t emitExportedHeader(Formatter &out) const;
+
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
     void handleError2(Formatter &out, ErrorMode mode) const;

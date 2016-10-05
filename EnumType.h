@@ -79,8 +79,15 @@ struct EnumType : public Scope {
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
+    void appendToExportedTypesVector(
+            std::vector<const Type *> *exportedTypes) const override;
+
+    status_t emitExportedHeader(Formatter &out) const override;
+
 private:
     void getTypeChain(std::vector<const EnumType *> *out) const;
+    const Annotation *findExportAnnotation() const;
+
     std::vector<EnumValue *> mValues;
     Type *mStorageType;
 
