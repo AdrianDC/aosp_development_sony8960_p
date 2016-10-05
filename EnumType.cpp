@@ -374,7 +374,7 @@ void EnumType::appendToExportedTypesVector(
     }
 }
 
-status_t EnumType::emitExportedHeader(Formatter &out) const {
+status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
     const Annotation *annotation = findExportAnnotation();
     CHECK(annotation != nullptr);
 
@@ -399,9 +399,61 @@ status_t EnumType::emitExportedHeader(Formatter &out) const {
     }
 
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
-    CHECK(scalarType != NULL);
+    CHECK(scalarType != nullptr);
 
-    std::string extra;
+    if (forJava) {
+        if (!name.empty()) {
+            out << "public final class "
+                << name
+                << " {\n";
+
+            out.indent();
+        } else {
+            out << "// Values declared in " << localName() << " follow.\n";
+        }
+
+        std::string extra;  // unused, because ScalarType leaves this empty.
+        const std::string typeName =
+            scalarType->getJavaType(&extra, false /* forInitializer */);
+
+        std::vector<const EnumType *> chain;
+        getTypeChain(&chain);
+
+        for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+            const auto &type = *it;
+
+            for (const auto &entry : type->values()) {
+                out << "public static final "
+                    << typeName
+                    << " "
+                    << valuePrefix
+                    << entry->name()
+                    << " = ";
+
+                // javaValue will make the number signed.
+                std::string value = entry->javaValue(scalarType->getKind());
+                CHECK(!value.empty()); // use autofilled values for java.
+                out << value;
+
+                out << ";";
+
+                std::string comment = entry->comment();
+                if (!comment.empty() && comment != value) {
+                    out << " // " << comment;
+                }
+
+                out << "\n";
+            }
+        }
+
+        if (!name.empty()) {
+            out.unindent();
+            out << "};\n";
+        }
+        out << "\n";
+
+        return OK;
+    }
 
     if (!name.empty()) {
         out << "typedef ";
