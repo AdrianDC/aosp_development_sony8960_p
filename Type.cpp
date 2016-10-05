@@ -390,6 +390,14 @@ void Type::getAlignmentAndSize(size_t *, size_t *) const {
     CHECK(!"Should not be here");
 }
 
+void Type::appendToExportedTypesVector(
+        std::vector<const Type *> * /* exportedTypes */) const {
+}
+
+status_t Type::emitExportedHeader(Formatter & /* out */) const {
+    return OK;
+}
+
 ////////////////////////////////////////
 
 TemplatedType::TemplatedType() : mElementType(nullptr) {

@@ -56,7 +56,7 @@ const AnnotationParamVector &Annotation::params() const {
     return *mParams;
 }
 
-const AnnotationParam *Annotation::getParam(const std::string &name) {
+const AnnotationParam *Annotation::getParam(const std::string &name) const {
     for (auto *i: *mParams) {
         if (i->getName() == name) {
             return i;

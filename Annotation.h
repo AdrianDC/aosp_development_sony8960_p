@@ -49,7 +49,7 @@ struct Annotation {
 
     std::string name() const;
     const AnnotationParamVector &params() const;
-    const AnnotationParam *getParam(const std::string &name);
+    const AnnotationParam *getParam(const std::string &name) const;
 
     void dump(Formatter &out) const;
 
