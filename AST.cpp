@@ -42,7 +42,7 @@ AST::AST(Coordinator *coordinator, const std::string &path)
 
 AST::~AST() {
     delete mRootScope;
-    mRootScope = NULL;
+    mRootScope = nullptr;
 
     CHECK(mScanner == NULL);
 
@@ -95,6 +95,7 @@ bool AST::addImport(const char *import) {
     // LOG(INFO) << "importing " << fqName.string();
 
     if (fqName.name().empty()) {
+        // import a package
         std::vector<FQName> packageInterfaces;
 
         status_t err =
@@ -107,21 +108,67 @@ bool AST::addImport(const char *import) {
 
         for (const auto &subFQName : packageInterfaces) {
             AST *ast = mCoordinator->parse(subFQName, &mImportedASTs);
-            if (ast == NULL) {
+            if (ast == nullptr) {
                 return false;
             }
+            // all previous single type imports are ignored.
+            mImportedTypes.erase(ast);
         }
 
         return true;
     }
 
-    AST *importAST = mCoordinator->parse(fqName, &mImportedASTs);
+    AST *importAST;
 
-    if (importAST == NULL) {
-        return false;
+    // cases like android.hardware.foo@1.0::IFoo.Internal
+    //            android.hardware.foo@1.0::Abc.Internal
+
+    // assume it is an interface, and try to import it.
+    const FQName interfaceName = fqName.getTopLevelType();
+    importAST = mCoordinator->parse(interfaceName, &mImportedASTs);
+
+    if (importAST != nullptr) {
+        // cases like android.hardware.foo@1.0::IFoo.Internal
+        //        and android.hardware.foo@1.0::IFoo
+        if (fqName == interfaceName) {
+            // import a single file.
+            // all previous single type imports are ignored.
+            // cases like android.hardware.foo@1.0::IFoo
+            //        and android.hardware.foo@1.0::types
+            mImportedTypes.erase(importAST);
+            return true;
+        }
+
+        // import a single type from this file
+        // cases like android.hardware.foo@1.0::IFoo.Internal
+        FQName matchingName;
+        Type *match = importAST->findDefinedType(fqName, &matchingName);
+        if (match == nullptr) {
+            return false;
+        }
+        // will automatically create a set if it does not exist
+        mImportedTypes[importAST].insert(match);
+        return true;
     }
 
-    return true;
+    // probably a type in types.hal, like android.hardware.foo@1.0::Abc.Internal
+    FQName typesFQName = fqName.getTypesForPackage();
+    importAST = mCoordinator->parse(typesFQName, &mImportedASTs);
+
+    if (importAST != nullptr) {
+        // Attempt to find Abc.Internal in types.
+        FQName matchingName;
+        Type *match = importAST->findDefinedType(fqName, &matchingName);
+        if (match == nullptr) {
+            return false;
+        }
+        // will automatically create a set if not exist
+        mImportedTypes[importAST].insert(match);
+        return true;
+    }
+
+    // can't find an appropriate AST for fqName.
+    return false;
 }
 
 void AST::addImportedAST(AST *ast) {
@@ -212,7 +259,7 @@ Type *AST::lookupType(const FQName &fqName) {
 
     if (fqName.name().empty()) {
         // Given a package and version???
-        return NULL;
+        return nullptr;
     }
 
     if (fqName.package().empty() && fqName.version().empty()) {
@@ -221,7 +268,7 @@ Type *AST::lookupType(const FQName &fqName) {
         for (size_t i = mScopePath.size(); i-- > 0;) {
             Type *type = mScopePath[i]->lookupType(fqName);
 
-            if (type != NULL) {
+            if (type != nullptr) {
                 // Resolve typeDefs to the target type.
                 while (type->isTypeDef()) {
                     type = static_cast<TypeDef *>(type)->referencedType();
@@ -237,6 +284,10 @@ Type *AST::lookupType(const FQName &fqName) {
     FQName resolvedName;
 
     for (const auto &importedAST : mImportedASTs) {
+        if (mImportedTypes.find(importedAST) != mImportedTypes.end()) {
+            // ignore single type imports
+            continue;
+        }
         FQName matchingName;
         Type *match = importedAST->findDefinedType(fqName, &matchingName);
 
@@ -249,7 +300,34 @@ Type *AST::lookupType(const FQName &fqName) {
                 std::cerr << "  " << resolvedName.string() << "\n";
                 std::cerr << "  " << matchingName.string() << "\n";
 
-                return NULL;
+                return nullptr;
+            }
+
+            resolvedType = match;
+            returnedType = resolvedType;
+            resolvedName = matchingName;
+
+            // Keep going even after finding a match.
+        }
+    }
+
+    for (const auto &pair : mImportedTypes) {
+        AST *importedAST = pair.first;
+        std::set<Type *> importedTypes = pair.second;
+
+        FQName matchingName;
+        Type *match = importedAST->findDefinedType(fqName, &matchingName);
+        if (match != nullptr &&
+                importedTypes.find(match) != importedTypes.end()) {
+            if (resolvedType != nullptr) {
+                std::cerr << "ERROR: Unable to resolve type name '"
+                          << fqName.string()
+                          << "', multiple matches found:\n";
+
+                std::cerr << "  " << resolvedName.string() << "\n";
+                std::cerr << "  " << matchingName.string() << "\n";
+
+                return nullptr;
             }
 
             resolvedType = match;

@@ -123,6 +123,12 @@ private:
     // A set of all ASTs we explicitly or implicitly (types.hal) import.
     std::set<AST *> mImportedASTs;
 
+    // If a single type (instead of the whole AST) is imported, the AST will be
+    // present as a key to this map, with the value being a list of types
+    // imported from this AST. If an AST appears in mImportedASTs but not in
+    // mImportedTypes, then the whole AST is imported.
+    std::map<AST *, std::set<Type *>> mImportedTypes;
+
     // Types keyed by full names defined in this AST.
     std::map<FQName, Type *> mDefinedTypesByFullName;
 

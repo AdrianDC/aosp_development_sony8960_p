@@ -99,11 +99,16 @@ struct FQName {
     // -> Bar
     std::string getInterfaceBaseName() const;
 
+    // Replace whatever after :: with "types"
+    // android.hardware.foo@1.0::Abc.Type:VALUE
+    // -> android.hardware.foo@1.0::types
+    FQName getTypesForPackage() const;
+
     // the following comments all assume that the FQName
-    // is ::android::hardware::Foo::V1_0::IBar::Baz
+    // is android.hardware.foo@1.0::IBar.Baz.Bam
 
     // returns highest type in the hidl namespace, i.e.
-    // ::android::hardware::Foo::V1_0::IBar
+    // android.hardware.foo@1.0::IBar
     const FQName getTopLevelType() const;
 
     // returns an unambiguous fully qualified name which can be
