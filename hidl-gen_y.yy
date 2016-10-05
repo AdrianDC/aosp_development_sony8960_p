@@ -590,7 +590,7 @@ struct_or_union_declaration
               YYERROR;
           }
 
-          $$ = container->ref();
+          $$ = container;
       }
     ;
 
@@ -687,7 +687,7 @@ enum_declaration
               YYERROR;
           }
 
-          $$ = enumType->ref();
+          $$ = enumType;
       }
     | ENUM IDENTIFIER opt_storage_type
       {
@@ -704,7 +704,7 @@ enum_declaration
               YYERROR;
           }
 
-          $$ = enumType->ref();
+          $$ = enumType;
       }
     ;
 
