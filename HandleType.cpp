@@ -81,6 +81,7 @@ void HandleType::emitReaderWriterEmbedded(
         Formatter &out,
         size_t /* depth */,
         const std::string &name,
+        const std::string &sanitizedName,
         bool nameIsPointer,
         const std::string &parcelObj,
         bool parcelObjIsPointer,
@@ -89,7 +90,7 @@ void HandleType::emitReaderWriterEmbedded(
         const std::string &parentName,
         const std::string &offsetText) const {
     if (isReader) {
-        const std::string ptrName = "_hidl_" + name  + "_ptr";
+        const std::string ptrName = "_hidl_" + sanitizedName  + "_ptr";
 
         out << "const native_handle_t *"
             << ptrName
