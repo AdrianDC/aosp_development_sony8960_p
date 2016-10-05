@@ -16,6 +16,7 @@
 
 #include "EnumType.h"
 
+#include "Annotation.h"
 #include "ScalarType.h"
 
 #include <inttypes.h>
@@ -284,6 +285,86 @@ void EnumType::getTypeChain(std::vector<const EnumType *> *out) const {
 
 void EnumType::getAlignmentAndSize(size_t *align, size_t *size) const {
     mStorageType->getAlignmentAndSize(align, size);
+}
+
+const Annotation *EnumType::findExportAnnotation() const {
+    for (const auto &annotation : annotations()) {
+        if (annotation->name() == "export") {
+            return annotation;
+        }
+    }
+
+    return nullptr;
+}
+
+void EnumType::appendToExportedTypesVector(
+        std::vector<const Type *> *exportedTypes) const {
+    if (findExportAnnotation() != nullptr) {
+        exportedTypes->push_back(this);
+    }
+}
+
+status_t EnumType::emitExportedHeader(Formatter &out) const {
+    const Annotation *annotation = findExportAnnotation();
+    CHECK(annotation != nullptr);
+
+    std::string name = localName();
+
+    const AnnotationParam *nameParam = annotation->getParam("name");
+    if (nameParam != nullptr) {
+        CHECK_EQ(nameParam->getValues()->size(), 1u);
+
+        std::string quotedString = nameParam->getValues()->at(0);
+        name = quotedString.substr(1, quotedString.size() - 2);
+    }
+
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != NULL);
+
+    std::string extra;
+
+    if (!name.empty()) {
+        out << "typedef ";
+    }
+
+    out << "enum {\n";
+
+    out.indent();
+
+    std::vector<const EnumType *> chain;
+    getTypeChain(&chain);
+
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const auto &type = *it;
+
+        for (const auto &entry : type->values()) {
+            out << entry->name();
+
+            std::string value = entry->cppValue(scalarType->getKind());
+            CHECK(!value.empty()); // use autofilled values for c++.
+            out << " = " << value;
+
+            out << ",";
+
+            std::string comment = entry->comment();
+            if (!comment.empty() && comment != value) {
+                out << " // " << comment;
+            }
+
+            out << "\n";
+        }
+    }
+
+    out.unindent();
+    out << "}";
+
+    if (!name.empty()) {
+        out << " " << name;
+    }
+
+    out << ";\n\n";
+
+    return OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
