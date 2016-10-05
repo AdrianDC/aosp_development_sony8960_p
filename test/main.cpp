@@ -1274,7 +1274,14 @@ TEST_F(HidlTest, FooHaveSomeStringsTest) {
     stringArrayParam[0] = "What";
     stringArrayParam[1] = "a";
     stringArrayParam[2] = "disaster";
-    EXPECT_OK(foo->haveSomeStrings(stringArrayParam));
+    EXPECT_OK(foo->haveSomeStrings(
+                stringArrayParam,
+                [&](const auto &out) {
+                    ALOGI("CLIENT haveSomeStrings returned %s.",
+                          to_string(out).c_str());
+
+                    EXPECT_EQ(to_string(out), "['Hello', 'World']");
+                }));
     ALOGI("CLIENT haveSomeStrings returned.");
 }
 
@@ -1285,7 +1292,14 @@ TEST_F(HidlTest, FooHaveAStringVecTest) {
     stringVecParam[0] = "What";
     stringVecParam[1] = "a";
     stringVecParam[2] = "disaster";
-    EXPECT_OK(foo->haveAStringVec(stringVecParam));
+    EXPECT_OK(foo->haveAStringVec(
+                stringVecParam,
+                [&](const auto &out) {
+                    ALOGI("CLIENT haveAStringVec returned %s.",
+                          to_string(out).c_str());
+
+                    EXPECT_EQ(to_string(out), "['Hello', 'World']");
+                }));
     ALOGI("CLIENT haveAStringVec returned.");
 }
 
@@ -1433,6 +1447,13 @@ TEST_F(HidlTest, FooTranspose2Test) {
                          "['two', 'five', 'eight', 'eleven', 'fourteen'], "
                          "['three', 'six', 'nine', 'twelve', 'fifteen']]");
                 }));
+}
+
+
+TEST_F(HidlTest, FooNonNullCallbackTest) {
+    hidl_array<hidl_string, 5, 3> in;
+
+    EXPECT_FAIL(foo->transpose2(in, nullptr /* _hidl_cb */));
 }
 
 TEST_F(HidlTest, FooSendVecTest) {
