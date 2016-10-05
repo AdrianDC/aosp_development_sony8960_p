@@ -154,6 +154,7 @@ void Type::emitReaderWriterEmbedded(
         Formatter &,
         size_t,
         const std::string &,
+        const std::string &,
         bool,
         const std::string &,
         bool,

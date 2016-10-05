@@ -120,6 +120,7 @@ void VectorType::emitReaderWriter(
             out,
             0 /* depth */,
             name,
+            name /* sanitizedName */ ,
             isReader /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,
@@ -129,20 +130,11 @@ void VectorType::emitReaderWriter(
             "0 /* parentOffset */");
 }
 
-// Remove any trailing array indices from the given name, i.e. foo[2][3] => foo
-static std::string StripIndex(const std::string &name) {
-    size_t pos = name.find("[");
-    if (pos == std::string::npos) {
-        return name;
-    }
-
-    return name.substr(0, pos);
-}
-
 void VectorType::emitReaderWriterEmbedded(
         Formatter &out,
         size_t depth,
         const std::string &name,
+        const std::string &sanitizedName,
         bool nameIsPointer,
         const std::string &parcelObj,
         bool parcelObjIsPointer,
@@ -153,7 +145,7 @@ void VectorType::emitReaderWriterEmbedded(
     std::string baseExtra;
     std::string baseType = Type::getCppType(&baseExtra);
 
-    const std::string childName = "_hidl_" + StripIndex(name) + "_child";
+    const std::string childName = "_hidl_" + sanitizedName + "_child";
     out << "size_t " << childName << ";\n\n";
 
     emitReaderWriterEmbeddedForTypeName(
@@ -196,6 +188,7 @@ void VectorType::emitReaderWriterEmbedded(
             depth + 1,
             (nameIsPointer ? "(*" + name + ")" : name)
                 + "[" + iteratorName + "]",
+            sanitizedName + (nameIsPointer ? "_deref" : "") + "_indexed",
             false /* nameIsPointer */,
             parcelObj,
             parcelObjIsPointer,

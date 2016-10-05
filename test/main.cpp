@@ -624,6 +624,8 @@ struct Bar : public IBar {
     Return<void> sendVec(
             const hidl_vec<uint8_t> &data, sendVec_cb _hidl_cb) override;
 
+    Return<void> sendVecVec(sendVecVec_cb _hidl_cb) override;
+
     Return<void> thisIsNew() override;
 };
 
@@ -989,6 +991,13 @@ Return<void> Bar::transpose2(
 
 Return<void> Bar::sendVec(
         const hidl_vec<uint8_t> &data, sendVec_cb _hidl_cb) {
+    _hidl_cb(data);
+
+    return Void();
+}
+
+Return<void> Bar::sendVecVec(sendVecVec_cb _hidl_cb) {
+    hidl_vec<hidl_vec<uint8_t>> data;
     _hidl_cb(data);
 
     return Void();
