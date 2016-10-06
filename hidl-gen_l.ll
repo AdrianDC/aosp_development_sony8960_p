@@ -95,7 +95,6 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "oneway"		{ return token::ONEWAY; }
 
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
-"opaque"		{ SCALAR_TYPE(KIND_OPAQUE); }
 "int8_t"		{ SCALAR_TYPE(KIND_INT8); }
 "uint8_t"		{ SCALAR_TYPE(KIND_UINT8); }
 "int16_t"		{ SCALAR_TYPE(KIND_INT16); }
