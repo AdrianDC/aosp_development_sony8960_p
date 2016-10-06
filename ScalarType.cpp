@@ -40,7 +40,6 @@ void ScalarType::addNamedTypesToSet(std::set<const FQName> &) const {
 std::string ScalarType::getCppType(StorageMode, std::string *extra, bool) const {
     static const char *const kName[] = {
         "bool",
-        "void *",
         "int8_t",
         "uint8_t",
         "int16_t",
@@ -62,7 +61,6 @@ std::string ScalarType::getJavaType(
         std::string *extra, bool /* forInitializer */) const {
     static const char *const kName[] = {
         "boolean",
-        "long",
         "byte",
         "byte",
         "short",
@@ -82,7 +80,6 @@ std::string ScalarType::getJavaType(
 std::string ScalarType::getJavaWrapperType() const {
     static const char *const kName[] = {
         "Boolean",
-        "Long",
         "Byte",
         "Byte",
         "Short",
@@ -101,7 +98,6 @@ std::string ScalarType::getJavaWrapperType() const {
 std::string ScalarType::getJavaSuffix() const {
     static const char *const kSuffix[] = {
         "Bool",
-        "Pointer",
         "Int8",
         "Int8",
         "Int16",
@@ -144,7 +140,6 @@ void ScalarType::emitReaderWriterWithCast(
         bool needsCast) const {
     static const char *const kSuffix[] = {
         "Bool",
-        "Pointer",
         "Int8",
         "Uint8",
         "Int16",
@@ -218,7 +213,6 @@ void ScalarType::emitJavaFieldReaderWriter(
 status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
     static const char *const kName[] = {
             "bool_t",
-            "opaque",
             "int8_t",
             "uint8_t",
             "int16_t",
@@ -237,7 +231,6 @@ status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
 void ScalarType::getAlignmentAndSize(size_t *align, size_t *size) const {
     static const size_t kAlign[] = {
         1,  // bool, this is NOT standardized!
-        8,  // void *, 64-bit mode
         1,  // int8_t
         1,  // uint8_t
         2,  // int16_t
