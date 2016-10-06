@@ -142,6 +142,9 @@ struct FQName {
 
     std::string getPackageMinorVersion() const;
 
+    // Returns the version of the package by cutting off the leading '@' prefix.
+    std::string getPackageFullVersion() const;
+
 private:
     bool mValid;
     bool mIsIdentifier;
