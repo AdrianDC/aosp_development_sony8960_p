@@ -25,7 +25,6 @@ namespace android {
 struct ScalarType : public Type {
     enum Kind {
         KIND_BOOL,
-        KIND_OPAQUE,
         KIND_INT8,
         KIND_UINT8,
         KIND_INT16,
