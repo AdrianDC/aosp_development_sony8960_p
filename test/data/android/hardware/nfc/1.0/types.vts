@@ -6,40 +6,53 @@ package: "android.hardware.nfc"
 
 
 attribute: {
-    name: "NfcEvent"
-    type: TYPE_ENUM
-    enum_value: {
-        enumerator: "OPEN_CPLT"
-        value: 0
-        enumerator: "CLOSE_CPLT"
-        value: 1
-        enumerator: "POST_INIT_CPLT"
-        value: 2
-        enumerator: "PRE_DISCOVER_CPLT"
-        value: 3
-        enumerator: "REQUEST_CONTROL"
-        value: 4
-        enumerator: "RELEASE_CONTROL"
-        value: 5
-        enumerator: "ERROR"
-        value: 6
-    }
+  name: "nfc_event_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_OPEN_CPLT_EVT"
+    value: 0
+    enumerator: "HAL_NFC_CLOSE_CPLT_EVT"
+    value: 1
+    enumerator: "HAL_NFC_POST_INIT_CPLT_EVT"
+    value: 2
+    enumerator: "HAL_NFC_PRE_DISCOVER_CPLT_EVT"
+    value: 3
+    enumerator: "HAL_NFC_REQUEST_CONTROL_EVT"
+    value: 4
+    enumerator: "HAL_NFC_RELEASE_CONTROL_EVT"
+    value: 5
+    enumerator: "HAL_NFC_ERROR_EVT"
+    value: 6
+  }
 }
 
 attribute: {
-    name: "NfcStatus"
-    type: TYPE_ENUM
-    enum_value: {
-        enumerator: "OK"
-        value: 0
-        enumerator: "FAILED"
-        value: 1
-        enumerator: "ERR_TRANSPORT"
-        value: 2
-        enumerator: "ERR_CMD_TIMEOUT"
-        value: 3
-        enumerator: "REFUSED"
-        value: 4
+  name: "nfc_status_t"
+  type: TYPE_ENUM
+  enum_value: {
+    enumerator: "HAL_NFC_STATUS_OK"
+    value: 0
+    enumerator: "HAL_NFC_STATUS_FAILED"
+    value: 1
+    enumerator: "HAL_NFC_STATUS_ERR_TRANSPORT"
+    value: 2
+    enumerator: "HAL_NFC_STATUS_ERR_CMD_TIMEOUT"
+    value: 3
+    enumerator: "HAL_NFC_STATUS_REFUSED"
+    value: 4
+  }
+}
+
+attribute: {
+  name: "nfc_data_t"
+  type: TYPE_STRUCT
+  struct_value: {
+    name: "data"
+    type: TYPE_VECTOR
+    vector_value: {
+      type: TYPE_SCALAR
+      scalar_type: "uint8_t"
     }
+  }
 }
 
