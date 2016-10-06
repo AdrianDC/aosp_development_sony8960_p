@@ -102,7 +102,8 @@ status_t AST::generateVts(const std::string &outputPath) const {
     Formatter out(file);
 
     out << "component_class: HAL_HIDL\n";
-    out << "component_type_version: " << mPackage.version().substr(1) << "\n";
+    out << "component_type_version: " << mPackage.getPackageFullVersion()
+        << "\n";
     out << "component_name: \""
         << (isInterface ? ifaceName : "types")
         << "\"\n\n";

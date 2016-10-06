@@ -666,11 +666,12 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         return err;
     }
 
-    // Generated code for instrumentation.
-    out << "// for hidl instrumentation.\n";
-    out << "std::vector<InstrumentationCallback> instrumentationCallbacks;\n\n";
-    out << "bool enableInstrumentation = false;\n";
 
+    out.unindent();
+    out << "private:\n";
+
+    out.indent();
+    emitCppInstrumentationDecl(out);
     out.unindent();
 
     out << "};\n\n";
@@ -750,6 +751,12 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     if (err != OK) {
         return err;
     }
+
+    out.unindent();
+    out << "private:\n";
+
+    out.indent();
+    emitCppInstrumentationDecl(out);
 
     out.unindent();
 
@@ -950,6 +957,8 @@ status_t AST::generateProxySource(
         << baseName
         << ">(_hidl_impl) {\n";
 
+    emitCppInstrumentationInit(out, baseName);
+
     out.unindent();
     out.unindent();
     out << "}\n\n";
@@ -979,6 +988,15 @@ status_t AST::generateProxySource(
 
             if (returnsValue && elidedReturn == nullptr) {
                 generateCheckNonNull(out, "_hidl_cb");
+            }
+
+            status_t status = generateCppInstrumentationCall(
+                    out,
+                    InstrumentationEvent::CLIENT_API_ENTRY,
+                    superInterface,
+                    method);
+            if (status != OK) {
+                return status;
             }
 
             out << "::android::hardware::Parcel _hidl_data;\n";
@@ -1084,6 +1102,14 @@ status_t AST::generateProxySource(
 
                     out << ");\n\n";
                 }
+                status_t status = generateCppInstrumentationCall(
+                        out,
+                        InstrumentationEvent::CLIENT_API_EXIT,
+                        superInterface,
+                        method);
+                if (status != OK) {
+                    return status;
+                }
             }
 
             if (elidedReturn != nullptr) {
@@ -1145,13 +1171,7 @@ status_t AST::generateStubSource(
         << baseName
         << ">(_hidl_impl) {\n";
 
-    out << "enableInstrumentation = "
-           "property_get_bool(\"hal.instrumentation.enable\", false);\n";
-    out << "registerInstrumentationCallbacks(\""
-        << mPackage.string()
-        << "::I"
-        << baseName
-        << "\", &instrumentationCallbacks);\n";
+    emitCppInstrumentationInit(out, baseName);
     out.unindent();
     out.unindent();
     out << "}\n\n";
@@ -1294,26 +1314,14 @@ status_t AST::generateStubSourceForMethod(
                 false /* addPrefixToName */);
     }
 
-    out << "if (UNLIKELY(enableInstrumentation)) {\n";
-    out.indent();
-    out << "std::vector<void *> args;\n";
-    for (const auto &arg : method->args()) {
-        out << "args.push_back((void *)"
-            << (arg->type().resultNeedsDeref() ? "" : "&")
-            << arg->name()
-            << ");\n";
+    status_t status = generateCppInstrumentationCall(
+            out,
+            InstrumentationEvent::SERVER_API_ENTRY,
+            iface,
+            method);
+    if (status != OK) {
+        return status;
     }
-
-    out << "for (auto callback: instrumentationCallbacks) {\n";
-    out.indent();
-    out << "callback(InstrumentationEvent::SERVER_API_ENTRY, \""
-        << mPackage.package()
-        << "\", \"" << mPackage.version().substr(1) << "\", \""
-        << iface->localName() << "\", \"" << method->name() << "\", &args);\n";
-    out.unindent();
-    out << "}\n";
-    out.unindent();
-    out << "}\n\n";
 
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
@@ -1361,22 +1369,14 @@ status_t AST::generateStubSourceForMethod(
                 Type::ErrorMode_Ignore,
                 false /* addPrefixToName */);
 
-        out << "if (UNLIKELY(enableInstrumentation)) {\n";
-        out.indent();
-        out << "std::vector<void *> results;\n";
-        out << "results.push_back((void *)&" << elidedReturn->name() << ");\n";
-
-        out << "for (auto callback: instrumentationCallbacks) {\n";
-        out.indent();
-        out << "callback(InstrumentationEvent::SERVER_API_EXIT, \""
-            << mPackage.package()
-            << "\", \"" << mPackage.version().substr(1) << "\", \""
-            << iface->localName() << "\", \"" << method->name()
-            << "\", &results);\n";
-        out.unindent();
-        out << "}\n";
-        out.unindent();
-        out << "}\n\n";
+        status_t status = generateCppInstrumentationCall(
+                out,
+                InstrumentationEvent::SERVER_API_EXIT,
+                iface,
+                method);
+        if (status != OK) {
+            return status;
+        }
 
         out << "_hidl_cb(*_hidl_reply);\n";
     } else {
@@ -1450,24 +1450,14 @@ status_t AST::generateStubSourceForMethod(
                         false /* addPrefixToName */);
             }
 
-            out << "if (UNLIKELY(enableInstrumentation)) {\n";
-            out.indent();
-            out << "std::vector<void *> results;\n";
-            for (const auto &arg : method->results()) {
-                out << "results.push_back((void *)&" << arg->name() << ");\n";
+            status_t status = generateCppInstrumentationCall(
+                    out,
+                    InstrumentationEvent::SERVER_API_EXIT,
+                    iface,
+                    method);
+            if (status != OK) {
+                return status;
             }
-
-            out << "for (auto callback: instrumentationCallbacks) {\n";
-            out.indent();
-            out << "callback(InstrumentationEvent::SERVER_API_EXIT, \""
-                << mPackage.package()
-                << "\", \"" << mPackage.version().substr(1) << "\", \""
-                << iface->localName() << "\", \"" << method->name()
-                << "\", &results);\n";
-            out.unindent();
-            out << "}\n";
-            out.unindent();
-            out << "}\n\n";
 
             out << "_hidl_cb(*_hidl_reply);\n";
 
@@ -1657,6 +1647,109 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
     }
 
     return OK;
+}
+
+status_t AST::generateCppInstrumentationCall(
+        Formatter &out,
+        InstrumentationEvent event,
+        const Interface *iface, const Method *method) const {
+    out << "if (UNLIKELY(mEnableInstrumentation)) {\n";
+    out.indent();
+    out << "std::vector<void *> args;\n";
+    std::string event_str = "";
+    switch (event) {
+        case SERVER_API_ENTRY:
+        {
+            event_str = "InstrumentationEvent::SERVER_API_ENTRY";
+            for (const auto &arg : method->args()) {
+                out << "args.push_back((void *)"
+                    << (arg->type().resultNeedsDeref() ? "" : "&")
+                    << arg->name()
+                    << ");\n";
+            }
+            break;
+        }
+        case SERVER_API_EXIT:
+        {
+            event_str = "InstrumentationEvent::SERVER_API_EXIT";
+            const TypedVar *elidedReturn = method->canElideCallback();
+            if (elidedReturn != nullptr) {
+                out << "args.push_back((void *)&" << elidedReturn->name()
+                    << ");\n";
+            } else {
+                for (const auto &arg : method->results()) {
+                    out << "args.push_back((void *)&" << arg->name()
+                        << ");\n";
+                }
+            }
+            break;
+        }
+        case CLIENT_API_ENTRY:
+        {
+            event_str = "InstrumentationEvent::CLIENT_API_ENTRY";
+            for (const auto &arg : method->args()) {
+                out << "args.push_back((void *)&" << arg->name() << ");\n";
+            }
+            break;
+        }
+        case CLIENT_API_EXIT:
+        {
+            event_str = "InstrumentationEvent::CLIENT_API_EXIT";
+            for (const auto &arg : method->results()) {
+                out << "args.push_back((void *)"
+                    << (arg->type().resultNeedsDeref() ? "" : "&")
+                    << "_hidl_out_" << arg->name()
+                    << ");\n";
+            }
+            break;
+        }
+        case SYNC_CALLBACK_ENTRY:
+        case SYNC_CALLBACK_EXIT:
+        case ASYNC_CALLBACK_ENTRY:
+        case ASYNC_CALLBACK_EXIT:
+        {
+            LOG(ERROR) << "Not supported instrumentation event: " << event;
+            return UNKNOWN_ERROR;
+        }
+    }
+
+    out << "for (auto callback: mInstrumentationCallbacks) {\n";
+    out.indent();
+    out << "callback("
+        << event_str
+        << ", \""
+        << mPackage.package()
+        << "\", \""
+        << mPackage.getPackageFullVersion()
+        << "\", \""
+        << iface->localName()
+        << "\", \""
+        << method->name()
+        << "\", &args);\n";
+    out.unindent();
+    out << "}\n";
+    out.unindent();
+    out << "}\n\n";
+
+    return OK;
+}
+
+void AST::emitCppInstrumentationDecl(
+        Formatter &out) const {
+    out << "// for hidl instrumentation.\n";
+    out << "std::vector<InstrumentationCallback> mInstrumentationCallbacks;\n";
+    out << "bool mEnableInstrumentation;\n";
+}
+
+void AST::emitCppInstrumentationInit(
+        Formatter &out, const std::string &baseName) const {
+    out << "mEnableInstrumentation = "
+        "property_get_bool(\"hal.instrumentation.enable\", false);\n";
+    out << "registerInstrumentationCallbacks(\""
+        << mPackage.string()
+        << "::I"
+        << baseName
+        << "\", &mInstrumentationCallbacks);\n";
 }
 
 }  // namespace android

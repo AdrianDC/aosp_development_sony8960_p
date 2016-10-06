@@ -204,6 +204,30 @@ private:
 
     status_t generatePassthroughSource(Formatter &out) const;
 
+
+    enum InstrumentationEvent {
+        SERVER_API_ENTRY = 0,
+        SERVER_API_EXIT,
+        CLIENT_API_ENTRY,
+        CLIENT_API_EXIT,
+        SYNC_CALLBACK_ENTRY,
+        SYNC_CALLBACK_EXIT,
+        ASYNC_CALLBACK_ENTRY,
+        ASYNC_CALLBACK_EXIT,
+    };
+
+    status_t generateCppInstrumentationCall(
+            Formatter &out,
+            InstrumentationEvent event,
+            const Interface *iface,
+            const Method *method) const;
+
+    void emitCppInstrumentationDecl(Formatter &out) const;
+
+    void emitCppInstrumentationInit(
+            Formatter &out,
+            const std::string &baseName) const;
+
     void declareCppReaderLocals(
             Formatter &out,
             const std::vector<TypedVar *> &arg,
