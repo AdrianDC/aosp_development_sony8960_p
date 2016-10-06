@@ -356,19 +356,31 @@ bool FQName::endsWith(const FQName &other) const {
         return false;
     }
 
-    if (pos > 0) {
-        // A match is only a match if it is preceded by a "boundary", i.e.
-        // we perform a component-wise match from the end.
-        // "az" is not a match for "android.hardware.foo@1.0::IFoo.bar.baz",
-        // "baz", "bar.baz", "IFoo.bar.baz" are.
-
-        char separator = s1[pos - 1];
-        if (separator != '.' && separator != ':') {
-            return false;
-        }
+    // A match is only a match if it is preceded by a "boundary", i.e.
+    // we perform a component-wise match from the end.
+    // "az" is not a match for "android.hardware.foo@1.0::IFoo.bar.baz",
+    // "baz", "bar.baz", "IFoo.bar.baz", "@1.0::IFoo.bar.baz" are.
+    if (pos == 0) {
+        // matches "android.hardware.foo@1.0::IFoo.bar.baz"
+        return true;
     }
 
-    return true;
+    if (s1[pos - 1] == '.') {
+        // matches "baz" and "bar.baz"
+        return true;
+    }
+
+    if (s1[pos - 1] == ':') {
+        // matches "IFoo.bar.baz"
+        return true;
+    }
+
+    if (s1[pos] == '@') {
+        // matches "@1.0::IFoo.bar.baz"
+        return true;
+    }
+
+    return false;
 }
 
 }  // namespace android
