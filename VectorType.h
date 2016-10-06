@@ -35,6 +35,8 @@ struct VectorType : public TemplatedType {
     std::string getJavaType(
             std::string *extra, bool forInitializer) const override;
 
+    std::string getVtsType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,

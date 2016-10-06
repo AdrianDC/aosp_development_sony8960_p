@@ -56,6 +56,9 @@ struct ScalarType : public Type {
     std::string getJavaWrapperType() const override;
     std::string getJavaSuffix() const override;
 
+    std::string getVtsType() const override;
+    std::string getVtsScalarType() const;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
