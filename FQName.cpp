@@ -347,6 +347,12 @@ std::string FQName::getPackageMinorVersion() const {
     return packageVersion.substr(dotPos + 1);
 }
 
+std::string FQName::getPackageFullVersion() const {
+    const std::string packageVersion = version();
+    CHECK_GT(packageVersion.length(), 1u);
+    return packageVersion.substr(1);
+}
+
 bool FQName::endsWith(const FQName &other) const {
     std::string s1 = string();
     std::string s2 = other.string();
