@@ -92,6 +92,10 @@ std::string EnumType::getJavaWrapperType() const {
     return mStorageType->resolveToScalarType()->getJavaWrapperType();
 }
 
+std::string EnumType::getVtsType() const {
+    return "TYPE_ENUM";
+}
+
 LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
     std::vector<const EnumType *> chain;
     getTypeChain(&chain);
@@ -232,11 +236,14 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
 }
 
 status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "name: \"" << localName() << "\"\n"
-        << "type: TYPE_ENUM\n"
-        << "enum_value: {\n";
+    out << "name: \"" << localName() << "\"\n";
+    out << "type: " << getVtsType() << "\n";
+    out << "enum_value: {\n";
     out.indent();
 
+    out << "scalar_type: \""
+        << mStorageType->resolveToScalarType()->getVtsScalarType()
+        << "\"\n\n";
     std::vector<const EnumType *> chain;
     getTypeChain(&chain);
 
@@ -245,13 +252,19 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
 
         for (const auto &entry : type->values()) {
             out << "enumerator: \"" << entry->name() << "\"\n";
-
+            out << "scalar_value: {\n";
+            out.indent();
             if (!entry->isAutoFill()) {
                 // don't autofill values for vts.
                 std::string value = entry->value();
                 CHECK(!value.empty());
-                out << "value: " << value << "\n";
+                out << mStorageType->resolveToScalarType()->getVtsScalarType()
+                    << ": "
+                    << value
+                    << "\n";
             }
+            out.unindent();
+            out << "}\n";
         }
     }
 
@@ -261,10 +274,8 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
 }
 
 status_t EnumType::emitVtsAttributeType(Formatter &out) const {
-    out << "type: TYPE_ENUM\n"
-        << "predefined_type: \""
-        << localName()
-        << "\"\n";
+    out << "type: " << getVtsType() << "\n";
+    out << "predefined_type: \"" << localName() << "\"\n";
     return OK;
 }
 

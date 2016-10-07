@@ -52,6 +52,8 @@ struct EnumType : public Scope {
 
     std::string getJavaWrapperType() const override;
 
+    std::string getVtsType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
