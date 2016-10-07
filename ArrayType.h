@@ -52,6 +52,8 @@ struct ArrayType : public Type {
 
     std::string getJavaWrapperType() const override;
 
+    std::string getVtsType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,

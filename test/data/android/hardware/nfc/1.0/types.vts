@@ -6,53 +6,81 @@ package: "android.hardware.nfc"
 
 
 attribute: {
-  name: "nfc_event_t"
-  type: TYPE_ENUM
-  enum_value: {
-    enumerator: "HAL_NFC_OPEN_CPLT_EVT"
-    value: 0
-    enumerator: "HAL_NFC_CLOSE_CPLT_EVT"
-    value: 1
-    enumerator: "HAL_NFC_POST_INIT_CPLT_EVT"
-    value: 2
-    enumerator: "HAL_NFC_PRE_DISCOVER_CPLT_EVT"
-    value: 3
-    enumerator: "HAL_NFC_REQUEST_CONTROL_EVT"
-    value: 4
-    enumerator: "HAL_NFC_RELEASE_CONTROL_EVT"
-    value: 5
-    enumerator: "HAL_NFC_ERROR_EVT"
-    value: 6
-  }
-}
+    name: "nfc_event_t"
+    type: TYPE_ENUM
+    enum_value: {
+        scalar_type: "uint32_t"
 
-attribute: {
-  name: "nfc_status_t"
-  type: TYPE_ENUM
-  enum_value: {
-    enumerator: "HAL_NFC_STATUS_OK"
-    value: 0
-    enumerator: "HAL_NFC_STATUS_FAILED"
-    value: 1
-    enumerator: "HAL_NFC_STATUS_ERR_TRANSPORT"
-    value: 2
-    enumerator: "HAL_NFC_STATUS_ERR_CMD_TIMEOUT"
-    value: 3
-    enumerator: "HAL_NFC_STATUS_REFUSED"
-    value: 4
-  }
-}
-
-attribute: {
-  name: "nfc_data_t"
-  type: TYPE_STRUCT
-  struct_value: {
-    name: "data"
-    type: TYPE_VECTOR
-    vector_value: {
-      type: TYPE_SCALAR
-      scalar_type: "uint8_t"
+        enumerator: "HAL_NFC_OPEN_CPLT_EVT"
+        scalar_value: {
+            uint32_t: 0
+        }
+        enumerator: "HAL_NFC_CLOSE_CPLT_EVT"
+        scalar_value: {
+            uint32_t: 1
+        }
+        enumerator: "HAL_NFC_POST_INIT_CPLT_EVT"
+        scalar_value: {
+            uint32_t: 2
+        }
+        enumerator: "HAL_NFC_PRE_DISCOVER_CPLT_EVT"
+        scalar_value: {
+            uint32_t: 3
+        }
+        enumerator: "HAL_NFC_REQUEST_CONTROL_EVT"
+        scalar_value: {
+            uint32_t: 4
+        }
+        enumerator: "HAL_NFC_RELEASE_CONTROL_EVT"
+        scalar_value: {
+            uint32_t: 5
+        }
+        enumerator: "HAL_NFC_ERROR_EVT"
+        scalar_value: {
+            uint32_t: 6
+        }
     }
-  }
+}
+
+attribute: {
+    name: "nfc_status_t"
+    type: TYPE_ENUM
+    enum_value: {
+        scalar_type: "uint32_t"
+
+        enumerator: "HAL_NFC_STATUS_OK"
+        scalar_value: {
+            uint32_t: 0
+        }
+        enumerator: "HAL_NFC_STATUS_FAILED"
+        scalar_value: {
+            uint32_t: 1
+        }
+        enumerator: "HAL_NFC_STATUS_ERR_TRANSPORT"
+        scalar_value: {
+            uint32_t: 2
+        }
+        enumerator: "HAL_NFC_STATUS_ERR_CMD_TIMEOUT"
+        scalar_value: {
+            uint32_t: 3
+        }
+        enumerator: "HAL_NFC_STATUS_REFUSED"
+        scalar_value: {
+            uint32_t: 4
+        }
+    }
+}
+
+attribute: {
+    name: "nfc_data_t"
+    type: TYPE_STRUCT
+    struct_value: {
+        name: "data"
+        type: TYPE_VECTOR
+        vector_value: {
+            type: TYPE_SCALAR
+            scalar_type: "uint8_t"
+        }
+    }
 }
 
