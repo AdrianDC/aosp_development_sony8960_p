@@ -24,7 +24,6 @@
 #include "Scope.h"
 
 #include <algorithm>
-#include <hidl-util/StringHelper.h>
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 #include <string>
@@ -368,35 +367,6 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out.indent();
 
     out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
-
-    out << "enum Call {\n";
-    out.indent();
-
-    bool first = true;
-    for (const auto &method : iface->methods()) {
-        out << StringHelper::Uppercase(method->name());
-
-        if (first) {
-            out << " = ";
-            if (superType != NULL) {
-                out << superType->fqName().cppNamespace()
-                    << "::IHw"
-                    << superType->getBaseName()
-                    << "::Call::CallCount";
-            } else {
-                out << "::android::hardware::IBinder::FIRST_CALL_TRANSACTION";
-            }
-
-            first = false;
-        }
-
-        out << ",\n";
-    }
-
-    out << "CallCount\n";
-
-    out.unindent();
-    out << "};\n\n";
 
     out.unindent();
 
@@ -1046,12 +1016,11 @@ status_t AST::generateProxySource(
             }
 
             out << "_hidl_err = remote()->transact("
-                      << superInterface->fqName().cppNamespace()
-                      << "::IHw"
-                      << superInterface->getBaseName()
-                      << "::Call::"
-                      << StringHelper::Uppercase(method->name())
-                      << ", _hidl_data, &_hidl_reply";
+                << method->getSerialId()
+                << " /* "
+                << method->name()
+                << " */, _hidl_data, &_hidl_reply";
+
             if (method->isOneway()) {
                 out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
             }
@@ -1212,12 +1181,10 @@ status_t AST::generateStubSource(
 
         for (const auto &method : superInterface->methods()) {
             out << "case "
-                << superInterface->fqName().cppNamespace()
-                << "::IHw"
-                << superInterface->getBaseName()
-                << "::Call::"
-                << StringHelper::Uppercase(method->name())
-                << ":\n{\n";
+                << method->getSerialId()
+                << " /* "
+                << method->name()
+                << " */:\n{\n";
 
             out.indent();
 

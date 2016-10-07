@@ -52,6 +52,14 @@ const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
 }
 
+void Method::setSerialId(size_t serial) {
+    mSerial = serial;
+}
+
+size_t Method::getSerialId() const {
+    return mSerial;
+}
+
 void Method::generateCppSignature(Formatter &out,
                                   const std::string &className,
                                   bool specifyNamespaces) const {
