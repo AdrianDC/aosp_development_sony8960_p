@@ -28,13 +28,16 @@ interface: {
             scalar_type: "int32_t"
         }
         arg: {
-            type: TYPE_STRUCT
-            predefined_type: "nfc_data_t"
+            type: TYPE_VECTOR
+            vector_value: {
+                type: TYPE_SCALAR
+                scalar_type: "uint8_t"
+            }
         }
     }
 
     api: {
-        name: "core_initialized"
+        name: "coreInitialized"
         return_type_hidl: {
             type: TYPE_SCALAR
             scalar_type: "int32_t"
@@ -49,7 +52,7 @@ interface: {
     }
 
     api: {
-        name: "pre_discover"
+        name: "prediscover"
         return_type_hidl: {
             type: TYPE_SCALAR
             scalar_type: "int32_t"
@@ -65,7 +68,7 @@ interface: {
     }
 
     api: {
-        name: "control_granted"
+        name: "controlGranted"
         return_type_hidl: {
             type: TYPE_SCALAR
             scalar_type: "int32_t"
@@ -73,7 +76,7 @@ interface: {
     }
 
     api: {
-        name: "power_cycle"
+        name: "powerCycle"
         return_type_hidl: {
             type: TYPE_SCALAR
             scalar_type: "int32_t"
