@@ -35,8 +35,6 @@ struct Type {
     Type();
     virtual ~Type();
 
-    Type *ref() { return this; }
-
     virtual bool isScope() const;
     virtual bool isInterface() const;
     virtual bool isEnum() const;
