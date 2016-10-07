@@ -110,6 +110,11 @@ std::string Type::getJavaSuffix() const {
     return std::string();
 }
 
+std::string Type::getVtsType() const {
+    CHECK(!"Should not be here");
+    return std::string();
+}
+
 void Type::emitReaderWriter(
         Formatter &,
         const std::string &,

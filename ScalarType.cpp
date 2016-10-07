@@ -113,6 +113,28 @@ std::string ScalarType::getJavaSuffix() const {
     return kSuffix[mKind];
 }
 
+std::string ScalarType::getVtsType() const {
+    return "TYPE_SCALAR";
+}
+
+std::string ScalarType::getVtsScalarType() const {
+    static const char * const kName[] = {
+            "bool_t",
+            "int8_t",
+            "uint8_t",
+            "int16_t",
+            "uint16_t",
+            "int32_t",
+            "uint32_t",
+            "int64_t",
+            "uint64_t",
+            "float_t",
+            "double_t"
+    };
+
+    return kName[mKind];
+}
+
 void ScalarType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -211,20 +233,8 @@ void ScalarType::emitJavaFieldReaderWriter(
 }
 
 status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
-    static const char *const kName[] = {
-            "bool_t",
-            "int8_t",
-            "uint8_t",
-            "int16_t",
-            "uint16_t",
-            "int32_t",
-            "uint32_t",
-            "int64_t",
-            "uint64_t",
-            "float_t",
-            "double_t"
-    };
-    out << "type: TYPE_SCALAR\n"<< "scalar_type: \""<< kName[mKind]<< "\"\n";
+    out << "type: " << getVtsType() << "\n";
+    out << "scalar_type: \"" << getVtsScalarType() << "\"\n";
     return OK;
 }
 

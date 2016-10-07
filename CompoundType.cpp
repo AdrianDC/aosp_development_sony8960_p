@@ -88,6 +88,19 @@ std::string CompoundType::getJavaType(
     return fullJavaName();
 }
 
+std::string CompoundType::getVtsType() const {
+    switch (mStyle) {
+        case STYLE_STRUCT:
+        {
+            return "TYPE_STRUCT";
+        }
+        case STYLE_UNION:
+        {
+            return "TYPE_UNION";
+        }
+    }
+}
+
 void CompoundType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -763,36 +776,21 @@ bool CompoundType::resultNeedsDeref() const {
 
 status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "name: \"" << localName() << "\"\n";
-    switch (mStyle) {
-        case STYLE_STRUCT:
-        {
-            out << "type: TYPE_STRUCT\n";
-            break;
-        }
-        case STYLE_UNION:
-        {
-            out << "type: TYPE_UNION\n";
-            break;
-        }
-        default:
-            break;
-    }
+    out << "type: " << getVtsType() << "\n";
 
     // Emit declaration for each subtype.
     for (const auto &type : getSubTypes()) {
         switch (mStyle) {
             case STYLE_STRUCT:
             {
-                out << "struct_value: {\n";
+                out << "sub_struct: {\n";
                 break;
             }
             case STYLE_UNION:
             {
-                out << "union_value: {\n";
+                out << "sub_union: {\n";
                 break;
             }
-            default:
-                break;
         }
         out.indent();
         status_t status(type->emitVtsTypeDeclarations(out));
@@ -816,8 +814,6 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
                 out << "union_value: {\n";
                 break;
             }
-            default:
-                break;
         }
         out.indent();
         out << "name: \"" << field->name() << "\"\n";
@@ -833,20 +829,7 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
 }
 
 status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
-    switch (mStyle) {
-        case STYLE_STRUCT:
-        {
-            out << "type: TYPE_STRUCT\n";
-            break;
-        }
-        case STYLE_UNION:
-        {
-            out << "type: TYPE_UNION\n";
-            break;
-        }
-        default:
-            break;
-    }
+    out << "type: " << getVtsType() << "\n";
     out << "predefined_type: \"" << localName() << "\"\n";
     return OK;
 }

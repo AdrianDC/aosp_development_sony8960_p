@@ -92,6 +92,8 @@ struct Type {
     virtual std::string getJavaWrapperType() const;
     virtual std::string getJavaSuffix() const;
 
+    virtual std::string getVtsType() const;
+
     enum ErrorMode {
         ErrorMode_Ignore,
         ErrorMode_Goto,
