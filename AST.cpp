@@ -227,7 +227,7 @@ Type *AST::lookupType(const FQName &fqName) {
                     type = static_cast<TypeDef *>(type)->referencedType();
                 }
 
-                return type->ref();
+                return type;
             }
         }
     }
@@ -347,7 +347,7 @@ Type *AST::lookupType(const FQName &fqName) {
         }
     }
 
-    return returnedType->ref();
+    return returnedType;
 }
 
 Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
