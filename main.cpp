@@ -896,7 +896,7 @@ static std::vector<OutputHandler> formats = {
     },
 
     {"makefile-impl",
-     OutputHandler::NOT_NEEDED /* mOutputMode */,
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForMakefile,
      generateMakefileImplForPackage,
     }
