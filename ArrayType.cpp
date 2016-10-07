@@ -120,6 +120,10 @@ std::string ArrayType::getJavaWrapperType() const {
     return mElementType->getJavaWrapperType();
 }
 
+std::string ArrayType::getVtsType() const {
+    return "TYPE_ARRAY";
+}
+
 void ArrayType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -478,13 +482,14 @@ void ArrayType::emitJavaFieldReaderWriter(
 
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     if (mSizes.size() > 1) {
-        // Multi-dimensional arrays are yet to be supported in VTS.
+        CHECK(!"Multi-dimensional arrays are yet to be supported in VTS.");
         return UNKNOWN_ERROR;
     }
 
-    out << "type: TYPE_ARRAY\n" << "vector_value: {\n";
+    out << "type: " << getVtsType() << "\n";
+    out << "vector_value: {\n";
     out.indent();
-    out << "size: " << mSizes[0] << "\n";
+    out << "vector_size: " << mSizes[0] << "\n";
     status_t err = mElementType->emitVtsTypeDeclarations(out);
     if (err != OK) {
         return err;

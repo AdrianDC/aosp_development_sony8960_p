@@ -65,6 +65,10 @@ std::string VectorType::getJavaType(
     return mElementType->getJavaType(&elementExtra) + elementExtra;
 }
 
+std::string VectorType::getVtsType() const {
+    return "TYPE_VECTOR";
+}
+
 void VectorType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -540,7 +544,8 @@ bool VectorType::resultNeedsDeref() const {
 }
 
 status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "type: TYPE_VECTOR\n" << "vector_value: {\n";
+    out << "type: " << getVtsType() << "\n";
+    out << "vector_value: {\n";
     out.indent();
     status_t err = mElementType->emitVtsTypeDeclarations(out);
     if (err != OK) {
