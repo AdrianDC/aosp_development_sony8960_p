@@ -37,6 +37,8 @@ struct StringType : public Type {
 
     std::string getJavaSuffix() const override;
 
+    std::string getVtsType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,

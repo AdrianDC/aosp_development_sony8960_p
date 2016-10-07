@@ -172,6 +172,10 @@ void Interface::emitJavaReaderWriter(
 
 status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
     for (const auto &type : getSubTypes()) {
+        // Skip for TypeDef as it is just an alias of a defined type.
+        if (type->isTypeDef()) {
+            continue;
+        }
         out << "attribute: {\n";
         out.indent();
         status_t status = type->emitVtsTypeDeclarations(out);

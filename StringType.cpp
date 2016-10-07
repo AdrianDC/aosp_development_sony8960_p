@@ -57,6 +57,10 @@ std::string StringType::getJavaSuffix() const {
     return "String";
 }
 
+std::string StringType::getVtsType() const {
+    return "TYPE_STRING";
+}
+
 void StringType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
