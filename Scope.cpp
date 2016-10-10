@@ -141,6 +141,18 @@ status_t Scope::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+status_t Scope::emitGlobalTypeDeclarations(Formatter &out) const {
+    for (size_t i = 0; i < mTypes.size(); ++i) {
+        status_t err = mTypes[i]->emitGlobalTypeDeclarations(out);
+
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    return OK;
+}
+
 status_t Scope::emitJavaTypeDeclarations(
         Formatter &out, bool atTopLevel) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {

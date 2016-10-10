@@ -263,7 +263,13 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     if (isInterface) {
         out.unindent();
 
-        out << "};\n";
+        out << "};\n\n";
+    }
+
+    err = mRootScope->emitGlobalTypeDeclarations(out);
+
+    if (err != OK) {
+        return err;
     }
 
     out << "\n";
