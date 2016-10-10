@@ -241,6 +241,10 @@ std::string FQName::getInterfaceBaseName() const {
     return mName.substr(1);
 }
 
+FQName FQName::getTypesForPackage() const {
+    return FQName(package(), version(), "types");
+}
+
 const FQName FQName::getTopLevelType() const {
     auto idx = mName.find('.');
 
