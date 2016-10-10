@@ -321,6 +321,10 @@ status_t Type::emitTypeDeclarations(Formatter &) const {
     return OK;
 }
 
+status_t Type::emitGlobalTypeDeclarations(Formatter &) const {
+    return OK;
+}
+
 status_t Type::emitTypeDefinitions(
         Formatter &, const std::string) const {
     return OK;
