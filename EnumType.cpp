@@ -329,6 +329,16 @@ status_t EnumType::emitExportedHeader(Formatter &out) const {
         name = quotedString.substr(1, quotedString.size() - 2);
     }
 
+    std::string valuePrefix;
+
+    const AnnotationParam *prefixParam = annotation->getParam("value_prefix");
+    if (prefixParam != nullptr) {
+        CHECK_EQ(prefixParam->getValues()->size(), 1u);
+
+        std::string quotedString = prefixParam->getValues()->at(0);
+        valuePrefix = quotedString.substr(1, quotedString.size() - 2);
+    }
+
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
@@ -349,7 +359,7 @@ status_t EnumType::emitExportedHeader(Formatter &out) const {
         const auto &type = *it;
 
         for (const auto &entry : type->values()) {
-            out << entry->name();
+            out << valuePrefix << entry->name();
 
             std::string value = entry->cppValue(scalarType->getKind());
             CHECK(!value.empty()); // use autofilled values for c++.
