@@ -72,6 +72,7 @@ struct EnumType : public Scope {
             bool isReader) const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
+    status_t emitGlobalTypeDeclarations(Formatter &out) const override;
 
     status_t emitJavaTypeDeclarations(
             Formatter &out, bool atTopLevel) const override;
@@ -89,6 +90,8 @@ struct EnumType : public Scope {
 private:
     void getTypeChain(std::vector<const EnumType *> *out) const;
     const Annotation *findExportAnnotation() const;
+
+    void emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const;
 
     std::vector<EnumValue *> mValues;
     Type *mStorageType;
