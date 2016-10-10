@@ -11,6 +11,7 @@
 #include <inttypes.h>
 #if GTEST_IS_THREADSAFE
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
@@ -41,6 +42,13 @@ static const nsecs_t DELAY_S = 1;
 static const nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
 static const nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
 static const nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
+
+// static storage
+static enum TestMode {
+    BINDERIZED,
+    PASSTHROUGH
+} gMode;
+// end static storage
 
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
@@ -219,7 +227,7 @@ static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
 // end duplicated code
 
 template <class T>
-static void startServer(T server,
+static void startServer(sp<T> server,
                         const std::string &serviceName,
                         const char *tag) {
     using namespace android::hardware;
@@ -243,7 +251,6 @@ static void killServer(pid_t pid, const char *serverName) {
     }
 }
 
-
 class HidlTest : public ::testing::Test {
 public:
     sp<IFoo> foo;
@@ -257,21 +264,27 @@ public:
 
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
-        // getStub is true because we are in passthrough mode.
-        foo = IFoo::getService("foo", true /* getStub */);
+        // getStub is true if we are in passthrough mode to skip checking
+        // binderized server, false for binderized mode.
+        foo = IFoo::getService("foo", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(foo, nullptr);
+        ASSERT_EQ(foo->isRemote(), gMode == BINDERIZED);
 
-        bar = IBar::getService("foo", true /* getStub */);
+        bar = IBar::getService("foo", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(bar, nullptr);
+        ASSERT_EQ(bar->isRemote(), gMode == BINDERIZED);
 
-        fooCb = IFooCallback::getService("foo callback", true /* getStub */);
+        fooCb = IFooCallback::getService("foo callback", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(fooCb, nullptr);
+        ASSERT_EQ(fooCb->isRemote(), gMode == BINDERIZED);
 
-        graphInterface = IGraph::getService("graph", true /* getStub */);
+        graphInterface = IGraph::getService("graph", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(graphInterface, nullptr);
+        ASSERT_EQ(graphInterface->isRemote(), gMode == BINDERIZED);
 
-        pointerInterface = IPointer::getService("pointer", true /* getStub */);
+        pointerInterface = IPointer::getService("pointer", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(pointerInterface, nullptr);
+        ASSERT_EQ(pointerInterface->isRemote(), gMode == BINDERIZED);
 
         ALOGI("Test setup complete");
     }
@@ -286,29 +299,33 @@ public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
         // use fork to create and kill to destroy server processes.
-        // if ((barServerPid = fork()) == 0) {
-        //     // Fear me, I am a child.
-        //     startServer(new Bar, "foo", "Bar"); // never returns
-        //     return;
-        // }
+        if ((barServerPid = fork()) == 0) {
+            // Fear me, I am a child.
+            startServer(IBar::getService("foo", true),
+                    "foo", "Bar"); // never returns
+            return;
+        }
 
-        // if ((fooCallbackServerPid = fork()) == 0) {
-        //     // Fear me, I am a second child.
-        //     startServer(new FooCallback, "foo callback", "FooCalback"); // never returns
-        //     return;
-        // }
+        if ((fooCallbackServerPid = fork()) == 0) {
+            // Fear me, I am a second child.
+            startServer(IFooCallback::getService("foo callback", true),
+                    "foo callback", "FooCalback"); // never returns
+            return;
+        }
 
-        // if ((graphServerPid = fork()) == 0) {
-        //     // Fear me, I am a third child.
-        //     startServer(new GraphInterface, "graph", "Graph"); // never returns
-        //     return;
-        // }
+        if ((graphServerPid = fork()) == 0) {
+            // Fear me, I am a third child.
+            startServer(IGraph::getService("graph", true),
+                    "graph", "Graph"); // never returns
+            return;
+        }
 
-        // if ((pointerServerPid = fork()) == 0) {
-        //     // Fear me, I am a forth child.
-        //     startServer(new PointerInterface, "pointer", "Pointer"); // never returns
-        //     return;
-        // }
+        if ((pointerServerPid = fork()) == 0) {
+            // Fear me, I am a forth child.
+            startServer(IPointer::getService("pointer", true),
+                    "pointer", "Pointer"); // never returns
+            return;
+        }
 
         // Fear you not, I am parent.
         sleep(1);
@@ -319,10 +336,10 @@ public:
         // clean up by killing server processes.
         ALOGI("Environment tear-down beginning...");
         ALOGI("Killing servers...");
-        // killServer(barServerPid, "barServer");
-        // killServer(fooCallbackServerPid, "fooCallbackServer");
-        // killServer(graphServerPid, "graphServer");
-        // killServer(pointerServerPid, "pointerServer");
+        killServer(barServerPid, "barServer");
+        killServer(fooCallbackServerPid, "fooCallbackServer");
+        killServer(graphServerPid, "graphServer");
+        killServer(pointerServerPid, "pointerServer");
         ALOGI("Servers all killed.");
         ALOGI("Environment tear-down complete.");
     }
@@ -1012,11 +1029,73 @@ TEST_F(HidlTest, PointerReportErrorsTest) {
 }
 #endif
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
-    int status = RUN_ALL_TESTS();
+int forkAndRunTests(TestMode mode) {
+    pid_t child;
+    int status;
 
-    ALOGI("Test result = %d", status);
+    const char* modeText = (mode == BINDERIZED) ? "BINDERIZED" : "PASSTHROUGH";
+    ALOGI("Start running tests in %s mode...", modeText);
+    fprintf(stdout, "Start running tests in %s mode...\n", modeText);
+    fflush(stdout);
+
+    if ((child = fork()) == 0) {
+        gMode = mode;
+        if (gMode == PASSTHROUGH) {
+
+        } else if (gMode == BINDERIZED) {
+            ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
+        }
+        int testStatus = RUN_ALL_TESTS();
+        if(testStatus == 0) {
+            exit(0);
+        }
+        int failed = ::testing::UnitTest::GetInstance()->failed_test_count();
+        if (failed == 0) {
+            exit(-testStatus);
+        }
+        exit(failed);
+    }
+    waitpid(child, &status, 0 /* options */);
+    ALOGI("All tests finished in %s mode.", modeText);
+    fprintf(stdout, "All tests finished in %s mode.\n", modeText);
+    fflush(stdout);
     return status;
+}
+
+void handleStatus(int status, const char *mode) {
+    if (status != 0) {
+        if (WIFEXITED(status)) {
+            status = WEXITSTATUS(status);
+            if (status < 0) {
+                fprintf(stderr, "RUN_ALL_TESTS returns %d for %s mode.\n", -status, mode);
+            } else {
+                fprintf(stderr, "%d test(s) failed for %s mode.\n", status, mode);
+            }
+        } else {
+            fprintf(stderr, "ERROR: %s child process exited abnormally with %d\n", mode, status);
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+
+    ::testing::InitGoogleTest(&argc, argv);
+    // put test in child process because RUN_ALL_TESTS
+    // should not be run twice.
+    int pStatus = forkAndRunTests(PASSTHROUGH);
+    int bStatus = forkAndRunTests(BINDERIZED);
+
+    ALOGI("PASSTHROUGH Test result = %d", pStatus);
+    ALOGI("BINDERIZED Test result = %d", bStatus);
+
+    fprintf(stdout, "\n===================\nSummary:\n");
+    fflush(stdout);
+    // output to terminal.
+    handleStatus(pStatus, "PASSTHROUGH");
+    handleStatus(bStatus, "BINDERIZED ");
+    if (pStatus == 0 && bStatus == 0) {
+        fprintf(stdout, "Hooray! All tests passed.\n");
+    }
+
+    return pStatus + bStatus;
 }
