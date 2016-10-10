@@ -1048,19 +1048,19 @@ public:
         ALOGI("Test setup beginning...");
         using namespace android::hardware;
         foo = IFoo::getService("foo");
-        CHECK(foo != NULL);
+        ASSERT_NE(foo, nullptr);
 
         bar = IBar::getService("foo");
-        CHECK(bar != NULL);
+        ASSERT_NE(bar, nullptr);
 
         fooCb = IFooCallback::getService("foo callback");
-        CHECK(fooCb != NULL);
+        ASSERT_NE(fooCb, nullptr);
 
         graphInterface = IGraph::getService("graph");
-        CHECK(graphInterface != NULL);
+        ASSERT_NE(graphInterface, nullptr);
 
         pointerInterface = IPointer::getService("pointer");
-        CHECK(graphInterface != NULL);
+        ASSERT_NE(graphInterface, nullptr);
 
         ALOGI("Test setup complete");
     }
