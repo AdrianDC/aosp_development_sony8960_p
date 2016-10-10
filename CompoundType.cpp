@@ -394,7 +394,8 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
 
 status_t CompoundType::emitTypeDefinitions(
         Formatter &out, const std::string prefix) const {
-    status_t err = Scope::emitTypeDefinitions(out, prefix + "::" + localName());
+    std::string space = prefix.empty() ? "" : (prefix + "::");
+    status_t err = Scope::emitTypeDefinitions(out, space + localName());
 
     if (err != OK) {
         return err;
