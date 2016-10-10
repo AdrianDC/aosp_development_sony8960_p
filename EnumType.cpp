@@ -144,14 +144,15 @@ void EnumType::emitJavaFieldReaderWriter(
 
 status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
-    CHECK(scalarType != NULL);
+    CHECK(scalarType != nullptr);
 
     std::string extra;
+    const std::string storageType = ((Type *)scalarType)->getCppType(&extra);
 
     out << "enum class "
         << localName()
         << " : "
-        << ((Type *)scalarType)->getCppType(&extra)
+        << storageType
         << " {\n";
 
     out.indent();
@@ -182,6 +183,64 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
 
     out.unindent();
     out << "};\n\n";
+
+    return OK;
+}
+
+void EnumType::emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const {
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != nullptr);
+
+    std::string extra;
+    const std::string storageType = ((Type *)scalarType)->getCppType(&extra);
+
+    out << "inline "
+        << fullName()
+        << (mutating ? " &" : "")
+        << " operator|"
+        << (mutating ? "=" : "")
+        << "(\n";
+
+    out.indent();
+    out.indent();
+
+    out << fullName()
+        << (mutating ? " &" : " ")
+        << "lhs, "
+        << fullName()
+        << " rhs) {\n";
+    out.unindent();
+
+    if (mutating) {
+        out << "lhs = ";
+    } else {
+        out << "return ";
+    }
+    out << "static_cast<"
+        << fullName()
+        << ">(\n";
+    out.indent();
+    out.indent();
+    out << "static_cast<"
+        << storageType
+        << ">(lhs) | static_cast<"
+        << storageType
+        << ">(rhs));\n";
+    out.unindent();
+    out.unindent();
+
+    if (mutating) {
+        out << "return lhs;\n";
+    }
+
+    out.unindent();
+
+    out << "}\n\n";
+}
+
+status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
+    emitEnumBitwiseOrOperator(out, false /* mutating */);
+    emitEnumBitwiseOrOperator(out, true /* mutating */);
 
     return OK;
 }
