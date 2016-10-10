@@ -164,6 +164,10 @@ struct Type {
 
     virtual status_t emitTypeDeclarations(Formatter &out) const;
 
+    // Emit any declarations pertaining to this type that have to be
+    // at global scope, i.e. enum class operators.
+    virtual status_t emitGlobalTypeDeclarations(Formatter &out) const;
+
     virtual status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const;
 
