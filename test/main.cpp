@@ -37,6 +37,13 @@
 // TODO uncomment this when kernel is patched with pointer changes.
 //#define HIDL_RUN_POINTER_TESTS 1
 
+
+// Defined in FooCallback.
+static const nsecs_t DELAY_S = 1;
+static const nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
+static const nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
+static const nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
+
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
@@ -1017,16 +1024,16 @@ Return<void> Bar::thisIsNew() {
 
 template <class T>
 static void startServer(T server,
-                        const char *serviceName,
+                        const std::string &serviceName,
                         const char *tag) {
     using namespace android::hardware;
-    ALOGI("SERVER(%s) registering", tag);
+    ALOGI("SERVER(%s) registering %s", tag, serviceName.c_str());
     server->registerAsService(serviceName);
-    ALOGI("SERVER(%s) starting", tag);
+    ALOGI("SERVER(%s) starting %s", tag, serviceName.c_str());
     ProcessState::self()->setThreadPoolMaxThreadCount(0);
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool(); // never ends. needs kill().
-    ALOGI("SERVER(%s) ends.", tag);
+    ALOGI("SERVER(%s) %s ends.", tag, serviceName.c_str());
 }
 
 static void killServer(pid_t pid, const char *serverName) {
@@ -1052,7 +1059,6 @@ public:
 
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
-        using namespace android::hardware;
         foo = IFoo::getService("foo");
         ASSERT_NE(foo, nullptr);
 
@@ -1066,7 +1072,7 @@ public:
         ASSERT_NE(graphInterface, nullptr);
 
         pointerInterface = IPointer::getService("pointer");
-        ASSERT_NE(graphInterface, nullptr);
+        ASSERT_NE(pointerInterface, nullptr);
 
         ALOGI("Test setup complete");
     }
@@ -1196,7 +1202,7 @@ TEST_F(HidlTest, FooCallMeTest) {
     nsecs_t now;
     now = systemTime();
     EXPECT_OK(foo->callMe(fooCb));
-    EXPECT_TRUE(systemTime() - now < FooCallback::ONEWAY_TOLERANCE_NS);
+    EXPECT_LT(systemTime() - now, ONEWAY_TOLERANCE_NS);
     ALOGI("CLIENT callMe returned.");
 }
 
@@ -1204,7 +1210,7 @@ TEST_F(HidlTest, ForReportResultsTest) {
 
     // Bar::callMe will invoke three methods on FooCallback; one will return
     // right away (even though it is a two-way method); the second one will
-    // block Bar for FooCallback::DELAY_S seconds, and the third one will return
+    // block Bar for DELAY_S seconds, and the third one will return
     // to Bar right away (is oneway) but will itself block for DELAY_S seconds.
     // We need a way to make sure that these three things have happened within
     // 2*DELAY_S seconds plus some small tolerance.
@@ -1219,7 +1225,7 @@ TEST_F(HidlTest, ForReportResultsTest) {
     // time to execute that we also expect.
 
     const nsecs_t reportResultsNs =
-        2 * FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS;
+        2 * DELAY_NS + TOLERANCE_NS;
 
     ALOGI("CLIENT: Waiting for up to %" PRId64 " seconds.",
           nanoseconds_to_seconds(reportResultsNs));
@@ -1231,21 +1237,22 @@ TEST_F(HidlTest, ForReportResultsTest) {
         ALOGI("CLIENT: Waited for %" PRId64 " milliseconds.",
               nanoseconds_to_milliseconds(reportResultsNs - timeLeftNs));
 
-        EXPECT_TRUE(0 <= timeLeftNs && timeLeftNs <= reportResultsNs);
+        EXPECT_LE(0, timeLeftNs);
+        EXPECT_LE(timeLeftNs, reportResultsNs);
 
         // two-way method, was supposed to return right away
         EXPECT_TRUE(invokeResults[0].invoked);
-        EXPECT_TRUE(invokeResults[0].timeNs <= invokeResults[0].callerBlockedNs);
-        EXPECT_TRUE(invokeResults[0].callerBlockedNs <= FooCallback::TOLERANCE_NS);
+        EXPECT_LE(invokeResults[0].timeNs, invokeResults[0].callerBlockedNs);
+        EXPECT_LE(invokeResults[0].callerBlockedNs, TOLERANCE_NS);
         // two-way method, was supposed to block caller for DELAY_NS
         EXPECT_TRUE(invokeResults[1].invoked);
-        EXPECT_TRUE(invokeResults[1].timeNs <= invokeResults[1].callerBlockedNs);
-        EXPECT_TRUE(invokeResults[1].callerBlockedNs <=
-                    FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS);
+        EXPECT_LE(invokeResults[1].timeNs, invokeResults[1].callerBlockedNs);
+        EXPECT_LE(invokeResults[1].callerBlockedNs,
+                    DELAY_NS + TOLERANCE_NS);
         // one-way method, do not block caller, but body was supposed to block for DELAY_NS
         EXPECT_TRUE(invokeResults[2].invoked);
-        EXPECT_TRUE(invokeResults[2].callerBlockedNs <= FooCallback::ONEWAY_TOLERANCE_NS);
-        EXPECT_TRUE(invokeResults[2].timeNs <= FooCallback::DELAY_NS + FooCallback::TOLERANCE_NS);
+        EXPECT_LE(invokeResults[2].callerBlockedNs, ONEWAY_TOLERANCE_NS);
+        EXPECT_LE(invokeResults[2].timeNs, DELAY_NS + TOLERANCE_NS);
     });
 }
 
@@ -1807,8 +1814,8 @@ TEST_F(HidlTest, PointerReportErrorsTest) {
 #endif
 
 int main(int argc, char **argv) {
-    ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
     ::testing::InitGoogleTest(&argc, argv);
+    ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
     int status = RUN_ALL_TESTS();
 
     ALOGI("Test result = %d", status);
