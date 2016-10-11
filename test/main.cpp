@@ -1458,6 +1458,11 @@ TEST_F(HidlTest, FooTranspose2Test) {
                 }));
 }
 
+TEST_F(HidlTest, FooNullNativeHandleTest) {
+    Abc xyz;
+    xyz.z = nullptr;
+    EXPECT_FAIL(foo->haveATypeFromAnotherFile(xyz));
+}
 
 TEST_F(HidlTest, FooNonNullCallbackTest) {
     hidl_array<hidl_string, 5, 3> in;
