@@ -49,8 +49,6 @@ struct Scope : public NamedType {
     bool containsSingleInterface(std::string *ifaceName) const;
     bool containsInterfaces() const;
 
-    std::string pickUniqueAnonymousName() const;
-
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
 
