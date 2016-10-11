@@ -1611,7 +1611,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         out.unindent();
         out << "}\n";
 
-        out << "return Status();\n";
+        out << "return ::android::hardware::Status();\n";
 
         out.unindent();
         out << "}\n\n";
