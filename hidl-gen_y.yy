@@ -98,12 +98,11 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 /* Precedence level 3, RTL; but we have to use %left here */
 %left UNARY_MINUS UNARY_PLUS '!' '~'
 
-%type<str> optIdentifier package
+%type<str> package
 %type<fqName> fqname
 %type<type> fqtype
 
 %type<type> type opt_storage_type
-%type<type> enum_declaration
 %type<type> opt_extends
 %type<type> type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
@@ -590,7 +589,7 @@ annotated_compound_declaration
 
 compound_declaration
     : named_struct_or_union_declaration { $$ = $1; }
-    | enum_declaration { $$ = $1; }
+    | named_enum_declaration { $$ = $1; }
     ;
 
 opt_storage_type
@@ -615,46 +614,6 @@ opt_comma
 
 named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type
-      {
-          ast->enterScope(new EnumType($2, $3));
-      }
-      enum_declaration_body
-      {
-          EnumType *enumType = static_cast<EnumType *>(ast->scope());
-          ast->leaveScope();
-
-          std::string errorMsg;
-          if (!ast->addScopedType(enumType, &errorMsg)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
-              YYERROR;
-          }
-
-          $$ = enumType;
-      }
-    ;
-
-enum_declaration
-    : ENUM
-      {
-          std::string anonName = ast->scope()->pickUniqueAnonymousName();
-          ast->enterScope(new EnumType(anonName.c_str()));
-      }
-      enum_declaration_body
-      {
-
-          EnumType *enumType = static_cast<EnumType *>(ast->scope());
-          ast->leaveScope();
-
-          std::string errorMsg;
-          if (!ast->addScopedType(enumType, &errorMsg)) {
-              // This should never fail.
-              std::cerr << "ERROR: " << errorMsg << "\n";
-              YYERROR;
-          }
-
-          $$ = enumType;
-      }
-    | ENUM IDENTIFIER opt_storage_type
       {
           ast->enterScope(new EnumType($2, $3));
       }
@@ -737,11 +696,6 @@ type
       }
     | annotated_compound_declaration { $$ = $1; }
     | INTERFACE { $$ = new GenericBinder; }
-    ;
-
-optIdentifier
-    : /* empty */ { $$ = NULL; }
-    | IDENTIFIER { $$ = $1; }
     ;
 
 %%
