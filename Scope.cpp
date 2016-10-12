@@ -115,20 +115,6 @@ bool Scope::containsInterfaces() const {
     return false;
 }
 
-std::string Scope::pickUniqueAnonymousName() const {
-    static size_t sNextID = 0;
-
-    for (;;) {
-        std::string anonName = "_hidl_Anon_" + std::to_string(sNextID++);
-
-        auto it = mTypeIndexByName.find(anonName);
-
-        if (it == mTypeIndexByName.end()) {
-            return anonName;
-        }
-    }
-}
-
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
         status_t err = mTypes[i]->emitTypeDeclarations(out);
