@@ -43,11 +43,17 @@ static const nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
 static const nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
 static const nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
 
+// forward declarations.
+class PassthroughEnvironment;
+class BinderizedEnvironment;
+
 // static storage
 static enum TestMode {
     BINDERIZED,
     PASSTHROUGH
 } gMode;
+static PassthroughEnvironment *gPassthroughEnvironment = nullptr;
+static BinderizedEnvironment *gBinderizedEnvironment = nullptr;
 // end static storage
 
 using ::android::hardware::tests::foo::V1_0::IFoo;
@@ -251,19 +257,15 @@ static void killServer(pid_t pid, const char *serverName) {
     }
 }
 
-class HidlTest : public ::testing::Test {
+class HidlEnvironmentBase : public ::testing::Environment {
 public:
     sp<IFoo> foo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
-#if HIDL_RUN_POINTER_TESTS
-    Pointer validationPointerInterface;
-#endif
 
-    virtual void SetUp() override {
-        ALOGI("Test setup beginning...");
+    void getServices() {
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
         foo = IFoo::getService("foo", gMode == PASSTHROUGH /* getStub */);
@@ -285,20 +287,30 @@ public:
         pointerInterface = IPointer::getService("pointer", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(pointerInterface, nullptr);
         ASSERT_EQ(pointerInterface->isRemote(), gMode == BINDERIZED);
-
-        ALOGI("Test setup complete");
-    }
-    virtual void TearDown() override {
     }
 };
 
-class HidlEnvironment : public ::testing::Environment {
+class PassthroughEnvironment : public HidlEnvironmentBase {
+private:
+    pid_t fooCallbackServerPid, barServerPid, graphServerPid, pointerServerPid;
+
+    virtual void SetUp() {
+        ALOGI("Environment setup beginning...");
+        getServices();
+        ALOGI("Environment setup complete.");
+    }
+};
+
+class BinderizedEnvironment : public HidlEnvironmentBase {
 private:
     pid_t fooCallbackServerPid, barServerPid, graphServerPid, pointerServerPid;
 public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
+
         // use fork to create and kill to destroy server processes.
+        // getStub = true to get the passthrough version as the backend for the
+        // binderized service.
         if ((barServerPid = fork()) == 0) {
             // Fear me, I am a child.
             startServer(IBar::getService("foo", true),
@@ -329,6 +341,8 @@ public:
 
         // Fear you not, I am parent.
         sleep(1);
+
+        getServices();
         ALOGI("Environment setup complete.");
     }
 
@@ -342,6 +356,34 @@ public:
         killServer(pointerServerPid, "pointerServer");
         ALOGI("Servers all killed.");
         ALOGI("Environment tear-down complete.");
+    }
+};
+
+class HidlTest : public ::testing::Test {
+public:
+    sp<IFoo> foo;
+    sp<IBar> bar;
+    sp<IFooCallback> fooCb;
+    sp<IGraph> graphInterface;
+    sp<IPointer> pointerInterface;
+#if HIDL_RUN_POINTER_TESTS
+    PointerInterface validationPointerInterface;
+#endif
+
+    virtual void SetUp() override {
+        ALOGI("Test setup beginning...");
+        HidlEnvironmentBase *env;
+        if (gMode == BINDERIZED) {
+            env = gBinderizedEnvironment;
+        } else {
+            env = gPassthroughEnvironment;
+        }
+        foo = env->foo;
+        bar = env->bar;
+        fooCb = env->fooCb;
+        graphInterface = env->graphInterface;
+        pointerInterface = env->pointerInterface;
+        ALOGI("Test setup complete");
     }
 };
 
@@ -1041,9 +1083,11 @@ int forkAndRunTests(TestMode mode) {
     if ((child = fork()) == 0) {
         gMode = mode;
         if (gMode == PASSTHROUGH) {
-
+            gPassthroughEnvironment = static_cast<PassthroughEnvironment *>(
+                ::testing::AddGlobalTestEnvironment(new PassthroughEnvironment));
         } else if (gMode == BINDERIZED) {
-            ::testing::AddGlobalTestEnvironment(new HidlEnvironment);
+            gBinderizedEnvironment = static_cast<BinderizedEnvironment *>(
+                ::testing::AddGlobalTestEnvironment(new BinderizedEnvironment));
         }
         int testStatus = RUN_ALL_TESTS();
         if(testStatus == 0) {
