@@ -21,7 +21,6 @@
 #include "Method.h"
 #include "Scope.h"
 
-#include <hidl-util/StringHelper.h>
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -223,36 +222,6 @@ status_t AST::generateJava(
         return err;
     }
 
-    const std::string base = (superType != NULL)
-        ? (superType->fullJavaName() + ".kOpEnd")
-        : "IHwBinder.FIRST_CALL_TRANSACTION";
-
-    bool first = true;
-    size_t index = 0;
-    for (const auto &method : iface->methods()) {
-        out << "public static final int kOp_"
-            << StringHelper::Uppercase(method->name())
-            << " = "
-            << base;
-
-        if (!first) {
-            out << " + " << index;
-        }
-
-        out << ";\n";
-
-        ++index;
-        first = false;
-    }
-
-    out << "public static final int kOpEnd = "
-        << base
-        << " + "
-        << index
-        << ";";
-
-    out << "\n\n";
-
     for (const auto &method : iface->methods()) {
         const bool returnsValue = !method->results().empty();
         const bool needsCallback = method->results().size() > 1;
@@ -373,9 +342,11 @@ status_t AST::generateJava(
             }
 
             out << "\nHwParcel reply = new HwParcel();\n"
-                << "mRemote.transact(kOp_"
-                << StringHelper::Uppercase(method->name())
-                << ", request, reply, ";
+                << "mRemote.transact("
+                << method->getSerialId()
+                << " /* "
+                << method->name()
+                << " */, request, reply, ";
 
             if (method->isOneway()) {
                 out << "IHwBinder.FLAG_ONEWAY";
@@ -476,11 +447,10 @@ status_t AST::generateJava(
             const bool needsCallback = method->results().size() > 1;
 
             out << "case "
-                << superInterface->fullJavaName()
-                << ".kOp_"
-                <<
-                StringHelper::Uppercase(method->name())
-                << ":\n{\n";
+                << method->getSerialId()
+                << " /* "
+                << method->name()
+                << " */:\n{\n";
 
             out.indent();
 
