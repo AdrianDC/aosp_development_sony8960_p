@@ -31,6 +31,26 @@ Interface::Interface(const char *localName, Interface *super)
 }
 
 void Interface::addMethod(Method *method) {
+    /* It is very important that these values NEVER change. These values
+     * must remain unchanged over the lifetime of android. This is
+     * because the framework on a device will be updated independently of
+     * the hals on a device. If the hals are compiled with one set of
+     * transaction values, and the framework with another, then the
+     * interface between them will be destroyed, and the device will not
+     * work.
+     */
+    size_t serial = 1; // hardware::IBinder::FIRST_CALL_TRANSACTION;
+
+    serial += methods().size();
+
+    const Interface *ancestor = mSuperType;
+    while (ancestor != nullptr) {
+        serial += ancestor->methods().size();
+        ancestor = ancestor->superType();
+    }
+
+    method->setSerialId(serial);
+
     mMethods.push_back(method);
 }
 

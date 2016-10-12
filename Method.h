@@ -43,6 +43,9 @@ struct Method {
     bool isOneway() const { return mOneway; }
     const std::vector<Annotation *> &annotations() const;
 
+    void setSerialId(size_t serial);
+    size_t getSerialId() const;
+
     void generateCppSignature(Formatter &out,
                               const std::string &className,
                               bool specifyNamespaces) const;
@@ -59,6 +62,7 @@ struct Method {
 
 private:
     std::string mName;
+    size_t mSerial = 0;
     std::vector<TypedVar *> *mArgs;
     std::vector<TypedVar *> *mResults;
     bool mOneway;
