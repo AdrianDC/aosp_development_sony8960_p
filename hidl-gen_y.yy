@@ -104,7 +104,6 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 
 %type<type> type opt_storage_type
 %type<type> enum_declaration
-%type<type> struct_or_union_declaration
 %type<type> opt_extends
 %type<type> type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
@@ -560,40 +559,6 @@ named_struct_or_union_declaration
       }
     ;
 
-struct_or_union_declaration
-    : struct_or_union_keyword optIdentifier
-      {
-          const char *localName = $2;
-          std::string anonName;
-          if (localName == nullptr) {
-              anonName = ast->scope()->pickUniqueAnonymousName();
-              localName = anonName.c_str();
-          }
-
-          CompoundType *container = new CompoundType($1, localName);
-          ast->enterScope(container);
-      }
-      struct_or_union_body
-      {
-          CompoundType *container = static_cast<CompoundType *>(ast->scope());
-
-          std::string errorMsg;
-          if (!container->setFields($4, &errorMsg)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @4 << "\n";
-              YYERROR;
-          }
-
-          ast->leaveScope();
-
-          if (!ast->addScopedType(container, &errorMsg)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
-              YYERROR;
-          }
-
-          $$ = container;
-      }
-    ;
-
 struct_or_union_body
     : '{' field_declarations '}' { $$ = $2; }
     ;
@@ -624,7 +589,7 @@ annotated_compound_declaration
     ;
 
 compound_declaration
-    : struct_or_union_declaration { $$ = $1; }
+    : named_struct_or_union_declaration { $$ = $1; }
     | enum_declaration { $$ = $1; }
     ;
 
