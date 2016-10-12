@@ -233,6 +233,15 @@ bool Type::isVoid() const {
            (*mQualifiers)[0]->qualification == Type::Qualifier::VOID;
 }
 
+bool Type::isHwDevice() const {
+    if (mQualifiers->size() < 2) {
+        return false;
+    }
+
+    return (*mQualifiers)[0]->qualification == Type::Qualifier::STRUCT &&
+        (*mQualifiers)[1]->qualification == Type::Qualifier::ID &&
+        (*mQualifiers)[1]->id == "hw_device_t";
+}
 
 std::string Type::removeLastId() {
     if(mQualifiers == NULL || mQualifiers->size() == 0) {
