@@ -256,6 +256,67 @@ static void generateMakefileSection(
     }
 }
 
+static status_t isPackageJavaCompatible(
+        const FQName &packageFQName,
+        Coordinator *coordinator,
+        bool *compatible) {
+    std::vector<FQName> todo;
+    status_t err =
+        coordinator->appendPackageInterfacesToVector(packageFQName, &todo);
+
+    if (err != OK) {
+        return err;
+    }
+
+    std::set<FQName> seen;
+    for (const auto &iface : todo) {
+        seen.insert(iface);
+    }
+
+    // Form the transitive closure of all imported interfaces (and types.hal-s)
+    // If any one of them is not java compatible, this package isn't either.
+    while (!todo.empty()) {
+        const FQName fqName = todo.back();
+        todo.pop_back();
+
+        AST *ast = coordinator->parse(fqName);
+
+        if (ast == nullptr) {
+            return UNKNOWN_ERROR;
+        }
+
+        if (!ast->isJavaCompatible()) {
+            *compatible = false;
+            return OK;
+        }
+
+        std::set<FQName> importedPackages;
+        ast->getImportedPackages(&importedPackages);
+
+        for (const auto &package : importedPackages) {
+            std::vector<FQName> packageInterfaces;
+            status_t err = coordinator->appendPackageInterfacesToVector(
+                    package, &packageInterfaces);
+
+            if (err != OK) {
+                return err;
+            }
+
+            for (const auto &iface : packageInterfaces) {
+                if (seen.find(iface) != seen.end()) {
+                    continue;
+                }
+
+                todo.push_back(iface);
+                seen.insert(iface);
+            }
+        }
+    }
+
+    *compatible = true;
+    return OK;
+}
+
 static status_t generateMakefileForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -277,7 +338,6 @@ static status_t generateMakefileForPackage(
     }
 
     std::set<FQName> importedPackages;
-    bool packageIsJavaCompatible = true;
     AST *typesAST = nullptr;
 
     for (const auto &fqName : packageInterfaces) {
@@ -291,15 +351,19 @@ static status_t generateMakefileForPackage(
             return UNKNOWN_ERROR;
         }
 
-        if (packageIsJavaCompatible && !ast->isJavaCompatible()) {
-            packageIsJavaCompatible = false;
-        }
-
         if (fqName.name() == "types") {
             typesAST = ast;
         }
 
         ast->getImportedPackages(&importedPackages);
+    }
+
+    bool packageIsJavaCompatible;
+    err = isPackageJavaCompatible(
+            packageFQName, coordinator, &packageIsJavaCompatible);
+
+    if (err != OK) {
+        return err;
     }
 
     if (!packageIsJavaCompatible) {
