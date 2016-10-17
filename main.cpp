@@ -317,6 +317,32 @@ static status_t isPackageJavaCompatible(
     return OK;
 }
 
+static bool packageNeedsJavaCode(
+        const std::vector<FQName> &packageInterfaces, AST *typesAST) {
+    // If there is more than just a types.hal file to this package we'll
+    // definitely need to generate Java code.
+    if (packageInterfaces.size() > 1
+            || packageInterfaces[0].name() != "types") {
+        return true;
+    }
+
+    CHECK(typesAST != nullptr);
+
+    // We'll have to generate Java code if types.hal contains any non-typedef
+    // type declarations.
+
+    Scope *rootScope = typesAST->scope();
+    std::vector<NamedType *> subTypes = rootScope->getSubTypes();
+
+    for (const auto &subType : subTypes) {
+        if (!subType->isTypeDef()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static status_t generateMakefileForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -367,6 +393,10 @@ static status_t generateMakefileForPackage(
     }
 
     if (!packageIsJavaCompatible) {
+        return OK;
+    }
+
+    if (!packageNeedsJavaCode(packageInterfaces, typesAST)) {
         return OK;
     }
 
