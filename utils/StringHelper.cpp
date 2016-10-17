@@ -228,7 +228,7 @@ void StringHelper::SplitString(
         startPos = matchPos + 1;
     }
 
-    if (startPos + 1 < s.length()) {
+    if (startPos < s.length()) {
         components->push_back(s.substr(startPos));
     }
 }
