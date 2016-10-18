@@ -569,6 +569,7 @@ Return<void> FooCallback::youBlockedMeFor(const hidl_array<int64_t, 3> &ns) {
 
 struct Bar : public IBar {
     Return<void> doThis(float param) override;
+    Return<void> doThis(uint32_t param) override;
 
     Return<int32_t> doThatAndReturnSomething(int64_t param) override;
 
@@ -632,6 +633,11 @@ struct Bar : public IBar {
 Return<void> Bar::doThis(float param) {
     ALOGI("SERVER(Bar) doThis(%.2f)", param);
 
+    return Void();
+}
+
+Return<void> Bar::doThis(uint32_t param) {
+    ALOGI("SERVER(Bar) doThis (int) (%d)", param);
     return Void();
 }
 
@@ -1121,6 +1127,13 @@ TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
     ALOGI("CLIENT doThis returned.");
+    EXPECT_EQ(true, true);
+}
+
+TEST_F(HidlTest, FooDoThisIntTest) {
+    ALOGI("CLIENT call doThis (int).");
+    EXPECT_OK(foo->doThis(42u));
+    ALOGI("CLIENT doThis (int) returned.");
     EXPECT_EQ(true, true);
 }
 
