@@ -59,10 +59,18 @@ std::string VectorType::getCppType(StorageMode mode,
 
 std::string VectorType::getJavaType(
         std::string *extra, bool /* forInitializer */) const {
-    *extra = "[]";
+    extra->clear();
 
     std::string elementExtra;
-    return mElementType->getJavaType(&elementExtra) + elementExtra;
+    std::string elementJavaType = mElementType->getJavaType(&elementExtra);
+
+    CHECK(mElementType->isArray() || elementExtra.empty());
+
+    return "ArrayList<"
+        + (mElementType->isArray()
+                ? elementJavaType : mElementType->getJavaWrapperType())
+        + elementExtra
+        + ">";
 }
 
 std::string VectorType::getVtsType() const {
@@ -341,6 +349,50 @@ void VectorType::emitJavaReaderWriter(
         return;
     }
 
+    if (mElementType->isArray()) {
+        if (isReader) {
+            std::string extra;
+            out << " new "
+                << getJavaType(&extra, false /* forInitializer */)
+                << "();\n";
+        }
+
+        out << "{\n";
+        out.indent();
+
+        out << "HwBlob _hidl_blob = ";
+
+        if (isReader) {
+            out << parcelObj
+                << ".readBuffer();\n";
+        } else {
+            size_t align, size;
+            getAlignmentAndSize(&align, &size);
+
+            out << "new HwBlob("
+                << size
+                << " /* size */);\n";
+        }
+
+        emitJavaFieldReaderWriter(
+                out,
+                0 /* depth */,
+                parcelObj,
+                "_hidl_blob",
+                argName,
+                "0 /* offset */",
+                isReader);
+
+        if (!isReader) {
+            out << parcelObj << ".writeBuffer(_hidl_blob);\n";
+        };
+
+        out.unindent();
+        out << "}\n";
+
+        return;
+    }
+
     emitJavaReaderWriterWithSuffix(
             out,
             parcelObj,
@@ -353,19 +405,15 @@ void VectorType::emitJavaReaderWriter(
 void VectorType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
     std::string extra;
-    mElementType->getJavaType(&extra);
+    std::string javaType = getJavaType(&extra, false /* forInitializer */);
 
-    const std::string wrapperType = mElementType->getJavaWrapperType();
-
-    out << "final ArrayList<"
-        << wrapperType
-        << extra
-        << "> "
+    out << "final "
+        << javaType
+        << " "
         << fieldName
-        << " = new ArrayList<"
-        << wrapperType
-        << extra
-        << ">();\n";
+        << " = new "
+        << javaType
+        << "();\n";
 }
 
 void VectorType::emitJavaFieldReaderWriter(
@@ -450,16 +498,8 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
                 iteratorName + " * " + std::to_string(elementSize),
                 true /* isReader */);
 
-        out << fieldName;
-
-        if (elementType->isArray()
-                && static_cast<const ArrayType *>(
-                    elementType)->getElementType()->resolveToScalarType()
-                        != nullptr) {
-            out << ".add(HwBlob.wrapArray(_hidl_vec_element));\n";
-        } else {
-            out << ".add(_hidl_vec_element);\n";
-        }
+        out << fieldName
+            << ".add(_hidl_vec_element);\n";
 
         out.unindent();
 
@@ -575,6 +615,10 @@ bool VectorType::isJavaCompatible() const {
 
     if (mElementType->isArray()) {
         return static_cast<ArrayType *>(mElementType)->countDimensions() == 1;
+    }
+
+    if (mElementType->isVector()) {
+        return false;
     }
 
     return true;
