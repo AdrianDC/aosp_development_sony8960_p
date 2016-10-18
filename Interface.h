@@ -27,7 +27,7 @@ struct Method;
 struct Interface : public Scope {
     Interface(const char *localName, Interface *super);
 
-    void addMethod(Method *method);
+    bool addMethod(Method *method);
 
     bool isInterface() const override;
     bool isBinder() const override;
@@ -35,6 +35,7 @@ struct Interface : public Scope {
     const Interface *superType() const;
 
     const std::vector<Method *> &methods() const;
+    Method *lookupMethod(std::string name) const;
 
     std::string getBaseName() const;
 

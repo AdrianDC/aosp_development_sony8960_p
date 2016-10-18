@@ -19,6 +19,7 @@
 #include "Annotation.h"
 #include "Method.h"
 
+#include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 #include <iostream>
 
@@ -30,7 +31,12 @@ Interface::Interface(const char *localName, Interface *super)
       mIsJavaCompatibleInProgress(false) {
 }
 
-void Interface::addMethod(Method *method) {
+bool Interface::addMethod(Method *method) {
+    if (lookupMethod(method->name()) != nullptr) {
+        LOG(ERROR) << "Redefinition of method " << method->name();
+        return false;
+    }
+
     /* It is very important that these values NEVER change. These values
      * must remain unchanged over the lifetime of android. This is
      * because the framework on a device will be updated independently of
@@ -41,17 +47,16 @@ void Interface::addMethod(Method *method) {
      */
     size_t serial = 1; // hardware::IBinder::FIRST_CALL_TRANSACTION;
 
-    serial += methods().size();
-
-    const Interface *ancestor = mSuperType;
+    const Interface *ancestor = this;
     while (ancestor != nullptr) {
         serial += ancestor->methods().size();
         ancestor = ancestor->superType();
     }
 
     method->setSerialId(serial);
-
     mMethods.push_back(method);
+
+    return true;
 }
 
 const Interface *Interface::superType() const {
@@ -68,6 +73,20 @@ bool Interface::isBinder() const {
 
 const std::vector<Method *> &Interface::methods() const {
     return mMethods;
+}
+
+Method *Interface::lookupMethod(std::string name) const {
+    const Interface *ancestor = this;
+    while (ancestor != nullptr) {
+        for (const auto &method : mMethods) {
+            if (method->name() == name) {
+                return method;
+            }
+        }
+        ancestor = ancestor->superType();
+    }
+
+    return nullptr;
 }
 
 std::string Interface::getBaseName() const {
