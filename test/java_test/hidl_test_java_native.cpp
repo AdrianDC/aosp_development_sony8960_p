@@ -52,6 +52,10 @@ struct Baz : public IBaz {
             const IBase::VectorOfArray &in,
             someMethodWithVectorOfArray_cb _hidl_cb) override;
 
+    Return<void> someMethodTakingAVectorOfArray(
+            const hidl_vec<hidl_array<uint8_t, 6> > &in,
+            someMethodTakingAVectorOfArray_cb _hidl_cb) override;
+
     Return<void> transpose(
             const IBase::StringMatrix5x3 &in,
             transpose_cb _hidl_cb) override;
@@ -118,6 +122,12 @@ static std::string to_string(bool x);
 static std::string to_string(const IBase::StringMatrix5x3 &M);
 static std::string to_string(const IBase::StringMatrix3x5 &M);
 
+template<typename T, size_t SIZE>
+static std::string to_string(const hidl_array<T, SIZE> &array);
+
+template<size_t SIZE>
+static std::string to_string(const hidl_array<uint8_t, SIZE> &array);
+
 template<typename T>
 static std::string to_string(const hidl_vec<T> &vec) {
     std::string out;
@@ -144,6 +154,23 @@ static std::string to_string(const hidl_array<T, SIZE> &array) {
         out += to_string(array[i]);
     }
     out += "]";
+
+    return out;
+}
+
+template<size_t SIZE>
+static std::string to_string(const hidl_array<uint8_t, SIZE> &array) {
+    std::string out;
+    for (size_t i = 0; i < SIZE; ++i) {
+        if (i > 0) {
+            out += ":";
+        }
+
+        char tmp[3];
+        sprintf(tmp, "%02x", array[i]);
+
+        out += tmp;
+    }
 
     return out;
 }
@@ -289,6 +316,26 @@ Return<void> Baz::someMethodWithVectorOfArray(
 
     for (size_t i = 0; i < n; ++i) {
         out.addresses[i] = in.addresses[n - 1 - i];
+    }
+
+    _hidl_cb(out);
+
+    return Void();
+}
+
+Return<void> Baz::someMethodTakingAVectorOfArray(
+        const hidl_vec<hidl_array<uint8_t, 6> > &in,
+        someMethodTakingAVectorOfArray_cb _hidl_cb) {
+    LOG(INFO) << "Baz::someMethodTakingAVectorOfArray "
+              << to_string(in);
+
+    const size_t n = in.size();
+
+    hidl_vec<hidl_array<uint8_t, 6> > out;
+    out.resize(n);
+
+    for (size_t i = 0; i < n; ++i) {
+        out[i] = in[n - 1 - i];
     }
 
     _hidl_cb(out);
@@ -675,6 +722,27 @@ TEST_F(HidlTest, BazSomeMethodWithVectorOfArray) {
                           "0c:0d:0e:0f:10:11, "
                           "06:07:08:09:0a:0b, "
                           "00:01:02:03:04:05)");
+                }));
+}
+
+TEST_F(HidlTest, BazSomeMethodTakingAVectorOfArray) {
+    hidl_vec<hidl_array<uint8_t, 6> > in;
+    in.resize(3);
+
+    size_t k = 0;
+    for (size_t i = 0; i < in.size(); ++i) {
+        for (size_t j = 0; j < 6; ++j, ++k) {
+            in[i][j] = k;
+        }
+    }
+
+    EXPECT_OK(
+            baz->someMethodTakingAVectorOfArray(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(
+                        to_string(out),
+                        "[0c:0d:0e:0f:10:11, 06:07:08:09:0a:0b, 00:01:02:03:04:05]");
                 }));
 }
 
