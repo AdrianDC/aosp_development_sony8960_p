@@ -55,6 +55,8 @@ static enum TestMode {
 } gMode;
 static PassthroughEnvironment *gPassthroughEnvironment = nullptr;
 static BinderizedEnvironment *gBinderizedEnvironment = nullptr;
+// per process tag
+static std::string gServiceName;
 // end static storage
 
 using ::android::hardware::tests::foo::V1_0::IFoo;
@@ -64,6 +66,8 @@ using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
+using ::android::hardware::IPCThreadState;
+using ::android::hardware::ProcessState;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
@@ -233,18 +237,39 @@ static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
 
 // end duplicated code
 
+void signal_handler(int signal)
+{
+    if (signal == SIGTERM) {
+        ALOGD("SERVER %s shutting down...", gServiceName.c_str());
+        IPCThreadState::shutdown();
+        ALOGD("SERVER %s shutdown.", gServiceName.c_str());
+        exit(0);
+    }
+}
+
 template <class T>
-static void startServer(sp<T> server,
-                        const std::string &serviceName,
-                        const char *tag) {
-    using namespace android::hardware;
-    ALOGI("SERVER(%s) registering %s", tag, serviceName.c_str());
-    server->registerAsService(serviceName);
-    ALOGI("SERVER(%s) starting %s", tag, serviceName.c_str());
-    ProcessState::self()->setThreadPoolMaxThreadCount(0);
-    ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool(); // never ends. needs kill().
-    ALOGI("SERVER(%s) %s ends.", tag, serviceName.c_str());
+static pid_t forkServer(const std::string &serviceName,
+                       const char *tag) {
+    pid_t pid;
+    // use fork to create and kill to destroy server processes.
+    // getStub = true to get the passthrough version as the backend for the
+    // binderized service.
+    if ((pid = fork()) == 0) {
+        // in child process
+        sp<T> server = T::getService(serviceName, true);
+        gServiceName = serviceName;
+        signal(SIGTERM, signal_handler);
+        ALOGD("SERVER(%s) registering %s", tag, serviceName.c_str());
+        server->registerAsService(serviceName);
+        ALOGD("SERVER(%s) starting %s", tag, serviceName.c_str());
+        ProcessState::self()->setThreadPoolMaxThreadCount(0);
+        ProcessState::self()->startThreadPool();
+        IPCThreadState::self()->joinThreadPool();
+        ALOGD("SERVER(%s) %s ends.", tag, serviceName.c_str());
+        exit(0);
+    }
+    // in main process
+    return pid;
 }
 
 static void killServer(pid_t pid, const char *serverName) {
@@ -252,9 +277,12 @@ static void killServer(pid_t pid, const char *serverName) {
         ALOGE("Could not kill %s; errno = %d", serverName, errno);
     } else {
         int status;
-        ALOGI("Waiting for %s to exit...", serverName);
+        ALOGD("Waiting for %s to exit...", serverName);
         waitpid(pid, &status, 0);
-        ALOGI("Continuing...");
+        if (status != 0) {
+            ALOGE("%s terminates abnormally with status %d", serverName, status);
+        }
+        ALOGD("Continuing...");
     }
 }
 
@@ -314,38 +342,11 @@ public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
 
-        // use fork to create and kill to destroy server processes.
-        // getStub = true to get the passthrough version as the backend for the
-        // binderized service.
-        if ((barServerPid = fork()) == 0) {
-            // Fear me, I am a child.
-            startServer(IBar::getService("foo", true),
-                    "foo", "Bar"); // never returns
-            return;
-        }
+        barServerPid = forkServer<IBar>("foo", "Bar");
+        fooCallbackServerPid = forkServer<IFooCallback>("foo callback", "FooCallback");
+        graphServerPid = forkServer<IGraph>("graph", "Graph");
+        pointerServerPid = forkServer<IPointer>("pointer", "Pointer");
 
-        if ((fooCallbackServerPid = fork()) == 0) {
-            // Fear me, I am a second child.
-            startServer(IFooCallback::getService("foo callback", true),
-                    "foo callback", "FooCalback"); // never returns
-            return;
-        }
-
-        if ((graphServerPid = fork()) == 0) {
-            // Fear me, I am a third child.
-            startServer(IGraph::getService("graph", true),
-                    "graph", "Graph"); // never returns
-            return;
-        }
-
-        if ((pointerServerPid = fork()) == 0) {
-            // Fear me, I am a forth child.
-            startServer(IPointer::getService("pointer", true),
-                    "pointer", "Pointer"); // never returns
-            return;
-        }
-
-        // Fear you not, I am parent.
         sleep(1);
 
         getServices();
