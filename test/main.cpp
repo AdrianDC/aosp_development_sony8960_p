@@ -264,6 +264,7 @@ public:
     sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
+    sp<IPointer> validationPointerInterface;
 
     void getServices() {
         // getStub is true if we are in passthrough mode to skip checking
@@ -287,6 +288,10 @@ public:
         pointerInterface = IPointer::getService("pointer", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(pointerInterface, nullptr);
         ASSERT_EQ(pointerInterface->isRemote(), gMode == BINDERIZED);
+
+        // use passthrough mode as the validation object.
+        validationPointerInterface = IPointer::getService("pointer", true /* getStub */);
+        ASSERT_NE(validationPointerInterface, nullptr);
     }
 };
 
@@ -366,9 +371,7 @@ public:
     sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
-#if HIDL_RUN_POINTER_TESTS
-    PointerInterface validationPointerInterface;
-#endif
+    sp<IPointer> validationPointerInterface;
 
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
@@ -383,6 +386,7 @@ public:
         fooCb = env->fooCb;
         graphInterface = env->graphInterface;
         pointerInterface = env->pointerInterface;
+        validationPointerInterface = env->validationPointerInterface;
         ALOGI("Test setup complete");
     }
 };
@@ -844,208 +848,208 @@ TEST_F(HidlTest, GraphReportErrorsTest) {
 }
 
 TEST_F(HidlTest, PointerPassOldBufferTest) {
-    EXPECT_OK(validationPointerInterface.bar1([&](const auto& sptr, const auto& s) {
+    EXPECT_OK(validationPointerInterface->bar1([&](const auto& sptr, const auto& s) {
         EXPECT_OK(pointerInterface->foo1(sptr, s));
     }));
 }
 TEST_F(HidlTest, PointerPassOldBufferTest2) {
-    EXPECT_OK(validationPointerInterface.bar2([&](const auto& s, const auto& a) {
+    EXPECT_OK(validationPointerInterface->bar2([&](const auto& s, const auto& a) {
         EXPECT_OK(pointerInterface->foo2(s, a));
     }));
 }
 TEST_F(HidlTest, PointerPassSameOldBufferPointerTest) {
-    EXPECT_OK(validationPointerInterface.bar3([&](const auto& s, const auto& a, const auto& b) {
+    EXPECT_OK(validationPointerInterface->bar3([&](const auto& s, const auto& a, const auto& b) {
         EXPECT_OK(pointerInterface->foo3(s, a, b));
     }));
 }
 TEST_F(HidlTest, PointerPassOnlyTest) {
-    EXPECT_OK(validationPointerInterface.bar4([&](const auto& s) {
+    EXPECT_OK(validationPointerInterface->bar4([&](const auto& s) {
         EXPECT_OK(pointerInterface->foo4(s));
     }));
 }
 TEST_F(HidlTest, PointerPassTwoEmbeddedTest) {
-    EXPECT_OK(validationPointerInterface.bar5([&](const auto& a, const auto& b) {
+    EXPECT_OK(validationPointerInterface->bar5([&](const auto& a, const auto& b) {
         EXPECT_OK(pointerInterface->foo5(a, b));
     }));
 }
 TEST_F(HidlTest, PointerPassIndirectBufferHasDataTest) {
-    EXPECT_OK(validationPointerInterface.bar6([&](const auto& a) {
+    EXPECT_OK(validationPointerInterface->bar6([&](const auto& a) {
         EXPECT_OK(pointerInterface->foo6(a));
     }));
 }
 TEST_F(HidlTest, PointerPassTwoIndirectBufferTest) {
-    EXPECT_OK(validationPointerInterface.bar7([&](const auto& a, const auto& b) {
+    EXPECT_OK(validationPointerInterface->bar7([&](const auto& a, const auto& b) {
         EXPECT_OK(pointerInterface->foo7(a, b));
     }));
 }
 TEST_F(HidlTest, PointerPassDeeplyIndirectTest) {
-    EXPECT_OK(validationPointerInterface.bar8([&](const auto& d) {
+    EXPECT_OK(validationPointerInterface->bar8([&](const auto& d) {
         EXPECT_OK(pointerInterface->foo8(d));
     }));
 }
 TEST_F(HidlTest, PointerPassStringRefTest) {
-    EXPECT_OK(validationPointerInterface.bar9([&](const auto& str) {
+    EXPECT_OK(validationPointerInterface->bar9([&](const auto& str) {
         EXPECT_OK(pointerInterface->foo9(str));
     }));
 }
 TEST_F(HidlTest, PointerPassRefVecTest) {
-    EXPECT_OK(validationPointerInterface.bar10([&](const auto& v) {
+    EXPECT_OK(validationPointerInterface->bar10([&](const auto& v) {
         EXPECT_OK(pointerInterface->foo10(v));
     }));
 }
 TEST_F(HidlTest, PointerPassVecRefTest) {
-    EXPECT_OK(validationPointerInterface.bar11([&](const auto& v) {
+    EXPECT_OK(validationPointerInterface->bar11([&](const auto& v) {
         EXPECT_OK(pointerInterface->foo11(v));
     }));
 }
 TEST_F(HidlTest, PointerPassArrayRefTest) {
-    EXPECT_OK(validationPointerInterface.bar12([&](const auto& array) {
+    EXPECT_OK(validationPointerInterface->bar12([&](const auto& array) {
         EXPECT_OK(pointerInterface->foo12(array));
     }));
 }
 TEST_F(HidlTest, PointerPassRefArrayTest) {
-    EXPECT_OK(validationPointerInterface.bar13([&](const auto& array) {
+    EXPECT_OK(validationPointerInterface->bar13([&](const auto& array) {
         EXPECT_OK(pointerInterface->foo13(array));
     }));
 }
 TEST_F(HidlTest, PointerPass3RefTest) {
-    EXPECT_OK(validationPointerInterface.bar14([&](const auto& p3) {
+    EXPECT_OK(validationPointerInterface->bar14([&](const auto& p3) {
         EXPECT_OK(pointerInterface->foo14(p3));
     }));
 }
 TEST_F(HidlTest, PointerPassInt3RefTest) {
-    EXPECT_OK(validationPointerInterface.bar15([&](const auto& p3) {
+    EXPECT_OK(validationPointerInterface->bar15([&](const auto& p3) {
         EXPECT_OK(pointerInterface->foo15(p3));
     }));
 }
 TEST_F(HidlTest, PointerPassEmbeddedPointersTest) {
-    EXPECT_OK(validationPointerInterface.bar16([&](const auto& p) {
+    EXPECT_OK(validationPointerInterface->bar16([&](const auto& p) {
         EXPECT_OK(pointerInterface->foo16(p));
     }));
 }
 TEST_F(HidlTest, PointerPassEmbeddedPointers2Test) {
-    EXPECT_OK(validationPointerInterface.bar17([&](const auto& p) {
+    EXPECT_OK(validationPointerInterface->bar17([&](const auto& p) {
         EXPECT_OK(pointerInterface->foo17(p));
     }));
 }
 TEST_F(HidlTest, PointerPassCopiedStringTest) {
-    EXPECT_OK(validationPointerInterface.bar18([&](const auto& str_ref, const auto& str_ref2, const auto& str) {
+    EXPECT_OK(validationPointerInterface->bar18([&](const auto& str_ref, const auto& str_ref2, const auto& str) {
         EXPECT_OK(pointerInterface->foo18(str_ref, str_ref2, str));
     }));
 }
 TEST_F(HidlTest, PointerPassCopiedVecTest) {
-    EXPECT_OK(validationPointerInterface.bar19([&](const auto& a_vec_ref, const auto& a_vec, const auto& a_vec_ref2) {
+    EXPECT_OK(validationPointerInterface->bar19([&](const auto& a_vec_ref, const auto& a_vec, const auto& a_vec_ref2) {
         EXPECT_OK(pointerInterface->foo19(a_vec_ref, a_vec, a_vec_ref2));
     }));
 }
 TEST_F(HidlTest, PointerPassBigRefVecTest) {
-    EXPECT_OK(validationPointerInterface.bar20([&](const auto& v) {
+    EXPECT_OK(validationPointerInterface->bar20([&](const auto& v) {
         EXPECT_FAIL(pointerInterface->foo20(v));
     }));
 }
 TEST_F(HidlTest, PointerPassMultidimArrayRefTest) {
-    EXPECT_OK(validationPointerInterface.bar21([&](const auto& v) {
+    EXPECT_OK(validationPointerInterface->bar21([&](const auto& v) {
         EXPECT_OK(pointerInterface->foo21(v));
     }));
 }
 TEST_F(HidlTest, PointerPassRefMultidimArrayTest) {
-    EXPECT_OK(validationPointerInterface.bar22([&](const auto& v) {
+    EXPECT_OK(validationPointerInterface->bar22([&](const auto& v) {
         EXPECT_OK(pointerInterface->foo22(v));
     }));
 }
 TEST_F(HidlTest, PointerGiveOldBufferTest) {
     EXPECT_OK(pointerInterface->bar1([&](const auto& sptr, const auto& s) {
-        EXPECT_OK(validationPointerInterface.foo1(sptr, s));
+        EXPECT_OK(validationPointerInterface->foo1(sptr, s));
     }));
 }
 TEST_F(HidlTest, PointerGiveOldBufferTest2) {
     EXPECT_OK(pointerInterface->bar2([&](const auto& s, const auto& a) {
-        EXPECT_OK(validationPointerInterface.foo2(s, a));
+        EXPECT_OK(validationPointerInterface->foo2(s, a));
     }));
 }
 TEST_F(HidlTest, PointerGiveSameOldBufferPointerTest) {
     EXPECT_OK(pointerInterface->bar3([&](const auto& s, const auto& a, const auto& b) {
-        EXPECT_OK(validationPointerInterface.foo3(s, a, b));
+        EXPECT_OK(validationPointerInterface->foo3(s, a, b));
     }));
 }
 TEST_F(HidlTest, PointerGiveOnlyTest) {
     EXPECT_OK(pointerInterface->bar4([&](const auto& s) {
-        EXPECT_OK(validationPointerInterface.foo4(s));
+        EXPECT_OK(validationPointerInterface->foo4(s));
     }));
 }
 TEST_F(HidlTest, PointerGiveTwoEmbeddedTest) {
     EXPECT_OK(pointerInterface->bar5([&](const auto& a, const auto& b) {
-        EXPECT_OK(validationPointerInterface.foo5(a, b));
+        EXPECT_OK(validationPointerInterface->foo5(a, b));
     }));
 }
 TEST_F(HidlTest, PointerGiveIndirectBufferHasDataTest) {
     EXPECT_OK(pointerInterface->bar6([&](const auto& a) {
-        EXPECT_OK(validationPointerInterface.foo6(a));
+        EXPECT_OK(validationPointerInterface->foo6(a));
     }));
 }
 TEST_F(HidlTest, PointerGiveTwoIndirectBufferTest) {
     EXPECT_OK(pointerInterface->bar7([&](const auto& a, const auto& b) {
-        EXPECT_OK(validationPointerInterface.foo7(a, b));
+        EXPECT_OK(validationPointerInterface->foo7(a, b));
     }));
 }
 TEST_F(HidlTest, PointerGiveDeeplyIndirectTest) {
     EXPECT_OK(pointerInterface->bar8([&](const auto& d) {
-        EXPECT_OK(validationPointerInterface.foo8(d));
+        EXPECT_OK(validationPointerInterface->foo8(d));
     }));
 }
 TEST_F(HidlTest, PointerGiveStringRefTest) {
     EXPECT_OK(pointerInterface->bar9([&](const auto& str) {
-        EXPECT_OK(validationPointerInterface.foo9(str));
+        EXPECT_OK(validationPointerInterface->foo9(str));
     }));
 }
 TEST_F(HidlTest, PointerGiveRefVecTest) {
     EXPECT_OK(pointerInterface->bar10([&](const auto& v) {
-        EXPECT_OK(validationPointerInterface.foo10(v));
+        EXPECT_OK(validationPointerInterface->foo10(v));
     }));
 }
 TEST_F(HidlTest, PointerGiveVecRefTest) {
     EXPECT_OK(pointerInterface->bar11([&](const auto& v) {
-        EXPECT_OK(validationPointerInterface.foo11(v));
+        EXPECT_OK(validationPointerInterface->foo11(v));
     }));
 }
 TEST_F(HidlTest, PointerGiveArrayRefTest) {
     EXPECT_OK(pointerInterface->bar12([&](const auto& array) {
-        EXPECT_OK(validationPointerInterface.foo12(array));
+        EXPECT_OK(validationPointerInterface->foo12(array));
     }));
 }
 TEST_F(HidlTest, PointerGiveRefArrayTest) {
     EXPECT_OK(pointerInterface->bar13([&](const auto& array) {
-        EXPECT_OK(validationPointerInterface.foo13(array));
+        EXPECT_OK(validationPointerInterface->foo13(array));
     }));
 }
 TEST_F(HidlTest, PointerGive3RefTest) {
     EXPECT_OK(pointerInterface->bar14([&](const auto& p3) {
-        EXPECT_OK(validationPointerInterface.foo14(p3));
+        EXPECT_OK(validationPointerInterface->foo14(p3));
     }));
 }
 TEST_F(HidlTest, PointerGiveInt3RefTest) {
     EXPECT_OK(pointerInterface->bar15([&](const auto& p3) {
-        EXPECT_OK(validationPointerInterface.foo15(p3));
+        EXPECT_OK(validationPointerInterface->foo15(p3));
     }));
 }
 TEST_F(HidlTest, PointerGiveEmbeddedPointersTest) {
     EXPECT_OK(pointerInterface->bar16([&](const auto& p) {
-        EXPECT_OK(validationPointerInterface.foo16(p));
+        EXPECT_OK(validationPointerInterface->foo16(p));
     }));
 }
 TEST_F(HidlTest, PointerGiveEmbeddedPointers2Test) {
     EXPECT_OK(pointerInterface->bar17([&](const auto& p) {
-        EXPECT_OK(validationPointerInterface.foo17(p));
+        EXPECT_OK(validationPointerInterface->foo17(p));
     }));
 }
 TEST_F(HidlTest, PointerGiveCopiedStringTest) {
     EXPECT_OK(pointerInterface->bar18([&](const auto& str_ref, const auto& str_ref2, const auto& str) {
-        EXPECT_OK(validationPointerInterface.foo18(str_ref, str_ref2, str));
+        EXPECT_OK(validationPointerInterface->foo18(str_ref, str_ref2, str));
     }));
 }
 TEST_F(HidlTest, PointerGiveCopiedVecTest) {
     EXPECT_OK(pointerInterface->bar19([&](const auto& a_vec_ref, const auto& a_vec, const auto& a_vec_ref2) {
-        EXPECT_OK(validationPointerInterface.foo19(a_vec_ref, a_vec, a_vec_ref2));
+        EXPECT_OK(validationPointerInterface->foo19(a_vec_ref, a_vec, a_vec_ref2));
     }));
 }
 // This cannot be enabled until _hidl_error is not ignored when
@@ -1056,12 +1060,12 @@ TEST_F(HidlTest, PointerGiveCopiedVecTest) {
 // }
 TEST_F(HidlTest, PointerGiveMultidimArrayRefTest) {
     EXPECT_OK(pointerInterface->bar21([&](const auto& v) {
-        EXPECT_OK(validationPointerInterface.foo21(v));
+        EXPECT_OK(validationPointerInterface->foo21(v));
     }));
 }
 TEST_F(HidlTest, PointerGiveRefMultidimArrayTest) {
     EXPECT_OK(pointerInterface->bar22([&](const auto& v) {
-        EXPECT_OK(validationPointerInterface.foo22(v));
+        EXPECT_OK(validationPointerInterface->foo22(v));
     }));
 }
 TEST_F(HidlTest, PointerReportErrorsTest) {
