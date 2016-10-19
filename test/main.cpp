@@ -8,7 +8,6 @@
 #include <android/hardware/tests/pointer/1.0/BnPointer.h>
 
 #include <gtest/gtest.h>
-#include <inttypes.h>
 #if GTEST_IS_THREADSAFE
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -19,8 +18,10 @@
 #error "GTest did not detect pthread library."
 #endif
 
-#include <vector>
+#include <getopt.h>
+#include <inttypes.h>
 #include <sstream>
+#include <vector>
 
 #include <hidl/IServiceManager.h>
 #include <hidl/Status.h>
@@ -1125,22 +1126,65 @@ void handleStatus(int status, const char *mode) {
     }
 }
 
+static void usage(const char *me) {
+    fprintf(stderr,
+            "usage: %s [-b] [-p] [GTEST_OPTIONS]\n",
+            me);
+
+    fprintf(stderr, "         -b binderized mode only\n");
+    fprintf(stderr, "         -p passthrough mode only\n");
+    fprintf(stderr, "            (if -b and -p are both missing or both present, "
+                                 "both modes are tested.)\n");
+}
+
 int main(int argc, char **argv) {
+    const char *me = argv[0];
+    bool b = false;
+    bool p = false;
+    struct option longopts[] = {{0,0,0,0}};
+    int res;
+    while ((res = getopt_long(argc, argv, "hbp", longopts, NULL)) >= 0) {
+        switch (res) {
+            case 'h': {
+                usage(me);
+                exit(1);
+            } break;
+
+            case 'b': {
+                b = true;
+            } break;
+
+            case 'p': {
+                p = true;
+            } break;
+
+            case '?':
+            default: {
+                // ignore. pass to gTest.
+            } break;
+        }
+    }
+    if (!b && !p) {
+        b = p = true;
+    }
 
     ::testing::InitGoogleTest(&argc, argv);
     // put test in child process because RUN_ALL_TESTS
     // should not be run twice.
-    int pStatus = forkAndRunTests(PASSTHROUGH);
-    int bStatus = forkAndRunTests(BINDERIZED);
-
-    ALOGI("PASSTHROUGH Test result = %d", pStatus);
-    ALOGI("BINDERIZED Test result = %d", bStatus);
+    int pStatus = p ? forkAndRunTests(PASSTHROUGH) : 0;
+    int bStatus = b ? forkAndRunTests(BINDERIZED)  : 0;
 
     fprintf(stdout, "\n===================\nSummary:\n");
     fflush(stdout);
-    // output to terminal.
-    handleStatus(pStatus, "PASSTHROUGH");
-    handleStatus(bStatus, "BINDERIZED ");
+    if (p) {
+        ALOGI("PASSTHROUGH Test result = %d", pStatus);
+        handleStatus(pStatus, "PASSTHROUGH");
+    }
+    if (b) {
+        ALOGI("BINDERIZED Test result = %d", bStatus);
+        handleStatus(bStatus, "BINDERIZED ");
+    }
+
     if (pStatus == 0 && bStatus == 0) {
         fprintf(stdout, "Hooray! All tests passed.\n");
     }
