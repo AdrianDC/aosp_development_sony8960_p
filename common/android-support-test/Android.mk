@@ -21,6 +21,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := rules/rules-0.5-release.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+LOCAL_SDK_VERSION := 8
 # Uninstallable static Java libraries.
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
@@ -37,6 +38,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := rules/rules-0.5-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+LOCAL_SDK_VERSION := 8
 # Uninstallable static Java libraries.
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
@@ -47,6 +49,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := runner/runner-0.5-release-no-dep.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+LOCAL_SDK_VERSION := 8
 # Uninstallable static Java libraries.
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
