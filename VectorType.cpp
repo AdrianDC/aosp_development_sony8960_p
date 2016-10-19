@@ -30,11 +30,20 @@ void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
     mElementType->addNamedTypesToSet(set);
 }
 
+bool VectorType::isVector() const {
+    return true;
+}
+
+bool VectorType::isVectorOfBinders() const {
+    return mElementType->isBinder();
+}
+
 std::string VectorType::getCppType(StorageMode mode,
                                    std::string *extra,
                                    bool specifyNamespaces) const {
     std::string elementExtra;
-    const std::string elementBase = mElementType->getCppType(&elementExtra, specifyNamespaces);
+    const std::string elementBase =
+        mElementType->getCppType(&elementExtra, specifyNamespaces);
 
     const std::string base =
           std::string(specifyNamespaces ? "::android::hardware::" : "")
@@ -53,7 +62,13 @@ std::string VectorType::getCppType(StorageMode mode,
             return "const " + base + "&";
 
         case StorageMode_Result:
+        {
+            if (isVectorOfBinders()) {
+                return base;
+            }
+
             return "const " + base + "*";
+        }
     }
 }
 
@@ -84,6 +99,13 @@ void VectorType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
+    if (isVectorOfBinders()) {
+        emitReaderWriterForVectorOfBinders(
+                out, name, parcelObj, parcelObjIsPointer, isReader, mode);
+
+        return;
+    }
+
     std::string baseExtra;
     std::string baseType = mElementType->getCppType(&baseExtra);
 
@@ -140,6 +162,92 @@ void VectorType::emitReaderWriter(
             mode,
             parentName,
             "0 /* parentOffset */");
+}
+
+void VectorType::emitReaderWriterForVectorOfBinders(
+        Formatter &out,
+        const std::string &name,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode) const {
+    const std::string parcelObjDeref =
+        parcelObj + (parcelObjIsPointer ? "->" : ".");
+
+    if (isReader) {
+        out << "{\n";
+        out.indent();
+
+        const std::string sizeName = "_hidl_" + name + "_size";
+
+        out << "uint64_t "
+            << sizeName
+            << ";\n";
+
+        out << "_hidl_err = "
+            << parcelObjDeref
+            << "readUint64(&"
+            << sizeName
+            << ");\n";
+
+        handleError(out, mode);
+
+        out << name
+            << ".resize("
+            << sizeName
+            << ");\n\n"
+            << "for (size_t _hidl_index = 0; _hidl_index < "
+            << sizeName
+            << "; ++_hidl_index) {\n";
+
+        out.indent();
+
+        std::string extra;
+        out << mElementType->getCppType(&extra, true /* specifyNamespaces */)
+            << " _hidl_binder;\n";
+
+        mElementType->emitReaderWriter(
+                out,
+                "_hidl_binder",
+                parcelObj,
+                parcelObjIsPointer,
+                isReader,
+                mode);
+
+        out << name
+            << "[_hidl_index] = _hidl_binder;\n";
+
+        out.unindent();
+        out << "}\n";
+
+        out.unindent();
+        out << "}\n";
+    } else {
+        out << "_hidl_err = "
+            << parcelObjDeref
+            << "writeUint64("
+            << name
+            << ".size());\n";
+
+        handleError(out, mode);
+
+        out << "for (size_t _hidl_index = 0; _hidl_index < "
+            << name
+            << ".size(); ++_hidl_index) {\n";
+
+        out.indent();
+
+        mElementType->emitReaderWriter(
+                out,
+                name + "[_hidl_index]",
+                parcelObj,
+                parcelObjIsPointer,
+                isReader,
+                mode);
+
+        out.unindent();
+        out << "}\n";
+    }
 }
 
 void VectorType::emitReaderWriterEmbedded(
@@ -580,7 +688,7 @@ bool VectorType::needsResolveReferences() const {
 }
 
 bool VectorType::resultNeedsDeref() const {
-    return true;
+    return !isVectorOfBinders();
 }
 
 status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
@@ -618,6 +726,10 @@ bool VectorType::isJavaCompatible() const {
     }
 
     if (mElementType->isVector()) {
+        return false;
+    }
+
+    if (isVectorOfBinders()) {
         return false;
     }
 
