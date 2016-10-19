@@ -18,49 +18,117 @@
 
 #include "Annotation.h"
 #include "Method.h"
+#include "StringType.h"
+#include "VectorType.h"
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <hidl-util/StringHelper.h>
 #include <iostream>
+#include <sstream>
 
 namespace android {
+
+/* It is very important that these values NEVER change. These values
+ * must remain unchanged over the lifetime of android. This is
+ * because the framework on a device will be updated independently of
+ * the hals on a device. If the hals are compiled with one set of
+ * transaction values, and the framework with another, then the
+ * interface between them will be destroyed, and the device will not
+ * work.
+ */
+enum {
+    // These values are defined in hardware::IBinder.
+    /////////////////// User defined transactions
+    FIRST_CALL_TRANSACTION  = 0x00000001,
+    LAST_CALL_TRANSACTION   = 0x00efffff,
+    /////////////////// HIDL reserved
+    FIRST_HIDL_TRANSACTION  = 0x00f00000,
+    HIDL_DESCRIPTOR_CHAIN_TRANSACTION = FIRST_HIDL_TRANSACTION,
+    LAST_HIDL_TRANSACTION   = 0x00ffffff,
+};
 
 Interface::Interface(const char *localName, Interface *super)
     : Scope(localName),
       mSuperType(super),
       mIsJavaCompatibleInProgress(false) {
+    mReservedMethods.push_back(createDescriptorChainMethod());
 }
 
+Method *Interface::createDescriptorChainMethod() const {
+    VectorType *vecType = new VectorType();
+    vecType->setElementType(new StringType());
+    std::vector<TypedVar *> *results = new std::vector<TypedVar *>();
+    results->push_back(new TypedVar("indicator", vecType));
+
+    return new Method("interfaceChain",
+        new std::vector<TypedVar *>() /* args */,
+        results,
+        false /* oneway */,
+        new std::vector<Annotation *>(),
+        HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
+        [this](auto &out) { /* cppImpl */
+            std::vector<const Interface *> chain = typeChain();
+            out << "::android::hardware::hidl_vec<::android::hardware::hidl_string> _hidl_return;\n";
+            out << "_hidl_return.resize(" << chain.size() << ");\n";
+            for (size_t i = 0; i < chain.size(); ++i) {
+                out << "_hidl_return[" << i << "] = \"" << chain[i]->fqName().string() << "\";\n";
+            }
+            out << "_hidl_cb(_hidl_return);\n";
+            out << "return ::android::hardware::Void();";
+        },
+        [this](auto &out) { /* javaImpl */
+            std::vector<const Interface *> chain = typeChain();
+            out << "return new ArrayList<String>(Arrays.asList(\n";
+            out.indent(); out.indent();
+            for (size_t i = 0; i < chain.size(); ++i) {
+                if (i != 0)
+                    out << ",\n";
+                out << "\"" << chain[i]->fqName().string() << "\"";
+            }
+            out << "));";
+            out.unindent(); out.unindent();
+        });
+}
+
+
 bool Interface::addMethod(Method *method) {
+    CHECK(!method->isHidlReserved());
     if (lookupMethod(method->name()) != nullptr) {
         LOG(ERROR) << "Redefinition of method " << method->name();
         return false;
     }
+    size_t serial = FIRST_CALL_TRANSACTION;
 
-    /* It is very important that these values NEVER change. These values
-     * must remain unchanged over the lifetime of android. This is
-     * because the framework on a device will be updated independently of
-     * the hals on a device. If the hals are compiled with one set of
-     * transaction values, and the framework with another, then the
-     * interface between them will be destroyed, and the device will not
-     * work.
-     */
-    size_t serial = 1; // hardware::IBinder::FIRST_CALL_TRANSACTION;
+    serial += userDefinedMethods().size();
 
-    const Interface *ancestor = this;
+    const Interface *ancestor = mSuperType;
     while (ancestor != nullptr) {
-        serial += ancestor->methods().size();
+        serial += ancestor->userDefinedMethods().size();
         ancestor = ancestor->superType();
     }
 
+    CHECK(serial <= LAST_CALL_TRANSACTION) << "More than "
+            << LAST_CALL_TRANSACTION << " methods are not allowed.";
     method->setSerialId(serial);
-    mMethods.push_back(method);
+    mUserMethods.push_back(method);
 
     return true;
 }
 
+
 const Interface *Interface::superType() const {
     return mSuperType;
+}
+
+std::vector<const Interface *> Interface::typeChain() const {
+    std::vector<const Interface *> v;
+    const Interface *iface = this;
+    while (iface != nullptr) {
+        v.push_back(iface);
+        iface = iface->mSuperType;
+    }
+    return v;
 }
 
 bool Interface::isInterface() const {
@@ -71,19 +139,41 @@ bool Interface::isBinder() const {
     return true;
 }
 
-const std::vector<Method *> &Interface::methods() const {
-    return mMethods;
+const std::vector<Method *> &Interface::userDefinedMethods() const {
+    return mUserMethods;
+}
+
+const std::vector<Method *> &Interface::hidlReservedMethods() const {
+    return mReservedMethods;
+}
+
+std::vector<Method *> Interface::methods() const {
+    std::vector<Method *> v(mUserMethods);
+    v.insert(v.end(), mReservedMethods.begin(), mReservedMethods.end());
+    return v;
+}
+
+std::vector<InterfaceAndMethod> Interface::allMethodsFromRoot() const {
+    std::vector<InterfaceAndMethod> v;
+    std::vector<const Interface *> chain = typeChain();
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const Interface *iface = *it;
+        for (Method *userMethod : iface->userDefinedMethods()) {
+            v.push_back(InterfaceAndMethod(iface, userMethod));
+        }
+    }
+    for (Method *reservedMethod : hidlReservedMethods()) {
+        v.push_back(InterfaceAndMethod(this, reservedMethod));
+    }
+    return v;
 }
 
 Method *Interface::lookupMethod(std::string name) const {
-    const Interface *ancestor = this;
-    while (ancestor != nullptr) {
-        for (const auto &method : mMethods) {
-            if (method->name() == name) {
-                return method;
-            }
+    for (const auto &tuple : allMethodsFromRoot()) {
+        Method *method = tuple.method();
+        if (method->name() == name) {
+            return method;
         }
-        ancestor = ancestor->superType();
     }
 
     return nullptr;
@@ -228,7 +318,7 @@ status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
 }
 
 status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
-    for (const auto &method : mMethods) {
+    for (const auto &method : methods()) {
         out << "api: {\n";
         out.indent();
         out << "name: \"" << method->name() << "\"\n";
@@ -297,7 +387,7 @@ status_t Interface::emitVtsAttributeType(Formatter &out) const {
 
 
 bool Interface::hasOnewayMethods() const {
-    for (auto const &method : mMethods) {
+    for (auto const &method : methods()) {
         if (method->isOneway()) {
             return true;
         }
@@ -334,7 +424,7 @@ bool Interface::isJavaCompatible() const {
         return false;
     }
 
-    for (const auto &method : mMethods) {
+    for (const auto &method : methods()) {
         if (!method->isJavaCompatible()) {
             mIsJavaCompatibleInProgress = false;
             return false;

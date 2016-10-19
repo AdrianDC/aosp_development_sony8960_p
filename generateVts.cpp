@@ -121,11 +121,7 @@ status_t AST::generateVts(const std::string &outputPath) const {
         out << "interface: {\n";
         out.indent();
 
-        std::vector<const Interface *> chain;
-        while (iface != NULL) {
-            chain.push_back(iface);
-            iface = iface->superType();
-        }
+        std::vector<const Interface *> chain = iface->typeChain();
 
         // Generate all the attribute declarations first.
         for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
