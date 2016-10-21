@@ -735,6 +735,11 @@ static status_t generateMakefileImplForPackage(
         << "libhwbinder \\\n"
         << "libutils \\\n"
         << makeLibraryName(packageFQName) << " \\\n";
+
+    for (const auto &importedPackage : importedPackages) {
+        out << makeLibraryName(importedPackage)
+            << " \\\n";
+    }
     out.unindent();
     out << "\n";
 
