@@ -33,13 +33,23 @@ Formatter::~Formatter() {
     mFile = NULL;
 }
 
-void Formatter::indent() {
-    ++mIndentDepth;
+void Formatter::indent(size_t level) {
+    mIndentDepth += level;
 }
 
-void Formatter::unindent() {
-    assert(mIndentDepth > 0);
-    --mIndentDepth;
+void Formatter::unindent(size_t level) {
+    assert(mIndentDepth >= level);
+    mIndentDepth -= level;
+}
+
+void Formatter::indentBlock(size_t level, std::function<void(void)> func) {
+    this->indent(level);
+    func();
+    this->unindent(level);
+}
+
+void Formatter::indentBlock(std::function<void(void)> func) {
+    this->indentBlock(1, func);
 }
 
 void Formatter::setLinePrefix(const std::string &prefix) {
