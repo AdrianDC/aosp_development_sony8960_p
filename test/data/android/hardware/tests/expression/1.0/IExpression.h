@@ -28,7 +28,7 @@ struct IExpression : virtual public RefBase {
         noSuffixHex2 = 2147483648ull, // 0x80000000
         noSuffixHex3 = 4294967295ull, // 0xffffffff
         longHex1 = 4294967295ull, // 0xffffffffl
-        longHex2 = 68719476735ull, // 0xfffffffff
+        longHex2 = 68719476735ull, // 0Xfffffffff
         longHex3 = 9223372036854775807ull, // 0x7fffffffffffffff
         longHex4 = 9223372036854775808ull, // 0x8000000000000000
         longHex5 = 18446744073709551615ull, // 0xFFFFFFFFFFFFFFFF
@@ -199,6 +199,228 @@ struct IExpression : virtual public RefBase {
     virtual ::android::hardware::Return<void> foo3(const hidl_array<int32_t, 20 /* Constants:MAX_ARRAY_SIZE */>& array) = 0;
     DECLARE_REGISTER_AND_GET_SERVICE(Expression)
 };
+
+inline IExpression::UInt64LiteralTypeGuessing operator|(
+        IExpression::UInt64LiteralTypeGuessing lhs, IExpression::UInt64LiteralTypeGuessing rhs) {
+    return static_cast<IExpression::UInt64LiteralTypeGuessing>(
+            static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs));
+}
+
+inline IExpression::UInt64LiteralTypeGuessing & operator|=(
+        IExpression::UInt64LiteralTypeGuessing &lhs, IExpression::UInt64LiteralTypeGuessing rhs) {
+    lhs = static_cast<IExpression::UInt64LiteralTypeGuessing>(
+            static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::SuffixedLiteralTypeGuessing operator|(
+        IExpression::SuffixedLiteralTypeGuessing lhs, IExpression::SuffixedLiteralTypeGuessing rhs) {
+    return static_cast<IExpression::SuffixedLiteralTypeGuessing>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+}
+
+inline IExpression::SuffixedLiteralTypeGuessing & operator|=(
+        IExpression::SuffixedLiteralTypeGuessing &lhs, IExpression::SuffixedLiteralTypeGuessing rhs) {
+    lhs = static_cast<IExpression::SuffixedLiteralTypeGuessing>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Int64LiteralTypeGuessing operator|(
+        IExpression::Int64LiteralTypeGuessing lhs, IExpression::Int64LiteralTypeGuessing rhs) {
+    return static_cast<IExpression::Int64LiteralTypeGuessing>(
+            static_cast<int64_t>(lhs) | static_cast<int64_t>(rhs));
+}
+
+inline IExpression::Int64LiteralTypeGuessing & operator|=(
+        IExpression::Int64LiteralTypeGuessing &lhs, IExpression::Int64LiteralTypeGuessing rhs) {
+    lhs = static_cast<IExpression::Int64LiteralTypeGuessing>(
+            static_cast<int64_t>(lhs) | static_cast<int64_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Int32BitShifting operator|(
+        IExpression::Int32BitShifting lhs, IExpression::Int32BitShifting rhs) {
+    return static_cast<IExpression::Int32BitShifting>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+}
+
+inline IExpression::Int32BitShifting & operator|=(
+        IExpression::Int32BitShifting &lhs, IExpression::Int32BitShifting rhs) {
+    lhs = static_cast<IExpression::Int32BitShifting>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::UInt32BitShifting operator|(
+        IExpression::UInt32BitShifting lhs, IExpression::UInt32BitShifting rhs) {
+    return static_cast<IExpression::UInt32BitShifting>(
+            static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+}
+
+inline IExpression::UInt32BitShifting & operator|=(
+        IExpression::UInt32BitShifting &lhs, IExpression::UInt32BitShifting rhs) {
+    lhs = static_cast<IExpression::UInt32BitShifting>(
+            static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Int64BitShifting operator|(
+        IExpression::Int64BitShifting lhs, IExpression::Int64BitShifting rhs) {
+    return static_cast<IExpression::Int64BitShifting>(
+            static_cast<int64_t>(lhs) | static_cast<int64_t>(rhs));
+}
+
+inline IExpression::Int64BitShifting & operator|=(
+        IExpression::Int64BitShifting &lhs, IExpression::Int64BitShifting rhs) {
+    lhs = static_cast<IExpression::Int64BitShifting>(
+            static_cast<int64_t>(lhs) | static_cast<int64_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::UInt64BitShifting operator|(
+        IExpression::UInt64BitShifting lhs, IExpression::UInt64BitShifting rhs) {
+    return static_cast<IExpression::UInt64BitShifting>(
+            static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs));
+}
+
+inline IExpression::UInt64BitShifting & operator|=(
+        IExpression::UInt64BitShifting &lhs, IExpression::UInt64BitShifting rhs) {
+    lhs = static_cast<IExpression::UInt64BitShifting>(
+            static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Precedence operator|(
+        IExpression::Precedence lhs, IExpression::Precedence rhs) {
+    return static_cast<IExpression::Precedence>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+}
+
+inline IExpression::Precedence & operator|=(
+        IExpression::Precedence &lhs, IExpression::Precedence rhs) {
+    lhs = static_cast<IExpression::Precedence>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::OperatorSanityCheck operator|(
+        IExpression::OperatorSanityCheck lhs, IExpression::OperatorSanityCheck rhs) {
+    return static_cast<IExpression::OperatorSanityCheck>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+}
+
+inline IExpression::OperatorSanityCheck & operator|=(
+        IExpression::OperatorSanityCheck &lhs, IExpression::OperatorSanityCheck rhs) {
+    lhs = static_cast<IExpression::OperatorSanityCheck>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Grayscale operator|(
+        IExpression::Grayscale lhs, IExpression::Grayscale rhs) {
+    return static_cast<IExpression::Grayscale>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Grayscale & operator|=(
+        IExpression::Grayscale &lhs, IExpression::Grayscale rhs) {
+    lhs = static_cast<IExpression::Grayscale>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Color operator|(
+        IExpression::Color lhs, IExpression::Color rhs) {
+    return static_cast<IExpression::Color>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Color & operator|=(
+        IExpression::Color &lhs, IExpression::Color rhs) {
+    lhs = static_cast<IExpression::Color>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Foo1 operator|(
+        IExpression::Foo1 lhs, IExpression::Foo1 rhs) {
+    return static_cast<IExpression::Foo1>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Foo1 & operator|=(
+        IExpression::Foo1 &lhs, IExpression::Foo1 rhs) {
+    lhs = static_cast<IExpression::Foo1>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Foo2 operator|(
+        IExpression::Foo2 lhs, IExpression::Foo2 rhs) {
+    return static_cast<IExpression::Foo2>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Foo2 & operator|=(
+        IExpression::Foo2 &lhs, IExpression::Foo2 rhs) {
+    lhs = static_cast<IExpression::Foo2>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Foo3 operator|(
+        IExpression::Foo3 lhs, IExpression::Foo3 rhs) {
+    return static_cast<IExpression::Foo3>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Foo3 & operator|=(
+        IExpression::Foo3 &lhs, IExpression::Foo3 rhs) {
+    lhs = static_cast<IExpression::Foo3>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Foo4 operator|(
+        IExpression::Foo4 lhs, IExpression::Foo4 rhs) {
+    return static_cast<IExpression::Foo4>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+}
+
+inline IExpression::Foo4 & operator|=(
+        IExpression::Foo4 &lhs, IExpression::Foo4 rhs) {
+    lhs = static_cast<IExpression::Foo4>(
+            static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Number operator|(
+        IExpression::Number lhs, IExpression::Number rhs) {
+    return static_cast<IExpression::Number>(
+            static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+}
+
+inline IExpression::Number & operator|=(
+        IExpression::Number &lhs, IExpression::Number rhs) {
+    lhs = static_cast<IExpression::Number>(
+            static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    return lhs;
+}
+
+inline IExpression::Constants operator|(
+        IExpression::Constants lhs, IExpression::Constants rhs) {
+    return static_cast<IExpression::Constants>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+}
+
+inline IExpression::Constants & operator|=(
+        IExpression::Constants &lhs, IExpression::Constants rhs) {
+    lhs = static_cast<IExpression::Constants>(
+            static_cast<int32_t>(lhs) | static_cast<int32_t>(rhs));
+    return lhs;
+}
+
 
 }  // namespace V1_0
 }  // namespace expression

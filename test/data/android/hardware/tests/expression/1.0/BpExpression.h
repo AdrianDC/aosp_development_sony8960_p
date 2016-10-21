@@ -9,7 +9,7 @@ namespace tests {
 namespace expression {
 namespace V1_0 {
 
-struct BpExpression : public ::android::hardware::BpInterface<IHwExpression> {
+struct BpExpression : public ::android::hardware::BpInterface<IHwExpression>, public ::android::hardware::HidlInstrumentor {
     explicit BpExpression(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);
 
     virtual bool isRemote() const { return true; }
@@ -19,10 +19,6 @@ struct BpExpression : public ::android::hardware::BpInterface<IHwExpression> {
     ::android::hardware::Return<void> foo2(const hidl_array<int32_t, 13 /* (5 + 8) */>& array)  override;
     ::android::hardware::Return<void> foo3(const hidl_array<int32_t, 20 /* Constants:MAX_ARRAY_SIZE */>& array)  override;
 
-private:
-    // for hidl instrumentation.
-    std::vector<InstrumentationCallback> mInstrumentationCallbacks;
-    bool mEnableInstrumentation;
 };
 
 }  // namespace V1_0
