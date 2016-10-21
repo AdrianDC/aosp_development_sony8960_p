@@ -673,7 +673,7 @@ type
       }
     | TEMPLATED '<' type '>'
       {
-          if ($3->isBinder()) {
+          if (!$1->isVector() && $3->isBinder()) {
               std::cerr << "ERROR: TemplatedType of interface types are not "
                         << "supported. at " << @3 << "\n";
 

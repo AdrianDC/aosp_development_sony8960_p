@@ -25,6 +25,9 @@ namespace android {
 struct VectorType : public TemplatedType {
     VectorType();
 
+    bool isVector() const override;
+    bool isVectorOfBinders() const;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getCppType(
@@ -143,6 +146,14 @@ struct VectorType : public TemplatedType {
             ErrorMode mode,
             const std::string &childName,
             const std::string &childOffsetText) const;
+
+    void emitReaderWriterForVectorOfBinders(
+            Formatter &out,
+            const std::string &name,
+            const std::string &parcelObj,
+            bool parcelObjIsPointer,
+            bool isReader,
+            ErrorMode mode) const;
 
     DISALLOW_COPY_AND_ASSIGN(VectorType);
 };
