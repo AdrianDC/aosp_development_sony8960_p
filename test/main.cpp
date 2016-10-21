@@ -59,11 +59,12 @@ static BinderizedEnvironment *gBinderizedEnvironment = nullptr;
 static std::string gServiceName;
 // end static storage
 
+using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
+using ::android::hardware::tests::foo::V1_0::ISimple;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IHwBar;
-using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::IPCThreadState;
@@ -128,6 +129,19 @@ static void logSimpleGraph(const char *prefix, const IGraph::Graph& g) {
 
 // NOTE: duplicated code in Foo.cpp
 using std::to_string;
+
+struct Simple : public ISimple {
+    Simple(int32_t cookie)
+        : mCookie(cookie) {
+    }
+
+    Return<int32_t> getCookie() override {
+        return mCookie;
+    }
+
+private:
+    int32_t mCookie;
+};
 
 static std::string to_string(const IFoo::StringMatrix5x3 &M);
 static std::string to_string(const IFoo::StringMatrix3x5 &M);
@@ -765,6 +779,51 @@ TEST_F(HidlTest, FooSendVecTest) {
                 in,
                 [&](const auto &out) {
                     EXPECT_EQ(to_string(in), to_string(out));
+                }));
+}
+
+TEST_F(HidlTest, FooHaveAVectorOfInterfacesTest) {
+    hidl_vec<sp<ISimple> > in;
+    in.resize(16);
+    for (size_t i = 0; i < in.size(); ++i) {
+        in[i] = new Simple(i);
+    }
+
+    EXPECT_OK(foo->haveAVectorOfInterfaces(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(in.size(), out.size());
+                    for (size_t i = 0; i < in.size(); ++i) {
+                        int32_t inCookie = in[i]->getCookie();
+                        int32_t outCookie = out[i]->getCookie();
+                        EXPECT_EQ(inCookie, outCookie);
+                    }
+                }));
+}
+
+TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
+    using ::android::hardware::tests::foo::V1_0::IHwSimple;
+    using ::android::hardware::tests::foo::V1_0::BnSimple;
+
+    hidl_vec<sp<android::hardware::IBinder> > in;
+    in.resize(16);
+    for (size_t i = 0; i < in.size(); ++i) {
+        sp<BnSimple> simpleStub = new BnSimple(new Simple(i));
+        in[i] = IHwSimple::asBinder(simpleStub);
+    }
+
+    EXPECT_OK(foo->haveAVectorOfGenericInterfaces(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(in.size(), out.size());
+                    for (size_t i = 0; i < in.size(); ++i) {
+                        sp<ISimple> inSimple = IHwSimple::asInterface(in[i]);
+                        sp<ISimple> outSimple = IHwSimple::asInterface(out[i]);
+
+                        int32_t inCookie = inSimple->getCookie();
+                        int32_t outCookie = outSimple->getCookie();
+                        EXPECT_EQ(inCookie, outCookie);
+                    }
                 }));
 }
 

@@ -35,7 +35,10 @@ bool CompoundType::setFields(
     for (const auto &field : *fields) {
         const Type &type = field->type();
 
-        if (type.isBinder()) {
+        if (type.isBinder()
+                || (type.isVector()
+                    && static_cast<const VectorType *>(
+                        &type)->isVectorOfBinders())) {
             *errorMsg =
                 "Structs/Unions must not contain references to interfaces.";
 
