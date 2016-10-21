@@ -18,13 +18,6 @@ namespace V1_0 {
 struct IHwExpression : public IExpression, public ::android::hardware::IInterface {
     DECLARE_HWBINDER_META_INTERFACE(Expression);
 
-    enum Call {
-        FOO1 = ::android::hardware::IBinder::FIRST_CALL_TRANSACTION,
-        FOO2,
-        FOO3,
-        CallCount
-    };
-
 };
 
 }  // namespace V1_0
