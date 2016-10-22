@@ -341,7 +341,12 @@ interface_declarations
     | interface_declarations method_declaration
       {
           Interface *iface = static_cast<Interface *>(ast->scope());
-          iface->addMethod($2);
+          if (!iface->addMethod($2)) {
+              std::cerr << "ERROR: Unable to add method '" << $2->name()
+                        << "' at " << @2 << "\n";
+
+              YYERROR;
+          }
       }
     ;
 
