@@ -665,6 +665,15 @@ static status_t generateAndroidBpForPackage(
 
     out << "],\n";
     out.unindent();
+
+    out << "export_shared_lib_headers: [\n";
+    out.indent();
+    out << "\"libhidl\",\n"
+        << "\"libhwbinder\",\n"
+        << "\"libutils\",\n"
+        << "],\n";
+    out.unindent();
+
     out << "}\n";
 
     return OK;
