@@ -414,13 +414,6 @@ TEST_F(HidlTest, FooDoThisTest) {
     EXPECT_EQ(true, true);
 }
 
-TEST_F(HidlTest, FooDoThisIntTest) {
-    ALOGI("CLIENT call doThis (int).");
-    EXPECT_OK(foo->doThis(42u));
-    ALOGI("CLIENT doThis (int) returned.");
-    EXPECT_EQ(true, true);
-}
-
 TEST_F(HidlTest, FooDoThatAndReturnSomethingTest) {
     ALOGI("CLIENT call doThatAndReturnSomething.");
     int32_t result = foo->doThatAndReturnSomething(2.0f);
