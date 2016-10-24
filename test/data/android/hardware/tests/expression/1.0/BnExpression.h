@@ -9,7 +9,7 @@ namespace tests {
 namespace expression {
 namespace V1_0 {
 
-struct BnExpression : public ::android::hardware::BnInterface<IExpression, IHwExpression> {
+struct BnExpression : public ::android::hardware::BnInterface<IExpression, IHwExpression>, public ::android::hardware::HidlInstrumentor {
     explicit BnExpression(const ::android::sp<IExpression> &_hidl_impl);
 
     ::android::status_t onTransact(
@@ -30,10 +30,6 @@ struct BnExpression : public ::android::hardware::BnInterface<IExpression, IHwEx
         return mImpl->foo3(array);
     };
 
-private:
-    // for hidl instrumentation.
-    std::vector<InstrumentationCallback> mInstrumentationCallbacks;
-    bool mEnableInstrumentation;
 };
 
 }  // namespace V1_0
