@@ -19,6 +19,17 @@ cc_test {
     ],
     static_libs: ["libgtest"],
 
+    required: [
+        // Warning, these should never be specified explicitly for anything else
+        // as for a given device, what hal implementation is used is determined
+        // by what is specified/available in a device.mk. However, this test
+        // actually depends on these test implementations (which should never be
+        // included on a device.mk).
+        "android.hardware.tests.foo@1.0-impl",
+        "android.hardware.tests.bar@1.0-impl",
+        "android.hardware.tests.pointer@1.0-impl",
+    ],
+
     cflags: [
         "-O0",
         "-g",
