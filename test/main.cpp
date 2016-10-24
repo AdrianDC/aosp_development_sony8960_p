@@ -23,6 +23,9 @@
 #include <sstream>
 #include <vector>
 
+#include <hidl-test/FooHelper.h>
+#include <hidl-test/PointerHelper.h>
+
 #include <hidl/IServiceManager.h>
 #include <hidl/Status.h>
 #include <hwbinder/IPCThreadState.h>
@@ -37,12 +40,6 @@
 
 // TODO uncomment this when kernel is patched with pointer changes.
 //#define HIDL_RUN_POINTER_TESTS 1
-
-// Defined in FooCallback.
-static const nsecs_t DELAY_S = 1;
-static const nsecs_t DELAY_NS = seconds_to_nanoseconds(DELAY_S);
-static const nsecs_t TOLERANCE_NS = milliseconds_to_nanoseconds(10);
-static const nsecs_t ONEWAY_TOLERANCE_NS = milliseconds_to_nanoseconds(1);
 
 // forward declarations.
 class PassthroughEnvironment;
@@ -75,8 +72,15 @@ using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::sp;
+using ::android::to_string;
 using ::android::Mutex;
+using ::android::MultiDimensionalToString;
 using ::android::Condition;
+using ::android::DELAY_S;
+using ::android::DELAY_NS;
+using ::android::TOLERANCE_NS;
+using ::android::ONEWAY_TOLERANCE_NS;
+using std::to_string;
 
 template <typename T>
 static inline ::testing::AssertionResult isOk(::android::hardware::Return<T> ret) {
@@ -93,43 +97,6 @@ static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
     return true;
 }
 
-// NOTE: duplicated code in Graph.cpp
-static void simpleGraph(IGraph::Graph& g) {
-    g.nodes.resize(2);
-    g.edges.resize(1);
-    g.nodes[0].data = 10;
-    g.nodes[1].data = 20;
-    g.edges[0].left = &g.nodes[0];
-    g.edges[0].right = &g.nodes[1];
-}
-
-static bool isSimpleGraph(const IGraph::Graph &g) {
-    if(g.nodes.size() != 2) return false;
-    if(g.edges.size() != 1) return false;
-    if(g.nodes[0].data != 10) return false;
-    if(g.nodes[1].data != 20) return false;
-    if(g.edges[0].left != &g.nodes[0]) return false;
-    if(g.edges[0].right != &g.nodes[1]) return false;
-    return true;
-}
-
-static void logSimpleGraph(const char *prefix, const IGraph::Graph& g) {
-    ALOGI("%s Graph %p, %d nodes, %d edges", prefix, &g, (int)g.nodes.size(), (int)g.edges.size());
-    std::ostringstream os;
-    for(size_t i = 0; i < g.nodes.size(); i++)
-      os << &g.nodes[i] << " = " << g.nodes[i].data << ", ";
-    ALOGI("%s Nodes: [%s]", prefix, os.str().c_str());
-    os.str("");
-    os.clear();
-    for(size_t i = 0; i < g.edges.size(); i++)
-      os << g.edges[i].left << " -> " << g.edges[i].right << ", ";
-    ALOGI("%s Edges: [%s]", prefix, os.str().c_str());
-}
-// end duplicated code
-
-// NOTE: duplicated code in Foo.cpp
-using std::to_string;
-
 struct Simple : public ISimple {
     Simple(int32_t cookie)
         : mCookie(cookie) {
@@ -142,115 +109,6 @@ struct Simple : public ISimple {
 private:
     int32_t mCookie;
 };
-
-static std::string to_string(const IFoo::StringMatrix5x3 &M);
-static std::string to_string(const IFoo::StringMatrix3x5 &M);
-static std::string to_string(const hidl_string &s);
-
-template<typename T>
-static std::string to_string(const T *elems, size_t n) {
-    std::string out;
-    out = "[";
-    for (size_t i = 0; i < n; ++i) {
-        if (i > 0) {
-            out += ", ";
-        }
-        out += to_string(elems[i]);
-    }
-    out += "]";
-
-    return out;
-}
-
-template<typename T, size_t SIZE>
-static std::string to_string(const hidl_array<T, SIZE> &array) {
-    return to_string(&array[0], SIZE);
-}
-
-template<typename T, size_t SIZE1, size_t SIZE2>
-static std::string to_string(const hidl_array<T, SIZE1, SIZE2> &array) {
-    std::string out;
-    out = "[";
-    for (size_t i = 0; i < SIZE1; ++i) {
-        if (i > 0) {
-            out += ", ";
-        }
-
-        out += "[";
-        for (size_t j = 0; j < SIZE2; ++j) {
-            if (j > 0) {
-                out += ", ";
-            }
-
-            out += to_string(array[i][j]);
-        }
-        out += "]";
-    }
-    out += "]";
-
-    return out;
-}
-
-template<typename T>
-static std::string to_string(const hidl_vec<T> &vec) {
-    return to_string(&vec[0], vec.size());
-}
-
-static std::string to_string(const IFoo::StringMatrix5x3 &M) {
-    return to_string(M.s);
-}
-
-static std::string to_string(const IFoo::StringMatrix3x5 &M) {
-    return to_string(M.s);
-}
-
-static std::string to_string(const hidl_string &s) {
-    return std::string("'") + s.c_str() + "'";
-}
-
-static std::string QuuxToString(const IFoo::Quux &val) {
-    std::string s;
-
-    s = "Quux(first='";
-    s += val.first.c_str();
-    s += "', last='";
-    s += val.last.c_str();
-    s += "')";
-
-    return s;
-}
-
-static std::string MultiDimensionalToString(const IFoo::MultiDimensional &val) {
-    std::string s;
-
-    s += "MultiDimensional(";
-
-    s += "quuxMatrix=[";
-
-    size_t k = 0;
-    for (size_t i = 0; i < 5; ++i) {
-        if (i > 0) {
-            s += ", ";
-        }
-
-        s += "[";
-        for (size_t j = 0; j < 3; ++j, ++k) {
-            if (j > 0) {
-                s += ", ";
-            }
-
-            s += QuuxToString(val.quuxMatrix[i][j]);
-        }
-    }
-    s += "]";
-
-    s += ")";
-
-    return s;
-}
-
-// end duplicated code
-
 void signal_handler(int signal)
 {
     if (signal == SIGTERM) {
@@ -841,16 +699,16 @@ TEST_F(HidlTest, TestArrayDimensionality) {
 
 TEST_F(HidlTest, PassAGraphTest) {
     IGraph::Graph g;
-    simpleGraph(g);
-    logSimpleGraph("CLIENT", g);
+    ::android::simpleGraph(g);
+    ::android::logSimpleGraph("CLIENT", g);
     ALOGI("CLIENT call passAGraph");
     EXPECT_OK(graphInterface->passAGraph(g));
 }
 
 TEST_F(HidlTest, GiveAGraphTest) {
     EXPECT_OK(graphInterface->giveAGraph([&](const auto &newGraph) {
-        logSimpleGraph("CLIENT", newGraph);
-        EXPECT_TRUE(isSimpleGraph(newGraph));
+        ::android::logSimpleGraph("CLIENT", newGraph);
+        EXPECT_TRUE(::android::isSimpleGraph(newGraph));
     }));
 }
 TEST_F(HidlTest, PassANodeTest) {
@@ -859,7 +717,7 @@ TEST_F(HidlTest, PassANodeTest) {
 }
 TEST_F(HidlTest, PassTwoGraphsTest) {
     IGraph::Graph g;
-    simpleGraph(g);
+    ::android::simpleGraph(g);
     EXPECT_OK(graphInterface->passTwoGraphs(&g, &g));
 }
 TEST_F(HidlTest, PassAGammaTest) {
