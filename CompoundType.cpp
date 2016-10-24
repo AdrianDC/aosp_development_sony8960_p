@@ -133,12 +133,11 @@ void CompoundType::emitReaderWriter(
             << name
             << " == nullptr) {\n";
 
-        out.indent();
+        out.indentBlock([&]{
+            out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
+            handleError2(out, mode);
+        });
 
-        out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
-        handleError2(out, mode);
-
-        out.unindent();
         out << "}\n\n";
     } else {
         out << "_hidl_err = "
@@ -313,19 +312,14 @@ void CompoundType::emitResolveReferencesEmbedded(
             << "writeEmbeddedReferenceToParcel(\n";
     }
 
-    out.indent();
-    out.indent();
-
-    out << (isReader ? parcelObjDeref : parcelObjPointer);
-    out << ",\n"
-        << parentName
-        << ",\n"
-        << offsetText;
-
-    out << ");\n\n";
-
-    out.unindent();
-    out.unindent();
+    out.indentBlock(2, [&]{
+        out << (isReader ? parcelObjDeref : parcelObjPointer)
+            << ",\n"
+            << parentName
+            << ",\n"
+            << offsetText
+            << ");\n\n";
+    });
 
     handleError(out, mode);
 }
@@ -352,41 +346,37 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     if (needsEmbeddedReadWrite()) {
         out << "\n::android::status_t readEmbeddedFromParcel(\n";
 
-        out.indent();
-        out.indent();
+        out.indent(2);
 
         out << "const ::android::hardware::Parcel &parcel,\n"
                   << "size_t parentHandle,\n"
                   << "size_t parentOffset);\n\n";
 
-        out.unindent();
-        out.unindent();
+        out.unindent(2);
 
         out << "::android::status_t writeEmbeddedToParcel(\n";
 
-        out.indent();
-        out.indent();
+        out.indent(2);
 
         out << "::android::hardware::Parcel *parcel,\n"
                   << "size_t parentHandle,\n"
                   << "size_t parentOffset) const;\n";
 
-        out.unindent();
-        out.unindent();
+        out.unindent(2);
     }
 
     if(needsResolveReferences()) {
         out << "\n";
         out << "::android::status_t readEmbeddedReferenceFromParcel(\n";
-        out.indent(); out.indent();
+        out.indent(2);
         out << "const ::android::hardware::Parcel &parcel,\n"
             << "size_t parentHandle, size_t parentOffset);\n";
-        out.unindent(); out.unindent();
+        out.unindent(2);
         out << "::android::status_t writeEmbeddedReferenceToParcel(\n";
-        out.indent(); out.indent();
+        out.indent(2);
         out << "::android::hardware::Parcel *,\n"
             << "size_t parentHandle, size_t parentOffset) const;\n";
-        out.unindent(); out.unindent();
+        out.unindent(2);
     }
 
     out.unindent();
@@ -483,8 +473,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
     ////////////////////////////////////////////////////////////////////////////
 
     out << "public final void readEmbeddedFromParcel(\n";
-    out.indent();
-    out.indent();
+    out.indent(2);
     out << "HwParcel parcel, HwBlob _hidl_blob, long _hidl_offset) {\n";
     out.unindent();
 
@@ -534,8 +523,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
     ////////////////////////////////////////////////////////////////////////////
 
     out << "public static final void writeVectorToParcel(\n";
-    out.indent();
-    out.indent();
+    out.indent(2);
     out << "HwParcel parcel, ArrayList<"
         << localName()
         << "> _hidl_vec) {\n";
@@ -561,8 +549,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
     ////////////////////////////////////////////////////////////////////////////
 
     out << "public final void writeEmbeddedToBlob(\n";
-    out.indent();
-    out.indent();
+    out.indent(2);
     out << "HwBlob _hidl_blob, long _hidl_offset) {\n";
     out.unindent();
 
@@ -606,8 +593,7 @@ void CompoundType::emitStructReaderWriter(
                            : "::writeEmbeddedToParcel")
               << "(\n";
 
-    out.indent();
-    out.indent();
+    out.indent(2);
 
     if (isReader) {
         out << "const ::android::hardware::Parcel &parcel,\n";
@@ -624,8 +610,7 @@ void CompoundType::emitStructReaderWriter(
 
     out << " {\n";
 
-    out.unindent();
-    out.unindent();
+    out.unindent(2);
     out.indent();
 
     out << "::android::status_t _hidl_err = ::android::OK;\n\n";
@@ -682,18 +667,18 @@ void CompoundType::emitResolveReferenceDef(
 
     if (isReader) {
         out << "::readEmbeddedReferenceFromParcel(\n";
-        out.indent(); out.indent();
+        out.indent(2);
         out << "const ::android::hardware::Parcel &parcel,\n"
             << "size_t " << parentHandleName << ", "
             << "size_t " << parentOffsetName << ")\n";
-        out.unindent(); out.unindent();
+        out.unindent(2);
     } else {
         out << "::writeEmbeddedReferenceToParcel(\n";
-        out.indent(); out.indent();
+        out.indent(2);
         out << "::android::hardware::Parcel *parcel,\n"
             << "size_t " << parentHandleName << ", "
             << "size_t " << parentOffsetName << ") const\n";
-        out.unindent(); out.unindent();
+        out.unindent(2);
     }
 
     out << " {\n";
