@@ -19,6 +19,7 @@
 #define FORMATTER_H_
 
 #include <android-base/macros.h>
+#include <functional>
 #include <string>
 
 namespace android {
@@ -28,8 +29,17 @@ struct Formatter {
     Formatter(FILE *file = NULL);
     ~Formatter();
 
-    void indent();
-    void unindent();
+    void indent(size_t level = 1);
+    void unindent(size_t level = 1);
+
+    // out.indentBlock(2, [&] {
+    //     out << "Meow\n";
+    // });
+    void indentBlock(size_t level, std::function<void(void)> func);
+    // out.indentBlock([&] {
+    //     out << "Meow\n";
+    // });
+    void indentBlock(std::function<void(void)> func);
 
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
