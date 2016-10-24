@@ -343,6 +343,43 @@ static bool packageNeedsJavaCode(
     return false;
 }
 
+static void generateMakefileSectionForJavaConstants(
+        Formatter &out,
+        Coordinator *coordinator,
+        const FQName &packageFQName,
+        const std::vector<FQName> &packageInterfaces) {
+    out << "\n#"
+        << "\nGEN := $(intermediates)/"
+        << coordinator->convertPackageRootToPath(packageFQName)
+        << coordinator->getPackagePath(packageFQName, true /* relative */)
+        << "Constants.java";
+
+    out << "\n$(GEN): $(HIDL)\n";
+    for (const auto &iface : packageInterfaces) {
+        out << "$(GEN): $(LOCAL_PATH)/" << iface.name() << ".hal\n";
+    }
+    out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
+    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
+        << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
+    out.indent();
+    out.indent();
+    out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
+        << "\n-Ljava-constants"
+        << " -r"
+        << coordinator->getPackageRoot(packageFQName) << ":"
+        << coordinator->getPackageRootPath(packageFQName) << " \\\n";
+
+    out << packageFQName.string();
+    out << "\n";
+
+    out.unindent();
+    out.unindent();
+
+    out << "\n$(GEN):";
+    out << "\n\t$(transform-generated-source)";
+    out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
+}
+
 static status_t generateMakefileForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -365,6 +402,7 @@ static status_t generateMakefileForPackage(
 
     std::set<FQName> importedPackages;
     AST *typesAST = nullptr;
+    std::vector<const Type *> exportedTypes;
 
     for (const auto &fqName : packageInterfaces) {
         AST *ast = coordinator->parse(fqName);
@@ -382,6 +420,7 @@ static status_t generateMakefileForPackage(
         }
 
         ast->getImportedPackages(&importedPackages);
+        ast->appendToExportedTypesVector(&exportedTypes);
     }
 
     bool packageIsJavaCompatible;
@@ -392,7 +431,9 @@ static status_t generateMakefileForPackage(
         return err;
     }
 
-    if (!packageIsJavaCompatible) {
+    bool haveJavaConstants = !exportedTypes.empty();
+
+    if (!packageIsJavaCompatible && !haveJavaConstants) {
         return OK;
     }
 
@@ -425,7 +466,8 @@ static status_t generateMakefileForPackage(
         LIBRARY_STYLE_END,
     };
 
-    for (int style = LIBRARY_STYLE_REGULAR; style != LIBRARY_STYLE_END;
+    for (int style = LIBRARY_STYLE_REGULAR;
+            (packageIsJavaCompatible && style != LIBRARY_STYLE_END);
             ++style) {
         const std::string staticSuffix =
             (style == LIBRARY_STYLE_STATIC) ? "-static" : "";
@@ -473,6 +515,31 @@ static status_t generateMakefileForPackage(
         out << "\ninclude $(BUILD_"
             << ((style == LIBRARY_STYLE_STATIC) ? "STATIC_" : "")
             << "JAVA_LIBRARY)\n\n";
+    }
+
+    if (haveJavaConstants) {
+        out << "\n"
+            << "########################################"
+            << "########################################\n\n";
+
+        out << "include $(CLEAR_VARS)\n"
+            << "LOCAL_MODULE := "
+            << libraryName
+            << "-java-constants"
+            << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
+            << "intermediates := $(local-generated-sources-dir)\n\n"
+            << "HIDL := $(HOST_OUT_EXECUTABLES)/"
+            << hidl_gen
+            << "$(HOST_EXECUTABLE_SUFFIX)";
+
+        generateMakefileSectionForJavaConstants(
+                out, coordinator, packageFQName, packageInterfaces);
+
+        out << "\n# Avoid dependency cycle of framework.jar -> this-library "
+            << "-> framework.jar\n"
+            << "LOCAL_NO_STANDARD_LIBRARIES := true\n"
+            << "LOCAL_JAVA_LIBRARIES := core-oj\n\n"
+            << "include $(BUILD_STATIC_JAVA_LIBRARY)\n\n";
     }
 
     out << "\n\n"
@@ -817,7 +884,8 @@ static status_t generateExportHeaderForPackage(
         const FQName &packageFQName,
         const char * /* hidl_gen */,
         Coordinator *coordinator,
-        const std::string &outputPath) {
+        const std::string &outputPath,
+        bool forJava) {
 
     CHECK(packageFQName.isValid()
             && !packageFQName.isFullyQualified()
@@ -852,8 +920,19 @@ static status_t generateExportHeaderForPackage(
         return OK;
     }
 
-    CHECK(Coordinator::MakeParentHierarchy(outputPath));
-    FILE *file = fopen(outputPath.c_str(), "w");
+    std::string path = outputPath;
+
+    if (forJava) {
+        path.append(coordinator->convertPackageRootToPath(packageFQName));
+
+        path.append(coordinator->getPackagePath(
+                    packageFQName, true /* relative */));
+
+        path.append("Constants.java");
+    }
+
+    CHECK(Coordinator::MakeParentHierarchy(path));
+    FILE *file = fopen(path.c_str(), "w");
 
     if (file == nullptr) {
         return -errno;
@@ -864,24 +943,36 @@ static status_t generateExportHeaderForPackage(
     out << "// This file is autogenerated by hidl-gen. Do not edit manually."
            "\n\n";
 
-    std::string guard = "HIDL_GENERATED_";
-    guard += packageFQName.tokenName();
-    guard += "_";
-    guard += "EXPORTED_CONSTANTS_H_";
+    std::string guard;
+    if (forJava) {
+        out << "package " << packageFQName.javaPackage() << ";\n\n";
+        out << "public class Constants {\n";
+        out.indent();
+    } else {
+        guard = "HIDL_GENERATED_";
+        guard += packageFQName.tokenName();
+        guard += "_";
+        guard += "EXPORTED_CONSTANTS_H_";
 
-    out << "#ifndef "
-        << guard
-        << "\n#define "
-        << guard
-        << "\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n";
-
-    for (const auto &type : exportedTypes) {
-        type->emitExportedHeader(out);
+        out << "#ifndef "
+            << guard
+            << "\n#define "
+            << guard
+            << "\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n";
     }
 
-    out << "#ifdef __cplusplus\n}\n#endif\n\n#endif  // "
-        << guard
-        << "\n";
+    for (const auto &type : exportedTypes) {
+        type->emitExportedHeader(out, forJava);
+    }
+
+    if (forJava) {
+        out.unindent();
+        out << "}\n";
+    } else {
+        out << "#ifdef __cplusplus\n}\n#endif\n\n#endif  // "
+            << guard
+            << "\n";
+    }
 
     return OK;
 }
@@ -922,7 +1013,8 @@ static std::vector<OutputHandler> formats = {
                     fqName,
                     hidl_gen,
                     coordinator,
-                    outputPath);
+                    outputPath,
+                    false /* forJava */);
         }
     },
 
@@ -967,6 +1059,22 @@ static std::vector<OutputHandler> formats = {
                                                  outputDir,
                                                  "java");
             }
+        }
+    },
+
+    {"java-constants",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForExportHeader,
+     [](const FQName &fqName,
+        const char *hidl_gen, Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            CHECK(!fqName.isFullyQualified());
+            return generateExportHeaderForPackage(
+                    fqName,
+                    hidl_gen,
+                    coordinator,
+                    outputDir,
+                    true /* forJava */);
         }
     },
 

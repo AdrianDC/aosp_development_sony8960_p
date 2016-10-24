@@ -85,7 +85,7 @@ struct EnumType : public Scope {
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const override;
 
-    status_t emitExportedHeader(Formatter &out) const override;
+    status_t emitExportedHeader(Formatter &out, bool forJava) const override;
 
 private:
     void getTypeChain(std::vector<const EnumType *> *out) const;
