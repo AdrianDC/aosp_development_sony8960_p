@@ -404,7 +404,8 @@ void Type::appendToExportedTypesVector(
         std::vector<const Type *> * /* exportedTypes */) const {
 }
 
-status_t Type::emitExportedHeader(Formatter & /* out */) const {
+status_t Type::emitExportedHeader(
+        Formatter & /* out */, bool /* forJava */) const {
     return OK;
 }
 
