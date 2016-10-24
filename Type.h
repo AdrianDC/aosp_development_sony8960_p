@@ -196,7 +196,7 @@ struct Type {
     virtual void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
 
-    virtual status_t emitExportedHeader(Formatter &out) const;
+    virtual status_t emitExportedHeader(Formatter &out, bool forJava) const;
 
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
