@@ -1,7 +1,6 @@
 #include <android/hardware/tests/expression/1.0//BpExpression.h>
 #include <android/hardware/tests/expression/1.0//BnExpression.h>
 #include <android/hardware/tests/expression/1.0//BsExpression.h>
-#include <cutils/properties.h>
 
 namespace android {
 namespace hardware {
@@ -12,17 +11,16 @@ namespace V1_0 {
 constexpr hidl_version IExpression::version;
 
 BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder> &_hidl_impl)
-        : BpInterface<IHwExpression>(_hidl_impl) {
-        mEnableInstrumentation = property_get_bool("hal.instrumentation.enable", false);
-        registerInstrumentationCallbacks("android.hardware.tests.expression@1.0::IExpression", &mInstrumentationCallbacks);
+        : BpInterface<IHwExpression>(_hidl_impl),
+          HidlInstrumentor("android.hardware.tests.expression@1.0::IExpression") {
 }
 
 ::android::hardware::Return<void> BpExpression::foo1(const hidl_array<int32_t, 1 /* (Constants:CONST_FOO + 1) */>& array) {
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
-        args.push_back((void *)&array);
+        std::vector<void *> _hidl_args;
+        _hidl_args.push_back((void *)&array);
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &args);
+            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &_hidl_args);
         }
     }
 
@@ -39,7 +37,7 @@ BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder> &_h
     _hidl_err = _hidl_data.writeBuffer(array.data(), 1 * sizeof(int32_t), &_hidl_array_parent);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
-    _hidl_err = remote()->transact(::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO1, _hidl_data, &_hidl_reply);
+    _hidl_err = remote()->transact(1 /* foo1 */, _hidl_data, &_hidl_reply);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
     _hidl_err = _hidl_status.readFromParcel(_hidl_reply);
@@ -48,9 +46,9 @@ BpExpression::BpExpression(const ::android::sp<::android::hardware::IBinder> &_h
     if (!_hidl_status.isOk()) { return _hidl_status; }
 
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
+        std::vector<void *> _hidl_args;
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &args);
+            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &_hidl_args);
         }
     }
 
@@ -64,10 +62,10 @@ _hidl_error:
 
 ::android::hardware::Return<void> BpExpression::foo2(const hidl_array<int32_t, 13 /* (5 + 8) */>& array) {
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
-        args.push_back((void *)&array);
+        std::vector<void *> _hidl_args;
+        _hidl_args.push_back((void *)&array);
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &args);
+            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &_hidl_args);
         }
     }
 
@@ -84,7 +82,7 @@ _hidl_error:
     _hidl_err = _hidl_data.writeBuffer(array.data(), 13 * sizeof(int32_t), &_hidl_array_parent);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
-    _hidl_err = remote()->transact(::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO2, _hidl_data, &_hidl_reply);
+    _hidl_err = remote()->transact(2 /* foo2 */, _hidl_data, &_hidl_reply);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
     _hidl_err = _hidl_status.readFromParcel(_hidl_reply);
@@ -93,9 +91,9 @@ _hidl_error:
     if (!_hidl_status.isOk()) { return _hidl_status; }
 
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
+        std::vector<void *> _hidl_args;
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &args);
+            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &_hidl_args);
         }
     }
 
@@ -109,10 +107,10 @@ _hidl_error:
 
 ::android::hardware::Return<void> BpExpression::foo3(const hidl_array<int32_t, 20 /* Constants:MAX_ARRAY_SIZE */>& array) {
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
-        args.push_back((void *)&array);
+        std::vector<void *> _hidl_args;
+        _hidl_args.push_back((void *)&array);
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &args);
+            callback(InstrumentationEvent::CLIENT_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &_hidl_args);
         }
     }
 
@@ -129,7 +127,7 @@ _hidl_error:
     _hidl_err = _hidl_data.writeBuffer(array.data(), 20 * sizeof(int32_t), &_hidl_array_parent);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
-    _hidl_err = remote()->transact(::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO3, _hidl_data, &_hidl_reply);
+    _hidl_err = remote()->transact(3 /* foo3 */, _hidl_data, &_hidl_reply);
     if (_hidl_err != ::android::OK) { goto _hidl_error; }
 
     _hidl_err = _hidl_status.readFromParcel(_hidl_reply);
@@ -138,9 +136,9 @@ _hidl_error:
     if (!_hidl_status.isOk()) { return _hidl_status; }
 
     if (UNLIKELY(mEnableInstrumentation)) {
-        std::vector<void *> args;
+        std::vector<void *> _hidl_args;
         for (auto callback: mInstrumentationCallbacks) {
-            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &args);
+            callback(InstrumentationEvent::CLIENT_API_EXIT, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &_hidl_args);
         }
     }
 
@@ -155,9 +153,8 @@ _hidl_error:
 IMPLEMENT_HWBINDER_META_INTERFACE(Expression, "android.hardware.tests.expression@1.0::IExpression");
 
 BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
-        : BnInterface<IExpression, IHwExpression>(_hidl_impl) {
-        mEnableInstrumentation = property_get_bool("hal.instrumentation.enable", false);
-        registerInstrumentationCallbacks("android.hardware.tests.expression@1.0::IExpression", &mInstrumentationCallbacks);
+        : BnInterface<IExpression, IHwExpression>(_hidl_impl),
+          HidlInstrumentor("android.hardware.tests.expression@1.0::IExpression") {
 }
 
 ::android::status_t BnExpression::onTransact(
@@ -169,7 +166,7 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
     ::android::status_t _hidl_err = ::android::OK;
 
     switch (_hidl_code) {
-        case ::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO1:
+        case 1 /* foo1 */:
         {
             if (!_hidl_data.enforceInterface(::android::hardware::tests::expression::V1_0::IHwExpression::descriptor)) {
                 _hidl_err = ::android::BAD_TYPE;
@@ -188,10 +185,10 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
             }
 
             if (UNLIKELY(mEnableInstrumentation)) {
-                std::vector<void *> args;
-                args.push_back((void *)array);
+                std::vector<void *> _hidl_args;
+                _hidl_args.push_back((void *)array);
                 for (auto callback: mInstrumentationCallbacks) {
-                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &args);
+                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo1", &_hidl_args);
                 }
             }
 
@@ -201,7 +198,7 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
             break;
         }
 
-        case ::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO2:
+        case 2 /* foo2 */:
         {
             if (!_hidl_data.enforceInterface(::android::hardware::tests::expression::V1_0::IHwExpression::descriptor)) {
                 _hidl_err = ::android::BAD_TYPE;
@@ -220,10 +217,10 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
             }
 
             if (UNLIKELY(mEnableInstrumentation)) {
-                std::vector<void *> args;
-                args.push_back((void *)array);
+                std::vector<void *> _hidl_args;
+                _hidl_args.push_back((void *)array);
                 for (auto callback: mInstrumentationCallbacks) {
-                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &args);
+                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo2", &_hidl_args);
                 }
             }
 
@@ -233,7 +230,7 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
             break;
         }
 
-        case ::android::hardware::tests::expression::V1_0::IHwExpression::Call::FOO3:
+        case 3 /* foo3 */:
         {
             if (!_hidl_data.enforceInterface(::android::hardware::tests::expression::V1_0::IHwExpression::descriptor)) {
                 _hidl_err = ::android::BAD_TYPE;
@@ -252,10 +249,10 @@ BnExpression::BnExpression(const ::android::sp<IExpression> &_hidl_impl)
             }
 
             if (UNLIKELY(mEnableInstrumentation)) {
-                std::vector<void *> args;
-                args.push_back((void *)array);
+                std::vector<void *> _hidl_args;
+                _hidl_args.push_back((void *)array);
                 for (auto callback: mInstrumentationCallbacks) {
-                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &args);
+                    callback(InstrumentationEvent::SERVER_API_ENTRY, "android.hardware.tests.expression", "1.0", "IExpression", "foo3", &_hidl_args);
                 }
             }
 

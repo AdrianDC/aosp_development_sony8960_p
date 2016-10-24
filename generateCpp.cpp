@@ -615,7 +615,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         << baseName
         << " : public ::android::hardware::BnInterface<I"
         << baseName << ", IHw" << baseName
-        << "> {\n";
+        << ">, public ::android::hardware::HidlInstrumentor {\n";
 
     out.indent();
     out << "explicit Bn"
@@ -644,12 +644,6 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
 
 
     out.unindent();
-    out << "private:\n";
-
-    out.indent();
-    emitCppInstrumentationDecl(out);
-    out.unindent();
-
     out << "};\n\n";
 
     enterLeaveNamespace(out, false /* enter */);
@@ -708,7 +702,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << baseName
         << " : public ::android::hardware::BpInterface<IHw"
         << baseName
-        << "> {\n";
+        << ">, public ::android::hardware::HidlInstrumentor {\n";
 
     out.indent();
 
@@ -729,13 +723,6 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     }
 
     out.unindent();
-    out << "private:\n";
-
-    out.indent();
-    emitCppInstrumentationDecl(out);
-
-    out.unindent();
-
     out << "};\n\n";
 
     enterLeaveNamespace(out, false /* enter */);
@@ -794,7 +781,6 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "#include <" << prefix << "/Bp" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bn" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bs" << baseName << ".h>\n";
-        out << "#include <cutils/properties.h>\n";
     } else {
         out << "#include <" << prefix << "types.h>\n";
     }
@@ -931,9 +917,12 @@ status_t AST::generateProxySource(
     out << ": BpInterface"
         << "<IHw"
         << baseName
-        << ">(_hidl_impl) {\n";
-
-    emitCppInstrumentationInit(out, baseName);
+        << ">(_hidl_impl),\n"
+        << "  HidlInstrumentor(\""
+        << mPackage.string()
+        << "::I"
+        << baseName
+        << "\") {\n";
 
     out.unindent();
     out.unindent();
@@ -1144,9 +1133,13 @@ status_t AST::generateStubSource(
         << baseName
         << ", IHw"
         << baseName
-        << ">(_hidl_impl) {\n";
+        << ">(_hidl_impl),\n"
+        << "  HidlInstrumentor(\""
+        << mPackage.string()
+        << "::I"
+        << baseName
+        << "\") {\n";
 
-    emitCppInstrumentationInit(out, baseName);
     out.unindent();
     out.unindent();
     out << "}\n\n";
@@ -1628,14 +1621,14 @@ status_t AST::generateCppInstrumentationCall(
         const Interface *iface, const Method *method) const {
     out << "if (UNLIKELY(mEnableInstrumentation)) {\n";
     out.indent();
-    out << "std::vector<void *> args;\n";
+    out << "std::vector<void *> _hidl_args;\n";
     std::string event_str = "";
     switch (event) {
         case SERVER_API_ENTRY:
         {
             event_str = "InstrumentationEvent::SERVER_API_ENTRY";
             for (const auto &arg : method->args()) {
-                out << "args.push_back((void *)"
+                out << "_hidl_args.push_back((void *)"
                     << (arg->type().resultNeedsDeref() ? "" : "&")
                     << arg->name()
                     << ");\n";
@@ -1647,11 +1640,13 @@ status_t AST::generateCppInstrumentationCall(
             event_str = "InstrumentationEvent::SERVER_API_EXIT";
             const TypedVar *elidedReturn = method->canElideCallback();
             if (elidedReturn != nullptr) {
-                out << "args.push_back((void *)&" << elidedReturn->name()
+                out << "_hidl_args.push_back((void *)&"
+                    << elidedReturn->name()
                     << ");\n";
             } else {
                 for (const auto &arg : method->results()) {
-                    out << "args.push_back((void *)&" << arg->name()
+                    out << "_hidl_args.push_back((void *)&"
+                        << arg->name()
                         << ");\n";
                 }
             }
@@ -1661,7 +1656,9 @@ status_t AST::generateCppInstrumentationCall(
         {
             event_str = "InstrumentationEvent::CLIENT_API_ENTRY";
             for (const auto &arg : method->args()) {
-                out << "args.push_back((void *)&" << arg->name() << ");\n";
+                out << "_hidl_args.push_back((void *)&"
+                    << arg->name()
+                    << ");\n";
             }
             break;
         }
@@ -1669,9 +1666,10 @@ status_t AST::generateCppInstrumentationCall(
         {
             event_str = "InstrumentationEvent::CLIENT_API_EXIT";
             for (const auto &arg : method->results()) {
-                out << "args.push_back((void *)"
+                out << "_hidl_args.push_back((void *)"
                     << (arg->type().resultNeedsDeref() ? "" : "&")
-                    << "_hidl_out_" << arg->name()
+                    << "_hidl_out_"
+                    << arg->name()
                     << ");\n";
             }
             break;
@@ -1698,31 +1696,13 @@ status_t AST::generateCppInstrumentationCall(
         << iface->localName()
         << "\", \""
         << method->name()
-        << "\", &args);\n";
+        << "\", &_hidl_args);\n";
     out.unindent();
     out << "}\n";
     out.unindent();
     out << "}\n\n";
 
     return OK;
-}
-
-void AST::emitCppInstrumentationDecl(
-        Formatter &out) const {
-    out << "// for hidl instrumentation.\n";
-    out << "std::vector<InstrumentationCallback> mInstrumentationCallbacks;\n";
-    out << "bool mEnableInstrumentation;\n";
-}
-
-void AST::emitCppInstrumentationInit(
-        Formatter &out, const std::string &baseName) const {
-    out << "mEnableInstrumentation = "
-        "property_get_bool(\"hal.instrumentation.enable\", false);\n";
-    out << "registerInstrumentationCallbacks(\""
-        << mPackage.string()
-        << "::I"
-        << baseName
-        << "\", &mInstrumentationCallbacks);\n";
 }
 
 }  // namespace android

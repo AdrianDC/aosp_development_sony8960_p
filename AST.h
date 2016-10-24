@@ -228,12 +228,6 @@ private:
             const Interface *iface,
             const Method *method) const;
 
-    void emitCppInstrumentationDecl(Formatter &out) const;
-
-    void emitCppInstrumentationInit(
-            Formatter &out,
-            const std::string &baseName) const;
-
     void declareCppReaderLocals(
             Formatter &out,
             const std::vector<TypedVar *> &arg,
