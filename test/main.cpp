@@ -325,6 +325,7 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
         }));
 }
 
+// TODO: b/31819198
 TEST_F(HidlTest, FooCallMeTest) {
     ALOGI("CLIENT call callMe.");
     // callMe is oneway, should return instantly.
@@ -335,6 +336,7 @@ TEST_F(HidlTest, FooCallMeTest) {
     ALOGI("CLIENT callMe returned.");
 }
 
+// TODO: b/31819198
 TEST_F(HidlTest, ForReportResultsTest) {
 
     // Bar::callMe will invoke three methods on FooCallback; one will return
@@ -607,10 +609,13 @@ TEST_F(HidlTest, FooTranspose2Test) {
                 }));
 }
 
+// TODO: enable for passthrough mode after b/30814137
 TEST_F(HidlTest, FooNullNativeHandleTest) {
-    Abc xyz;
-    xyz.z = nullptr;
-    EXPECT_FAIL(foo->haveATypeFromAnotherFile(xyz));
+    if (gMode == BINDERIZED) {
+        Abc xyz;
+        xyz.z = nullptr;
+        EXPECT_FAIL(foo->haveATypeFromAnotherFile(xyz));
+    }
 }
 
 TEST_F(HidlTest, FooNonNullCallbackTest) {
@@ -1027,12 +1032,12 @@ void handleStatus(int status, const char *mode) {
         if (WIFEXITED(status)) {
             status = WEXITSTATUS(status);
             if (status < 0) {
-                fprintf(stderr, "RUN_ALL_TESTS returns %d for %s mode.\n", -status, mode);
+                fprintf(stdout, "    RUN_ALL_TESTS returns %d for %s mode.\n", -status, mode);
             } else {
-                fprintf(stderr, "%d test(s) failed for %s mode.\n", status, mode);
+                fprintf(stdout, "    %d test(s) failed for %s mode.\n", status, mode);
             }
         } else {
-            fprintf(stderr, "ERROR: %s child process exited abnormally with %d\n", mode, status);
+            fprintf(stdout, "    ERROR: %s child process exited abnormally with %d\n", mode, status);
         }
     }
 }
@@ -1085,8 +1090,8 @@ int main(int argc, char **argv) {
     int pStatus = p ? forkAndRunTests(PASSTHROUGH) : 0;
     int bStatus = b ? forkAndRunTests(BINDERIZED)  : 0;
 
-    fprintf(stdout, "\n===================\nSummary:\n");
-    fflush(stdout);
+    fprintf(stdout, "\n=========================================================\n\n"
+                    "    Summary:\n\n");
     if (p) {
         ALOGI("PASSTHROUGH Test result = %d", pStatus);
         handleStatus(pStatus, "PASSTHROUGH");
@@ -1097,8 +1102,9 @@ int main(int argc, char **argv) {
     }
 
     if (pStatus == 0 && bStatus == 0) {
-        fprintf(stdout, "Hooray! All tests passed.\n");
+        fprintf(stdout, "    Hooray! All tests passed.\n");
     }
+    fprintf(stdout, "\n=========================================================\n\n");
 
     return pStatus + bStatus;
 }
