@@ -252,11 +252,21 @@ void Interface::emitReaderWriter(
         out.unindent();
         out << "}\n\n";
     } else {
+        out << "if (" << name << " == nullptr) {\n";
+        out.indent();
+        out << "_hidl_err = ";
+        out << parcelObjDeref
+            << "writeStrongBinder(nullptr);\n";
+        out.unindent();
+        out << "} else {\n";
+        out.indent();
         out << "_hidl_err = "
             << parcelObjDeref
             << "writeStrongBinder("
             << name
             << "->toBinder());\n";
+        out.unindent();
+        out << "}\n";
 
         handleError(out, mode);
     }
