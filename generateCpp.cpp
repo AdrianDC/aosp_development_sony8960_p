@@ -171,7 +171,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         if (superType == NULL) {
             out << " : virtual public RefBase";
         } else {
-            out << " : public "
+            out << " : virtual public "
                 << superType->fullName();
         }
 
