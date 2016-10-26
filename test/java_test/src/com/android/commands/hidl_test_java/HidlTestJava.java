@@ -401,12 +401,11 @@ public final class HidlTestJava {
     private void client() {
         {
             // Test access through base interface binder.
-            IBase baseProxy = IBase.asInterface(HwBinder.getService("baz"));
+            IBase baseProxy = IBase.getService("baz");
             baseProxy.someBaseMethod();
         }
 
-        IBaz proxy = IBaz.asInterface(HwBinder.getService("baz"));
-
+        IBaz proxy = IBaz.getService("baz");
         proxy.someBaseMethod();
 
         {
@@ -900,7 +899,7 @@ public final class HidlTestJava {
 
     private void server() {
         Baz baz = new Baz();
-        baz.registerService("baz");
+        baz.registerAsService("baz");
 
         try {
             Thread.sleep(20000);
