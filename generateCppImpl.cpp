@@ -137,27 +137,22 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     // this is namespace aware code and doesn't require post-processing
     out.setNamespace("");
 
-    const Interface *ancestor = iface;
-    std::vector<const Interface *> chain;
-    while (ancestor != NULL) {
-        chain.push_back(ancestor);
-        ancestor = ancestor->superType();
-    }
+    std::vector<const Interface *> chain = iface->typeChain();
 
     std::set<const FQName> usedTypes{};
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const Interface *superInterface = *it;
-
         superInterface->addNamedTypesToSet(usedTypes);
+    }
 
-        for (const auto &method : superInterface->methods()) {
-            for(const auto & arg : method->args()) {
-                arg->type().addNamedTypesToSet(usedTypes);
-            }
-            for(const auto & results : method->results()) {
-                results->type().addNamedTypesToSet(usedTypes);
-            }
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        for(const auto & arg : method->args()) {
+            arg->type().addNamedTypesToSet(usedTypes);
+        }
+        for(const auto & results : method->results()) {
+            results->type().addNamedTypesToSet(usedTypes);
         }
     }
 

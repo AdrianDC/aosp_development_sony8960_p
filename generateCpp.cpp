@@ -169,7 +169,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *superType = iface->superType();
 
         if (superType == NULL) {
-            out << " : virtual public RefBase";
+            out << " : virtual public IHidlInterfaceBase";
         } else {
             out << " : virtual public "
                 << superType->fullName();
@@ -199,7 +199,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "return version;\n";
         out.unindent();
         out << "}\n\n";
-        out << "virtual bool isRemote() const { return false; }\n\n";
+        out << "virtual bool isRemote() const override { return false; }\n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
@@ -253,8 +253,20 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                 out << method->name() << "_cb _hidl_cb";
             }
 
-            out << ") = 0;\n";
+            out << ")";
+            if (method->isHidlReserved()) {
+                out << " override";
+                out << " {\n";
+                out.indent();
+                method->cppImpl(out);
+                out.unindent();
+                out << "\n}\n";
+            } else {
+                out << " = 0;\n";
+            }
         }
+
+        out << "\nstatic const ::android::String16 descriptor;\n\n";
 
         out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
     }
@@ -504,64 +516,63 @@ status_t AST::generateMethods(
 
     const Interface *iface = mRootScope->getInterface();
 
-    std::vector<const Interface *> chain;
-    while (iface != NULL) {
-        chain.push_back(iface);
-        iface = iface->superType();
-    }
+    const Interface *prevIterface = nullptr;
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        const Interface *superInterface = tuple.interface();
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
-
-        out << "// Methods from "
-            << superInterface->fullName()
-            << " follow.\n";
-
-        for (const auto &method : superInterface->methods()) {
-            status_t err;
-            switch(type) {
-                case STUB_HEADER:
-                    err = generateStubMethod(out,
+        if(prevIterface != superInterface) {
+            if (prevIterface != nullptr) {
+                out << "\n";
+            }
+            out << "// Methods from "
+                << superInterface->fullName()
+                << " follow.\n";
+            prevIterface = superInterface;
+        }
+        status_t err;
+        switch(type) {
+            case STUB_HEADER:
+                err = generateStubMethod(out,
+                                         className,
+                                         method,
+                                         specifyNamespaces);
+                break;
+            case PROXY_HEADER:
+                err = generateProxyDeclaration(out,
+                                               className,
+                                               method,
+                                               specifyNamespaces);
+                break;
+            case IMPL_HEADER:
+                err = generateStubImplDeclaration(out,
+                                                  className,
+                                                  method,
+                                                  specifyNamespaces);
+                break;
+            case IMPL_SOURCE:
+                err = generateStubImplMethod(out,
                                              className,
                                              method,
                                              specifyNamespaces);
-                    break;
-                case PROXY_HEADER:
-                    err = generateProxyDeclaration(out,
-                                                   className,
-                                                   method,
-                                                   specifyNamespaces);
-                    break;
-                case IMPL_HEADER:
-                    err = generateStubImplDeclaration(out,
-                                                      className,
-                                                      method,
-                                                      specifyNamespaces);
-                    break;
-                case IMPL_SOURCE:
-                    err = generateStubImplMethod(out,
-                                                 className,
-                                                 method,
-                                                 specifyNamespaces);
-                    break;
-                case PASSTHROUGH_HEADER:
-                    err = generatePassthroughMethod(out,
-                                                    className,
-                                                    method,
-                                                    specifyNamespaces);
-                    break;
-                default:
-                    LOG(ERROR) << "Unkown method type: " << type;
-                    err = UNKNOWN_ERROR;
-            }
-
-            if (err != OK) {
-                return err;
-            }
+                break;
+            case PASSTHROUGH_HEADER:
+                err = generatePassthroughMethod(out,
+                                                className,
+                                                method,
+                                                specifyNamespaces);
+                break;
+            default:
+                LOG(ERROR) << "Unkown method type: " << type;
+                err = UNKNOWN_ERROR;
         }
 
-        out << "\n";
+        if (err != OK) {
+            return err;
+        }
     }
+
+    out << "\n";
 
     return OK;
 }
@@ -711,7 +722,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
-    out << "virtual bool isRemote() const { return true; }\n\n";
+    out << "virtual bool isRemote() const override { return true; }\n\n";
 
     status_t err = generateMethods(out,
                                    "" /* class name */,
@@ -793,7 +804,16 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     status_t err = generateTypeSource(out, ifaceName);
 
     if (err == OK && isInterface) {
+        const Interface *iface = mRootScope->getInterface();
         out << "constexpr hidl_version " << ifaceName << "::version;\n\n";
+
+        // need to be put here, generateStubSource is using this.
+        out << "const ::android::String16 I"
+            << iface->getBaseName()
+            << "::descriptor(\""
+            << iface->fqName().string()
+            << "\");\n\n";
+
         err = generateProxySource(out, baseName);
     }
 
@@ -930,180 +950,177 @@ status_t AST::generateProxySource(
 
     const Interface *iface = mRootScope->getInterface();
 
-    std::vector<const Interface *> chain;
-    while (iface != NULL) {
-        chain.push_back(iface);
-        iface = iface->superType();
-    }
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        const Interface *superInterface = tuple.interface();
+        method->generateCppSignature(out,
+                                     klassName,
+                                     true /* specify namespaces */);
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
+        const bool returnsValue = !method->results().empty();
+        const TypedVar *elidedReturn = method->canElideCallback();
 
-        for (const auto &method : superInterface->methods()) {
-            method->generateCppSignature(out,
-                                         klassName,
-                                         true /* specify namespaces */);
+        out << "{\n";
 
-            const bool returnsValue = !method->results().empty();
-            const TypedVar *elidedReturn = method->canElideCallback();
+        out.indent();
 
-            out << "{\n";
+        if (returnsValue && elidedReturn == nullptr) {
+            generateCheckNonNull(out, "_hidl_cb");
+        }
 
-            out.indent();
+        status_t status = generateCppInstrumentationCall(
+                out,
+                InstrumentationEvent::CLIENT_API_ENTRY,
+                superInterface,
+                method);
+        if (status != OK) {
+            return status;
+        }
 
-            if (returnsValue && elidedReturn == nullptr) {
-                generateCheckNonNull(out, "_hidl_cb");
+        out << "::android::hardware::Parcel _hidl_data;\n";
+        out << "::android::hardware::Parcel _hidl_reply;\n";
+        out << "::android::status_t _hidl_err;\n";
+        out << "::android::hardware::Status _hidl_status;\n\n";
+
+        declareCppReaderLocals(
+                out, method->results(), true /* forResults */);
+
+        out << "_hidl_err = _hidl_data.writeInterfaceToken(";
+        if (!method->isHidlReserved()) {
+            out << superInterface->fqName().cppNamespace()
+                << "::IHw"
+                << superInterface->getBaseName();
+        } else {
+            out << "::android::hardware::IHidlInterfaceBase";
+        }
+        out << "::descriptor);\n";
+
+        out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
+
+        // First DFS: write all buffers and resolve pointers for parent
+        for (const auto &arg : method->args()) {
+            emitCppReaderWriter(
+                    out,
+                    "_hidl_data",
+                    false /* parcelObjIsPointer */,
+                    arg,
+                    false /* reader */,
+                    Type::ErrorMode_Goto,
+                    false /* addPrefixToName */);
+        }
+
+        // Second DFS: resolve references.
+        for (const auto &arg : method->args()) {
+            emitCppResolveReferences(
+                    out,
+                    "_hidl_data",
+                    false /* parcelObjIsPointer */,
+                    arg,
+                    false /* reader */,
+                    Type::ErrorMode_Goto,
+                    false /* addPrefixToName */);
+        }
+
+        out << "_hidl_err = remote()->transact("
+            << method->getSerialId()
+            << " /* "
+            << method->name()
+            << " */, _hidl_data, &_hidl_reply";
+
+        if (method->isOneway()) {
+            out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
+        }
+        out << ");\n";
+
+        out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
+
+        if (!method->isOneway()) {
+            out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
+            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
+            out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
+
+
+            // First DFS: write all buffers and resolve pointers for parent
+            for (const auto &arg : method->results()) {
+                emitCppReaderWriter(
+                        out,
+                        "_hidl_reply",
+                        false /* parcelObjIsPointer */,
+                        arg,
+                        true /* reader */,
+                        Type::ErrorMode_Goto,
+                        true /* addPrefixToName */);
             }
 
+            // Second DFS: resolve references.
+            for (const auto &arg : method->results()) {
+                emitCppResolveReferences(
+                        out,
+                        "_hidl_reply",
+                        false /* parcelObjIsPointer */,
+                        arg,
+                        true /* reader */,
+                        Type::ErrorMode_Goto,
+                        true /* addPrefixToName */);
+            }
+
+            if (returnsValue && elidedReturn == nullptr) {
+                out << "_hidl_cb(";
+
+                bool first = true;
+                for (const auto &arg : method->results()) {
+                    if (!first) {
+                        out << ", ";
+                    }
+
+                    if (arg->type().resultNeedsDeref()) {
+                        out << "*";
+                    }
+                    out << "_hidl_out_" << arg->name();
+
+                    first = false;
+                }
+
+                out << ");\n\n";
+            }
             status_t status = generateCppInstrumentationCall(
                     out,
-                    InstrumentationEvent::CLIENT_API_ENTRY,
+                    InstrumentationEvent::CLIENT_API_EXIT,
                     superInterface,
                     method);
             if (status != OK) {
                 return status;
             }
+        }
 
-            out << "::android::hardware::Parcel _hidl_data;\n";
-            out << "::android::hardware::Parcel _hidl_reply;\n";
-            out << "::android::status_t _hidl_err;\n";
-            out << "::android::hardware::Status _hidl_status;\n\n";
-
-            declareCppReaderLocals(
-                    out, method->results(), true /* forResults */);
-
-            out << "_hidl_err = _hidl_data.writeInterfaceToken("
-                << superInterface->fqName().cppNamespace()
-                << "::IHw"
-                << superInterface->getBaseName()
-                << "::descriptor);\n";
-
-            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-
-            // First DFS: write all buffers and resolve pointers for parent
-            for (const auto &arg : method->args()) {
-                emitCppReaderWriter(
-                        out,
-                        "_hidl_data",
-                        false /* parcelObjIsPointer */,
-                        arg,
-                        false /* reader */,
-                        Type::ErrorMode_Goto,
-                        false /* addPrefixToName */);
-            }
-
-            // Second DFS: resolve references.
-            for (const auto &arg : method->args()) {
-                emitCppResolveReferences(
-                        out,
-                        "_hidl_data",
-                        false /* parcelObjIsPointer */,
-                        arg,
-                        false /* reader */,
-                        Type::ErrorMode_Goto,
-                        false /* addPrefixToName */);
-            }
-
-            out << "_hidl_err = remote()->transact("
-                << method->getSerialId()
-                << " /* "
-                << method->name()
-                << " */, _hidl_data, &_hidl_reply";
-
-            if (method->isOneway()) {
-                out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
-            }
-            out << ");\n";
-
-            out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-
-            if (!method->isOneway()) {
-                out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
-                out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
-                out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
-
-
-                // First DFS: write all buffers and resolve pointers for parent
-                for (const auto &arg : method->results()) {
-                    emitCppReaderWriter(
-                            out,
-                            "_hidl_reply",
-                            false /* parcelObjIsPointer */,
-                            arg,
-                            true /* reader */,
-                            Type::ErrorMode_Goto,
-                            true /* addPrefixToName */);
-                }
-
-                // Second DFS: resolve references.
-                for (const auto &arg : method->results()) {
-                    emitCppResolveReferences(
-                            out,
-                            "_hidl_reply",
-                            false /* parcelObjIsPointer */,
-                            arg,
-                            true /* reader */,
-                            Type::ErrorMode_Goto,
-                            true /* addPrefixToName */);
-                }
-
-                if (returnsValue && elidedReturn == nullptr) {
-                    out << "_hidl_cb(";
-
-                    bool first = true;
-                    for (const auto &arg : method->results()) {
-                        if (!first) {
-                            out << ", ";
-                        }
-
-                        if (arg->type().resultNeedsDeref()) {
-                            out << "*";
-                        }
-                        out << "_hidl_out_" << arg->name();
-
-                        first = false;
-                    }
-
-                    out << ");\n\n";
-                }
-                status_t status = generateCppInstrumentationCall(
-                        out,
-                        InstrumentationEvent::CLIENT_API_EXIT,
-                        superInterface,
-                        method);
-                if (status != OK) {
-                    return status;
-                }
-            }
-
-            if (elidedReturn != nullptr) {
-                std::string extra;
-                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return ::android::hardware::Return<";
-                out << elidedReturn->type().getCppResultType(&extra)
-                    << ">(_hidl_out_" << elidedReturn->name() << ");\n\n";
-            } else {
-                out << "_hidl_status.setFromStatusT(_hidl_err);\n";
-                out << "return ::android::hardware::Return<void>();\n\n";
-            }
-
-            out.unindent();
-            out << "_hidl_error:\n";
-            out.indent();
+        if (elidedReturn != nullptr) {
+            std::string extra;
             out << "_hidl_status.setFromStatusT(_hidl_err);\n";
             out << "return ::android::hardware::Return<";
-            if (elidedReturn != nullptr) {
-                std::string extra;
-                out << method->results().at(0)->type().getCppResultType(&extra);
-            } else {
-                out << "void";
-            }
-            out << ">(_hidl_status);\n";
-
-            out.unindent();
-            out << "}\n\n";
+            out << elidedReturn->type().getCppResultType(&extra)
+                << ">(_hidl_out_" << elidedReturn->name() << ");\n\n";
+        } else {
+            out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+            out << "return ::android::hardware::Return<void>();\n\n";
         }
+
+        out.unindent();
+        out << "_hidl_error:\n";
+        out.indent();
+        out << "_hidl_status.setFromStatusT(_hidl_err);\n";
+        out << "return ::android::hardware::Return<";
+        if (elidedReturn != nullptr) {
+            std::string extra;
+            out << method->results().at(0)->type().getCppResultType(&extra);
+        } else {
+            out << "void";
+        }
+        out << ">(_hidl_status);\n";
+
+        out.unindent();
+        out << "}\n\n";
     }
+
 
     return OK;
 }
@@ -1112,11 +1129,11 @@ status_t AST::generateStubSource(
         Formatter &out, const std::string &baseName) const {
     out << "IMPLEMENT_HWBINDER_META_INTERFACE("
         << baseName
-        << ", \""
-        << mPackage.string()
+        << ", "
+        << mPackage.cppNamespace()
         << "::I"
         << baseName
-        << "\");\n\n";
+        << "::descriptor);\n\n";
 
     const std::string klassName = "Bn" + baseName;
 
@@ -1163,34 +1180,26 @@ status_t AST::generateStubSource(
 
     const Interface *iface = mRootScope->getInterface();
 
-    std::vector<const Interface *> chain;
-    while (iface != NULL) {
-        chain.push_back(iface);
-        iface = iface->superType();
-    }
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        const Interface *superInterface = tuple.interface();
+        out << "case "
+            << method->getSerialId()
+            << " /* "
+            << method->name()
+            << " */:\n{\n";
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
+        out.indent();
 
-        for (const auto &method : superInterface->methods()) {
-            out << "case "
-                << method->getSerialId()
-                << " /* "
-                << method->name()
-                << " */:\n{\n";
+        status_t err =
+            generateStubSourceForMethod(out, superInterface, method);
 
-            out.indent();
-
-            status_t err =
-                generateStubSourceForMethod(out, superInterface, method);
-
-            if (err != OK) {
-                return err;
-            }
-
-            out.unindent();
-            out << "}\n\n";
+        if (err != OK) {
+            return err;
         }
+
+        out.unindent();
+        out << "}\n\n";
     }
 
     out << "default:\n{\n";
@@ -1242,11 +1251,17 @@ status_t AST::generateStubSource(
 
 status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
-    out << "if (!_hidl_data.enforceInterface("
-        << iface->fqName().cppNamespace()
-        << "::IHw"
-        << iface->getBaseName()
-        << "::descriptor)) {\n";
+    out << "if (!_hidl_data.enforceInterface(";
+
+    if (!method->isHidlReserved()) {
+        out << iface->fqName().cppNamespace()
+            << "::IHw"
+            << iface->getBaseName();
+    } else {
+        out << "::android::hardware::IHidlInterfaceBase";
+    }
+
+    out << "::descriptor)) {\n";
 
     out.indent();
     out << "_hidl_err = ::android::BAD_TYPE;\n";

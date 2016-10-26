@@ -20,6 +20,7 @@
 #include "ScalarType.h"
 #include "Type.h"
 
+#include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 
 namespace android {
@@ -35,6 +36,24 @@ Method::Method(const char *name,
       mOneway(oneway),
       mAnnotations(annotations) {
 }
+
+// HIDL reserved methods.
+Method::Method(const char *name,
+       std::vector<TypedVar *> *args,
+       std::vector<TypedVar *> *results,
+       bool oneway,
+       std::vector<Annotation *> *annotations,
+       size_t serial,
+       MethodImpl cppImpl,
+       MethodImpl javaImpl)
+    : Method(name, args, results, oneway, annotations) {
+
+    mIsHidlReserved = true;
+    mSerial = serial;
+    mCppImpl = cppImpl;
+    mJavaImpl = javaImpl;
+}
+
 
 std::string Method::name() const {
     return mName;
@@ -52,7 +71,22 @@ const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
 }
 
+void Method::cppImpl(Formatter &out) const {
+    CHECK(mIsHidlReserved);
+    if (mCppImpl) {
+        mCppImpl(out);
+    }
+}
+
+void Method::javaImpl(Formatter &out) const {
+    CHECK(mIsHidlReserved);
+    if (mJavaImpl) {
+        mJavaImpl(out);
+    }
+}
+
 void Method::setSerialId(size_t serial) {
+    CHECK(!mIsHidlReserved);
     mSerial = serial;
 }
 
