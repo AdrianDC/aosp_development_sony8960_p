@@ -758,7 +758,7 @@ bool CompoundType::resultNeedsDeref() const {
 }
 
 status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "name: \"" << localName() << "\"\n";
+    out << "name: \"" << fullName() << "\"\n";
     out << "type: " << getVtsType() << "\n";
 
     // Emit declaration for each subtype.
@@ -813,7 +813,7 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
 
 status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
-    out << "predefined_type: \"" << localName() << "\"\n";
+    out << "predefined_type: \"" << fullName() << "\"\n";
     return OK;
 }
 
