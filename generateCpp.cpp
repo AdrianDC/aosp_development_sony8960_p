@@ -1520,7 +1520,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << ifaceName << ".h>\n\n";
 
     if (supportOneway) {
-        out << "#include <hidl/SynchronizedQueue.h>\n";
+        out << "#include <hidl/TaskRunner.h>\n";
     }
 
     enterLeaveNamespace(out, true /* enter */);
@@ -1553,15 +1553,12 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << "const sp<" << ifaceName << "> mImpl;\n";
 
     if (supportOneway) {
-        out << "SynchronizedQueue<std::function<void(void)>> mOnewayQueue;\n";
-        out << "std::thread *mOnewayThread = nullptr;\n";
+        out << "::android::hardware::TaskRunner mOnewayQueue;\n";
 
         out << "\n";
 
         out << "::android::hardware::Return<void> addOnewayTask("
                "std::function<void(void)>);\n\n";
-
-        out << "static const int kOnewayQueueMaxSize = 3000;\n";
     }
 
     out.unindent();
@@ -1575,7 +1572,6 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     return OK;
 }
 
-
 status_t AST::generatePassthroughSource(Formatter &out) const {
     const Interface *iface = mRootScope->getInterface();
 
@@ -1587,24 +1583,21 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         << klassName
         << "(const sp<"
         << iface->fullName()
-        << "> impl) : mImpl(impl) {}\n\n";
+        << "> impl) : mImpl(impl) {";
+    if (iface->hasOnewayMethods()) {
+        out << "\n";
+        out.indentBlock([&] {
+            out << "mOnewayQueue.setLimit(3000 /* similar limit to binderized */);\n";
+        });
+    }
+    out << "}\n\n";
 
     if (iface->hasOnewayMethods()) {
         out << "::android::hardware::Return<void> "
             << klassName
             << "::addOnewayTask(std::function<void(void)> fun) {\n";
         out.indent();
-        out << "if (mOnewayThread == nullptr) {\n";
-        out.indent();
-        out << "mOnewayThread = new std::thread([this]() {\n";
-        out.indent();
-        out << "while(true) { (this->mOnewayQueue.wait_pop())(); }";
-        out.unindent();
-        out << "});\n";
-        out.unindent();
-        out << "}\n\n";
-
-        out << "if (mOnewayQueue.size() > kOnewayQueueMaxSize) {\n";
+        out << "if (!mOnewayQueue.push(fun)) {\n";
         out.indent();
         out << "return ::android::hardware::Status::fromExceptionCode(\n";
         out.indent();
@@ -1612,10 +1605,6 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         out << "::android::hardware::Status::EX_TRANSACTION_FAILED);\n";
         out.unindent();
         out.unindent();
-        out.unindent();
-        out << "} else {\n";
-        out.indent();
-        out << "mOnewayQueue.push(fun);\n";
         out.unindent();
         out << "}\n";
 
