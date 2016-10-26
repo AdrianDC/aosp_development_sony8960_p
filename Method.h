@@ -19,6 +19,8 @@
 #define METHOD_H_
 
 #include <android-base/macros.h>
+#include <functional>
+#include <hidl-util/Formatter.h>
 #include <string>
 #include <vector>
 
@@ -30,17 +32,30 @@ struct ScalarType;
 struct Type;
 struct TypedVar;
 
+using MethodImpl = std::function<void(Formatter &)>;
+
 struct Method {
     Method(const char *name,
            std::vector<TypedVar *> *args,
            std::vector<TypedVar *> *results,
            bool oneway,
            std::vector<Annotation *> *annotations);
+    Method(const char *name,
+           std::vector<TypedVar *> *args,
+           std::vector<TypedVar *> *results,
+           bool oneway,
+           std::vector<Annotation *> *annotations,
+           size_t serial,
+           MethodImpl cppImpl,
+           MethodImpl javaImpl);
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;
     const std::vector<TypedVar *> &results() const;
     bool isOneway() const { return mOneway; }
+    void cppImpl(Formatter &out) const;
+    void javaImpl(Formatter &out) const;
+    bool isHidlReserved() const { return mIsHidlReserved; }
     const std::vector<Annotation *> &annotations() const;
 
     void setSerialId(size_t serial);
@@ -67,6 +82,12 @@ private:
     std::vector<TypedVar *> *mResults;
     bool mOneway;
     std::vector<Annotation *> *mAnnotations;
+
+    bool mIsHidlReserved = false;
+    // The following fields has no meaning if mIsHidlReserved is false.
+    // hard-coded implementation for HIDL reserved methods.
+    MethodImpl mCppImpl = nullptr;
+    MethodImpl mJavaImpl = nullptr;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };

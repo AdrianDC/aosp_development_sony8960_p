@@ -304,119 +304,114 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    std::vector<const Interface *> chain;
-    while (iface != NULL) {
-        chain.push_back(iface);
-        iface = iface->superType();
-    }
+    const Interface *prevInterface = nullptr;
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        const Interface *superInterface = tuple.interface();
+        if (prevInterface != superInterface) {
+            out << "// Methods from "
+                << superInterface->fullName()
+                << " follow.\n";
+            prevInterface = superInterface;
+        }
+        const bool returnsValue = !method->results().empty();
+        const bool needsCallback = method->results().size() > 1;
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
+        out << "public ";
+        if (returnsValue && !needsCallback) {
+            std::string extra;
+            out << method->results()[0]->type().getJavaType(&extra)
+                << extra;
+        } else {
+            out << "void";
+        }
 
-        out << "// Methods from "
-            << superInterface->fullName()
-            << " follow.\n";
+        out << " "
+            << method->name()
+            << "("
+            << Method::GetJavaArgSignature(method->args());
 
-        for (const auto &method : superInterface->methods()) {
-            const bool returnsValue = !method->results().empty();
-            const bool needsCallback = method->results().size() > 1;
-
-            out << "public ";
-            if (returnsValue && !needsCallback) {
-                std::string extra;
-                out << method->results()[0]->type().getJavaType(&extra)
-                    << extra;
-            } else {
-                out << "void";
+        if (needsCallback) {
+            if (!method->args().empty()) {
+                out << ", ";
             }
 
-            out << " "
-                << method->name()
-                << "("
-                << Method::GetJavaArgSignature(method->args());
+            out << method->name()
+                << "Callback cb";
+        }
 
-            if (needsCallback) {
-                if (!method->args().empty()) {
-                    out << ", ";
-                }
+        out << ") {\n";
+        out.indent();
 
-                out << method->name()
-                    << "Callback cb";
-            }
+        out << "HwParcel request = new HwParcel();\n";
+        out << "request.writeInterfaceToken("
+            << superInterface->fullJavaName()
+            << ".kInterfaceName);\n";
 
-            out << ") {\n";
-            out.indent();
+        for (const auto &arg : method->args()) {
+            emitJavaReaderWriter(
+                    out,
+                    "request",
+                    arg,
+                    false /* isReader */);
+        }
 
-            out << "HwParcel request = new HwParcel();\n";
-            out << "request.writeInterfaceToken("
-                << superInterface->fullJavaName()
-                << ".kInterfaceName);\n";
+        out << "\nHwParcel reply = new HwParcel();\n"
+            << "mRemote.transact("
+            << method->getSerialId()
+            << " /* "
+            << method->name()
+            << " */, request, reply, ";
 
-            for (const auto &arg : method->args()) {
+        if (method->isOneway()) {
+            out << "IHwBinder.FLAG_ONEWAY";
+        } else {
+            out << "0 /* flags */";
+        }
+
+        out << ");\n";
+
+        if (!method->isOneway()) {
+            out << "reply.verifySuccess();\n";
+        } else {
+            CHECK(!returnsValue);
+        }
+
+        out << "request.releaseTemporaryStorage();\n";
+
+        if (returnsValue) {
+            out << "\n";
+
+            for (const auto &arg : method->results()) {
                 emitJavaReaderWriter(
                         out,
-                        "request",
+                        "reply",
                         arg,
-                        false /* isReader */);
+                        true /* isReader */);
             }
 
-            out << "\nHwParcel reply = new HwParcel();\n"
-                << "mRemote.transact("
-                << method->getSerialId()
-                << " /* "
-                << method->name()
-                << " */, request, reply, ";
+            if (needsCallback) {
+                out << "cb.onValues(";
 
-            if (method->isOneway()) {
-                out << "IHwBinder.FLAG_ONEWAY";
-            } else {
-                out << "0 /* flags */";
-            }
-
-            out << ");\n";
-
-            if (!method->isOneway()) {
-                out << "reply.verifySuccess();\n";
-            } else {
-                CHECK(!returnsValue);
-            }
-
-            out << "request.releaseTemporaryStorage();\n";
-
-            if (returnsValue) {
-                out << "\n";
-
+                bool firstField = true;
                 for (const auto &arg : method->results()) {
-                    emitJavaReaderWriter(
-                            out,
-                            "reply",
-                            arg,
-                            true /* isReader */);
-                }
-
-                if (needsCallback) {
-                    out << "cb.onValues(";
-
-                    bool firstField = true;
-                    for (const auto &arg : method->results()) {
-                        if (!firstField) {
-                            out << ", ";
-                        }
-
-                        out << arg->name();
-                        firstField = false;
+                    if (!firstField) {
+                        out << ", ";
                     }
 
-                    out << ");\n";
-                } else {
-                    const std::string returnName = method->results()[0]->name();
-                    out << "return " << returnName << ";\n";
+                    out << arg->name();
+                    firstField = false;
                 }
-            }
 
-            out.unindent();
-            out << "}\n\n";
+                out << ");\n";
+            } else {
+                const std::string returnName = method->results()[0]->name();
+                out << "return " << returnName << ";\n";
+            }
         }
+
+        out.unindent();
+        out << "}\n\n";
     }
 
     out.unindent();
@@ -435,6 +430,21 @@ status_t AST::generateJava(
     out << "return this;\n";
     out.unindent();
     out << "}\n\n";
+
+    // b/32383557 this is a hack. We need to change this if we have more reserved methods.
+    for (Method *method : iface->hidlReservedMethods()) {
+        std::string extra;
+        out << "public final "
+            << method->results()[0]->type().getJavaType(&extra)
+            << extra
+            << " "
+            << method->name()
+            << "() {\n";
+        out.indent();
+        method->javaImpl(out);
+        out.unindent();
+        out << "\n}\n\n";
+    }
 
     out << "public IHwInterface queryLocalInterface(String descriptor) {\n";
     out.indent();
@@ -470,111 +480,109 @@ status_t AST::generateJava(
 
     out.indent();
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
+    for (const auto &tuple : iface->allMethodsFromRoot()) {
+        const Method *method = tuple.method();
+        const Interface *superInterface = tuple.interface();
+        const bool returnsValue = !method->results().empty();
+        const bool needsCallback = method->results().size() > 1;
 
-        for (const auto &method : superInterface->methods()) {
-            const bool returnsValue = !method->results().empty();
-            const bool needsCallback = method->results().size() > 1;
+        out << "case "
+            << method->getSerialId()
+            << " /* "
+            << method->name()
+            << " */:\n{\n";
 
-            out << "case "
-                << method->getSerialId()
-                << " /* "
-                << method->name()
-                << " */:\n{\n";
+        out.indent();
 
+        out << "request.enforceInterface("
+            << superInterface->fullJavaName()
+            << ".kInterfaceName);\n\n";
+
+        for (const auto &arg : method->args()) {
+            emitJavaReaderWriter(
+                    out,
+                    "request",
+                    arg,
+                    true /* isReader */);
+        }
+
+        if (!needsCallback && returnsValue) {
+            const TypedVar *returnArg = method->results()[0];
+            std::string extra;
+
+            out << returnArg->type().getJavaType(&extra)
+                << extra
+                << " "
+                << returnArg->name()
+                << " = ";
+        }
+
+        out << method->name()
+            << "(";
+
+        bool firstField = true;
+        for (const auto &arg : method->args()) {
+            if (!firstField) {
+                out << ", ";
+            }
+
+            out << arg->name();
+
+            firstField = false;
+        }
+
+        if (needsCallback) {
+            if (!firstField) {
+                out << ", ";
+            }
+
+            out << "new " << method->name() << "Callback() {\n";
             out.indent();
 
-            out << "request.enforceInterface("
-                << superInterface->fullJavaName()
-                << ".kInterfaceName);\n\n";
+            out << "@Override\n"
+                << "public void onValues("
+                << Method::GetJavaArgSignature(method->results())
+                << ") {\n";
 
-            for (const auto &arg : method->args()) {
+            out.indent();
+            out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
+
+            for (const auto &arg : method->results()) {
                 emitJavaReaderWriter(
                         out,
-                        "request",
+                        "reply",
                         arg,
-                        true /* isReader */);
+                        false /* isReader */);
             }
 
-            if (!needsCallback && returnsValue) {
-                const TypedVar *returnArg = method->results()[0];
-                std::string extra;
+            out << "reply.send();\n"
+                      << "}}";
 
-                out << returnArg->type().getJavaType(&extra)
-                    << extra
-                    << " "
-                    << returnArg->name()
-                    << " = ";
-            }
-
-            out << method->name()
-                << "(";
-
-            bool firstField = true;
-            for (const auto &arg : method->args()) {
-                if (!firstField) {
-                    out << ", ";
-                }
-
-                out << arg->name();
-
-                firstField = false;
-            }
-
-            if (needsCallback) {
-                if (!firstField) {
-                    out << ", ";
-                }
-
-                out << "new " << method->name() << "Callback() {\n";
-                out.indent();
-
-                out << "@Override\n"
-                    << "public void onValues("
-                    << Method::GetJavaArgSignature(method->results())
-                    << ") {\n";
-
-                out.indent();
-                out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
-
-                for (const auto &arg : method->results()) {
-                    emitJavaReaderWriter(
-                            out,
-                            "reply",
-                            arg,
-                            false /* isReader */);
-                }
-
-                out << "reply.send();\n"
-                          << "}}";
-
-                out.unindent();
-                out.unindent();
-            }
-
-            out << ");\n";
-
-            if (!needsCallback) {
-                out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
-
-                if (returnsValue) {
-                    const TypedVar *returnArg = method->results()[0];
-
-                    emitJavaReaderWriter(
-                            out,
-                            "reply",
-                            returnArg,
-                            false /* isReader */);
-                }
-
-                out << "reply.send();\n";
-            }
-
-            out << "break;\n";
             out.unindent();
-            out << "}\n\n";
+            out.unindent();
         }
+
+        out << ");\n";
+
+        if (!needsCallback) {
+            out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
+
+            if (returnsValue) {
+                const TypedVar *returnArg = method->results()[0];
+
+                emitJavaReaderWriter(
+                        out,
+                        "reply",
+                        returnArg,
+                        false /* isReader */);
+            }
+
+            out << "reply.send();\n";
+        }
+
+        out << "break;\n";
+        out.unindent();
+        out << "}\n\n";
     }
 
     out.unindent();

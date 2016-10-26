@@ -19,10 +19,12 @@
 #define INTERFACE_H_
 
 #include "Scope.h"
+#include <vector>
 
 namespace android {
 
 struct Method;
+struct InterfaceAndMethod;
 
 struct Interface : public Scope {
     Interface(const char *localName, Interface *super);
@@ -34,8 +36,26 @@ struct Interface : public Scope {
 
     const Interface *superType() const;
 
-    const std::vector<Method *> &methods() const;
     Method *lookupMethod(std::string name) const;
+    // Super type chain to root type, including myself.
+    // First element is this.
+    std::vector<const Interface *> typeChain() const;
+
+    // user defined methods (explicit definition in HAL files)
+    const std::vector<Method *> &userDefinedMethods() const;
+    // HIDL reserved methods (every interface has these implicitly defined)
+    const std::vector<Method *> &hidlReservedMethods() const;
+    // the sum of userDefinedMethods() and hidlReservedMethods().
+    std::vector<Method *> methods() const;
+
+    // userDefinedMethods() for all super type + methods()
+    // The order will be as follows (in the transaction code order):
+    // great-great-...-great-grand parent->userDefinedMethods()
+    // ...
+    // parent->userDefinedMethods()
+    // this->userDefinedMethods()
+    // this->hidlReservedMethods()
+    std::vector<InterfaceAndMethod> allMethodsFromRoot() const;
 
     std::string getBaseName() const;
 
@@ -72,10 +92,25 @@ struct Interface : public Scope {
 
 private:
     Interface *mSuperType;
-    std::vector<Method *> mMethods;
+    std::vector<Method *> mUserMethods;
+    std::vector<Method *> mReservedMethods;
     mutable bool mIsJavaCompatibleInProgress;
+    Method *createDescriptorChainMethod() const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
+};
+
+// An interface / method tuple.
+struct InterfaceAndMethod {
+    InterfaceAndMethod(const Interface *iface, Method *method)
+        : mInterface(iface),
+          mMethod(method) {}
+    Method *method() const { return mMethod; }
+    const Interface *interface() const { return mInterface; }
+private:
+    // do not own these objects.
+    const Interface *mInterface;
+    Method *mMethod;
 };
 
 }  // namespace android
