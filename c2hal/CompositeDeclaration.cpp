@@ -16,6 +16,7 @@
 
 #include "CompositeDeclaration.h"
 #include "FunctionDeclaration.h"
+#include "VarDeclaration.h"
 #include "Declaration.h"
 
 #include <algorithm>
@@ -116,7 +117,20 @@ void CompositeDeclaration::processContents(AST &ast) {
         auto it = mFieldDeclarations->begin();
         while (it != mFieldDeclarations->end()) {
             if((*it)->decType() != FunctionDeclaration::type()) {
-                nonFpDecs->push_back(*it);
+                bool keep = true;
+                if((*it)->decType() == VarDeclaration::type()) {
+                  VarDeclaration* var = (VarDeclaration *)(*it);
+                  // Conventional HALs were all required to have
+                  // a member of this type.
+                  // This member is no longer needed for HIDL
+                  if(var->getType()->isHwDevice()) {
+                    keep = false;
+                  }
+                }
+
+                if (keep) {
+                  nonFpDecs->push_back(*it);
+                }
                 it = mFieldDeclarations->erase(it);
             } else {
                 it++;
