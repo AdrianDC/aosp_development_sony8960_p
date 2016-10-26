@@ -80,6 +80,8 @@ LOCAL_BUILT_MODULE_STEM := test.fake
 # Since it is not built, it cannot be installed. But we will define our own
 # dist files, depending on which of the specific targets is invoked.
 LOCAL_UNINSTALLABLE_MODULE := true
+# Do not build it for checkbuild or mma
+LOCAL_DONT_CHECK_MODULE := true
 
 include $(BUILD_SYSTEM)/base_rules.mk
 
