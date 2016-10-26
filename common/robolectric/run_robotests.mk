@@ -38,6 +38,76 @@
 # Where to find Robolectric.
 my_robolectric_script_path := $(call my-dir)
 my_robolectric_path := $(my_robolectric_script_path)/lib
+# Explicitly define the jars and their classpath ordering.
+my_robolectric_jars := \
+    $(my_robolectric_path)/accessibility-test-framework-2.1.jar \
+    $(my_robolectric_path)/android-all-4.1.2_r1-robolectric-0.jar \
+    $(my_robolectric_path)/android-all-4.2.2_r1.2-robolectric-0.jar \
+    $(my_robolectric_path)/android-all-4.3_r2-robolectric-0.jar \
+    $(my_robolectric_path)/android-all-4.4_r1-robolectric-1.jar \
+    $(my_robolectric_path)/android-all-5.0.0_r2-robolectric-1.jar \
+    $(my_robolectric_path)/android-all-6.0.0_r1-robolectric-0.jar \
+    $(my_robolectric_path)/ant-1.8.0.jar \
+    $(my_robolectric_path)/ant-launcher-1.8.0.jar \
+    $(my_robolectric_path)/asm-5.0.1.jar \
+    $(my_robolectric_path)/asm-analysis-5.0.1.jar \
+    $(my_robolectric_path)/asm-commons-5.0.1.jar \
+    $(my_robolectric_path)/asm-tree-5.0.1.jar \
+    $(my_robolectric_path)/asm-util-5.0.1.jar \
+    $(my_robolectric_path)/backport-util-concurrent-3.1.jar \
+    $(my_robolectric_path)/bcprov-jdk16-1.46.jar \
+    $(my_robolectric_path)/classworlds-1.1-alpha-2.jar \
+    $(my_robolectric_path)/commons-codec-1.3.jar \
+    $(my_robolectric_path)/commons-logging-1.1.1.jar \
+    $(my_robolectric_path)/guava-19.0.jar \
+    $(my_robolectric_path)/hamcrest-core-1.1.jar \
+    $(my_robolectric_path)/hamcrest-core-1.3.jar \
+    $(my_robolectric_path)/hamcrest-library-1.3.jar \
+    $(my_robolectric_path)/httpclient-4.0.3.jar \
+    $(my_robolectric_path)/httpcore-4.0.1.jar \
+    $(my_robolectric_path)/icu4j-53.1.jar \
+    $(my_robolectric_path)/junit-4.12.jar \
+    $(my_robolectric_path)/maven-ant-tasks-2.1.3.jar \
+    $(my_robolectric_path)/maven-artifact-2.2.1.jar \
+    $(my_robolectric_path)/maven-artifact-manager-2.2.1.jar \
+    $(my_robolectric_path)/maven-error-diagnostics-2.2.1.jar \
+    $(my_robolectric_path)/maven-model-2.2.1.jar \
+    $(my_robolectric_path)/maven-plugin-registry-2.2.1.jar \
+    $(my_robolectric_path)/maven-profile-2.2.1.jar \
+    $(my_robolectric_path)/maven-project-2.2.1.jar \
+    $(my_robolectric_path)/maven-repository-metadata-2.2.1.jar \
+    $(my_robolectric_path)/maven-settings-2.2.1.jar \
+    $(my_robolectric_path)/mockito-core-1.10.19.jar \
+    $(my_robolectric_path)/nekohtml-1.9.6.2.jar \
+    $(my_robolectric_path)/objenesis-2.1.jar \
+    $(my_robolectric_path)/plexus-container-default-1.0-alpha-9-stable-1.jar \
+    $(my_robolectric_path)/plexus-interpolation-1.11.jar \
+    $(my_robolectric_path)/plexus-utils-1.5.15.jar \
+    $(my_robolectric_path)/protobuf-java-2.6.1.jar \
+    $(my_robolectric_path)/robolectric-3.1.1.jar \
+    $(my_robolectric_path)/robolectric-annotations-3.1.1.jar \
+    $(my_robolectric_path)/robolectric-resources-3.1.1.jar \
+    $(my_robolectric_path)/robolectric-utils-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v23-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v22-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v21-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v19-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v18-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v17-3.1.1.jar \
+    $(my_robolectric_path)/shadows-core-v16-3.1.1.jar \
+    $(my_robolectric_path)/shadows-httpclient-3.1.1.jar \
+    $(my_robolectric_path)/shadows-multidex-3.1.1.jar \
+    $(my_robolectric_path)/sqlite4java-0.282.jar \
+    $(my_robolectric_path)/vtd-xml-2.11.jar \
+    $(my_robolectric_path)/wagon-file-1.0-beta-6.jar \
+    $(my_robolectric_path)/wagon-http-lightweight-1.0-beta-6.jar \
+    $(my_robolectric_path)/wagon-http-shared-1.0-beta-6.jar \
+    $(my_robolectric_path)/wagon-provider-api-1.0-beta-6.jar \
+    $(my_robolectric_path)/xercesMinimal-1.9.6.2.jar \
+    $(my_robolectric_path)/xmlpull-1.1.3.1.jar \
+    $(my_robolectric_path)/xpp3_min-1.1.4c.jar \
+    $(my_robolectric_path)/xstream-1.4.8.jar
 
 # Whether or not to ignore the result of running the robotests.
 # LOCAL_ROBOTEST_FAILURE_FATAL will take precedence over ROBOTEST_FAILURE_FATAL,
@@ -110,7 +180,7 @@ my_srcs_jars := \
         $(LOCAL_TEST_PACKAGE), \
         $(call intermediates-dir-for,APPS,$(lib),,COMMON)/classes.jar)
 # The jars needed to run the tests.
-my_jars := \
+my_jars := $(my_robolectric_jars) \
     prebuilts/sdk/$(LOCAL_SDK_VERSION)/android.jar \
     $(my_srcs_jars)
 
@@ -122,6 +192,7 @@ include $(my_robolectric_script_path)/robotest-internal.mk
 my_failure_fatal :=
 my_jars :=
 my_java_args :=
+my_robolectric_jars :=
 my_robolectric_path :=
 my_robolectric_script_path :=
 my_srcs_jars :=

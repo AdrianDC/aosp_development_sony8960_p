@@ -51,7 +51,7 @@ function normalize-path-list() {
 
 function junit() {
   # This adds the lib folder to the cp.
-  local classpath=""${PRIVATE_ROBOLECTRIC_PATH}"/*:$(strip "$(normalize-path-list "${PRIVATE_JARS}")")"
+  local classpath="$(strip "$(normalize-path-list "${PRIVATE_JARS}")")"
   local command=(
     "${PRIVATE_ROBOLECTRIC_SCRIPT_PATH}/java-timeout"
     "${PRIVATE_TIMEOUT}"
