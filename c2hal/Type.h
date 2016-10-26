@@ -88,6 +88,7 @@ struct Type {
     const std::string decorateName(const std::string &name) const;
 
     bool isVoid() const;
+    bool isHwDevice() const;
     std::string removeLastId();
 
 private:
