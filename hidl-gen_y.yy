@@ -66,7 +66,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %token<str> FLOAT
 %token<str> INTERFACE
 %token<str> PACKAGE
-%token<type> SCALAR
+%token<type> TYPE
 %token<str> STRUCT
 %token<str> STRING_LITERAL
 %token<str> TYPEDEF
@@ -288,7 +288,7 @@ fqtype
               YYERROR;
           }
       }
-    | SCALAR
+    | TYPE
     ;
 
 package
