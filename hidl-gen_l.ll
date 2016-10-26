@@ -40,6 +40,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "StringType.h"
 #include "VectorType.h"
 #include "RefType.h"
+#include "PredefinedType.h"
 
 #include "hidl-gen_y.h"
 
@@ -53,7 +54,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 #define SCALAR_TYPE(kind)                                       \
     do {                                                        \
         yylval->type = new ScalarType(ScalarType::kind);        \
-        return token::SCALAR;                                   \
+        return token::TYPE;                                   \
     } while (0)
 
 #define YY_USER_ACTION yylloc->step(); yylloc->columns(yyleng);
@@ -106,8 +107,11 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "float"			{ SCALAR_TYPE(KIND_FLOAT); }
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
-"handle"		{ yylval->type = new HandleType; return token::SCALAR; }
-"string"		{ yylval->type = new StringType; return token::SCALAR; }
+"handle"		{ yylval->type = new HandleType; return token::TYPE; }
+"string"		{ yylval->type = new StringType; return token::TYPE; }
+
+"MQDescriptorSync" { yylval->type = new PredefinedType("::android::hardware::MQDescriptorSync"); return token::TYPE; }
+"MQDescriptorUnsync" { yylval->type = new PredefinedType("::android::hardware::MQDescriptorUnsync"); return token::TYPE; }
 
 "("			{ return('('); }
 ")"			{ return(')'); }
