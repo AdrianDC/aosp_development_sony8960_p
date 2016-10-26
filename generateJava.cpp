@@ -217,6 +217,24 @@ status_t AST::generateJava(
 
     out << "public IHwBinder asBinder();\n\n";
 
+    out << "public static "
+        << ifaceName
+        << " getService(String serviceName) {\n";
+
+    out.indent();
+
+    out << "return "
+        << ifaceName
+        << ".asInterface(HwBinder.getService(serviceName, "
+        << mPackage.getPackageMajorVersion()
+        << ", "
+        << mPackage.getPackageMinorVersion()
+        << "));\n";
+
+    out.unindent();
+
+    out << "}\n\n";
+
     status_t err = emitJavaTypeDeclarations(out);
 
     if (err != OK) {
@@ -427,6 +445,18 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n";
     out << "return null;\n";
+    out.unindent();
+    out << "}\n\n";
+
+    out << "public void registerAsService(String serviceName) {\n";
+    out.indent();
+
+    out << "registerService(serviceName, "
+        << mPackage.getPackageMajorVersion()
+        << ", "
+        << mPackage.getPackageMinorVersion()
+        << ");\n";
+
     out.unindent();
     out << "}\n\n";
 
