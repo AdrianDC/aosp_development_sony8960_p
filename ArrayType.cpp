@@ -481,21 +481,34 @@ void ArrayType::emitJavaFieldReaderWriter(
 }
 
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
-    if (mSizes.size() > 1) {
-        CHECK(!"Multi-dimensional arrays are yet to be supported in VTS.");
-        return UNKNOWN_ERROR;
-    }
-
     out << "type: " << getVtsType() << "\n";
     out << "vector_value: {\n";
     out.indent();
     out << "vector_size: " << mSizes[0] << "\n";
-    status_t err = mElementType->emitVtsTypeDeclarations(out);
-    if (err != OK) {
-        return err;
+    // Simple array case.
+    if (mSizes.size() == 1) {
+        status_t err = mElementType->emitVtsTypeDeclarations(out);
+        if (err != OK) {
+            return err;
+        }
+    } else {  // Multi-dimension array case.
+        for (size_t index = 1; index < mSizes.size(); index++) {
+            out << "type: " << getVtsType() << "\n";
+            out << "vector_value: {\n";
+            out.indent();
+            out << "vector_size: " << mSizes[index] << "\n";
+            if (index == mSizes.size() - 1) {
+                status_t err = mElementType->emitVtsTypeDeclarations(out);
+                if (err != OK) {
+                    return err;
+                }
+            }
+        }
     }
-    out.unindent();
-    out << "}\n";
+    for (size_t index = 0; index < mSizes.size(); index++) {
+        out.unindent();
+        out << "}\n";
+    }
     return OK;
 }
 
