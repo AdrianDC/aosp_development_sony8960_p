@@ -51,6 +51,11 @@ status_t AST::generateStubImplMethod(Formatter &out,
                                      const Method *method,
                                      bool specifyNamespaces) const {
 
+    // ignore HIDL reserved methods -- implemented in IFoo already.
+    if (method->isHidlReserved()) {
+        return OK;
+    }
+
     method->generateCppSignature(out, className, specifyNamespaces);
 
     out << " {\n";
@@ -80,6 +85,11 @@ status_t AST::generateStubImplDeclaration(Formatter &out,
                                           const std::string &className,
                                           const Method *method,
                                           bool specifyNamespaces) const {
+
+    // ignore HIDL reserved methods -- implemented in IFoo already.
+    if (method->isHidlReserved()) {
+        return OK;
+    }
 
     method->generateCppSignature(out,
                                  className,
