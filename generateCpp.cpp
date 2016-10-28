@@ -171,7 +171,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         if (superType == NULL) {
             out << " : virtual public IHidlInterfaceBase";
         } else {
-            out << " : virtual public "
+            out << " : public "
                 << superType->fullName();
         }
 
