@@ -93,7 +93,7 @@ void GenericBinder::emitJavaReaderWriter(
         bool isReader) const {
     if (isReader) {
         out << parcelObj
-            << ".readStrongBinder());\n";
+            << ".readStrongBinder();\n";
     } else {
         out << parcelObj
             << ".writeStrongBinder("
