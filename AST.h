@@ -104,6 +104,10 @@ struct AST {
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
 
+    // used by the parser.
+    void addSyntaxError();
+    size_t syntaxErrors() const;
+
 private:
     Coordinator *mCoordinator;
     std::string mPath;
@@ -133,6 +137,9 @@ private:
 
     // Types keyed by full names defined in this AST.
     std::map<FQName, Type *> mDefinedTypesByFullName;
+
+    // used by the parser.
+    size_t mSyntaxErrors = 0;
 
     bool addScopedTypeInternal(
             NamedType *type,

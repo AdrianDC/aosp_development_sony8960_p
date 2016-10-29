@@ -194,7 +194,7 @@ status_t parseFile(AST *ast) {
     fclose(file);
     file = NULL;
 
-    if (res != 0) {
+    if (res != 0 || ast->syntaxErrors() != 0) {
         return UNKNOWN_ERROR;
     }
 

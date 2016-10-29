@@ -50,6 +50,15 @@ AST::~AST() {
     // Ownership of "coordinator" was NOT transferred.
 }
 
+// used by the parser.
+void AST::addSyntaxError() {
+    mSyntaxErrors++;
+}
+
+size_t AST::syntaxErrors() const {
+    return mSyntaxErrors;
+}
+
 void *AST::scanner() {
     return mScanner;
 }
