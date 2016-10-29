@@ -266,6 +266,24 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             }
         }
 
+        if (!iface->isRootType()) {
+            out << "// cast static functions\n";
+            std::string childTypeExtra;
+            std::string childTypeResult = iface->getCppResultType(&childTypeExtra);
+            childTypeResult += childTypeExtra;
+
+            for (const Interface *superType : iface->superTypeChain()) {
+                std::string superTypeExtra;
+                out << "static "
+                    << childTypeResult
+                    << " castFrom("
+                    << superType->getCppArgumentType(&superTypeExtra)
+                    << " parent"
+                    << superTypeExtra
+                    << ");\n";
+            }
+        }
+
         out << "\nstatic const ::android::String16 descriptor;\n\n";
 
         out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
@@ -752,13 +770,15 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     std::string ifaceName;
     std::string baseName;
 
-    bool isInterface = true;
+    const Interface *iface = nullptr;
+    bool isInterface;
     if (!AST::isInterface(&ifaceName)) {
         baseName = "types";
         isInterface = false;
     } else {
-        const Interface *iface = mRootScope->getInterface();
+        iface = mRootScope->getInterface();
         baseName = iface->getBaseName();
+        isInterface = true;
     }
 
     path.append(baseName);
@@ -792,6 +812,17 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "#include <" << prefix << "/Bp" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bn" << baseName << ".h>\n";
         out << "#include <" << prefix << "/Bs" << baseName << ".h>\n";
+
+        for (const Interface *superType : iface->superTypeChain()) {
+            std::vector<std::string> superPackageComponents;
+            superType->fqName().getPackageAndVersionComponents(&superPackageComponents, false /* cpp_compatible */);
+            std::string superPrefix;
+            for (const auto &component : superPackageComponents) {
+                superPrefix += component;
+                superPrefix += "/";
+            }
+            out << "#include <" << superPrefix << "/Bp" << superType->getBaseName() << ".h>\n";
+        }
     } else {
         out << "#include <" << prefix << "types.h>\n";
     }
@@ -814,6 +845,10 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             << iface->fqName().string()
             << "\");\n\n";
 
+        err = generateInterfaceSource(out);
+    }
+
+    if (err == OK && isInterface) {
         err = generateProxySource(out, baseName);
     }
 
@@ -1568,6 +1603,47 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     enterLeaveNamespace(out, false /* enter */);
 
     out << "\n#endif  // " << guard << "\n";
+
+    return OK;
+}
+
+status_t AST::generateInterfaceSource(Formatter &out) const {
+    const Interface *iface = mRootScope->getInterface();
+
+    if (!iface->isRootType()) {
+        std::string childTypeExtra;
+        std::string childTypeResult = iface->getCppResultType(&childTypeExtra);
+        childTypeResult += childTypeExtra;
+
+        for (const Interface *superType : iface->superTypeChain()) {
+            std::string superTypeExtra;
+            out << "// static \n"
+                << childTypeResult
+                << " I"
+                << iface->getBaseName()
+                << "::castFrom("
+                << superType->getCppArgumentType(&superTypeExtra)
+                << " parent"
+                << superTypeExtra
+                << ")";
+            out << " {\n";
+            out.indent();
+            out << "return ::android::hardware::castInterface<";
+            out << "I" << iface->getBaseName() << ", "
+                << superType->fqName().cppName() << ", "
+                << "Bp" << iface->getBaseName()
+                << ">(\n";
+            out.indent();
+            out.indent();
+            out << "parent, \""
+                << iface->fqName().string()
+                << "\");\n";
+            out.unindent();
+            out.unindent();
+            out.unindent();
+            out << "}\n\n";
+        }
+    }
 
     return OK;
 }
