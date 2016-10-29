@@ -210,6 +210,7 @@ private:
 
     status_t generatePassthroughSource(Formatter &out) const;
 
+    status_t generateInterfaceSource(Formatter &out) const;
 
     enum InstrumentationEvent {
         SERVER_API_ENTRY = 0,
