@@ -33,10 +33,14 @@ struct Interface : public Scope {
 
     bool isInterface() const override;
     bool isBinder() const override;
+    bool isRootType() const { return mSuperType == nullptr; }
 
     const Interface *superType() const;
 
     Method *lookupMethod(std::string name) const;
+    // Super type chain to root type.
+    // First element is superType().
+    std::vector<const Interface *> superTypeChain() const;
     // Super type chain to root type, including myself.
     // First element is this.
     std::vector<const Interface *> typeChain() const;
