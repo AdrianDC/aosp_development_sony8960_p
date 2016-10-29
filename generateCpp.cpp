@@ -200,6 +200,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out.unindent();
         out << "}\n\n";
         out << "virtual bool isRemote() const override { return false; }\n\n";
+        out << "virtual ::android::sp<::android::hardware::IBinder> "
+            << "toBinder() override;\n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
@@ -1610,6 +1612,28 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 status_t AST::generateInterfaceSource(Formatter &out) const {
     const Interface *iface = mRootScope->getInterface();
 
+
+    // generate toBinder functions
+    out << "::android::sp<::android::hardware::IBinder> I"
+        << iface->getBaseName()
+        << "::toBinder() {\n";
+    out.indent();
+    out << "if (isRemote()) {\n";
+    out.indent();
+    out << "return ::android::hardware::IInterface::asBinder("
+        << "static_cast<IHw"
+        << iface->getBaseName()
+        << " *>(this));\n";
+    out.unindent();
+    out << "} else {\n";
+    out.indent();
+    out << "return new Bn" << iface->getBaseName() << "(this);\n";
+    out.unindent();
+    out << "}\n";
+    out.unindent();
+    out << "}\n\n";
+
+    // generate castFrom functions
     if (!iface->isRootType()) {
         std::string childTypeExtra;
         std::string childTypeResult = iface->getCppResultType(&childTypeExtra);
