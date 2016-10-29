@@ -7,7 +7,8 @@ LOCAL_MODULE_STEM := hidl_test_java
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_JAVA_LIBRARIES := 			   \
 	android.hardware.tests.baz@1.0-java	   \
-	android.hardware.tests.expression@1.0-java
+	android.hardware.tests.expression@1.0-java \
+	android.hardware.tests.inheritance@1.0-java
 
 include $(BUILD_JAVA_LIBRARY)
 
@@ -38,7 +39,8 @@ LOCAL_SHARED_LIBRARIES :=           \
     libhwbinder                     \
     libutils                        \
     android.hardware.tests.baz@1.0  \
-    android.hardware.tests.expression@1.0
+    android.hardware.tests.expression@1.0 \
+    android.hardware.tests.inheritance@1.0
 
 LOCAL_STATIC_LIBRARIES := \
     libgtest

@@ -4,6 +4,10 @@
 #include <android/hardware/tests/foo/1.0/BnFoo.h>
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
 #include <android/hardware/tests/bar/1.0/BnBar.h>
+#include <android/hardware/tests/inheritance/1.0/BnFetcher.h>
+#include <android/hardware/tests/inheritance/1.0/BnGrandparent.h>
+#include <android/hardware/tests/inheritance/1.0/BnParent.h>
+#include <android/hardware/tests/inheritance/1.0/BnChild.h>
 #include <android/hardware/tests/pointer/1.0/BnGraph.h>
 #include <android/hardware/tests/pointer/1.0/BnPointer.h>
 
@@ -62,6 +66,10 @@ using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::foo::V1_0::ISimple;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IHwBar;
+using ::android::hardware::tests::inheritance::V1_0::IFetcher;
+using ::android::hardware::tests::inheritance::V1_0::IGrandparent;
+using ::android::hardware::tests::inheritance::V1_0::IParent;
+using ::android::hardware::tests::inheritance::V1_0::IChild;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::IPCThreadState;
@@ -159,7 +167,13 @@ static void killServer(pid_t pid, const char *serverName) {
 }
 
 class HidlEnvironmentBase : public ::testing::Environment {
+protected:
+    std::vector<pid_t> mPids;
+    const char * const serverNames[6] = {
+        "Child", "Fetcher", "Bar", "FooCallback", "Graph", "Pointer"
+    };
 public:
+    sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
@@ -170,6 +184,11 @@ public:
     void getServices() {
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
+
+        fetcher = IFetcher::getService("fetcher", gMode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(fetcher, nullptr);
+        ASSERT_EQ(fetcher->isRemote(), gMode == BINDERIZED);
+
         foo = IFoo::getService("foo", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(foo, nullptr);
         ASSERT_EQ(foo->isRemote(), gMode == BINDERIZED);
@@ -194,52 +213,55 @@ public:
         validationPointerInterface = IPointer::getService("pointer", true /* getStub */);
         ASSERT_NE(validationPointerInterface, nullptr);
     }
+
+    virtual void TearDown() {
+        // clean up by killing server processes.
+        ALOGI("Environment tear-down beginning...");
+        ALOGI("Killing servers...");
+        size_t i = 0;
+        for (pid_t pid : mPids) {
+            killServer(pid, serverNames[i++]);
+        }
+        ALOGI("Servers all killed.");
+        ALOGI("Environment tear-down complete.");
+    }
 };
 
 class PassthroughEnvironment : public HidlEnvironmentBase {
 private:
-    pid_t fooCallbackServerPid, barServerPid, graphServerPid, pointerServerPid;
-
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
+        // starts this even for passthrough mode.
+        // this is used in Bar's default implementation
+        mPids.push_back(forkServer<IChild>("child", serverNames[0]));
+        sleep(1);
         getServices();
         ALOGI("Environment setup complete.");
     }
 };
 
 class BinderizedEnvironment : public HidlEnvironmentBase {
-private:
-    pid_t fooCallbackServerPid, barServerPid, graphServerPid, pointerServerPid;
 public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
 
-        barServerPid = forkServer<IBar>("foo", "Bar");
-        fooCallbackServerPid = forkServer<IFooCallback>("foo callback", "FooCallback");
-        graphServerPid = forkServer<IGraph>("graph", "Graph");
-        pointerServerPid = forkServer<IPointer>("pointer", "Pointer");
+        size_t i = 0;
+        mPids.push_back(forkServer<IChild>("child", serverNames[i++]));
+        mPids.push_back(forkServer<IFetcher>("fetcher", serverNames[i++]));
+        mPids.push_back(forkServer<IBar>("foo", serverNames[i++]));
+        mPids.push_back(forkServer<IFooCallback>("foo callback", serverNames[i++]));
+        mPids.push_back(forkServer<IGraph>("graph", serverNames[i++]));
+        mPids.push_back(forkServer<IPointer>("pointer", serverNames[i++]));
 
         sleep(1);
-
         getServices();
         ALOGI("Environment setup complete.");
-    }
-
-    virtual void TearDown() {
-        // clean up by killing server processes.
-        ALOGI("Environment tear-down beginning...");
-        ALOGI("Killing servers...");
-        killServer(barServerPid, "barServer");
-        killServer(fooCallbackServerPid, "fooCallbackServer");
-        killServer(graphServerPid, "graphServer");
-        killServer(pointerServerPid, "pointerServer");
-        ALOGI("Servers all killed.");
-        ALOGI("Environment tear-down complete.");
     }
 };
 
 class HidlTest : public ::testing::Test {
 public:
+    sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
@@ -255,6 +277,7 @@ public:
         } else {
             env = gPassthroughEnvironment;
         }
+        fetcher = env->fetcher;
         foo = env->foo;
         bar = env->bar;
         fooCb = env->fooCb;
@@ -688,6 +711,64 @@ TEST_F(HidlTest, BarThisIsNewTest) {
     ALOGI("CLIENT call thisIsNew.");
     EXPECT_OK(bar->thisIsNew());
     ALOGI("CLIENT thisIsNew returned.");
+}
+
+static void expectGoodChild(const sp<IChild> &child) {
+    ASSERT_NE(child.get(), nullptr);
+    EXPECT_OK(child->doGrandparent());
+    EXPECT_OK(child->doParent());
+    EXPECT_OK(child->doChild());
+}
+
+static void expectGoodParent(const sp<IParent> &parent) {
+    ASSERT_NE(parent.get(), nullptr);
+    EXPECT_OK(parent->doGrandparent());
+    EXPECT_OK(parent->doParent());
+    sp<IChild> child = IChild::castFrom(parent);
+    expectGoodChild(child);
+}
+
+static void expectGoodGrandparent(const sp<IGrandparent> &grandparent) {
+    ASSERT_NE(grandparent.get(), nullptr);
+    EXPECT_OK(grandparent->doGrandparent());
+    sp<IParent> parent = IParent::castFrom(grandparent);
+    expectGoodParent(parent);
+}
+
+TEST_F(HidlTest, InheritRemoteGrandparentTest) {
+    EXPECT_OK(fetcher->getGrandparent(true, [&](const sp<IGrandparent>& grandparent) {
+        expectGoodGrandparent(grandparent);
+    }));
+}
+
+TEST_F(HidlTest, InheritLocalGrandparentTest) {
+    EXPECT_OK(fetcher->getGrandparent(false, [&](const sp<IGrandparent>& grandparent) {
+        expectGoodGrandparent(grandparent);
+    }));
+}
+
+TEST_F(HidlTest, BarRemoteParentTest) {
+    EXPECT_OK(fetcher->getParent(true, [&](const sp<IParent>& parent) {
+        expectGoodParent(parent);
+    }));
+}
+
+TEST_F(HidlTest, BarLocalParentTest) {
+    EXPECT_OK(fetcher->getParent(false, [&](const sp<IParent>& parent) {
+        expectGoodParent(parent);
+    }));
+}
+
+TEST_F(HidlTest, InheritRemoteChildTest) {
+    EXPECT_OK(fetcher->getChild(true, [&](const sp<IChild>& child) {
+        expectGoodChild(child);
+    }));
+}
+
+TEST_F(HidlTest, InheritLocalChildTest) {
+    EXPECT_OK(fetcher->getChild(false, [&](const sp<IChild>& child) {
+        expectGoodChild(child);
+    }));
 }
 
 TEST_F(HidlTest, TestArrayDimensionality) {
