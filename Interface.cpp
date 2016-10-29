@@ -252,33 +252,12 @@ void Interface::emitReaderWriter(
         out.unindent();
         out << "}\n\n";
     } else {
+        out << "_hidl_err = "
+            << parcelObjDeref
+            << "writeStrongBinder("
+            << name
+            << "->toBinder());\n";
 
-        out << "if (" << name << "->isRemote()) {\n";
-        out.indent();
-        out << "_hidl_err = ";
-        out << parcelObjDeref
-            << "writeStrongBinder("
-            << fqName().cppNamespace()
-            << "::IHw"
-            << getBaseName()
-            << "::asBinder(static_cast<"
-            << fqName().cppNamespace()
-            << "::IHw"
-            << getBaseName()
-            << "*>("
-            << name << ".get()"
-            << ")));\n";
-        out.unindent();
-        out << "} else {\n";
-        out.indent();
-        out << "_hidl_err = ";
-        out << parcelObjDeref
-            << "writeStrongBinder("
-            << "new " << fqName().cppNamespace()
-            << "::Bn" << getBaseName() << " "
-            << "(" << name <<"));\n";
-        out.unindent();
-        out << "}\n";
         handleError(out, mode);
     }
 }
