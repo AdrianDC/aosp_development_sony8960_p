@@ -923,7 +923,6 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     status_t status = generateCppInstrumentationCall(
             out,
             InstrumentationEvent::CLIENT_API_ENTRY,
-            superInterface,
             method);
     if (status != OK) {
         return status;
@@ -1038,7 +1037,6 @@ status_t AST::generateProxyMethodSource(Formatter &out,
         status_t status = generateCppInstrumentationCall(
                 out,
                 InstrumentationEvent::CLIENT_API_EXIT,
-                superInterface,
                 method);
         if (status != OK) {
             return status;
@@ -1280,7 +1278,6 @@ status_t AST::generateStubSourceForMethod(
     status_t status = generateCppInstrumentationCall(
             out,
             InstrumentationEvent::SERVER_API_ENTRY,
-            iface,
             method);
     if (status != OK) {
         return status;
@@ -1335,7 +1332,6 @@ status_t AST::generateStubSourceForMethod(
         status_t status = generateCppInstrumentationCall(
                 out,
                 InstrumentationEvent::SERVER_API_EXIT,
-                iface,
                 method);
         if (status != OK) {
             return status;
@@ -1416,7 +1412,6 @@ status_t AST::generateStubSourceForMethod(
             status_t status = generateCppInstrumentationCall(
                     out,
                     InstrumentationEvent::SERVER_API_EXIT,
-                    iface,
                     method);
             if (status != OK) {
                 return status;
@@ -1666,7 +1661,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
 status_t AST::generateCppInstrumentationCall(
         Formatter &out,
         InstrumentationEvent event,
-        const Interface *iface, const Method *method) const {
+        const Method *method) const {
     out << "if (UNLIKELY(mEnableInstrumentation)) {\n";
     out.indent();
     out << "std::vector<void *> _hidl_args;\n";
@@ -1686,17 +1681,10 @@ status_t AST::generateCppInstrumentationCall(
         case SERVER_API_EXIT:
         {
             event_str = "InstrumentationEvent::SERVER_API_EXIT";
-            const TypedVar *elidedReturn = method->canElideCallback();
-            if (elidedReturn != nullptr) {
+            for (const auto &arg : method->results()) {
                 out << "_hidl_args.push_back((void *)&"
-                    << elidedReturn->name()
+                    << arg->name()
                     << ");\n";
-            } else {
-                for (const auto &arg : method->results()) {
-                    out << "_hidl_args.push_back((void *)&"
-                        << arg->name()
-                        << ");\n";
-                }
             }
             break;
         }
@@ -1722,15 +1710,14 @@ status_t AST::generateCppInstrumentationCall(
             }
             break;
         }
-        case SYNC_CALLBACK_ENTRY:
-        case SYNC_CALLBACK_EXIT:
-        case ASYNC_CALLBACK_ENTRY:
-        case ASYNC_CALLBACK_EXIT:
+        default:
         {
-            LOG(ERROR) << "Not supported instrumentation event: " << event;
+            LOG(ERROR) << "Unsupported instrumentation event: " << event;
             return UNKNOWN_ERROR;
         }
     }
+
+    const Interface *iface = mRootScope->getInterface();
 
     out << "for (auto callback: mInstrumentationCallbacks) {\n";
     out.indent();
