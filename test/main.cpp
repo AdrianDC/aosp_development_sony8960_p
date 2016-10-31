@@ -40,7 +40,7 @@
 
 #define EXPECT_OK(__ret__) EXPECT_TRUE(isOk(__ret__))
 #define EXPECT_FAIL(__ret__) EXPECT_FALSE(isOk(__ret__))
-#define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(IsArrayEq(__a1__, __a2__, __size__))
+#define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(isArrayEqual(__a1__, __a2__, __size__))
 
 // TODO uncomment this when kernel is patched with pointer changes.
 //#define HIDL_RUN_POINTER_TESTS 1
@@ -704,6 +704,33 @@ TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
                         EXPECT_EQ(inCookie, outCookie);
                     }
                 }));
+}
+
+TEST_F(HidlTest, FooStructEmbeddedHandleTest) {
+    EXPECT_OK(foo->createMyHandle([&](const auto &myHandle) {
+        EXPECT_EQ(myHandle.guard, 666);
+        EXPECT_EQ(myHandle.h->numInts, 10);
+        EXPECT_EQ(myHandle.h->numFds, 0);
+        int data[] = {2,3,5,7,11,13,17,19,21,23};
+        EXPECT_ARRAYEQ(myHandle.h->data, data, 10);
+    }));
+
+    EXPECT_OK(foo->closeHandles());
+}
+
+TEST_F(HidlTest, FooHandleVecTest) {
+    EXPECT_OK(foo->createHandles(3, [&](const auto &handles) {
+        EXPECT_EQ(handles.size(), 3ull);
+        int data[] = {2,3,5,7,11,13,17,19,21,23};
+        for (size_t i = 0; i < 3; i++) {
+            const native_handle_t *h = handles[i];
+            EXPECT_EQ(h->numInts, 10) << " for element " << i;
+            EXPECT_EQ(h->numFds, 0) << " for element " << i;
+            EXPECT_ARRAYEQ(h->data, data, 10);
+        }
+    }));
+
+    EXPECT_OK(foo->closeHandles());
 }
 
 TEST_F(HidlTest, BarThisIsNewTest) {
