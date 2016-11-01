@@ -109,15 +109,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    std::vector<std::string> packageComponents;
-    getPackageAndVersionComponents(
-            &packageComponents, false /* cpp_compatible */);
-
-    out << "#include <";
-    for (const auto &component : packageComponents) {
-        out << component << "/";
-    }
-    out << "I" << baseName << ".h>\n";
+    generateCppPackageInclude(out, mPackage, "I" + baseName);
 
     out << "#include <hidl/Status.h>\n\n";
     out << "#include <hidl/MQDescriptor.h>\n";
