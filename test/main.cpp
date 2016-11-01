@@ -641,6 +641,14 @@ TEST_F(HidlTest, FooNullNativeHandleTest) {
     }
 }
 
+TEST_F(HidlTest, FooNullCallbackTest) {
+    EXPECT_OK(foo->echoNullInterface(nullptr,
+                [](const auto receivedNull, const auto &intf) {
+                   EXPECT_TRUE(receivedNull);
+                   EXPECT_EQ(intf, nullptr);
+                }));
+}
+
 TEST_F(HidlTest, FooNonNullCallbackTest) {
     hidl_array<hidl_string, 5, 3> in;
 
