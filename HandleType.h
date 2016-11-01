@@ -29,7 +29,6 @@ struct HandleType : public Type {
 
     std::string getCppType(
             StorageMode mode,
-            std::string *extra,
             bool specifyNamespaces) const override;
 
     void emitReaderWriter(

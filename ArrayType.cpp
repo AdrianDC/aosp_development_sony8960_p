@@ -59,10 +59,8 @@ Type *ArrayType::getElementType() const {
 }
 
 std::string ArrayType::getCppType(StorageMode mode,
-                                  std::string *extra,
                                   bool specifyNamespaces) const {
-    const std::string base = mElementType->getCppType(extra, specifyNamespaces);
-    CHECK(extra->empty());
+    const std::string base = mElementType->getCppStackType(specifyNamespaces);
 
     std::string space = specifyNamespaces ? "::android::hardware::" : "";
     std::string arrayType = space + "hidl_array<" + base;
@@ -138,9 +136,7 @@ void ArrayType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
-    std::string baseExtra;
-    std::string baseType = mElementType->getCppType(&baseExtra);
-    CHECK(baseExtra.empty());
+    std::string baseType = mElementType->getCppStackType();
 
     const std::string parentName = "_hidl_" + name + "_parent";
 
@@ -150,11 +146,10 @@ void ArrayType::emitReaderWriter(
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
     if (isReader) {
-        std::string extra;
 
         out << name
             << " = ("
-            << getCppResultType(&extra)
+            << getCppResultType()
             << ")"
             << parcelObjDeref
             << "readBuffer(&"
@@ -223,9 +218,7 @@ void ArrayType::emitReaderWriterEmbedded(
 
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
 
-    std::string baseExtra;
-    std::string baseType = mElementType->getCppType(&baseExtra);
-    CHECK(baseExtra.empty());
+    std::string baseType = mElementType->getCppStackType();
 
     std::string iteratorName = "_hidl_index_" + std::to_string(depth);
 
@@ -300,8 +293,7 @@ void ArrayType::emitResolveReferencesEmbedded(
 
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
 
-    std::string baseExtra;
-    std::string baseType = mElementType->getCppType(&baseExtra);
+    std::string baseType = mElementType->getCppStackType();
 
     std::string iteratorName = "_hidl_index_" + std::to_string(depth);
 

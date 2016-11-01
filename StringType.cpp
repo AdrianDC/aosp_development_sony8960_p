@@ -27,10 +27,7 @@ void StringType::addNamedTypesToSet(std::set<const FQName> &) const {
 }
 
 std::string StringType::getCppType(StorageMode mode,
-                                   std::string *extra,
                                    bool specifyNamespaces) const {
-    extra->clear();
-
     const std::string base =
           std::string(specifyNamespaces ? "::android::hardware::" : "")
         + "hidl_string";

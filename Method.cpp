@@ -106,10 +106,9 @@ void Method::generateCppSignature(Formatter &out,
     if (elidedReturn == nullptr) {
         out << space << "Return<void> ";
     } else {
-        std::string extra;
         out << space
             << "Return<"
-            << elidedReturn->type().getCppResultType(&extra, specifyNamespaces)
+            << elidedReturn->type().getCppResultType( specifyNamespaces)
             << "> ";
     }
 
@@ -142,12 +141,9 @@ std::string Method::GetArgSignature(const std::vector<TypedVar *> &args,
             out += ", ";
         }
 
-        std::string extra;
-        out += arg->type().getCppArgumentType(&extra,
-                                              specifyNamespaces);
+        out += arg->type().getCppArgumentType(specifyNamespaces);
         out += " ";
         out += arg->name();
-        out += extra;
 
         first = false;
     }

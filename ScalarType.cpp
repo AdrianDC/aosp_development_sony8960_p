@@ -37,7 +37,7 @@ void ScalarType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
-std::string ScalarType::getCppType(StorageMode, std::string *extra, bool) const {
+std::string ScalarType::getCppType(StorageMode, bool) const {
     static const char *const kName[] = {
         "bool",
         "int8_t",
@@ -51,8 +51,6 @@ std::string ScalarType::getCppType(StorageMode, std::string *extra, bool) const 
         "float",
         "double"
     };
-
-    extra->clear();
 
     return kName[mKind];
 }
@@ -184,10 +182,8 @@ void ScalarType::emitReaderWriterWithCast(
         << "(";
 
     if (needsCast) {
-        std::string extra;
-
         out << "("
-            << Type::getCppType(&extra)
+            << getCppStackType()
             << (isReader ? " *)" : ")");
     }
 

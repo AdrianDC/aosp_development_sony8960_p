@@ -29,7 +29,6 @@ struct StringType : public Type {
 
     std::string getCppType(
             StorageMode mode,
-            std::string *extra,
             bool specifyNamespaces) const override;
 
     std::string getJavaType(

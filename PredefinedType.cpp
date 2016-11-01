@@ -30,9 +30,7 @@ void PredefinedType::addNamedTypesToSet(std::set<const FQName> &) const {
 }
 std::string PredefinedType::getCppType(
         StorageMode mode,
-        std::string *extra,
         bool) const {
-    extra->clear();
 
     const std::string base = mName;
 
