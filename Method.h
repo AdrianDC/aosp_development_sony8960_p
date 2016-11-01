@@ -62,8 +62,8 @@ struct Method {
     size_t getSerialId() const;
 
     void generateCppSignature(Formatter &out,
-                              const std::string &className,
-                              bool specifyNamespaces) const;
+                              const std::string &className = "",
+                              bool specifyNamespaces = true) const;
 
     static std::string GetArgSignature(const std::vector<TypedVar *> &args,
                                        bool specifyNamespaces);
