@@ -161,41 +161,26 @@ private:
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;
 
-    enum MethodLocation {
-        PROXY_HEADER,
-        STUB_HEADER,
-        IMPL_HEADER,
-        IMPL_SOURCE,
-        PASSTHROUGH_HEADER
-    };
+    // a method, and in which interface is it originally defined.
+    // be careful of the case where method.isHidlReserved(), where interface
+    // is effectively useless.
+    using MethodGenerator = std::function<status_t(const Method *, const Interface *)>;
 
     status_t generateStubImplHeader(const std::string &outputPath) const;
     status_t generateStubImplSource(const std::string &outputPath) const;
 
-    status_t generateMethods(Formatter &out,
-                             const std::string &className,
-                             MethodLocation type,
-                             bool specifyNamespaces) const;
+    status_t generateMethods(Formatter &out, MethodGenerator gen) const;
     status_t generateStubMethod(Formatter &out,
-                                const std::string &className,
-                                const Method *method,
-                                bool specifyNamespaces) const;
-    status_t generateProxyDeclaration(Formatter &out,
-                                      const std::string &className,
-                                      const Method *method,
-                                      bool specifyNamespaces) const;
-    status_t generateStubImplDeclaration(Formatter &out,
-                                         const std::string &className,
-                                         const Method *method,
-                                         bool specifyNamespaces) const;
+                                const Method *method) const;
     status_t generateStubImplMethod(Formatter &out,
                                     const std::string &className,
-                                    const Method *method,
-                                    bool specifyNamespaces) const;
+                                    const Method *method) const;
     status_t generatePassthroughMethod(Formatter &out,
+                                       const Method *method) const;
+    status_t generateProxyMethodSource(Formatter &out,
                                        const std::string &className,
                                        const Method *method,
-                                       bool specifyNamespaces) const;
+                                       const Interface *superInterface) const;
 
     void generateFetchSymbol(Formatter &out, const std::string &ifaceName) const;
 
