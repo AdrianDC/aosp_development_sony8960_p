@@ -21,6 +21,7 @@
 #include "FQName.h"
 #include "HandleType.h"
 #include "Interface.h"
+#include "Location.h"
 #include "PredefinedType.h"
 #include "Scope.h"
 #include "TypeDef.h"
@@ -36,7 +37,7 @@ AST::AST(Coordinator *coordinator, const std::string &path)
     : mCoordinator(coordinator),
       mPath(path),
       mScanner(NULL),
-      mRootScope(new Scope("" /* localName */)) {
+      mRootScope(new Scope("" /* localName */, Location::startOf(path))) {
     enterScope(mRootScope);
 }
 
@@ -188,13 +189,13 @@ Scope *AST::scope() {
     return mScopePath.back();
 }
 
-bool AST::addTypeDef(
-        const char *localName, Type *type, std::string *errorMsg) {
+bool AST::addTypeDef(const char *localName, Type *type, const Location &location,
+        std::string *errorMsg) {
     // The reason we wrap the given type in a TypeDef is simply to suppress
     // emitting any type definitions later on, since this is just an alias
     // to a type defined elsewhere.
     return addScopedTypeInternal(
-            new TypeDef(localName, type), errorMsg);
+            new TypeDef(localName, location, type), errorMsg);
 }
 
 bool AST::addScopedType(NamedType *type, std::string *errorMsg) {

@@ -27,8 +27,9 @@ namespace android {
 
 EnumType::EnumType(
         const char *localName,
+        const Location &location,
         Type *storageType)
-    : Scope(localName),
+    : Scope(localName, location),
       mValues(),
       mStorageType(
               storageType != NULL
