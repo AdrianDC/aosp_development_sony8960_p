@@ -48,15 +48,14 @@ void AST::generateFetchSymbol(Formatter &out, const std::string& ifaceName) cons
 
 status_t AST::generateStubImplMethod(Formatter &out,
                                      const std::string &className,
-                                     const Method *method,
-                                     bool specifyNamespaces) const {
+                                     const Method *method) const {
 
     // ignore HIDL reserved methods -- implemented in IFoo already.
     if (method->isHidlReserved()) {
         return OK;
     }
 
-    method->generateCppSignature(out, className, specifyNamespaces);
+    method->generateCppSignature(out, className, false /* specifyNamespaces */);
 
     out << " {\n";
 
@@ -77,24 +76,6 @@ status_t AST::generateStubImplMethod(Formatter &out,
     out.unindent();
 
     out << "}\n\n";
-
-    return OK;
-}
-
-status_t AST::generateStubImplDeclaration(Formatter &out,
-                                          const std::string &className,
-                                          const Method *method,
-                                          bool specifyNamespaces) const {
-
-    // ignore HIDL reserved methods -- implemented in IFoo already.
-    if (method->isHidlReserved()) {
-        return OK;
-    }
-
-    method->generateCppSignature(out,
-                                 className,
-                                 specifyNamespaces);
-    out << " override;\n";
 
     return OK;
 }
@@ -192,10 +173,16 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     out.indent();
 
-    status_t err = generateMethods(out,
-                                   "", /* class name */
-                                   MethodLocation::IMPL_HEADER,
-                                   false /* specify namespaces */);
+    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
+        // ignore HIDL reserved methods -- implemented in IFoo already.
+        if (method->isHidlReserved()) {
+            return OK;
+        }
+        method->generateCppSignature(out, "" /* className */,
+                false /* specifyNamespaces */);
+        out << " override;\n";
+        return OK;
+    });
 
     if (err != OK) {
         return err;
@@ -250,11 +237,9 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
     // this is namespace aware code and doesn't require post-processing
     out.setNamespace("");
 
-    generateMethods(out,
-                    baseName,
-                    MethodLocation::IMPL_SOURCE,
-                    false /* specify namespaces */);
-
+    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
+        return generateStubImplMethod(out, baseName, method);
+    });
 
     out << ifaceName
         << "* ";
