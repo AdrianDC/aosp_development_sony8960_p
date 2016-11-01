@@ -47,6 +47,9 @@ struct FQName {
             const std::string &defaultVersion);
 
     std::string package() const;
+    // Return version in the form "@1.0" if it is present, otherwise empty string.
+    std::string atVersion() const;
+    // Return version in the form "1.0" if it is present, otherwise empty string.
     std::string version() const;
 
     // The next two methods return the name part of the FQName, that is, the
@@ -147,16 +150,16 @@ struct FQName {
 
     std::string getPackageMinorVersion() const;
 
-    // Returns the version of the package by cutting off the leading '@' prefix.
-    std::string getPackageFullVersion() const;
-
 private:
     bool mValid;
     bool mIsIdentifier;
     std::string mPackage;
-    std::string mVersion;
+    std::string mMajor;
+    std::string mMinor;
     std::string mName;
     std::string mValueName;
+
+    void setVersion(const std::string &v);
 };
 
 }  // namespace android

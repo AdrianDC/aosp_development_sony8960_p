@@ -786,7 +786,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "IMPLEMENT_REGISTER_AND_GET_SERVICE("
             << baseName << ", "
             << "\"" << iface->fqName().package()
-            << iface->fqName().version() << "-impl.so\""
+            << iface->fqName().atVersion() << "-impl.so\""
             << ")\n";
     }
 
@@ -1719,7 +1719,7 @@ status_t AST::generateCppInstrumentationCall(
         << ", \""
         << mPackage.package()
         << "\", \""
-        << mPackage.getPackageFullVersion()
+        << mPackage.version()
         << "\", \""
         << iface->localName()
         << "\", \""
