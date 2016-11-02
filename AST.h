@@ -146,6 +146,11 @@ private:
     void getPackageAndVersionComponents(
             std::vector<std::string> *components, bool cpp_compatible) const;
 
+    static void generateCppPackageInclude(
+            Formatter &out,
+            const FQName &package,
+            const std::string &klass);
+
     std::string makeHeaderGuard(const std::string &baseName) const;
     void enterLeaveNamespace(Formatter &out, bool enter) const;
 
