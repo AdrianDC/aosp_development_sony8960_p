@@ -444,10 +444,11 @@ TEST_F(HidlTest, FooHaveATypeFromAnotherFileTest) {
     Abc abcParam{};
     abcParam.x = "alphabet";
     abcParam.y = 3.14f;
-    abcParam.z = new native_handle_t();
+    native_handle_t *handle = native_handle_create(0, 0);
+    abcParam.z = handle;
     EXPECT_OK(foo->haveATypeFromAnotherFile(abcParam));
     ALOGI("CLIENT haveATypeFromAnotherFile returned.");
-    delete abcParam.z;
+    native_handle_delete(handle);
     abcParam.z = NULL;
 }
 
@@ -637,7 +638,10 @@ TEST_F(HidlTest, FooNullNativeHandleTest) {
     if (gMode == BINDERIZED) {
         Abc xyz;
         xyz.z = nullptr;
-        EXPECT_FAIL(foo->haveATypeFromAnotherFile(xyz));
+        EXPECT_FAIL(bar->expectNullHandle(nullptr, xyz, [](bool hIsNull, bool xyzHasNull) {
+            EXPECT_TRUE(hIsNull);
+            EXPECT_TRUE(xyzHasNull);
+        }));
     }
 }
 
