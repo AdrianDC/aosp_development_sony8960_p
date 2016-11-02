@@ -82,11 +82,11 @@ struct Type {
 
     std::string getCppArgumentType(bool specifyNamespaces = true) const;
 
-    // For an array type, "extra" accumulates dimensionality information,
+    // For an array type, dimensionality information will be accumulated at the
+    // end of the returned string.
     // if forInitializer == true, actual dimensions are included, i.e. [3][5],
     // otherwise (and by default), they are omitted, i.e. [][].
-    virtual std::string getJavaType(
-            std::string *extra, bool forInitializer = false) const;
+    virtual std::string getJavaType(bool forInitializer = false) const;
 
     virtual std::string getJavaWrapperType() const;
     virtual std::string getJavaSuffix() const;

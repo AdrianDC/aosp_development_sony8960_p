@@ -41,8 +41,7 @@ struct CompoundType : public Scope {
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 
-    std::string getJavaType(
-            std::string *extra, bool forInitializer) const override;
+    std::string getJavaType(bool forInitializer) const override;
 
     std::string getVtsType() const override;
 

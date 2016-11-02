@@ -92,30 +92,24 @@ std::string ArrayType::getCppType(StorageMode mode,
     CHECK(!"Should not be here");
 }
 
-std::string ArrayType::getJavaType(
-        std::string *extra, bool forInitializer) const {
-    std::string baseExtra;
-    const std::string base =
-        mElementType->getJavaType(&baseExtra, forInitializer);
-
-    CHECK(baseExtra.empty());
-
-    extra->clear();
+std::string ArrayType::getJavaType(bool forInitializer) const {
+    std::string base =
+        mElementType->getJavaType(forInitializer);
 
     for (size_t i = 0; i < mSizes.size(); ++i) {
-        *extra += "[";
+        base += "[";
 
         if (forInitializer) {
-            *extra += mSizes[i]->javaValue();
+            base += mSizes[i]->javaValue();
         }
 
         if (!forInitializer || !mSizes[i]->descriptionIsTrivial()) {
             if (forInitializer)
-                *extra += " ";
-            *extra += "/* " + mSizes[i]->description() + " */";
+                base += " ";
+            base += "/* " + mSizes[i]->description() + " */";
         }
 
-        *extra += "]";
+        base += "]";
     }
 
     return base;
@@ -348,10 +342,8 @@ void ArrayType::emitJavaReaderWriter(
         const std::string &argName,
         bool isReader) const {
     if (isReader) {
-        std::string extra;
         out << "new "
-            << getJavaType(&extra, true /* forInitializer */)
-            << extra
+            << getJavaType(true /* forInitializer */)
             << ";\n";
     }
 
@@ -391,20 +383,15 @@ void ArrayType::emitJavaReaderWriter(
 
 void ArrayType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
-    std::string extra;
-    std::string typeName = getJavaType(&extra, false /* forInitializer */);
-
-    std::string extraInit;
-    getJavaType(&extraInit, true /* forInitializer */);
+    std::string typeName = getJavaType(false /* forInitializer */);
+    std::string initName = getJavaType(true /* forInitializer */);
 
     out << "final "
         << typeName
-        << extra
         << " "
         << fieldName
         << " = new "
-        << typeName
-        << extraInit
+        << initName
         << ";\n";
 }
 
@@ -443,11 +430,8 @@ void ArrayType::emitJavaFieldReaderWriter(
     }
 
     if (isReader && mElementType->isCompoundType()) {
-        std::string extra;
         std::string typeName =
-            mElementType->getJavaType(&extra, false /* forInitializer */);
-
-        CHECK(extra.empty());
+            mElementType->getJavaType(false /* forInitializer */);
 
         out << fieldName
             << indexString
