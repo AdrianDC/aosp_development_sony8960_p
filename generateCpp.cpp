@@ -466,14 +466,21 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         generateCheckNonNull(out, "_hidl_cb");
     }
 
-    out << "return ";
+    generateCppInstrumentationCall(
+            out,
+            InstrumentationEvent::PASSTHROUGH_ENTRY,
+            method);
+
+    out << "auto _hidl_return = ";
 
     if (method->isOneway()) {
         out << "addOnewayTask([this";
         for (const auto &arg : method->args()) {
             out << ", " << arg->name();
         }
-        out << "] {this->";
+        out << "] {\n";
+        out.indent();
+        out << "this->";
     }
 
     out << "mImpl->"
@@ -495,12 +502,19 @@ status_t AST::generatePassthroughMethod(Formatter &out,
 
         out << "_hidl_cb";
     }
-    out << ")";
+    out << ");\n\n";
+
+    generateCppInstrumentationCall(
+        out,
+        InstrumentationEvent::PASSTHROUGH_EXIT,
+        method);
 
     if (method->isOneway()) {
-        out << ";})";
+        out.unindent();
+        out << "});\n";
     }
-    out << ";\n";
+
+    out << "return _hidl_return;\n";
 
     out.unindent();
     out << "}\n";
@@ -1506,7 +1520,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << "struct "
         << klassName
         << " : " << ifaceName
-        << " {\n";
+        << ", HidlInstrumentor {\n";
 
     out.indent();
     out << "explicit "
@@ -1622,7 +1636,9 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         << klassName
         << "(const sp<"
         << iface->fullName()
-        << "> impl) : mImpl(impl) {";
+        << "> impl) : HidlInstrumentor(\""
+        << iface->fqName().string()
+        << "\"), mImpl(impl) {";
     if (iface->hasOnewayMethods()) {
         out << "\n";
         out.indentBlock([&] {
@@ -1708,6 +1724,22 @@ status_t AST::generateCppInstrumentationCall(
                     << arg->name()
                     << ");\n";
             }
+            break;
+        }
+        case PASSTHROUGH_ENTRY:
+        {
+            event_str = "InstrumentationEvent::PASSTHROUGH_ENTRY";
+            for (const auto &arg : method->args()) {
+                out << "_hidl_args.push_back((void *)&"
+                    << arg->name()
+                    << ");\n";
+            }
+            break;
+        }
+        case PASSTHROUGH_EXIT:
+        {
+            event_str = "InstrumentationEvent::PASSTHROUGH_EXIT";
+            // TODO(b/32576620): passthrough return values
             break;
         }
         default:
