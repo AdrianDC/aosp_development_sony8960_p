@@ -1,3 +1,7 @@
+subdirs = [
+    "vendor/1.0",
+]
+
 cc_test {
     name: "hidl_test",
     gtest: false,

@@ -62,7 +62,8 @@ std::string ArrayType::getCppType(StorageMode mode,
     const std::string base = mElementType->getCppType(extra, specifyNamespaces);
     CHECK(extra->empty());
 
-    std::string arrayType = "hidl_array<" + base;
+    std::string space = specifyNamespaces ? "::android::hardware::" : "";
+    std::string arrayType = space + "hidl_array<" + base;
 
     for (size_t i = 0; i < mSizes.size(); ++i) {
         arrayType += ", ";
