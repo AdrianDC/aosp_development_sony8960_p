@@ -6,7 +6,7 @@
 #include <android/hardware/tests/baz/1.0/IBaz.h>
 
 #include <gtest/gtest.h>
-#include <hidl/IServiceManager.h>
+
 #include <hidl/Status.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/ProcessState.h>

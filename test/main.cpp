@@ -30,7 +30,6 @@
 #include <hidl-test/FooHelper.h>
 #include <hidl-test/PointerHelper.h>
 
-#include <hidl/IServiceManager.h>
 #include <hidl/Status.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/ProcessState.h>
