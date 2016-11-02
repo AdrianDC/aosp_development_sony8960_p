@@ -157,7 +157,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     }
 
     out << "#include <hidl/HidlSupport.h>\n";
-    out << "#include <hidl/IServiceManager.h>\n";
+    out << "#include <hidl/ServiceManagement.h>\n";
     out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
@@ -177,7 +177,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *superType = iface->superType();
 
         if (superType == NULL) {
-            out << " : virtual public IHidlInterfaceBase";
+            out << " : virtual public ::android::hardware::IHidlInterfaceBase";
         } else {
             out << " : public "
                 << superType->fullName();
@@ -199,10 +199,11 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
         const std::string baseName = iface->getBaseName();
-        out << "constexpr static hidl_version version = {"
+        out << "constexpr static ::android::hardware::hidl_version version = {"
             << mPackage.getPackageMajorVersion() << ","
             << mPackage.getPackageMinorVersion() << "};\n";
-        out << "virtual const hidl_version& getInterfaceVersion() const {\n";
+        out << "virtual const ::android::hardware::hidl_version&"
+            << "getInterfaceVersion() const {\n";
         out.indent();
         out << "return version;\n";
         out.unindent();
@@ -734,6 +735,9 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     Formatter out(file);
 
     if (isInterface) {
+        // This is a no-op for IServiceManager itself.
+        out << "#include <android/hidl/manager/1.0/IServiceManager.h>\n";
+
         generateCppPackageInclude(out, mPackage, "Bp" + baseName);
         generateCppPackageInclude(out, mPackage, "Bn" + baseName);
         generateCppPackageInclude(out, mPackage, "Bs" + baseName);
@@ -756,7 +760,9 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     if (err == OK && isInterface) {
         const Interface *iface = mRootScope->getInterface();
-        out << "constexpr hidl_version " << ifaceName << "::version;\n\n";
+        out << "constexpr ::android::hardware::hidl_version "
+            << ifaceName
+            << "::version;\n\n";
 
         // need to be put here, generateStubSource is using this.
         out << "const ::android::String16 I"
@@ -1065,7 +1071,7 @@ status_t AST::generateProxySource(
         << "<IHw"
         << baseName
         << ">(_hidl_impl),\n"
-        << "  HidlInstrumentor(\""
+        << "  ::android::hardware::HidlInstrumentor(\""
         << mPackage.string()
         << "::I"
         << baseName
@@ -1108,7 +1114,7 @@ status_t AST::generateStubSource(
         << ", IHw"
         << baseName
         << ">(_hidl_impl),\n"
-        << "  HidlInstrumentor(\""
+        << "  ::android::hardware::HidlInstrumentor(\""
         << mPackage.string()
         << "::I"
         << baseName
@@ -1481,12 +1487,12 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << "struct "
         << klassName
         << " : " << ifaceName
-        << ", HidlInstrumentor {\n";
+        << ", ::android::hardware::HidlInstrumentor {\n";
 
     out.indent();
     out << "explicit "
         << klassName
-        << "(const sp<"
+        << "(const ::android::sp<"
         << ifaceName
         << "> impl);\n";
 
@@ -1501,7 +1507,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out.unindent();
     out << "private:\n";
     out.indent();
-    out << "const sp<" << ifaceName << "> mImpl;\n";
+    out << "const ::android::sp<" << ifaceName << "> mImpl;\n";
 
     if (supportOneway) {
         out << "::android::hardware::TaskRunner mOnewayQueue;\n";
@@ -1595,9 +1601,9 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
     out << klassName
         << "::"
         << klassName
-        << "(const sp<"
+        << "(const ::android::sp<"
         << iface->fullName()
-        << "> impl) : HidlInstrumentor(\""
+        << "> impl) : ::android::hardware::HidlInstrumentor(\""
         << iface->fqName().string()
         << "\"), mImpl(impl) {";
     if (iface->hasOnewayMethods()) {
