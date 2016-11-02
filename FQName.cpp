@@ -24,17 +24,20 @@
 
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
-#define RE_VERSION      "@[0-9]+[.][0-9]+"
+#define RE_MAJOR        "[0-9]+"
+#define RE_MINOR        "[0-9]+"
 
-static const std::regex kRE1("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH ")");
-static const std::regex kRE2("(" RE_VERSION ")::(" RE_PATH ")");
-static const std::regex kRE3("(" RE_PATH ")(" RE_VERSION ")");
+static const std::regex kRE1("(" RE_PATH ")@(" RE_MAJOR ")[.](" RE_MINOR ")?::(" RE_PATH ")");
+static const std::regex kRE2("@(" RE_MAJOR ")[.](" RE_MINOR ")::(" RE_PATH ")");
+static const std::regex kRE3("(" RE_PATH ")@(" RE_MAJOR ")[.](" RE_MINOR ")");
 static const std::regex kRE4("(" RE_COMPONENT ")([.]" RE_COMPONENT ")+");
 static const std::regex kRE5("(" RE_COMPONENT ")");
 
-static const std::regex kRE6("(" RE_PATH ")(" RE_VERSION ")?::(" RE_PATH "):(" RE_COMPONENT ")");
-static const std::regex kRE7("(" RE_VERSION ")::(" RE_PATH "):(" RE_COMPONENT ")");
+static const std::regex kRE6("(" RE_PATH ")@(" RE_MAJOR ")[.](" RE_MINOR ")?::(" RE_PATH "):(" RE_COMPONENT ")");
+static const std::regex kRE7("@(" RE_MAJOR ")[.](" RE_MINOR ")::(" RE_PATH "):(" RE_COMPONENT ")");
 static const std::regex kRE8("(" RE_PATH "):(" RE_COMPONENT ")");
+
+static const std::regex kREVer("(" RE_MAJOR ")[.](" RE_MINOR ")");
 
 namespace android {
 
@@ -57,16 +60,17 @@ FQName::FQName(
     : mValid(true),
       mIsIdentifier(false),
       mPackage(package),
-      mVersion(version),
       mName(name),
       mValueName(valueName) {
+    setVersion(version);
 }
 
 FQName::FQName(const FQName& other)
     : mValid(other.mValid),
       mIsIdentifier(other.mIsIdentifier),
       mPackage(other.mPackage),
-      mVersion(other.mVersion),
+      mMajor(other.mMajor),
+      mMinor(other.mMinor),
       mName(other.mName),
       mValueName(other.mValueName) {
 }
@@ -86,7 +90,7 @@ bool FQName::isIdentifier() const {
 }
 
 bool FQName::isFullyQualified() const {
-    return !mPackage.empty() && !mVersion.empty() && !mName.empty();
+    return !mPackage.empty() && !version().empty() && !mName.empty();
 }
 
 bool FQName::isValidValueName() const {
@@ -96,46 +100,52 @@ bool FQName::isValidValueName() const {
 
 bool FQName::setTo(const std::string &s) {
     mPackage.clear();
-    mVersion.clear();
+    mMajor.clear();
+    mMinor.clear();
     mName.clear();
 
     mValid = true;
 
     std::smatch match;
     if (std::regex_match(s, match, kRE1)) {
+        CHECK_EQ(match.size(), 5u);
+
+        mPackage = match.str(1);
+        mMajor = match.str(2);
+        mMinor = match.str(3);
+        mName = match.str(4);
+    } else if (std::regex_match(s, match, kRE2)) {
+        CHECK_EQ(match.size(), 4u);
+
+        mMajor = match.str(1);
+        mMinor = match.str(2);
+        mName = match.str(3);
+    } else if (std::regex_match(s, match, kRE3)) {
         CHECK_EQ(match.size(), 4u);
 
         mPackage = match.str(1);
-        mVersion = match.str(2);
-        mName = match.str(3);
-    } else if (std::regex_match(s, match, kRE2)) {
-        CHECK_EQ(match.size(), 3u);
-
-        mVersion = match.str(1);
-        mName = match.str(2);
-    } else if (std::regex_match(s, match, kRE3)) {
-        CHECK_EQ(match.size(), 3u);
-
-        mPackage = match.str(1);
-        mVersion = match.str(2);
+        mMajor = match.str(2);
+        mMinor = match.str(3);
     } else if (std::regex_match(s, match, kRE4)) {
         mName = match.str(0);
     } else if (std::regex_match(s, match, kRE5)) {
         mIsIdentifier = true;
         mName = match.str(0);
     } else if (std::regex_match(s, match, kRE6)) {
-        CHECK_EQ(match.size(), 5u);
+        CHECK_EQ(match.size(), 6u);
 
         mPackage = match.str(1);
-        mVersion = match.str(2);
+        mMajor = match.str(2);
+        mMinor = match.str(3);
+        mName = match.str(4);
+        mValueName = match.str(5);
+    } else if (std::regex_match(s, match, kRE7)) {
+        CHECK_EQ(match.size(), 5u);
+
+        mMajor = match.str(1);
+        mMinor = match.str(2);
         mName = match.str(3);
         mValueName = match.str(4);
-    } else if (std::regex_match(s, match, kRE7)) {
-        CHECK_EQ(match.size(), 4u);
-
-        mVersion = match.str(1);
-        mName = match.str(2);
-        mValueName = match.str(3);
     } else if (std::regex_match(s, match, kRE8)) {
         CHECK_EQ(match.size(), 3u);
 
@@ -158,7 +168,33 @@ std::string FQName::package() const {
 }
 
 std::string FQName::version() const {
-    return mVersion;
+    CHECK(mMajor.empty() == mMinor.empty());
+    if (mMajor.empty() && mMinor.empty()) {
+        return "";
+    }
+    return mMajor + "." + mMinor;
+}
+
+std::string FQName::atVersion() const {
+    std::string v = version();
+    return v.empty() ? "" : ("@" + v);
+}
+
+void FQName::setVersion(const std::string &v) {
+    if (v.empty()) {
+        mMajor.clear();
+        mMinor.clear();
+        return;
+    }
+    std::smatch match;
+    if (std::regex_match(v, match, kREVer)) {
+        CHECK_EQ(match.size(), 3u);
+
+        mMajor = match.str(1);
+        mMinor = match.str(2);
+    } else {
+        mValid = false;
+    }
 }
 
 std::string FQName::name() const {
@@ -180,7 +216,7 @@ std::string FQName::valueName() const {
 }
 
 FQName FQName::typeName() const {
-    return FQName(mPackage, mVersion, mName);
+    return FQName(mPackage, version(), mName);
 }
 
 void FQName::applyDefaults(
@@ -190,8 +226,8 @@ void FQName::applyDefaults(
         mPackage = defaultPackage;
     }
 
-    if (mVersion.empty()) {
-        mVersion = defaultVersion;
+    if (version().empty()) {
+        setVersion(defaultVersion);
     }
 }
 
@@ -200,9 +236,9 @@ std::string FQName::string() const {
 
     std::string out;
     out.append(mPackage);
-    out.append(mVersion);
+    out.append(atVersion());
     if (!mName.empty()) {
-        if (!mPackage.empty() || !mVersion.empty()) {
+        if (!mPackage.empty() || !version().empty()) {
             out.append("::");
         }
         out.append(mName);
@@ -252,7 +288,7 @@ const FQName FQName::getTopLevelType() const {
         return *this;
     }
 
-    return FQName(mPackage, mVersion, mName.substr(0, idx));
+    return FQName(mPackage, version(), mName.substr(0, idx));
 }
 
 std::string FQName::tokenName() const {
@@ -336,25 +372,11 @@ void FQName::getPackageAndVersionComponents(
 }
 
 std::string FQName::getPackageMajorVersion() const {
-    const std::string packageVersion = version();
-    CHECK(packageVersion[0] == '@');
-    const size_t dotPos = packageVersion.find('.');
-    CHECK(dotPos != std::string::npos);
-    return packageVersion.substr(1, dotPos - 1);
+    return mMajor;
 }
 
 std::string FQName::getPackageMinorVersion() const {
-    const std::string packageVersion = version();
-    CHECK(packageVersion[0] == '@');
-    const size_t dotPos = packageVersion.find('.');
-    CHECK(dotPos != std::string::npos);
-    return packageVersion.substr(dotPos + 1);
-}
-
-std::string FQName::getPackageFullVersion() const {
-    const std::string packageVersion = version();
-    CHECK_GT(packageVersion.length(), 1u);
-    return packageVersion.substr(1);
+    return mMinor;
 }
 
 bool FQName::endsWith(const FQName &other) const {
