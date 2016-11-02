@@ -78,6 +78,25 @@ std::string AST::makeHeaderGuard(const std::string &baseName) const {
     return guard;
 }
 
+// static
+void AST::generateCppPackageInclude(
+        Formatter &out,
+        const FQName &package,
+        const std::string &klass) {
+
+    out << "#include <";
+
+    std::vector<std::string> components;
+    package.getPackageAndVersionComponents(&components, false /* cpp_compatible */);
+
+    for (const auto &component : components) {
+        out << component << "/";
+    }
+
+    out << klass
+        << ".h>\n";
+}
+
 void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     std::vector<std::string> packageComponents;
     getPackageAndVersionComponents(
@@ -130,18 +149,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     out << "#define " << guard << "\n\n";
 
     for (const auto &item : mImportedNames) {
-        out << "#include <";
-
-        std::vector<std::string> components;
-        item.getPackageAndVersionComponents(
-                &components, false /* cpp_compatible */);
-
-        for (const auto &component : components) {
-            out << component << "/";
-        }
-
-        out << item.name()
-            << ".h>\n";
+        generateCppPackageInclude(out, item, item.name());
     }
 
     if (!mImportedNames.empty()) {
@@ -341,36 +349,16 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    std::vector<std::string> packageComponents;
-    getPackageAndVersionComponents(
-            &packageComponents, false /* cpp_compatible */);
+    generateCppPackageInclude(out, mPackage, ifaceName);
 
-    out << "#include <";
-    for (const auto &component : packageComponents) {
-        out << component << "/";
-    }
-    out << ifaceName << ".h>\n\n";
+    out << "\n";
 
     for (const auto &item : mImportedNames) {
         if (item.name() == "types") {
             continue;
         }
 
-        out << "#include <";
-
-        std::vector<std::string> components;
-        item.getPackageAndVersionComponents(
-                &components, false /* cpp_compatible */);
-
-        for (const auto &component : components) {
-            out << component << "/";
-        }
-
-        const std::string itemBaseName = item.getInterfaceBaseName();
-
-        out << "Bn"
-            << itemBaseName
-            << ".h>\n";
+        generateCppPackageInclude(out, item, "Bn" + item.getInterfaceBaseName());
     }
 
     out << "\n";
@@ -583,15 +571,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    std::vector<std::string> packageComponents;
-    getPackageAndVersionComponents(
-            &packageComponents, false /* cpp_compatible */);
-
-    out << "#include <";
-    for (const auto &component : packageComponents) {
-        out << component << "/";
-    }
-    out << "IHw" << baseName << ".h>\n\n";
+    generateCppPackageInclude(out, mPackage, "IHw" + baseName);
+    out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
@@ -673,11 +654,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     getPackageAndVersionComponents(
             &packageComponents, false /* cpp_compatible */);
 
-    out << "#include <";
-    for (const auto &component : packageComponents) {
-        out << component << "/";
-    }
-    out << "IHw" << baseName << ".h>\n\n";
+    generateCppPackageInclude(out, mPackage, "IHw" + baseName);
+    out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
@@ -755,33 +733,18 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     Formatter out(file);
 
-    std::vector<std::string> packageComponents;
-    getPackageAndVersionComponents(
-            &packageComponents, false /* cpp_compatible */);
-
-    std::string prefix;
-    for (const auto &component : packageComponents) {
-        prefix += component;
-        prefix += "/";
-    }
-
     if (isInterface) {
-        out << "#include <" << prefix << "/Bp" << baseName << ".h>\n";
-        out << "#include <" << prefix << "/Bn" << baseName << ".h>\n";
-        out << "#include <" << prefix << "/Bs" << baseName << ".h>\n";
+        generateCppPackageInclude(out, mPackage, "Bp" + baseName);
+        generateCppPackageInclude(out, mPackage, "Bn" + baseName);
+        generateCppPackageInclude(out, mPackage, "Bs" + baseName);
 
         for (const Interface *superType : iface->superTypeChain()) {
-            std::vector<std::string> superPackageComponents;
-            superType->fqName().getPackageAndVersionComponents(&superPackageComponents, false /* cpp_compatible */);
-            std::string superPrefix;
-            for (const auto &component : superPackageComponents) {
-                superPrefix += component;
-                superPrefix += "/";
-            }
-            out << "#include <" << superPrefix << "/Bp" << superType->getBaseName() << ".h>\n";
+            generateCppPackageInclude(out,
+                                      superType->fqName(),
+                                      "Bp" + superType->getBaseName());
         }
     } else {
-        out << "#include <" << prefix << "types.h>\n";
+        generateCppPackageInclude(out, mPackage, "types");
     }
 
     out << "\n";
@@ -1504,11 +1467,9 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
             &packageComponents, false /* cpp_compatible */);
 
     out << "#include <future>\n";
-    out << "#include <";
-    for (const auto &component : packageComponents) {
-        out << component << "/";
-    }
-    out << ifaceName << ".h>\n\n";
+
+    generateCppPackageInclude(out, mPackage, ifaceName);
+    out << "\n";
 
     if (supportOneway) {
         out << "#include <hidl/TaskRunner.h>\n";
