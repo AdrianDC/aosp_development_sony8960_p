@@ -226,8 +226,7 @@ std::string Coordinator::getPackagePath(
     packagePath.append(packageSuffix.substr(startPos));
     packagePath.append("/");
 
-    CHECK_EQ(fqName.version().find('@'), 0u);
-    packagePath.append(fqName.version().substr(1));
+    packagePath.append(fqName.version());
     packagePath.append("/");
 
     return packagePath;
@@ -296,7 +295,7 @@ status_t Coordinator::appendPackageInterfacesToVector(
 
     for (const auto &fileName : fileNames) {
         FQName subFQName(
-                package.package() + package.version() + "::" + fileName);
+                package.package() + package.atVersion() + "::" + fileName);
 
         if (!subFQName.isValid()) {
             LOG(WARNING)
@@ -304,7 +303,7 @@ status_t Coordinator::appendPackageInterfacesToVector(
                 << fileName
                 << "' in package "
                 << package.package()
-                << package.version();
+                << package.atVersion();
 
             continue;
         }
