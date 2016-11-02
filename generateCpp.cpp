@@ -1492,7 +1492,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out.indent();
     out << "explicit "
         << klassName
-        << "(const sp<"
+        << "(const ::android::sp<"
         << ifaceName
         << "> impl);\n";
 
@@ -1507,7 +1507,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out.unindent();
     out << "private:\n";
     out.indent();
-    out << "const sp<" << ifaceName << "> mImpl;\n";
+    out << "const ::android::sp<" << ifaceName << "> mImpl;\n";
 
     if (supportOneway) {
         out << "::android::hardware::TaskRunner mOnewayQueue;\n";
@@ -1601,7 +1601,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
     out << klassName
         << "::"
         << klassName
-        << "(const sp<"
+        << "(const ::android::sp<"
         << iface->fullName()
         << "> impl) : ::android::hardware::HidlInstrumentor(\""
         << iface->fqName().string()
