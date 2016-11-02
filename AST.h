@@ -211,7 +211,6 @@ private:
     status_t generateCppInstrumentationCall(
             Formatter &out,
             InstrumentationEvent event,
-            const Interface *iface,
             const Method *method) const;
 
     void declareCppReaderLocals(
