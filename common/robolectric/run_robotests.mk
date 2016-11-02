@@ -140,6 +140,27 @@ else
     my_test_filter_command := grep -E "$(ROBOTEST_FILTER)"
 endif
 
+# Setting the DEBUG_ROBOLECTRIC environment variable will print additional logging from
+# Robolectric and also make it wait for a debugger to be connected.
+# For Android Studio / IntelliJ the debugger can be connected via the "remote" configuration:
+#     https://www.jetbrains.com/help/idea/2016.2/run-debug-configuration-remote.html
+# From command line the debugger can be connected via
+#     jdb -attach localhost:5005
+ifdef DEBUG_ROBOLECTRIC
+    # The arguments to the JVM needed to debug the tests.
+    # - server: wait for connection rather than connecting to a debugger
+    # - transport: how to accept debugger connections (sockets)
+    # - address: the port on which to accept debugger connections
+    # - timeout: how long (in ms) to wait for a debugger to connect
+    # - suspend: do not start running any code until the debugger connects
+    my_java_args := \
+        -Drobolectric.logging.enabled=true \
+        -Xdebug -agentlib:jdwp=server=y,transport=dt_socket,address=5005,suspend=y
+
+    # Remove the timeout so Robolectric doesn't get killed while debugging
+    my_timeout := 0
+endif
+
 ##########################
 # Used by base_rules.mk. #
 ##########################
@@ -200,6 +221,7 @@ my_target :=
 my_target_message :=
 my_test_filter_command :=
 my_tests :=
+my_timeout :=
 
 # Clear local variables specific to this build.
 LOCAL_ROBOTEST_FAILURE_FATAL :=
