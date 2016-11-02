@@ -169,10 +169,11 @@ ConstantExpression::ConstantExpression(const ConstantExpression& other) {
     *this = other;
 }
 
-/* Copy constructor, with the expr overriden. */
+/* Copy constructor, with the expr overriden and treated non-trivial */
 ConstantExpression::ConstantExpression(const ConstantExpression& other, std::string expr) {
     *this = other;
     mExpr = expr;
+    mTrivialDescription = false;
 }
 
 ConstantExpression& ConstantExpression::operator=(const ConstantExpression& other) {
@@ -180,12 +181,13 @@ ConstantExpression& ConstantExpression::operator=(const ConstantExpression& othe
     mValueKind = other.mValueKind;
     mValue = other.mValue;
     mExpr = other.mExpr;
+    mTrivialDescription = other.mTrivialDescription;
     return *this;
 }
 
 /* Literals. */
 ConstantExpression::ConstantExpression(const char *value)
-        : mExpr(value), mType(kConstExprLiteral) {
+        : mExpr(value), mType(kConstExprLiteral), mTrivialDescription(true) {
     const char* head = value, *tail = head + strlen(value) - 1;
     bool isLong = false, isUnsigned = false;
     bool isHex = (value[0] == '0' && (value[1] == 'x' || value[1] == 'X'));
@@ -331,6 +333,10 @@ ConstantExpression &ConstantExpression::toLiteral() {
 
 const std::string &ConstantExpression::description() const {
     return mExpr;
+}
+
+bool ConstantExpression::descriptionIsTrivial() const {
+    return mTrivialDescription;
 }
 
 std::string ConstantExpression::value() const {
