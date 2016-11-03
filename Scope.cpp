@@ -24,8 +24,9 @@
 
 namespace android {
 
-Scope::Scope(const char *localName)
-    : NamedType(localName) {
+Scope::Scope(const char *localName,
+        const Location &location)
+    : NamedType(localName, location) {
 }
 Scope::~Scope(){}
 
