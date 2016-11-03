@@ -32,6 +32,7 @@ namespace android {
 struct Coordinator;
 struct Formatter;
 struct Interface;
+struct Location;
 struct Method;
 struct NamedType;
 struct TypedVar;
@@ -55,7 +56,8 @@ struct AST {
     Scope *scope();
 
     // Returns true iff successful.
-    bool addTypeDef(const char *localName, Type *type, std::string *errorMsg);
+    bool addTypeDef(const char *localName, Type *type, const Location &location,
+            std::string *errorMsg);
 
     // Returns true iff successful.
     bool addScopedType(NamedType *type, std::string *errorMsg);

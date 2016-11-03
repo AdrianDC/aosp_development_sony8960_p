@@ -22,8 +22,8 @@
 
 namespace android {
 
-CompoundType::CompoundType(Style style, const char *localName)
-    : Scope(localName),
+CompoundType::CompoundType(Style style, const char *localName, const Location &location)
+    : Scope(localName, location),
       mStyle(style),
       mFields(NULL) {
 }
