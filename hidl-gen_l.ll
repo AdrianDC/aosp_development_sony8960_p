@@ -31,6 +31,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 
 #include "Annotation.h"
 #include "AST.h"
+#include "ArrayType.h"
 #include "CompoundType.h"
 #include "ConstantExpression.h"
 #include "EnumType.h"

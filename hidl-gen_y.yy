@@ -112,6 +112,8 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %type<type> fqtype
 
 %type<type> type opt_storage_type
+%type<type> array_type_base
+%type<arrayType> array_type
 %type<type> opt_extends
 %type<type> type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
@@ -138,6 +140,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %union {
     const char *str;
     android::Type *type;
+    android::ArrayType *arrayType;
     android::TemplatedType *templatedType;
     android::FQName *fqName;
     android::CompoundType *compoundType;
@@ -668,23 +671,8 @@ enum_values
       }
     ;
 
-type
+array_type_base
     : fqtype { $$ = $1; }
-    | type '[' const_expr ']'
-      {
-          if ($1->isBinder()) {
-              std::cerr << "ERROR: Arrays of interface types are not supported."
-                        << " at " << @1 << "\n";
-
-              YYERROR;
-          }
-
-          if ($1->isArray()) {
-              $$ = new ArrayType(static_cast<ArrayType *>($1), $3);
-          } else {
-              $$ = new ArrayType($1, $3);
-          }
-      }
     | TEMPLATED '<' type '>'
       {
           if (!$1->isVector() && $3->isBinder()) {
@@ -708,6 +696,33 @@ type
           $1->setElementType($3);
           $$ = $1;
       }
+    ;
+
+array_type
+    : array_type_base '[' const_expr ']'
+      {
+          if ($1->isBinder()) {
+              std::cerr << "ERROR: Arrays of interface types are not supported."
+                        << " at " << @1 << "\n";
+
+              YYERROR;
+          }
+          if ($1->isArray()) {
+              $$ = new ArrayType(static_cast<ArrayType *>($1), $3);
+          } else {
+              $$ = new ArrayType($1, $3);
+          }
+      }
+    | array_type '[' const_expr ']'
+      {
+          $$ = $1;
+          $$->appendDimension($3);
+      }
+    ;
+
+type
+    : array_type_base { $$ = $1; }
+    | array_type { $$ = $1; }
     | annotated_compound_declaration { $$ = $1; }
     | INTERFACE { $$ = new GenericBinder; }
     ;

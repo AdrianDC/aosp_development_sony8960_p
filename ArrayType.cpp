@@ -27,17 +27,22 @@ ArrayType::ArrayType(ArrayType *srcArray, ConstantExpression *size)
     : mElementType(srcArray->mElementType),
       mSizes(srcArray->mSizes),
       mSizeComments(srcArray->mSizeComments) {
-    addDimension(size);
+    prependDimension(size);
 }
 
 ArrayType::ArrayType(Type *elementType, ConstantExpression *size)
     : mElementType(elementType) {
-    addDimension(size);
+    prependDimension(size);
 }
 
-void ArrayType::addDimension(ConstantExpression *size) {
+void ArrayType::prependDimension(ConstantExpression *size) {
     mSizes.insert(mSizes.begin(), size->castSizeT());
     mSizeComments.insert(mSizeComments.begin(), size->description());
+}
+
+void ArrayType::appendDimension(ConstantExpression *size) {
+    mSizes.push_back(size->castSizeT());
+    mSizeComments.push_back(size->description());
 }
 
 size_t ArrayType::countDimensions() const {
