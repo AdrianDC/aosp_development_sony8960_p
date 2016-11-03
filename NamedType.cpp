@@ -18,8 +18,8 @@
 
 namespace android {
 
-NamedType::NamedType(const char *localName)
-    : mLocalName(localName) {
+NamedType::NamedType(const char *localName, const Location &loc)
+    : mLocalName(localName), mLocation(loc) {
 }
 
 bool NamedType::isNamedType() const {
@@ -52,6 +52,10 @@ std::string NamedType::partialCppName() const {
 
 std::string NamedType::fullJavaName() const {
     return mFullName.javaName();
+}
+
+const Location &NamedType::location() const {
+    return mLocation;
 }
 
 }  // namespace android

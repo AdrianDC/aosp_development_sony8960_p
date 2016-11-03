@@ -18,16 +18,16 @@
 
 #define NAMED_TYPE_H_
 
-#include "Type.h"
-
 #include "FQName.h"
+#include "Location.h"
+#include "Type.h"
 
 #include <string>
 
 namespace android {
 
 struct NamedType : public Type {
-    NamedType(const char *localName);
+    NamedType(const char *localName, const Location &loc);
 
     bool isNamedType() const override;
 
@@ -46,9 +46,13 @@ struct NamedType : public Type {
     /* short for fqName().fullJavaName() */
     std::string fullJavaName() const;
 
+    // returns null if no location is set for this type.
+    const Location &location() const;
+
 private:
     std::string mLocalName;
     FQName mFullName;
+    Location mLocation;
 
     DISALLOW_COPY_AND_ASSIGN(NamedType);
 };

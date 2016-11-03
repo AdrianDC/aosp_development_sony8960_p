@@ -48,8 +48,8 @@ enum {
     LAST_HIDL_TRANSACTION   = 0x00ffffff,
 };
 
-Interface::Interface(const char *localName, Interface *super)
-    : Scope(localName),
+Interface::Interface(const char *localName, const Location &location, Interface *super)
+    : Scope(localName, location),
       mSuperType(super),
       mIsJavaCompatibleInProgress(false) {
     mReservedMethods.push_back(createDescriptorChainMethod());

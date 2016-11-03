@@ -32,7 +32,7 @@ struct CompoundType : public Scope {
         STYLE_UNION,
     };
 
-    CompoundType(Style style, const char *localName);
+    CompoundType(Style style, const char *localName, const Location &location);
 
     bool setFields(std::vector<CompoundField *> *fields, std::string *errorMsg);
 
