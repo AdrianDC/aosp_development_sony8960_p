@@ -25,6 +25,7 @@
 #include "FQName.h"
 #include "GenericBinder.h"
 #include "Interface.h"
+#include "Location.h"
 #include "Method.h"
 #include "VectorType.h"
 #include "RefType.h"
@@ -39,6 +40,14 @@ using namespace android;
 extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 #define scanner ast->scanner()
+
+::android::Location convertYYLoc(const yy::parser::location_type &loc) {
+    return ::android::Location(
+            ::android::Position(*(loc.begin.filename), loc.begin.line, loc.begin.column),
+            ::android::Position(*(loc.end.filename), loc.end.line, loc.end.column)
+    );
+}
+
 
 %}
 
@@ -396,7 +405,7 @@ interface_declaration
               YYERROR;
           }
 
-          Interface *iface = new Interface($2, static_cast<Interface *>($3));
+          Interface *iface = new Interface($2, convertYYLoc(@2), static_cast<Interface *>($3));
 
           // Register interface immediately so it can be referenced inside
           // definition.
@@ -422,7 +431,7 @@ typedef_declaration
     : TYPEDEF type IDENTIFIER
       {
           std::string errorMsg;
-          if (!ast->addTypeDef($3, $2, &errorMsg)) {
+          if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
@@ -539,7 +548,7 @@ struct_or_union_keyword
 named_struct_or_union_declaration
     : struct_or_union_keyword IDENTIFIER
       {
-          CompoundType *container = new CompoundType($1, $2);
+          CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2));
           ast->enterScope(container);
       }
       struct_or_union_body
@@ -620,7 +629,7 @@ opt_comma
 named_enum_declaration
     : ENUM IDENTIFIER opt_storage_type
       {
-          ast->enterScope(new EnumType($2, $3));
+          ast->enterScope(new EnumType($2, convertYYLoc(@2), $3));
       }
       enum_declaration_body
       {

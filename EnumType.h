@@ -29,6 +29,7 @@ struct EnumValue;
 
 struct EnumType : public Scope {
     EnumType(const char *localName,
+             const Location &location,
              Type *storageType = NULL);
 
     const Type *storageType() const;
