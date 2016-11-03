@@ -104,7 +104,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     Formatter out(file);
 
-    const std::string guard = makeHeaderGuard(baseName);
+    const std::string guard = makeHeaderGuard(baseName, false /* indicateGenerated */);
 
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
