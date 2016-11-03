@@ -32,13 +32,12 @@ struct ArrayType : public Type {
 
     ArrayType(Type *elementType, ConstantExpression *size);
 
-    static ArrayType *AddDimension(ArrayType *base, ConstantExpression *size);
-
     bool isArray() const override;
 
     Type *getElementType() const;
 
-    void addDimension(ConstantExpression *size);
+    void prependDimension(ConstantExpression *size);
+    void appendDimension(ConstantExpression *size);
     size_t countDimensions() const;
 
     std::string getCppType(StorageMode mode,
