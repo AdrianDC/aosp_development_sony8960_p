@@ -153,7 +153,8 @@ private:
             const FQName &package,
             const std::string &klass);
 
-    std::string makeHeaderGuard(const std::string &baseName) const;
+    std::string makeHeaderGuard(const std::string &baseName,
+                                bool indicateGenerated = true) const;
     void enterLeaveNamespace(Formatter &out, bool enter) const;
 
     static void generateCheckNonNull(Formatter &out, const std::string &nonNull);
