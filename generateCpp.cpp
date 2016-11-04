@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <hidl-util/Formatter.h>
+#include <hidl-util/StringHelper.h>
 #include <android-base/logging.h>
 #include <string>
 #include <vector>
@@ -67,13 +68,18 @@ void AST::getPackageAndVersionComponents(
     mPackage.getPackageAndVersionComponents(components, cpp_compatible);
 }
 
-std::string AST::makeHeaderGuard(const std::string &baseName) const {
-    std::string guard = "HIDL_GENERATED_";
-    guard += mPackage.tokenName();
+std::string AST::makeHeaderGuard(const std::string &baseName,
+                                 bool indicateGenerated) const {
+    std::string guard;
 
+    if (indicateGenerated) {
+        guard += "HIDL_GENERATED_";
+    }
+
+    guard += StringHelper::Uppercase(mPackage.tokenName());
     guard += "_";
-    guard += baseName;
-    guard += "_H_";
+    guard += StringHelper::Uppercase(baseName);
+    guard += "_H";
 
     return guard;
 }
