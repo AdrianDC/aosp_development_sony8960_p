@@ -1718,7 +1718,7 @@ status_t AST::generateCppInstrumentationCall(
 
     const Interface *iface = mRootScope->getInterface();
 
-    out << "for (auto callback: mInstrumentationCallbacks) {\n";
+    out << "for (const auto &callback: mInstrumentationCallbacks) {\n";
     out.indent();
     out << "callback("
         << event_str
