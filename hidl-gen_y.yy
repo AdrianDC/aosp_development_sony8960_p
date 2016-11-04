@@ -107,6 +107,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 /* Precedence level 3, RTL; but we have to use %left here */
 %left UNARY_MINUS UNARY_PLUS '!' '~'
 
+%type<str> error_stmt opt_error_stmt error
 %type<str> package
 %type<fqName> fqname
 %type<type> fqtype
@@ -261,8 +262,34 @@ annotation_const_expr_values
       }
     ;
 
+error_stmt
+  : error ';'
+    {
+      $$ = $1;
+      ast->addSyntaxError();
+      // std::cerr << "WARNING: skipping errors until " << @2 << ".\n";
+    }
+  ;
+
+opt_error_stmt
+  : /* empty */ { $$ = NULL; }
+  | error_stmt  { $$ = $1; }
+  ;
+
+require_semicolon
+    : ';'
+    | /* empty */
+      {
+          std::cerr << "ERROR: missing ; at " << @$ << "\n";
+          ast->addSyntaxError();
+      }
+    ;
+
 program
-    : package imports body
+    : opt_error_stmt
+      package
+      imports
+      body
     ;
 
 fqname
@@ -304,7 +331,7 @@ fqtype
     ;
 
 package
-    : PACKAGE FQNAME ';'
+    : PACKAGE FQNAME require_semicolon
       {
           if (!ast->setPackage($2)) {
               std::cerr << "ERROR: Malformed package identifier '"
@@ -317,26 +344,30 @@ package
           }
       }
 
+import_stmt
+    : IMPORT FQNAME require_semicolon
+      {
+          if (!ast->addImport($2)) {
+              std::cerr << "ERROR: Unable to import '" << $2 << "' at " << @2
+                        << "\n";
+              ast->addSyntaxError();
+          }
+      }
+    | IMPORT IDENTIFIER require_semicolon
+      {
+          if (!ast->addImport($2)) {
+              std::cerr << "ERROR: Unable to import '" << $2 << "' at " << @2
+                        << "\n";
+              ast->addSyntaxError();
+          }
+      }
+    | IMPORT error_stmt
+    ;
+
+
 imports
     : /* empty */
-    | imports IMPORT FQNAME ';'
-      {
-          if (!ast->addImport($3)) {
-              std::cerr << "ERROR: Unable to import '" << $3 << "' at " << @3
-                        << "\n";
-
-              YYERROR;
-          }
-      }
-    | imports IMPORT IDENTIFIER ';'
-      {
-          if (!ast->addImport($3)) {
-              std::cerr << "ERROR: Unable to import '" << $3 << "' at " << @3
-                        << "\n";
-
-              YYERROR;
-          }
-      }
+    | imports import_stmt
     ;
 
 opt_extends
@@ -352,18 +383,28 @@ interface_declarations
     | interface_declarations type_declaration
     | interface_declarations method_declaration
       {
-          Interface *iface = static_cast<Interface *>(ast->scope());
-          if (!iface->addMethod($2)) {
-              std::cerr << "ERROR: Unable to add method '" << $2->name()
-                        << "' at " << @2 << "\n";
+          if ($2 != nullptr) {
+            if (!ast->scope()->isInterface()) {
+                std::cerr << "ERROR: unknown error in interface declaration at "
+                    << @2 << "\n";
+                YYERROR;
+            }
 
-              YYERROR;
+            Interface *iface = static_cast<Interface *>(ast->scope());
+            if (!iface->addMethod($2)) {
+                std::cerr << "ERROR: Unable to add method '" << $2->name()
+                          << "' at " << @2 << "\n";
+
+                YYERROR;
+            }
           }
+          // ignore if $2 is nullptr (from error recovery)
       }
     ;
 
 type_declarations
     : /* empty */
+    | error_stmt
     | type_declarations type_declaration
     ;
 
@@ -385,17 +426,17 @@ type_declaration
     ;
 
 type_declaration_body
-    : named_struct_or_union_declaration ';'
-    | named_enum_declaration ';'
-    | typedef_declaration ';'
-    | interface_declaration ';'
+    : named_struct_or_union_declaration require_semicolon
+    | named_enum_declaration require_semicolon
+    | typedef_declaration require_semicolon
+    | interface_declaration require_semicolon
     ;
 
 interface_declaration
     : INTERFACE IDENTIFIER opt_extends
       {
           if ($3 != NULL && !$3->isInterface()) {
-              std::cerr << "ERROR: You can only extend interfaces. at" << @3
+              std::cerr << "ERROR: You can only extend interfaces. at " << @3
                         << "\n";
 
               YYERROR;
@@ -422,6 +463,12 @@ interface_declaration
       }
       '{' interface_declarations '}'
       {
+          if (!ast->scope()->isInterface()) {
+              std::cerr << "ERROR: unknown error in interface declaration at "
+                  << @5 << "\n";
+              YYERROR;
+          }
+
           Interface *iface = static_cast<Interface *>(ast->scope());
 
           ast->leaveScope();
@@ -457,13 +504,13 @@ const_expr
               std::string identifier = $1->name();
               LocalIdentifier *iden = ast->scope()->lookupIdentifier(identifier);
               if(!iden) {
-                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1->string()
-                            << " could not be found.\n";
+                  std::cerr << "ERROR: identifier " << $1->string()
+                            << " could not be found at " << @1 << ".\n";
                   YYERROR;
               }
               if(!iden->isEnumValue()) {
-                  std::cerr << "ERROR: at " << @1 << ", identifier " << $1->string()
-                            << " is not an enum value.\n";
+                  std::cerr << "ERROR: identifier " << $1->string()
+                            << " is not an enum value at " << @1 << ".\n";
                   YYERROR;
               }
               $$ = new ConstantExpression(
@@ -505,18 +552,25 @@ const_expr
     | '!' const_expr { $$ = new ConstantExpression("!", $2); }
     | '~' const_expr { $$ = new ConstantExpression("~", $2); }
     | '(' const_expr ')' { $$ = $2; }
+    | '(' error ')'
+      {
+        ast->addSyntaxError();
+        // to avoid segfaults
+        $$ = new ConstantExpression(ConstantExpression::Zero(ScalarType::KIND_INT32));
+      }
     ;
 
 method_declaration
-    : opt_annotations IDENTIFIER '(' typed_vars ')' ';'
+    : error_stmt { $$ = nullptr; }
+    | opt_annotations IDENTIFIER '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($2, $4, new std::vector<TypedVar *>, false, $1);
       }
-    | opt_annotations ONEWAY IDENTIFIER '(' typed_vars ')' ';'
+    | opt_annotations ONEWAY IDENTIFIER '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($3, $5, new std::vector<TypedVar *>, true, $1);
       }
-    | opt_annotations IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' ';'
+    | opt_annotations IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($2, $4, $8, false, $1);
       }
@@ -556,6 +610,11 @@ named_struct_or_union_declaration
       }
       struct_or_union_body
       {
+          if (!ast->scope()->isCompoundType()) {
+              std::cerr << "ERROR: unknown error in struct or union declaration at "
+                  << @4 << "\n";
+              YYERROR;
+          }
           CompoundType *container = static_cast<CompoundType *>(ast->scope());
 
           std::string errorMsg;
@@ -592,7 +651,8 @@ field_declarations
     ;
 
 field_declaration
-    : type IDENTIFIER ';' { $$ = new CompoundField($2, $1); }
+    : error_stmt { $$ = nullptr; }
+    | type IDENTIFIER require_semicolon { $$ = new CompoundField($2, $1); }
     | annotated_compound_declaration ';' { $$ = NULL; }
     ;
 
@@ -619,7 +679,7 @@ opt_storage_type
               std::cerr << "ERROR: Invalid enum storage type specified. at "
                         << @2 << "\n";
 
-              YYABORT;
+              YYERROR;
           }
       }
     ;
@@ -636,6 +696,12 @@ named_enum_declaration
       }
       enum_declaration_body
       {
+          if (!ast->scope()->isEnum()) {
+              std::cerr << "ERROR: unknown error in enum declaration at "
+                  << @5 << "\n";
+              YYERROR;
+          }
+
           EnumType *enumType = static_cast<EnumType *>(ast->scope());
           ast->leaveScope();
 
@@ -663,10 +729,22 @@ enum_values
       { /* do nothing */ }
     | enum_value
       {
+          if (!ast->scope()->isEnum()) {
+              std::cerr << "ERROR: unknown error in enum declaration at "
+                  << @1 << "\n";
+              YYERROR;
+          }
+
           static_cast<EnumType *>(ast->scope())->addValue($1);
       }
     | enum_values ',' enum_value
       {
+          if (!ast->scope()->isEnum()) {
+              std::cerr << "ERROR: unknown error in enum declaration at "
+                  << @3 << "\n";
+              YYERROR;
+          }
+
           static_cast<EnumType *>(ast->scope())->addValue($3);
       }
     ;
