@@ -312,6 +312,10 @@ status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
 
 status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
     for (const auto &method : methods()) {
+        if (method->isHidlReserved()) {
+            continue;
+        }
+
         out << "api: {\n";
         out.indent();
         out << "name: \"" << method->name() << "\"\n";
