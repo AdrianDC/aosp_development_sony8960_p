@@ -69,6 +69,8 @@ struct ConstantExpression {
     std::string javaValue(ScalarType::Kind castKind) const;
     /* Original expression with type. */
     const std::string &description() const;
+    /* See mTrivialDescription */
+    bool descriptionIsTrivial() const;
     /* Return a ConstantExpression that is 1 plus the original. */
     ConstantExpression addOne() const;
     /* Assignment operator. */
@@ -85,6 +87,8 @@ private:
     ScalarType::Kind mValueKind;
     /* The stored result value. */
     uint64_t mValue;
+    /* true if description() does not offer more information than value(). */
+    bool mTrivialDescription = false;
 
     /*
      * Helper function for all cpp/javaValue methods.
