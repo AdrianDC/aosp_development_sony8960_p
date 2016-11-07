@@ -901,7 +901,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
 
-    out << "{\n";
+    out << " {\n";
 
     out.indent();
 
