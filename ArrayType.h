@@ -126,8 +126,7 @@ struct ArrayType : public Type {
 
 private:
     Type *mElementType;
-    std::vector<size_t> mSizes;
-    std::vector<std::string> mSizeComments;
+    std::vector<ConstantExpression *> mSizes;
 
     size_t dimension() const;
 
