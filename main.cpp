@@ -582,9 +582,9 @@ static void generateAndroidBpGenSection(
     out << "genrule {\n";
     out.indent();
     out << "name: \"" << genName << "\",\n"
-        << "tool: \"" << hidl_gen << "\",\n";
+        << "tools: [\"" << hidl_gen << "\"],\n";
 
-    out << "cmd: \"$tool -o $genDir"
+    out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)"
         << " -L" << language
         << " -r"
         << coordinator->getPackageRoot(packageFQName) << ":"
