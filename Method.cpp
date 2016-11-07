@@ -129,7 +129,7 @@ void Method::generateCppSignature(Formatter &out,
         out << name() << "_cb _hidl_cb";
     }
 
-    out << ") ";
+    out << ")";
 }
 
 // static
