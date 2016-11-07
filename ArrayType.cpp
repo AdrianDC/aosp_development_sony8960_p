@@ -25,8 +25,7 @@ namespace android {
 
 ArrayType::ArrayType(ArrayType *srcArray, ConstantExpression *size)
     : mElementType(srcArray->mElementType),
-      mSizes(srcArray->mSizes),
-      mSizeComments(srcArray->mSizeComments) {
+      mSizes(srcArray->mSizes) {
     prependDimension(size);
 }
 
@@ -36,13 +35,11 @@ ArrayType::ArrayType(Type *elementType, ConstantExpression *size)
 }
 
 void ArrayType::prependDimension(ConstantExpression *size) {
-    mSizes.insert(mSizes.begin(), size->castSizeT());
-    mSizeComments.insert(mSizeComments.begin(), size->description());
+    mSizes.insert(mSizes.begin(), size);
 }
 
 void ArrayType::appendDimension(ConstantExpression *size) {
-    mSizes.push_back(size->castSizeT());
-    mSizeComments.push_back(size->description());
+    mSizes.push_back(size);
 }
 
 size_t ArrayType::countDimensions() const {
@@ -72,11 +69,13 @@ std::string ArrayType::getCppType(StorageMode mode,
 
     for (size_t i = 0; i < mSizes.size(); ++i) {
         arrayType += ", ";
-        arrayType += std::to_string(mSizes[i]);
+        arrayType += mSizes[i]->cppValue();
 
-        arrayType += " /* ";
-        arrayType += mSizeComments[i];
-        arrayType += " */";
+        if (!mSizes[i]->descriptionIsTrivial()) {
+            arrayType += " /* ";
+            arrayType += mSizes[i]->description();
+            arrayType += " */";
+        }
     }
 
     arrayType += ">";
@@ -105,16 +104,18 @@ std::string ArrayType::getJavaType(
 
     extra->clear();
 
-    CHECK(mSizes.size() == mSizeComments.size());
     for (size_t i = 0; i < mSizes.size(); ++i) {
         *extra += "[";
 
         if (forInitializer) {
-            *extra += std::to_string(mSizes[i]);
-            *extra += " ";
+            *extra += mSizes[i]->javaValue();
         }
 
-        *extra += "/* " + mSizeComments[i] + " */";
+        if (!forInitializer || !mSizes[i]->descriptionIsTrivial()) {
+            if (forInitializer)
+                *extra += " ";
+            *extra += "/* " + mSizes[i]->description() + " */";
+        }
 
         *extra += "]";
     }
@@ -172,7 +173,7 @@ void ArrayType::emitReaderWriter(
     } else {
         size_t numArrayElements = 1;
         for (auto size : mSizes) {
-            numArrayElements *= size;
+            numArrayElements *= size->castSizeT();
         }
 
         out << "_hidl_err = "
@@ -439,7 +440,7 @@ void ArrayType::emitJavaFieldReaderWriter(
             << " = 0; "
             << iteratorName
             << " < "
-            << mSizes[dim]
+            << mSizes[dim]->javaValue()
             << "; ++"
             << iteratorName
             << ") {\n";
@@ -490,7 +491,7 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
     out << "vector_value: {\n";
     out.indent();
-    out << "vector_size: " << mSizes[0] << "\n";
+    out << "vector_size: " << mSizes[0]->value() << "\n";
     // Simple array case.
     if (mSizes.size() == 1) {
         status_t err = mElementType->emitVtsTypeDeclarations(out);
@@ -502,7 +503,7 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
             out << "type: " << getVtsType() << "\n";
             out << "vector_value: {\n";
             out.indent();
-            out << "vector_size: " << mSizes[index] << "\n";
+            out << "vector_size: " << mSizes[index]->value() << "\n";
             if (index == mSizes.size() - 1) {
                 status_t err = mElementType->emitVtsTypeDeclarations(out);
                 if (err != OK) {
@@ -526,14 +527,14 @@ void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {
     mElementType->getAlignmentAndSize(align, size);
 
     for (auto sizeInDimension : mSizes) {
-        (*size) *= sizeInDimension;
+        (*size) *= sizeInDimension->castSizeT();
     }
 }
 
 size_t ArrayType::dimension() const {
     size_t numArrayElements = 1;
     for (auto size : mSizes) {
-        numArrayElements *= size;
+        numArrayElements *= size->castSizeT();
     }
     return numArrayElements;
 }
