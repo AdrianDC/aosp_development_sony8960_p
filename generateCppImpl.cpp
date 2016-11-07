@@ -111,8 +111,8 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     generateCppPackageInclude(out, mPackage, "I" + baseName);
 
-    out << "#include <hidl/Status.h>\n\n";
     out << "#include <hidl/MQDescriptor.h>\n";
+    out << "#include <hidl/Status.h>\n\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "namespace implementation {\n\n";
