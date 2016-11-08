@@ -223,11 +223,9 @@ status_t AST::generateJava(
 
     out << "return "
         << ifaceName
-        << ".asInterface(HwBinder.getService(serviceName, "
-        << mPackage.getPackageMajorVersion()
-        << ", "
-        << mPackage.getPackageMinorVersion()
-        << "));\n";
+        << ".asInterface(HwBinder.getService(\""
+        << iface->fqName().string()
+        << "\",serviceName));\n";
 
     out.unindent();
 
@@ -453,11 +451,7 @@ status_t AST::generateJava(
     out << "public void registerAsService(String serviceName) {\n";
     out.indent();
 
-    out << "registerService(serviceName, "
-        << mPackage.getPackageMajorVersion()
-        << ", "
-        << mPackage.getPackageMinorVersion()
-        << ");\n";
+    out << "registerService(interfaceChain(), serviceName);\n";
 
     out.unindent();
     out << "}\n\n";
