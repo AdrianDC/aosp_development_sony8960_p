@@ -250,9 +250,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             const TypedVar *elidedReturn = method->canElideCallback();
             if (elidedReturn) {
-                std::string extra;
                 out << "virtual ::android::hardware::Return<";
-                out << elidedReturn->type().getCppResultType(&extra) << "> ";
+                out << elidedReturn->type().getCppResultType() << "> ";
             } else {
                 out << "virtual ::android::hardware::Return<void> ";
             }
@@ -285,18 +284,14 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         if (!iface->isRootType()) {
             out << "// cast static functions\n";
-            std::string childTypeExtra;
-            std::string childTypeResult = iface->getCppResultType(&childTypeExtra);
-            childTypeResult += childTypeExtra;
+            std::string childTypeResult = iface->getCppResultType();
 
             for (const Interface *superType : iface->superTypeChain()) {
-                std::string superTypeExtra;
                 out << "static "
                     << childTypeResult
                     << " castFrom("
-                    << superType->getCppArgumentType(&superTypeExtra)
+                    << superType->getCppArgumentType()
                     << " parent"
-                    << superTypeExtra
                     << ");\n";
             }
         }
@@ -837,12 +832,9 @@ void AST::declareCppReaderLocals(
     for (const auto &arg : args) {
         const Type &type = arg->type();
 
-        std::string extra;
-        out << type.getCppResultType(&extra)
+        out << type.getCppResultType()
             << " "
-            << (forResults ? "_hidl_out_" : "")
-            << arg->name()
-            << extra
+            << (forResults ? "_hidl_out_" : "") + arg->name()
             << ";\n";
     }
 
@@ -1033,10 +1025,9 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     }
 
     if (elidedReturn != nullptr) {
-        std::string extra;
         out << "_hidl_status.setFromStatusT(_hidl_err);\n";
         out << "return ::android::hardware::Return<";
-        out << elidedReturn->type().getCppResultType(&extra)
+        out << elidedReturn->type().getCppResultType()
             << ">(_hidl_out_" << elidedReturn->name() << ");\n\n";
     } else {
         out << "_hidl_status.setFromStatusT(_hidl_err);\n";
@@ -1049,8 +1040,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     out << "_hidl_status.setFromStatusT(_hidl_err);\n";
     out << "return ::android::hardware::Return<";
     if (elidedReturn != nullptr) {
-        std::string extra;
-        out << method->results().at(0)->type().getCppResultType(&extra);
+        out << method->results().at(0)->type().getCppResultType();
     } else {
         out << "void";
     }
@@ -1276,11 +1266,12 @@ status_t AST::generateStubSourceForMethod(
     const TypedVar *elidedReturn = method->canElideCallback();
 
     if (elidedReturn != nullptr) {
-        std::string extra;
-
-        out << elidedReturn->type().getCppResultType(&extra) << " ";
-        out << elidedReturn->name() << " = ";
-        out << method->name() << "(";
+        out << elidedReturn->type().getCppResultType()
+            << " "
+            << elidedReturn->name()
+            << " = "
+            << method->name()
+            << "(";
 
         bool first = true;
         for (const auto &arg : method->args()) {
@@ -1561,22 +1552,16 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
 
     // generate castFrom functions
     if (!iface->isRootType()) {
-        std::string childTypeExtra;
-        std::string childTypeResult = iface->getCppResultType(&childTypeExtra);
-        childTypeResult += childTypeExtra;
+        std::string childTypeResult = iface->getCppResultType();
 
         for (const Interface *superType : iface->superTypeChain()) {
-            std::string superTypeExtra;
             out << "// static \n"
                 << childTypeResult
                 << " I"
                 << iface->getBaseName()
                 << "::castFrom("
-                << superType->getCppArgumentType(&superTypeExtra)
-                << " parent"
-                << superTypeExtra
-                << ")";
-            out << " {\n";
+                << superType->getCppArgumentType()
+                << " parent) {\n";
             out.indent();
             out << "return ::android::hardware::castInterface<";
             out << "I" << iface->getBaseName() << ", "

@@ -72,10 +72,7 @@ bool EnumType::isEnum() const {
 }
 
 std::string EnumType::getCppType(StorageMode,
-                                 std::string *extra,
                                  bool specifyNamespaces) const {
-    extra->clear();
-
     return specifyNamespaces ? fullName() : partialCppName();
 }
 
@@ -147,8 +144,7 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
 
-    std::string extra;
-    const std::string storageType = ((Type *)scalarType)->getCppType(&extra);
+    const std::string storageType = scalarType->getCppStackType();
 
     out << "enum class "
         << localName()
@@ -192,8 +188,7 @@ void EnumType::emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
 
-    std::string extra;
-    const std::string storageType = ((Type *)scalarType)->getCppType(&extra);
+    const std::string storageType = scalarType->getCppStackType();
 
     out << "inline "
         << fullName()

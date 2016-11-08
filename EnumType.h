@@ -43,7 +43,6 @@ struct EnumType : public Scope {
     bool isEnum() const override;
 
     std::string getCppType(StorageMode mode,
-                           std::string *extra,
                            bool specifyNamespaces) const override;
 
     std::string getJavaType(

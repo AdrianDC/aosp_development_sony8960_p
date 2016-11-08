@@ -32,9 +32,7 @@ void GenericBinder::addNamedTypesToSet(std::set<const FQName> &) const {
 
 std::string GenericBinder::getCppType(
         StorageMode mode,
-        std::string *extra,
         bool specifyNamespaces) const {
-    extra->clear();
     const std::string base =
           std::string(specifyNamespaces ? "::android::" : "")
         + "sp<"
