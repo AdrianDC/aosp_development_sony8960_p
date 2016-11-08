@@ -82,9 +82,7 @@ std::string CompoundType::getCppType(
     }
 }
 
-std::string CompoundType::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
-    extra->clear();
+std::string CompoundType::getJavaType(bool /* forInitializer */) const {
     return fullJavaName();
 }
 

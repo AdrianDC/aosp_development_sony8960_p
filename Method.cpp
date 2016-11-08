@@ -160,9 +160,7 @@ std::string Method::GetJavaArgSignature(const std::vector<TypedVar *> &args) {
             out += ", ";
         }
 
-        std::string extra;
-        out += arg->type().getJavaType(&extra);
-        out += extra;
+        out += arg->type().getJavaType();
         out += " ";
         out += arg->name();
 

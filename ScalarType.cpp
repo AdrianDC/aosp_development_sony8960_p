@@ -55,8 +55,7 @@ std::string ScalarType::getCppType(StorageMode, bool) const {
     return kName[mKind];
 }
 
-std::string ScalarType::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
+std::string ScalarType::getJavaType(bool /* forInitializer */) const {
     static const char *const kName[] = {
         "boolean",
         "byte",
@@ -71,7 +70,6 @@ std::string ScalarType::getJavaType(
         "double"
     };
 
-    extra->clear();
     return kName[mKind];
 }
 

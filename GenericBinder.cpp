@@ -49,9 +49,7 @@ std::string GenericBinder::getCppType(
     }
 }
 
-std::string GenericBinder::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
-    extra->clear();
+std::string GenericBinder::getJavaType(bool /* forInitializer */) const {
     return "IHwBinder";
 }
 

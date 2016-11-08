@@ -32,9 +32,7 @@ void AST::emitJavaReaderWriter(
         const TypedVar *arg,
         bool isReader) const {
     if (isReader) {
-        std::string extra;
-        out << arg->type().getJavaType(&extra)
-            << extra
+        out << arg->type().getJavaType()
             << " "
             << arg->name()
             << " = ";
@@ -261,9 +259,7 @@ status_t AST::generateJava(
         }
 
         if (returnsValue && !needsCallback) {
-            std::string extra;
-            out << method->results()[0]->type().getJavaType(&extra)
-                << extra;
+            out << method->results()[0]->type().getJavaType();
         } else {
             out << "void";
         }
@@ -319,9 +315,7 @@ status_t AST::generateJava(
 
         out << "public ";
         if (returnsValue && !needsCallback) {
-            std::string extra;
-            out << method->results()[0]->type().getJavaType(&extra)
-                << extra;
+            out << method->results()[0]->type().getJavaType();
         } else {
             out << "void";
         }
@@ -433,10 +427,8 @@ status_t AST::generateJava(
 
     // b/32383557 this is a hack. We need to change this if we have more reserved methods.
     for (Method *method : iface->hidlReservedMethods()) {
-        std::string extra;
         out << "public final "
-            << method->results()[0]->type().getJavaType(&extra)
-            << extra
+            << method->results()[0]->type().getJavaType()
             << " "
             << method->name()
             << "() {\n";
@@ -508,10 +500,8 @@ status_t AST::generateJava(
 
         if (!needsCallback && returnsValue) {
             const TypedVar *returnArg = method->results()[0];
-            std::string extra;
 
-            out << returnArg->type().getJavaType(&extra)
-                << extra
+            out << returnArg->type().getJavaType()
                 << " "
                 << returnArg->name()
                 << " = ";
