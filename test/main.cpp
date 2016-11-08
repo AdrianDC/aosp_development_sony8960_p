@@ -1,6 +1,8 @@
 #define LOG_TAG "hidl_test"
 #include <android-base/logging.h>
 
+#include <android/hidl/manager/1.0/IServiceManager.h>
+
 #include <android/hardware/tests/foo/1.0/BnFoo.h>
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
 #include <android/hardware/tests/bar/1.0/BnBar.h>
@@ -22,8 +24,13 @@
 #error "GTest did not detect pthread library."
 #endif
 
+// TODO(b/32745840)
+#include <utils/String8.h>
+
+#include <algorithm>
 #include <getopt.h>
 #include <inttypes.h>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -78,6 +85,7 @@ using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
+using ::android::hidl::manager::V1_0::IServiceManager;
 using ::android::sp;
 using ::android::to_string;
 using ::android::Mutex;
@@ -102,6 +110,27 @@ static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
         if(arr1[i] != arr2[i])
             return false;
     return true;
+}
+
+template<typename T>
+std::string to_string(std::set<T> set) {
+    std::stringstream ss;
+    ss << "{";
+
+    bool first = true;
+    for (const T &item : set) {
+        if (first) {
+            first = false;
+        } else {
+            ss << ", ";
+        }
+
+        ss << to_string(item);
+    }
+
+    ss << "}";
+
+    return ss.str();
 }
 
 struct Simple : public ISimple {
@@ -172,6 +201,7 @@ protected:
         "Child", "Fetcher", "Bar", "FooCallback", "Graph", "Pointer"
     };
 public:
+    sp<IServiceManager> manager;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
@@ -181,6 +211,15 @@ public:
     sp<IPointer> validationPointerInterface;
 
     void getServices() {
+
+        manager = IServiceManager::getService("manager");
+
+        // alternatively:
+        // manager = defaultServiceManager()
+
+        ASSERT_NE(manager, nullptr);
+        ASSERT_TRUE(manager->isRemote()); // manager is always remote
+
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
 
@@ -246,6 +285,7 @@ public:
 
         size_t i = 0;
         mPids.push_back(forkServer<IChild>("child", serverNames[i++]));
+        mPids.push_back(forkServer<IParent>("parent", serverNames[i++]));
         mPids.push_back(forkServer<IFetcher>("fetcher", serverNames[i++]));
         mPids.push_back(forkServer<IBar>("foo", serverNames[i++]));
         mPids.push_back(forkServer<IFooCallback>("foo callback", serverNames[i++]));
@@ -260,6 +300,7 @@ public:
 
 class HidlTest : public ::testing::Test {
 public:
+    sp<IServiceManager> manager;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
@@ -276,6 +317,7 @@ public:
         } else {
             env = gPassthroughEnvironment;
         }
+        manager = env->manager;
         fetcher = env->fetcher;
         foo = env->foo;
         bar = env->bar;
@@ -287,11 +329,92 @@ public:
     }
 };
 
+TEST_F(HidlTest, ServiceListTest) {
+    static const std::set<std::string> binderizedSet = {
+        "android.hardware.tests.pointer@1.0::IPointer/pointer",
+        "android.hardware.tests.bar@1.0::IBar/foo",
+        "android.hardware.tests.inheritance@1.0::IFetcher/fetcher",
+        "android.hardware.tests.foo@1.0::IFooCallback/foo callback",
+        "android.hardware.tests.inheritance@1.0::IParent/parent",
+        "android.hardware.tests.inheritance@1.0::IParent/child",
+        "android.hardware.tests.inheritance@1.0::IChild/child",
+        "android.hardware.tests.pointer@1.0::IGraph/graph",
+        "android.hardware.tests.inheritance@1.0::IGrandparent/child",
+        "android.hardware.tests.foo@1.0::IFoo/foo",
+        "android.hidl.manager@1.0::IServiceManager/manager",
+    };
+
+    static const std::set<std::string> passthroughSet = {
+        "android.hidl.manager@1.0::IServiceManager/manager"
+    };
+
+    std::set<std::string> activeSet;
+
+    switch(gMode) {
+        case BINDERIZED: {
+            activeSet = binderizedSet;
+        } break;
+
+        case PASSTHROUGH: {
+            activeSet = passthroughSet;
+        } break;
+        default:
+            EXPECT_TRUE(false) << "unrecognized mode";
+    }
+
+    EXPECT_OK(manager->list([&activeSet](const hidl_vec<hidl_string> &registered){
+        std::set<std::string> registeredSet;
+
+        for (size_t i = 0; i < registered.size(); i++) {
+            registeredSet.insert(registered[i]);
+        }
+
+        std::set<std::string> difference;
+        std::set_difference(activeSet.begin(), activeSet.end(),
+                            registeredSet.begin(), registeredSet.end(),
+                            std::inserter(difference, difference.begin()));
+
+        EXPECT_EQ(difference.size(), 0u) << "service(s) not registered " << to_string(difference);
+    }));
+}
+
+// passthrough TODO(b/32747392)
+TEST_F(HidlTest, ServiceListByInterfaceTest) {
+    if (gMode == BINDERIZED) {
+        EXPECT_OK(manager->listByInterface(::android::String8(IParent::descriptor).string(),
+            [](const hidl_vec<hidl_string> &registered) {
+                std::set<std::string> registeredSet;
+
+                for (size_t i = 0; i < registered.size(); i++) {
+                    registeredSet.insert(registered[i]);
+                }
+
+                std::set<std::string> activeSet = {
+                    "parent", "child"
+                };
+                std::set<std::string> difference;
+                std::set_difference(activeSet.begin(), activeSet.end(),
+                                    registeredSet.begin(), registeredSet.end(),
+                                    std::inserter(difference, difference.begin()));
+
+                EXPECT_EQ(difference.size(), 0u) << "service(s) not registered " << to_string(difference);
+            }));
+    }
+}
+
+// passthrough TODO(b/32747392)
+TEST_F(HidlTest, ServiceParentTest) {
+    if (gMode == BINDERIZED) {
+        sp<IParent> parent = IParent::getService("child");
+
+        EXPECT_NE(parent, nullptr);
+    }
+}
+
 TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
     ALOGI("CLIENT doThis returned.");
-    EXPECT_EQ(true, true);
 }
 
 TEST_F(HidlTest, FooDoThatAndReturnSomethingTest) {
