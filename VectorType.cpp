@@ -39,20 +39,12 @@ bool VectorType::isVectorOfBinders() const {
 }
 
 std::string VectorType::getCppType(StorageMode mode,
-                                   std::string *extra,
                                    bool specifyNamespaces) const {
-    std::string elementExtra;
-    const std::string elementBase =
-        mElementType->getCppType(&elementExtra, specifyNamespaces);
-
     const std::string base =
           std::string(specifyNamespaces ? "::android::hardware::" : "")
         + "hidl_vec<"
-        + mElementType->getCppType(extra, specifyNamespaces)
-        + (*extra)
+        + mElementType->getCppStackType( specifyNamespaces)
         + ">";
-
-    extra->clear();
 
     switch (mode) {
         case StorageMode_Stack:
@@ -106,8 +98,7 @@ void VectorType::emitReaderWriter(
         return;
     }
 
-    std::string baseExtra;
-    std::string baseType = mElementType->getCppType(&baseExtra);
+    std::string baseType = mElementType->getCppStackType();
 
     const std::string parentName = "_hidl_" + name + "_parent";
 
@@ -120,7 +111,6 @@ void VectorType::emitReaderWriter(
         out << name
             << " = (const ::android::hardware::hidl_vec<"
             << baseType
-            << baseExtra
             << "> *)"
             << parcelObjDeref
             << "readBuffer(&"
@@ -202,8 +192,7 @@ void VectorType::emitReaderWriterForVectorOfBinders(
 
         out.indent();
 
-        std::string extra;
-        out << mElementType->getCppType(&extra, true /* specifyNamespaces */)
+        out << mElementType->getCppStackType(true /* specifyNamespaces */)
             << " _hidl_binder;\n";
 
         mElementType->emitReaderWriter(
@@ -262,8 +251,7 @@ void VectorType::emitReaderWriterEmbedded(
         ErrorMode mode,
         const std::string &parentName,
         const std::string &offsetText) const {
-    std::string baseExtra;
-    std::string baseType = Type::getCppType(&baseExtra);
+    std::string baseType = getCppStackType();
 
     const std::string childName = "_hidl_" + sanitizedName + "_child";
     out << "size_t " << childName << ";\n\n";
@@ -287,7 +275,7 @@ void VectorType::emitReaderWriterEmbedded(
 
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
 
-    baseType = mElementType->getCppType(&baseExtra);
+    baseType = mElementType->getCppStackType();
 
     std::string iteratorName = "_hidl_index_" + std::to_string(depth);
 
@@ -315,7 +303,7 @@ void VectorType::emitReaderWriterEmbedded(
             isReader,
             mode,
             childName,
-            iteratorName + " * sizeof(" + baseType + baseExtra + ")");
+            iteratorName + " * sizeof(" + baseType + ")");
 
     out.unindent();
 
@@ -381,8 +369,7 @@ void VectorType::emitResolveReferencesEmbeddedHelper(
     CHECK(needsResolveReferences() && mElementType->needsResolveReferences());
 
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
-    std::string elementExtra;
-    std::string elementType = mElementType->getCppType(&elementExtra);
+    std::string elementType = mElementType->getCppStackType();
 
     std::string myChildName = childName, myChildOffset = childOffsetText;
 
@@ -425,7 +412,7 @@ void VectorType::emitResolveReferencesEmbeddedHelper(
         mode,
         myChildName,
         myChildOffset + " + " +
-                iteratorName + " * sizeof(" + elementType + elementExtra + ")");
+                iteratorName + " * sizeof(" + elementType + ")");
 
     out.unindent();
 

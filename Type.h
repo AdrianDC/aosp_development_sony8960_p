@@ -54,9 +54,14 @@ struct Type {
         StorageMode_Argument,
         StorageMode_Result
     };
+
     virtual std::string getCppType(
             StorageMode mode,
-            std::string *extra,
+            bool specifyNamespaces) const;
+
+    std::string decorateCppName(
+            const std::string &name,
+            StorageMode mode,
             bool specifyNamespaces) const;
 
     /* gets all hidl-defined types used when this item is
@@ -71,15 +76,11 @@ struct Type {
      */
     virtual void addNamedTypesToSet(std::set<const FQName> &set) const = 0;
 
-    // Convenience, gets StorageMode_Stack type.
-    std::string getCppType(
-            std::string *extra, bool specifyNamespaces = true) const;
+    std::string getCppStackType(bool specifyNamespaces = true) const;
 
-    std::string getCppResultType(
-            std::string *extra, bool specifyNamespaces = true) const;
+    std::string getCppResultType(bool specifyNamespaces = true) const;
 
-    std::string getCppArgumentType(
-            std::string *extra, bool specifyNamespaces = true) const;
+    std::string getCppArgumentType(bool specifyNamespaces = true) const;
 
     // For an array type, "extra" accumulates dimensionality information,
     // if forInitializer == true, actual dimensions are included, i.e. [3][5],

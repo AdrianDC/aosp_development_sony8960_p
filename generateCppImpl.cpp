@@ -67,9 +67,8 @@ status_t AST::generateStubImplMethod(Formatter &out,
     if (elidedReturn == nullptr) {
         out << "return Void();\n";
     } else {
-        std::string extra;
         out << "return "
-            << elidedReturn->type().getCppResultType(&extra)
+            << elidedReturn->type().getCppResultType()
             << " {};\n";
     }
 
