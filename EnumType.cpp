@@ -76,10 +76,8 @@ std::string EnumType::getCppType(StorageMode,
     return specifyNamespaces ? fullName() : partialCppName();
 }
 
-std::string EnumType::getJavaType(
-        std::string *extra, bool forInitializer) const {
-    return mStorageType->resolveToScalarType()->getJavaType(
-            extra, forInitializer);
+std::string EnumType::getJavaType(bool forInitializer) const {
+    return mStorageType->resolveToScalarType()->getJavaType(forInitializer);
 }
 
 std::string EnumType::getJavaSuffix() const {
@@ -251,9 +249,8 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
 
     out.indent();
 
-    std::string extra;  // unused, because ScalarType leaves this empty.
     const std::string typeName =
-        scalarType->getJavaType(&extra, false /* forInitializer */);
+        scalarType->getJavaType(false /* forInitializer */);
 
     std::vector<const EnumType *> chain;
     getTypeChain(&chain);
@@ -408,9 +405,8 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
             out << "// Values declared in " << localName() << " follow.\n";
         }
 
-        std::string extra;  // unused, because ScalarType leaves this empty.
         const std::string typeName =
-            scalarType->getJavaType(&extra, false /* forInitializer */);
+            scalarType->getJavaType(false /* forInitializer */);
 
         std::vector<const EnumType *> chain;
         getTypeChain(&chain);

@@ -64,19 +64,17 @@ std::string VectorType::getCppType(StorageMode mode,
     }
 }
 
-std::string VectorType::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
-    extra->clear();
+std::string VectorType::getJavaType(bool /* forInitializer */) const {
 
-    std::string elementExtra;
-    std::string elementJavaType = mElementType->getJavaType(&elementExtra);
-
-    CHECK(mElementType->isArray() || elementExtra.empty());
+    std::string elementJavaType;
+    if (mElementType->isArray()) {
+        elementJavaType = mElementType->getJavaType();
+    } else {
+        elementJavaType = mElementType->getJavaWrapperType();
+    }
 
     return "ArrayList<"
-        + (mElementType->isArray()
-                ? elementJavaType : mElementType->getJavaWrapperType())
-        + elementExtra
+        + elementJavaType
         + ">";
 }
 
@@ -425,15 +423,14 @@ void VectorType::emitJavaReaderWriter(
         const std::string &argName,
         bool isReader) const {
     if (mElementType->isCompoundType()) {
-        std::string extra;  // unused, because CompoundType leaves this empty.
 
         if (isReader) {
-            out << mElementType->getJavaType(&extra)
+            out << mElementType->getJavaType()
                 << ".readVectorFromParcel("
                 << parcelObj
                 << ");\n";
         } else {
-            out << mElementType->getJavaType(&extra)
+            out << mElementType->getJavaType()
                 << ".writeVectorToParcel("
                 << parcelObj
                 << ", "
@@ -446,9 +443,8 @@ void VectorType::emitJavaReaderWriter(
 
     if (mElementType->isArray()) {
         if (isReader) {
-            std::string extra;
             out << " new "
-                << getJavaType(&extra, false /* forInitializer */)
+                << getJavaType(false /* forInitializer */)
                 << "();\n";
         }
 
@@ -499,8 +495,7 @@ void VectorType::emitJavaReaderWriter(
 
 void VectorType::emitJavaFieldInitializer(
         Formatter &out, const std::string &fieldName) const {
-    std::string extra;
-    std::string javaType = getJavaType(&extra, false /* forInitializer */);
+    std::string javaType = getJavaType(false /* forInitializer */);
 
     out << "final "
         << javaType
