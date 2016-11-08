@@ -343,6 +343,10 @@ std::string ConstantExpression::value() const {
     return rawValue(mValueKind);
 }
 
+std::string ConstantExpression::value(ScalarType::Kind castKind) const {
+    return rawValue(castKind);
+}
+
 std::string ConstantExpression::cppValue() const {
     return cppValue(mValueKind);
 }
