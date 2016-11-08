@@ -41,7 +41,6 @@ struct ArrayType : public Type {
     size_t countDimensions() const;
 
     std::string getCppType(StorageMode mode,
-                           std::string *extra,
                            bool specifyNamespaces) const override;
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;

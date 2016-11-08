@@ -88,9 +88,14 @@ bool Type::isValidEnumStorageType() const {
     return scalarType->isValidEnumStorageType();
 }
 
-std::string Type::getCppType(StorageMode, std::string *, bool) const {
+std::string Type::getCppType(StorageMode, bool) const {
     CHECK(!"Should not be here");
     return std::string();
+}
+
+std::string Type::decorateCppName(
+        const std::string &name, StorageMode mode, bool specifyNamespaces) const {
+    return getCppType(mode, specifyNamespaces) + " " + name;
 }
 
 std::string Type::getJavaType(
@@ -346,19 +351,16 @@ bool Type::resultNeedsDeref() const {
     return false;
 }
 
-std::string Type::getCppType(std::string *extra,
-                             bool specifyNamespaces) const {
-    return getCppType(StorageMode_Stack, extra, specifyNamespaces);
+std::string Type::getCppStackType(bool specifyNamespaces) const {
+    return getCppType(StorageMode_Stack, specifyNamespaces);
 }
 
-std::string Type::getCppResultType(std::string *extra,
-                                   bool specifyNamespaces) const {
-    return getCppType(StorageMode_Result, extra, specifyNamespaces);
+std::string Type::getCppResultType(bool specifyNamespaces) const {
+    return getCppType(StorageMode_Result, specifyNamespaces);
 }
 
-std::string Type::getCppArgumentType(std::string *extra,
-                                     bool specifyNamespaces) const {
-    return getCppType(StorageMode_Argument, extra, specifyNamespaces);
+std::string Type::getCppArgumentType(bool specifyNamespaces) const {
+    return getCppType(StorageMode_Argument, specifyNamespaces);
 }
 
 void Type::emitJavaReaderWriterWithSuffix(
