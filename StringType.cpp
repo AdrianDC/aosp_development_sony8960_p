@@ -44,9 +44,7 @@ std::string StringType::getCppType(StorageMode mode,
     }
 }
 
-std::string StringType::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
-    extra->clear();
+std::string StringType::getJavaType(bool /* forInitializer */) const {
     return "String";
 }
 

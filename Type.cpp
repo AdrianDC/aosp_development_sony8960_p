@@ -98,16 +98,13 @@ std::string Type::decorateCppName(
     return getCppType(mode, specifyNamespaces) + " " + name;
 }
 
-std::string Type::getJavaType(
-        std::string *extra, bool /* forInitializer */) const {
+std::string Type::getJavaType(bool /* forInitializer */) const {
     CHECK(!"Should not be here");
-    extra->clear();
     return std::string();
 }
 
 std::string Type::getJavaWrapperType() const {
-    std::string extra;
-    return getJavaType(&extra);
+    return getJavaType();
 }
 
 std::string Type::getJavaSuffix() const {
@@ -192,8 +189,7 @@ void Type::emitJavaReaderWriter(
 void Type::emitJavaFieldInitializer(
         Formatter &out,
         const std::string &fieldName) const {
-    std::string extra;
-    out << getJavaType(&extra)
+    out << getJavaType()
         << " "
         << fieldName
         << ";\n";
