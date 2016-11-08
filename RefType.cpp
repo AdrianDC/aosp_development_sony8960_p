@@ -29,17 +29,9 @@ RefType::RefType() {
  * ref<ref<ref<T>>> t_3ptr;
  * in this case the const's will get stacked on the left (const const const T *** t_3ptr)
  * but in this implementation it would be clearer (T const* const* const* t_3ptr) */
-std::string RefType::getCppType(StorageMode /*mode*/, std::string *extra, bool /*specifyNamespaces*/) const {
-    const std::string elementBase = mElementType->getCppType(extra);
-    std::string base;
-    if(extra->empty())
-        base = elementBase + " const*";
-    else { // for pointer to array: e.g. int32_t (*meow)[5]
-        base = elementBase + " const(*";
-        extra->insert(0, 1, ')');
-    }
-
-    return base;
+std::string RefType::getCppType(StorageMode /*mode*/, bool specifyNamespaces) const {
+    return mElementType->getCppStackType(specifyNamespaces)
+            + " const*";
 }
 
 void RefType::addNamedTypesToSet(std::set<const FQName> &set) const {
@@ -93,12 +85,9 @@ void RefType::emitResolveReferencesEmbedded(
             const std::string &parentName,
             const std::string &offsetText) const {
 
-    std::string elementExtra;
-    std::string elementBase = mElementType->getCppType(&elementExtra);
-    std::string elementType = elementBase + elementExtra;
+    std::string elementType = mElementType->getCppStackType();
 
-    std::string baseExtra;
-    std::string baseType = Type::getCppType(&baseExtra);
+    std::string baseType = getCppStackType();
 
     const std::string parcelObjDeref =
         parcelObjIsPointer ? ("*" + parcelObj) : parcelObj;
@@ -126,9 +115,7 @@ void RefType::emitResolveReferencesEmbedded(
             << elementType
             << ">(const_cast<"
             << baseType
-            << " *"
-            << baseExtra
-            << ">("
+            << " *>("
             << namePointer
             << "),";
     } else {

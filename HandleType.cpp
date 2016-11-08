@@ -28,10 +28,7 @@ void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
 }
 
 std::string HandleType::getCppType(StorageMode,
-                                   std::string *extra,
                                    bool specifyNamespaces) const {
-    extra->clear();
-
     const std::string base =
           std::string(specifyNamespaces ? "::" : "")
         + "native_handle_t";

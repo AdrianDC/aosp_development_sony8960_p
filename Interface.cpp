@@ -188,9 +188,7 @@ std::string Interface::getBaseName() const {
 }
 
 std::string Interface::getCppType(StorageMode mode,
-                                  std::string *extra,
                                   bool specifyNamespaces) const {
-    extra->clear();
     const std::string base =
           std::string(specifyNamespaces ? "::android::" : "")
         + "sp<"

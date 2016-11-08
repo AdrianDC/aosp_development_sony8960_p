@@ -358,13 +358,9 @@ std::string ConstantExpression::cppValue(ScalarType::Kind castKind) const {
     // -(uint64_t)9223372036854775808 == 9223372036854775808 could not
     // be narrowed to int64_t.
     if(castKind == SK(INT64) && (int64_t)mValue == INT64_MIN) {
-        std::string extra;
-        return strdup(("("
-            + ScalarType(SK(INT64)).getCppType(
-                    android::Type::StorageMode_Stack,
-                    &extra,
-                    true /* specify namespaces */) // "int64_t"
-            + ")(" + literal + "ull)").c_str());
+        return strdup(("static_cast<"
+            + ScalarType(SK(INT64)).getCppStackType() // "int64_t"
+            + ">(" + literal + "ull)").c_str());
     }
 
     // add suffix if necessary.

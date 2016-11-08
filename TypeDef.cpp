@@ -59,9 +59,11 @@ bool TypeDef::resultNeedsDeref() const {
 }
 
 status_t TypeDef::emitTypeDeclarations(Formatter &out) const {
-    std::string extra;
-    std::string type{mReferencedType->getCppType(&extra)};
-    out << "typedef " << type << " " << localName() << extra << ";\n\n";
+    out << "typedef "
+        << mReferencedType->getCppStackType()
+        << " "
+        << localName()
+        << ";\n\n";
 
     return OK;
 }

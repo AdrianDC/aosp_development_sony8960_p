@@ -66,10 +66,7 @@ bool CompoundType::isCompoundType() const {
 
 std::string CompoundType::getCppType(
         StorageMode mode,
-        std::string *extra,
         bool specifyNamespaces) const {
-
-    extra->clear();
     const std::string base =
         specifyNamespaces ? fullName() : partialCppName();
 
@@ -335,11 +332,9 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     Scope::emitTypeDeclarations(out);
 
     for (const auto &field : *mFields) {
-        std::string extra;
-        out << field->type().getCppType(&extra)
+        out << field->type().getCppStackType()
             << " "
             << field->name()
-            << extra
             << ";\n";
     }
 
