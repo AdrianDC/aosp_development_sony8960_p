@@ -793,8 +793,8 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "IMPLEMENT_REGISTER_AND_GET_SERVICE("
             << baseName << ", "
             << "\"" << iface->fqName().package()
-            << iface->fqName().atVersion() << "-impl.so\""
-            << ")\n";
+            << iface->fqName().atVersion()
+            << "\")\n";
     }
 
     enterLeaveNamespace(out, false /* enter */);
