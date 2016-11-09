@@ -737,6 +737,9 @@ static status_t generateAndroidBpForPackage(
     out << "\"libhidl\",\n"
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n";
+    for (const auto &importedPackage : importedPackages) {
+        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+    }
     out.unindent();
     out << "],\n";
     out.unindent();
