@@ -215,8 +215,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out.unindent();
         out << "}\n\n";
         out << "virtual bool isRemote() const override { return false; }\n\n";
-        out << "virtual ::android::sp<::android::hardware::IBinder> "
-            << "toBinder() override;\n\n";
         bool haveCallbacks = false;
         for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
@@ -298,7 +296,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         out << "\nstatic const ::android::String16 descriptor;\n\n";
 
-        out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n";
+        out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n\n";
+
+        out << "private: static int hidlStaticBlock;\n";
     }
 
     if (isInterface) {
@@ -771,6 +771,28 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             << "::descriptor(\""
             << iface->fqName().string()
             << "\");\n\n";
+
+        out << "int I"
+            << iface->getBaseName()
+            << "::hidlStaticBlock = []() -> int {\n";
+        out.indentBlock([&] {
+            out << "::android::hardware::gBnConstructorMap[::android::String16::std_string(I"
+                << iface->getBaseName()
+                << "::descriptor)]\n";
+            out.indentBlock(2, [&] {
+                out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
+                out.indentBlock([&] {
+                    out << "return new Bn"
+                        << iface->getBaseName()
+                        << "(reinterpret_cast<I"
+                        << iface->getBaseName()
+                        << " *>(iIntf));\n";
+                });
+                out << "};\n";
+            });
+            out << "return 1;\n";
+        });
+        out << "}();\n\n";
 
         err = generateInterfaceSource(out);
     }
@@ -1529,27 +1551,6 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 status_t AST::generateInterfaceSource(Formatter &out) const {
     const Interface *iface = mRootScope->getInterface();
 
-
-    // generate toBinder functions
-    out << "::android::sp<::android::hardware::IBinder> I"
-        << iface->getBaseName()
-        << "::toBinder() {\n";
-    out.indent();
-    out << "if (isRemote()) {\n";
-    out.indent();
-    out << "return ::android::hardware::IInterface::asBinder("
-        << "static_cast<IHw"
-        << iface->getBaseName()
-        << " *>(this));\n";
-    out.unindent();
-    out << "} else {\n";
-    out.indent();
-    out << "return new Bn" << iface->getBaseName() << "(this);\n";
-    out.unindent();
-    out << "}\n";
-    out.unindent();
-    out << "}\n\n";
-
     // generate castFrom functions
     if (!iface->isRootType()) {
         std::string childTypeResult = iface->getCppResultType();
@@ -1566,7 +1567,8 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out << "return ::android::hardware::castInterface<";
             out << "I" << iface->getBaseName() << ", "
                 << superType->fqName().cppName() << ", "
-                << "Bp" << iface->getBaseName()
+                << "Bp" << iface->getBaseName() << ", "
+                << superType->getHwName().cppName()
                 << ">(\n";
             out.indent();
             out.indent();
