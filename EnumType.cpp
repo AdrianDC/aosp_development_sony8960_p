@@ -288,13 +288,15 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
 }
 
 status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+
     out << "name: \"" << fullName() << "\"\n";
     out << "type: " << getVtsType() << "\n";
     out << "enum_value: {\n";
     out.indent();
 
     out << "scalar_type: \""
-        << mStorageType->resolveToScalarType()->getVtsScalarType()
+        << scalarType->getVtsScalarType()
         << "\"\n\n";
     std::vector<const EnumType *> chain;
     getTypeChain(&chain);
@@ -306,15 +308,13 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
             out << "enumerator: \"" << entry->name() << "\"\n";
             out << "scalar_value: {\n";
             out.indent();
-            if (!entry->isAutoFill()) {
-                // don't autofill values for vts.
-                std::string value = entry->value();
-                CHECK(!value.empty());
-                out << mStorageType->resolveToScalarType()->getVtsScalarType()
-                    << ": "
-                    << value
-                    << "\n";
-            }
+            // use autofilled values for vts.
+            std::string value = entry->value(scalarType->getKind());
+            CHECK(!value.empty());
+            out << mStorageType->resolveToScalarType()->getVtsScalarType()
+                << ": "
+                << value
+                << "\n";
             out.unindent();
             out << "}\n";
         }
@@ -503,9 +503,9 @@ std::string EnumValue::name() const {
     return mName;
 }
 
-std::string EnumValue::value() const {
+std::string EnumValue::value(ScalarType::Kind castKind) const {
     CHECK(mValue != nullptr);
-    return mValue->value();
+    return mValue->value(castKind);
 }
 
 std::string EnumValue::cppValue(ScalarType::Kind castKind) const {
