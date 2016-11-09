@@ -64,6 +64,8 @@ struct ConstantExpression {
     /* Evaluated result in a string form. */
     std::string javaValue() const;
     /* Evaluated result in a string form, with given contextual kind. */
+    std::string value(ScalarType::Kind castKind) const;
+    /* Evaluated result in a string form, with given contextual kind. */
     std::string cppValue(ScalarType::Kind castKind) const;
     /* Evaluated result in a string form, with given contextual kind. */
     std::string javaValue(ScalarType::Kind castKind) const;
