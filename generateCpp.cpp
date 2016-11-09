@@ -183,7 +183,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *superType = iface->superType();
 
         if (superType == NULL) {
-            out << " : virtual public ::android::hardware::IHidlInterfaceBase";
+            out << " : virtual public ::android::hardware::IBase";
         } else {
             out << " : public "
                 << superType->fullName();
@@ -945,7 +945,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
             << "::IHw"
             << superInterface->getBaseName();
     } else {
-        out << "::android::hardware::IHidlInterfaceBase";
+        out << "::android::hardware::IBase";
     }
     out << "::descriptor);\n";
 
@@ -1239,7 +1239,7 @@ status_t AST::generateStubSourceForMethod(
             << "::IHw"
             << iface->getBaseName();
     } else {
-        out << "::android::hardware::IHidlInterfaceBase";
+        out << "::android::hardware::IBase";
     }
 
     out << "::descriptor)) {\n";
