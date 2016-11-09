@@ -187,6 +187,23 @@ std::string Interface::getBaseName() const {
     return fqName().getInterfaceBaseName();
 }
 
+FQName Interface::getHwName() const {
+    return FQName(fqName().package(), fqName().version(), "IHw" + getBaseName());
+}
+
+FQName Interface::getPassthroughName() const {
+    return FQName(fqName().package(), fqName().version(), "Bp" + getBaseName());
+}
+
+FQName Interface::getNativeName() const {
+    return FQName(fqName().package(), fqName().version(), "Bn" + getBaseName());
+}
+
+FQName Interface::getSameprocessName() const {
+    return FQName(fqName().package(), fqName().version(), "Bs" + getBaseName());
+}
+
+
 std::string Interface::getCppType(StorageMode mode,
                                   bool specifyNamespaces) const {
     const std::string base =
@@ -256,11 +273,31 @@ void Interface::emitReaderWriter(
         out.unindent();
         out << "} else {\n";
         out.indent();
-        out << "_hidl_err = "
-            << parcelObjDeref
-            << "writeStrongBinder("
-            << name
-            << "->toBinder());\n";
+        out << "::android::sp<::android::hardware::IBinder> _hidl_binder = "
+            << "::android::hardware::toBinder<\n";
+        out.indentBlock(2, [&] {
+            out << fqName().cppNamespace()
+                << "::I"
+                << getBaseName()
+                << ", "
+                << fqName().cppNamespace()
+                << "::IHw"
+                << getBaseName()
+                << ">("
+                << name
+                << ");\n";
+        });
+        out << "if (_hidl_binder.get() != nullptr) {\n";
+        out.indentBlock([&] {
+            out << "_hidl_err = "
+                << parcelObjDeref
+                << "writeStrongBinder(_hidl_binder);\n";
+        });
+        out << "} else {\n";
+        out.indentBlock([&] {
+            out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
+        });
+        out << "}\n";
         out.unindent();
         out << "}\n";
 
