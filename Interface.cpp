@@ -79,7 +79,7 @@ Method *Interface::createDescriptorChainMethod() const {
         },
         [this](auto &out) { /* javaImpl */
             std::vector<const Interface *> chain = typeChain();
-            out << "return new ArrayList<String>(Arrays.asList(\n";
+            out << "return new java.util.ArrayList<String>(java.util.Arrays.asList(\n";
             out.indent(); out.indent();
             for (size_t i = 0; i < chain.size(); ++i) {
                 if (i != 0)

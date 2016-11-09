@@ -350,7 +350,7 @@ void ArrayType::emitJavaReaderWriter(
     out << "{\n";
     out.indent();
 
-    out << "HwBlob _hidl_blob = ";
+    out << "android.os.HwBlob _hidl_blob = ";
 
     if (isReader) {
         out << parcelObj
@@ -359,7 +359,7 @@ void ArrayType::emitJavaReaderWriter(
         size_t align, size;
         getAlignmentAndSize(&align, &size);
 
-        out << "new HwBlob("
+        out << "new android.os.HwBlob("
             << size
             << " /* size */);\n";
     }
