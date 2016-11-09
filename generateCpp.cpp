@@ -215,38 +215,24 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out.unindent();
         out << "}\n\n";
         out << "virtual bool isRemote() const override { return false; }\n\n";
-        bool haveCallbacks = false;
+
         for (const auto &method : iface->methods()) {
-            const bool returnsValue = !method->results().empty();
-
-            if (!returnsValue) {
-                continue;
-            }
-
-            if (method->canElideCallback() != nullptr) {
-                continue;
-            }
-
-            haveCallbacks = true;
-
-            out << "using "
-                << method->name()
-                << "_cb = std::function<void("
-                << Method::GetArgSignature(method->results(),
-                                           true /* specify namespaces */)
-                << ")>;\n";
-        }
-
-        if (haveCallbacks) {
             out << "\n";
-        }
 
-        for (const auto &method : iface->methods()) {
             const bool returnsValue = !method->results().empty();
+            const TypedVar *elidedReturn = method->canElideCallback();
+
+            if (elidedReturn == nullptr && returnsValue) {
+                out << "using "
+                    << method->name()
+                    << "_cb = std::function<void("
+                    << Method::GetArgSignature(method->results(),
+                                               true /* specify namespaces */)
+                    << ")>;\n";
+            }
 
             method->dumpAnnotations(out);
 
-            const TypedVar *elidedReturn = method->canElideCallback();
             if (elidedReturn) {
                 out << "virtual ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType() << "> ";
