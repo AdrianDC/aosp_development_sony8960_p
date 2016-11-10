@@ -1207,7 +1207,12 @@ int main(int argc, char **argv) {
         packageRoots.push_back("android.hardware");
 
         const char *TOP = getenv("TOP");
-        CHECK(TOP != NULL);
+        if (TOP == nullptr) {
+            fprintf(stderr,
+                    "ERROR: No root path (-r) specified"
+                    " and $TOP environment variable not set.\n");
+            exit(1);
+        }
 
         std::string path = TOP;
         path.append("/hardware/interfaces");
