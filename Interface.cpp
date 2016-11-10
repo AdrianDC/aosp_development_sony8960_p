@@ -191,15 +191,15 @@ FQName Interface::getHwName() const {
     return FQName(fqName().package(), fqName().version(), "IHw" + getBaseName());
 }
 
-FQName Interface::getPassthroughName() const {
+FQName Interface::getProxyName() const {
     return FQName(fqName().package(), fqName().version(), "Bp" + getBaseName());
 }
 
-FQName Interface::getNativeName() const {
+FQName Interface::getStubName() const {
     return FQName(fqName().package(), fqName().version(), "Bn" + getBaseName());
 }
 
-FQName Interface::getSameprocessName() const {
+FQName Interface::getPassthroughName() const {
     return FQName(fqName().package(), fqName().version(), "Bs" + getBaseName());
 }
 
