@@ -33,6 +33,7 @@
 #include "hidl-gen_y.h"
 
 #include <android-base/logging.h>
+#include <hidl-util/StringHelper.h>
 #include <stdio.h>
 
 using namespace android;
@@ -48,6 +49,119 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
     );
 }
 
+bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
+    static const std::vector<std::string> reserved({
+        // Injected names to interfaces by auto-generated code
+        "isRemote", "interfaceChain", "descriptor", "hidlStaticBlock", "onTransact",
+        "castFrom", "version", "getInterfaceVersion",
+
+        // Inherited names by interfaces from IInterface / IBinder
+        "onAsBinder", "asBinder", "queryLocalInterface", "getInterfaceDescriptor", "isBinderAlive",
+        "pingBinder", "dump", "transact", "linkToDeath", "unlinkToDeath", "checkSubclass",
+        "attachObject", "findObject", "detachObject", "localBinder", "remoteBinder", "mImpl",
+    });
+    std::string idstr(identifier);
+    if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {
+        *errorMsg = idstr + " cannot be a name inside an interface";
+        return false;
+    }
+    return true;
+}
+
+bool isValidStructField(const char *identifier, std::string *errorMsg) {
+    static const std::vector<std::string> reserved({
+        // Injected names to structs and unions by auto-generated code
+        "readEmbeddedFromParcel", "writeEmbeddedToParcel", "readVectorFromParcel",
+        "writeVectorToParcel", "writeEmbeddedToBlob",
+    });
+    std::string idstr(identifier);
+    if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {
+        *errorMsg = idstr + " cannot be a name inside an struct or union";
+        return false;
+    }
+    return true;
+}
+
+bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
+    static const std::vector<std::string> keywords({
+        "uint8_t", "uint16_t", "uint32_t", "uint64_t",
+        "int8_t", "int16_t", "int32_t", "int64_t", "bool", "float", "double",
+        "interface", "struct", "union", "string", "vec", "enum", "ref", "handle",
+        "package", "import", "typedef", "generates", "oneway", "extends",
+        "MQDescriptorSync", "MQDescriptorUnsync",
+    });
+    static const std::vector<std::string> cppKeywords({
+        "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit",
+        "atomic_noexcept", "auto", "bitand", "bitor", "bool", "break", "case", "catch",
+        "char", "char16_t", "char32_t", "class", "compl", "concept", "const", "constexpr",
+        "const_cast", "continue", "decltype", "default", "delete", "do", "double",
+        "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float",
+        "for", "friend", "goto", "if", "inline", "int", "import", "long", "module", "mutable",
+        "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq",
+        "private", "protected", "public", "register", "reinterpret_cast", "requires", "return",
+        "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct",
+        "switch", "synchronized", "template", "this", "thread_local", "throw", "true", "try",
+        "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void",
+        "volatile", "wchar_t", "while", "xor", "xor_eq",
+    });
+    static const std::vector<std::string> javaKeywords({
+        "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
+        "synchronized", "boolean", "do", "if", "private", "this", "break", "double",
+        "implements", "protected", "throw", "byte", "else", "import", "public", "throws",
+        "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int",
+        "short", "try", "char", "final", "interface", "static", "void", "class", "finally",
+        "long", "strictfp", "volatile", "const", "float", "native", "super", "while",
+    });
+    static const std::vector<std::string> cppCollide({
+        "size_t", "offsetof",
+        "DECLARE_REGISTER_AND_GET_SERVICE", "IMPLEMENT_HWBINDER_META_INTERFACE",
+        "IMPLEMENT_REGISTER_AND_GET_SERVICE"
+    });
+    static const std::vector<std::string> hidlReserved({
+        // Part of HidlSupport
+        "hidl_string", "hidl_vec", "hidl_array", "hidl_version", "toBinder", "castInterface",
+        "make_hidl_version"
+    });
+
+    // errors
+    std::string idstr(identifier);
+    if (std::find(keywords.begin(), keywords.end(), idstr) != keywords.end()) {
+        *errorMsg = idstr + " is a HIDL keyword "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+    if (std::find(cppKeywords.begin(), cppKeywords.end(), idstr) != cppKeywords.end()) {
+        *errorMsg = idstr + " is a C++ keyword "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+    if (std::find(javaKeywords.begin(), javaKeywords.end(), idstr) != javaKeywords.end()) {
+        *errorMsg = idstr + " is a Java keyword "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+    if (std::find(cppCollide.begin(), cppCollide.end(), idstr) != cppCollide.end()) {
+        *errorMsg = idstr + " collides with reserved names in C++ code "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+    if (StringHelper::StartsWith(idstr, "_hidl_")) {
+        *errorMsg = idstr + " starts with _hidl_ "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+    if (StringHelper::EndsWith(idstr, "_cb")) {
+        *errorMsg = idstr + " ends with _cb "
+            "and is therefore not a valid identifier";
+        return false;
+    }
+
+    // warnings
+    if (std::find(hidlReserved.begin(), hidlReserved.end(), idstr) != hidlReserved.end()) {
+        *errorMsg = idstr + " is a name reserved by HIDL and should be avoided";
+    }
+    return true;
+}
 
 %}
 
@@ -111,12 +225,13 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 %type<str> package
 %type<fqName> fqname
 %type<type> fqtype
+%type<str> valid_identifier
 
 %type<type> type opt_storage_type
 %type<type> array_type_base
 %type<arrayType> array_type
 %type<type> opt_extends
-%type<type> type_declaration_body interface_declaration typedef_declaration
+%type<type> type_declaration type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
 %type<type> compound_declaration annotated_compound_declaration
 
@@ -163,6 +278,21 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 }
 
 %%
+
+valid_identifier
+    : IDENTIFIER
+      {
+        std::string errorMsg;
+        if (!isValidIdentifier($1, &errorMsg)) {
+            std::cerr << "ERROR: " << errorMsg << " at " << @1 << "\n";
+            YYERROR;
+        }
+        if (!errorMsg.empty()) {
+            std::cerr << "WARNING: " << errorMsg << " at " << @1 << "\n";
+        }
+        $$ = $1;
+      }
+    ;
 
 opt_annotations
     : /* empty */
@@ -303,7 +433,7 @@ fqname
               YYERROR;
           }
       }
-    | IDENTIFIER
+    | valid_identifier
       {
           $$ = new FQName($1);
           if(!$$->isValid()) {
@@ -353,7 +483,7 @@ import_stmt
               ast->addSyntaxError();
           }
       }
-    | IMPORT IDENTIFIER require_semicolon
+    | IMPORT valid_identifier require_semicolon
       {
           if (!ast->addImport($2)) {
               std::cerr << "ERROR: Unable to import '" << $2 << "' at " << @2
@@ -381,8 +511,27 @@ body
 interface_declarations
     : /* empty */
     | interface_declarations type_declaration
+      {
+          std::string errorMsg;
+          if ($2 != nullptr &&
+              $2->isNamedType() &&
+              !isValidInterfaceField(static_cast<NamedType *>($2)->localName().c_str(),
+                    &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at "
+                        << @2 << "\n";
+              YYERROR;
+          }
+      }
     | interface_declarations method_declaration
       {
+          std::string errorMsg;
+          if ($2 != nullptr &&
+              !isValidInterfaceField($2->name().c_str(), &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at "
+                        << @2 << "\n";
+              YYERROR;
+          }
+
           if ($2 != nullptr) {
             if (!ast->scope()->isInterface()) {
                 std::cerr << "ERROR: unknown error in interface declaration at "
@@ -422,6 +571,7 @@ type_declaration
 
               YYERROR;
           }
+          $$ = $2;
       }
     ;
 
@@ -433,7 +583,7 @@ type_declaration_body
     ;
 
 interface_declaration
-    : INTERFACE IDENTIFIER opt_extends
+    : INTERFACE valid_identifier opt_extends
       {
           if ($3 != NULL && !$3->isInterface()) {
               std::cerr << "ERROR: You can only extend interfaces. at " << @3
@@ -478,7 +628,7 @@ interface_declaration
     ;
 
 typedef_declaration
-    : TYPEDEF type IDENTIFIER
+    : TYPEDEF type valid_identifier
       {
           std::string errorMsg;
           if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg)) {
@@ -562,15 +712,15 @@ const_expr
 
 method_declaration
     : error_stmt { $$ = nullptr; }
-    | opt_annotations IDENTIFIER '(' typed_vars ')' require_semicolon
+    | opt_annotations valid_identifier '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($2, $4, new std::vector<TypedVar *>, false, $1);
       }
-    | opt_annotations ONEWAY IDENTIFIER '(' typed_vars ')' require_semicolon
+    | opt_annotations ONEWAY valid_identifier '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($3, $5, new std::vector<TypedVar *>, true, $1);
       }
-    | opt_annotations IDENTIFIER '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
+    | opt_annotations valid_identifier '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
       {
           $$ = new Method($2, $4, $8, false, $1);
       }
@@ -593,7 +743,7 @@ typed_vars
       }
     ;
 
-typed_var : type IDENTIFIER { $$ = new TypedVar($2, $1); }
+typed_var : type valid_identifier { $$ = new TypedVar($2, $1); }
     ;
 
 
@@ -603,7 +753,7 @@ struct_or_union_keyword
     ;
 
 named_struct_or_union_declaration
-    : struct_or_union_keyword IDENTIFIER
+    : struct_or_union_keyword valid_identifier
       {
           CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2));
           ast->enterScope(container);
@@ -652,8 +802,32 @@ field_declarations
 
 field_declaration
     : error_stmt { $$ = nullptr; }
-    | type IDENTIFIER require_semicolon { $$ = new CompoundField($2, $1); }
-    | annotated_compound_declaration ';' { $$ = NULL; }
+    | type valid_identifier require_semicolon
+      {
+        std::string errorMsg;
+        if (ast->scope()->isCompoundType() &&
+            static_cast<CompoundType *>(ast->scope())->style() == CompoundType::STYLE_STRUCT &&
+            !isValidStructField($2, &errorMsg)) {
+            std::cerr << "ERROR: " << errorMsg << " at "
+                      << @2 << "\n";
+            YYERROR;
+        }
+        $$ = new CompoundField($2, $1);
+      }
+    | annotated_compound_declaration ';'
+      {
+        std::string errorMsg;
+        if (ast->scope()->isCompoundType() &&
+            static_cast<CompoundType *>(ast->scope())->style() == CompoundType::STYLE_STRUCT &&
+            $1 != nullptr &&
+            $1->isNamedType() &&
+            !isValidStructField(static_cast<NamedType *>($1)->localName().c_str(), &errorMsg)) {
+            std::cerr << "ERROR: " << errorMsg << " at "
+                      << @2 << "\n";
+            YYERROR;
+        }
+        $$ = NULL;
+      }
     ;
 
 annotated_compound_declaration
@@ -690,7 +864,7 @@ opt_comma
     ;
 
 named_enum_declaration
-    : ENUM IDENTIFIER opt_storage_type
+    : ENUM valid_identifier opt_storage_type
       {
           ast->enterScope(new EnumType($2, convertYYLoc(@2), $3));
       }
@@ -720,8 +894,8 @@ enum_declaration_body
     ;
 
 enum_value
-    : IDENTIFIER { $$ = new EnumValue($1); }
-    | IDENTIFIER '=' const_expr { $$ = new EnumValue($1, $3); }
+    : valid_identifier { $$ = new EnumValue($1); }
+    | valid_identifier '=' const_expr { $$ = new EnumValue($1, $3); }
     ;
 
 enum_values

@@ -34,6 +34,8 @@ struct CompoundType : public Scope {
 
     CompoundType(Style style, const char *localName, const Location &location);
 
+    Style style() const;
+
     bool setFields(std::vector<CompoundField *> *fields, std::string *errorMsg);
 
     bool isCompoundType() const override;
