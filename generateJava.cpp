@@ -77,12 +77,6 @@ status_t AST::generateJavaTypes(
 
         out << "package " << mPackage.javaPackage() << ";\n\n";
 
-        out << "import android.os.HwBlob;\n";
-        out << "import android.os.HwParcel;\n\n";
-
-        out << "import java.util.Arrays;\n";
-        out << "import java.util.ArrayList;\n\n";
-
         for (const auto &item : mImportedNamesForJava) {
             out << "import " << item.javaName() << ";\n";
         }
@@ -142,15 +136,6 @@ status_t AST::generateJava(
 
     out << "package " << mPackage.javaPackage() << ";\n\n";
 
-    out << "import android.os.IHwBinder;\n";
-    out << "import android.os.IHwInterface;\n";
-    out << "import android.os.HwBinder;\n";
-    out << "import android.os.HwBlob;\n";
-    out << "import android.os.HwParcel;\n\n";
-
-    out << "import java.util.Arrays;\n";
-    out << "import java.util.ArrayList;\n\n";
-
     for (const auto &item : mImportedNamesForJava) {
         out << "import " << item.javaName() << ";\n";
     }
@@ -168,7 +153,7 @@ status_t AST::generateJava(
     if (superType != NULL) {
         out << superType->fullJavaName();
     } else {
-        out << "IHwInterface";
+        out << "android.os.IHwInterface";
     }
 
     out << " {\n";
@@ -182,7 +167,7 @@ status_t AST::generateJava(
 
     out << "public static "
         << ifaceName
-        << " asInterface(IHwBinder binder) {\n";
+        << " asInterface(android.os.IHwBinder binder) {\n";
 
     out.indent();
 
@@ -192,7 +177,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "IHwInterface iface =\n";
+    out << "android.os.IHwInterface iface =\n";
     out.indent();
     out.indent();
     out << "binder.queryLocalInterface(kInterfaceName);\n\n";
@@ -213,7 +198,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public IHwBinder asBinder();\n\n";
+    out << "public android.os.IHwBinder asBinder();\n\n";
 
     out << "public static "
         << ifaceName
@@ -223,7 +208,7 @@ status_t AST::generateJava(
 
     out << "return "
         << ifaceName
-        << ".asInterface(HwBinder.getService(\""
+        << ".asInterface(android.os.HwBinder.getService(\""
         << iface->fqName().string()
         << "\",serviceName));\n";
 
@@ -285,14 +270,14 @@ status_t AST::generateJava(
 
     out.indent();
 
-    out << "private IHwBinder mRemote;\n\n";
-    out << "public Proxy(IHwBinder remote) {\n";
+    out << "private android.os.IHwBinder mRemote;\n\n";
+    out << "public Proxy(android.os.IHwBinder remote) {\n";
     out.indent();
     out << "mRemote = remote;\n";
     out.unindent();
     out << "}\n\n";
 
-    out << "public IHwBinder asBinder() {\n";
+    out << "public android.os.IHwBinder asBinder() {\n";
     out.indent();
     out << "return mRemote;\n";
     out.unindent();
@@ -335,7 +320,7 @@ status_t AST::generateJava(
         out << ") {\n";
         out.indent();
 
-        out << "HwParcel request = new HwParcel();\n";
+        out << "android.os.HwParcel request = new android.os.HwParcel();\n";
         out << "request.writeInterfaceToken("
             << superInterface->fullJavaName()
             << ".kInterfaceName);\n";
@@ -348,7 +333,7 @@ status_t AST::generateJava(
                     false /* isReader */);
         }
 
-        out << "\nHwParcel reply = new HwParcel();\n"
+        out << "\nandroid.os.HwParcel reply = new android.os.HwParcel();\n"
             << "mRemote.transact("
             << method->getSerialId()
             << " /* "
@@ -356,7 +341,7 @@ status_t AST::generateJava(
             << " */, request, reply, ";
 
         if (method->isOneway()) {
-            out << "IHwBinder.FLAG_ONEWAY";
+            out << "android.os.IHwBinder.FLAG_ONEWAY";
         } else {
             out << "0 /* flags */";
         }
@@ -411,13 +396,13 @@ status_t AST::generateJava(
 
     ////////////////////////////////////////////////////////////////////////////
 
-    out << "\npublic static abstract class Stub extends HwBinder "
+    out << "\npublic static abstract class Stub extends android.os.HwBinder "
         << "implements "
         << ifaceName << " {\n";
 
     out.indent();
 
-    out << "public IHwBinder asBinder() {\n";
+    out << "public android.os.IHwBinder asBinder() {\n";
     out.indent();
     out << "return this;\n";
     out.unindent();
@@ -436,7 +421,7 @@ status_t AST::generateJava(
         out << "\n}\n\n";
     }
 
-    out << "public IHwInterface queryLocalInterface(String descriptor) {\n";
+    out << "public android.os.IHwInterface queryLocalInterface(String descriptor) {\n";
     out.indent();
     // XXX what about potential superClasses?
     out << "if (kInterfaceName.equals(descriptor)) {\n";
@@ -457,7 +442,7 @@ status_t AST::generateJava(
     out << "}\n\n";
 
     out << "public void onTransact("
-        << "int code, HwParcel request, final HwParcel reply, "
+        << "int code, android.os.HwParcel request, final android.os.HwParcel reply, "
         << "int flags) {\n";
 
     out.indent();
@@ -529,7 +514,7 @@ status_t AST::generateJava(
                 << ") {\n";
 
             out.indent();
-            out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
+            out << "reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             for (const auto &arg : method->results()) {
                 emitJavaReaderWriter(
@@ -549,7 +534,7 @@ status_t AST::generateJava(
         out << ");\n";
 
         if (!needsCallback) {
-            out << "reply.writeStatus(HwParcel.STATUS_SUCCESS);\n";
+            out << "reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             if (returnsValue) {
                 const TypedVar *returnArg = method->results()[0];
