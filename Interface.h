@@ -73,6 +73,7 @@ struct Interface : public Scope {
             bool specifyNamespaces) const override;
 
     std::string getJavaType(bool forInitializer) const override;
+    std::string getVtsType() const override;
 
     void emitReaderWriter(
             Formatter &out,

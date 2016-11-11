@@ -226,6 +226,14 @@ std::string Interface::getJavaType(bool /* forInitializer */) const {
     return fullJavaName();
 }
 
+std::string Interface::getVtsType() const {
+    if (StringHelper::EndsWith(localName(), "Callback")) {
+        return "TYPE_HIDL_CALLBACK";
+    } else {
+        return "TYPE_HIDL_INTERFACE";
+    }
+}
+
 void Interface::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -407,14 +415,15 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
 }
 
 status_t Interface::emitVtsAttributeType(Formatter &out) const {
-    out << "type: TYPE_HIDL_CALLBACK\n"
+    out << "type: " << getVtsType() << "\n"
         << "predefined_type: \""
         << localName()
         << "\"\n"
-        << "is_callback: true\n";
+        << "is_callback: "
+        << (StringHelper::EndsWith(localName(), "Callback") ? "true" : "false")
+        << "\n";
     return OK;
 }
-
 
 bool Interface::hasOnewayMethods() const {
     for (auto const &method : methods()) {
