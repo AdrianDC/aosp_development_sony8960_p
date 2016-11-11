@@ -284,7 +284,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             }
         }
 
-        out << "\nstatic const ::android::String16 descriptor;\n\n";
+        out << "\nstatic const char* descriptor;\n\n";
 
         out << "DECLARE_SERVICE_MANAGER_INTERACTIONS(" << baseName << ")\n\n";
 
@@ -756,7 +756,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             << "::version;\n\n";
 
         // need to be put here, generateStubSource is using this.
-        out << "const ::android::String16 I"
+        out << "const char* I"
             << iface->getBaseName()
             << "::descriptor(\""
             << iface->fqName().string()
@@ -766,9 +766,9 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             << iface->getBaseName()
             << "::hidlStaticBlock = []() -> int {\n";
         out.indentBlock([&] {
-            out << "::android::hardware::gBnConstructorMap[::android::String16::std_string(I"
+            out << "::android::hardware::gBnConstructorMap[I"
                 << iface->getBaseName()
-                << "::descriptor)]\n";
+                << "::descriptor]\n";
             out.indentBlock(2, [&] {
                 out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
                 out.indentBlock([&] {
@@ -930,12 +930,12 @@ status_t AST::generateProxyMethodSource(Formatter &out,
             out, method->results(), true /* forResults */);
 
     out << "_hidl_err = _hidl_data.writeInterfaceToken(";
-    if (!method->isHidlReserved()) {
-        out << superInterface->fqName().cppNamespace()
-            << "::IHw"
-            << superInterface->getBaseName();
-    } else {
+    if (method->isHidlReserved()) {
         out << "::android::hardware::IBase";
+    } else {
+        out << superInterface->fqName().cppNamespace()
+            << "::I"
+            << superInterface->getBaseName();
     }
     out << "::descriptor);\n";
 
@@ -1224,12 +1224,12 @@ status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
     out << "if (!_hidl_data.enforceInterface(";
 
-    if (!method->isHidlReserved()) {
-        out << iface->fqName().cppNamespace()
-            << "::IHw"
-            << iface->getBaseName();
-    } else {
+    if (method->isHidlReserved()) {
         out << "::android::hardware::IBase";
+    } else {
+        out << iface->fqName().cppNamespace()
+            << "::I"
+            << iface->getBaseName();
     }
 
     out << "::descriptor)) {\n";
