@@ -50,7 +50,7 @@ std::string GenericBinder::getCppType(
 }
 
 std::string GenericBinder::getJavaType(bool /* forInitializer */) const {
-    return "IHwBinder";
+    return "android.os.IHwBinder";
 }
 
 void GenericBinder::emitReaderWriter(
