@@ -2,6 +2,7 @@
 #include <android-base/logging.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
+#include <android/hidl/manager/1.0/IServiceNotification.h>
 
 #include <android/hardware/tests/foo/1.0/BnFoo.h>
 #include <android/hardware/tests/foo/1.0/BnFooCallback.h>
@@ -28,8 +29,10 @@
 #include <utils/String8.h>
 
 #include <algorithm>
+#include <condition_variable>
 #include <getopt.h>
 #include <inttypes.h>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <vector>
@@ -86,6 +89,7 @@ using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
 using ::android::hidl::manager::V1_0::IServiceManager;
+using ::android::hidl::manager::V1_0::IServiceNotification;
 using ::android::sp;
 using ::android::to_string;
 using ::android::Mutex;
@@ -145,6 +149,37 @@ struct Simple : public ISimple {
 private:
     int32_t mCookie;
 };
+
+struct ServiceNotification : public IServiceNotification {
+    std::mutex mutex;
+    std::condition_variable condition;
+
+    Return<void> onRegistration(const hidl_string &fqName,
+                                const hidl_string &name,
+                                bool preexisting) override {
+        if (preexisting) {
+            // not interested in things registered from previous runs of hidl_test
+            return Void();
+        }
+
+        std::unique_lock<std::mutex> lock(mutex);
+
+        mRegistered.push_back(std::string(fqName.c_str()) + "/" + name.c_str());
+
+        lock.unlock();
+        condition.notify_one();
+
+        return Void();
+    }
+
+    const std::vector<std::string> &getRegistrations() const {
+        return mRegistered;
+    }
+
+private:
+    std::vector<std::string> mRegistered{};
+};
+
 void signal_handler(int signal)
 {
     if (signal == SIGTERM) {
@@ -408,6 +443,78 @@ TEST_F(HidlTest, ServiceParentTest) {
         sp<IParent> parent = IParent::getService("child");
 
         EXPECT_NE(parent, nullptr);
+    }
+}
+
+// passthrough TODO(b/32747392)
+TEST_F(HidlTest, ServiceNotificationTest) {
+    if (gMode == BINDERIZED) {
+        ServiceNotification *notification = new ServiceNotification();
+
+        std::string instanceName = "test-instance";
+        EXPECT_TRUE(ISimple::registerForNotifications(instanceName, notification));
+
+        ProcessState::self()->setThreadPoolMaxThreadCount(0);
+        ProcessState::self()->startThreadPool();
+
+        Simple* instance = new Simple(1);
+        instance->registerAsService(instanceName);
+
+        std::unique_lock<std::mutex> lock(notification->mutex);
+
+        notification->condition.wait_for(
+                lock,
+                std::chrono::milliseconds(2),
+                [&notification]() {
+                   return notification->getRegistrations().size() >= 1;
+                });
+
+        std::vector<std::string> registrations = notification->getRegistrations();
+
+        EXPECT_EQ(registrations.size(), 1u);
+
+        EXPECT_EQ(to_string(registrations.data(), registrations.size()),
+                  "['" + std::string(::android::String8(ISimple::descriptor))
+                  + "/" + instanceName + "']");
+    }
+}
+
+// passthrough TODO(b/32747392)
+TEST_F(HidlTest, ServiceAllNotificationTest) {
+    if (gMode == BINDERIZED) {
+        ServiceNotification *notification = new ServiceNotification();
+
+        std::string instanceOne = "test-instance-one";
+        std::string instanceTwo = "test-instance-two";
+        EXPECT_TRUE(ISimple::registerForNotifications("", notification));
+
+        ProcessState::self()->setThreadPoolMaxThreadCount(0);
+        ProcessState::self()->startThreadPool();
+
+        Simple* instanceA = new Simple(1);
+        instanceA->registerAsService(instanceOne);
+        Simple* instanceB = new Simple(2);
+        instanceB->registerAsService(instanceTwo);
+
+        std::unique_lock<std::mutex> lock(notification->mutex);
+
+        notification->condition.wait_for(
+                lock,
+                std::chrono::milliseconds(2),
+                [&notification]() {
+                   return notification->getRegistrations().size() >= 2;
+                });
+
+        std::vector<std::string> registrations = notification->getRegistrations();
+        std::sort(registrations.begin(), registrations.end());
+
+        EXPECT_EQ(registrations.size(), 2u);
+
+        std::string descriptor = std::string(::android::String8(ISimple::descriptor));
+
+        EXPECT_EQ(to_string(registrations.data(), registrations.size()),
+                  "['" + descriptor + "/" + instanceOne + "', '"
+                       + descriptor + "/" + instanceTwo + "']");
     }
 }
 
