@@ -162,11 +162,15 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "\n";
     }
 
+    if (isInterface) {
+        out << "#include <android/hidl/manager/1.0/IServiceNotification.h>\n\n";
+    }
+
     out << "#include <hidl/HidlSupport.h>\n";
-    out << "#include <hidl/ServiceManagement.h>\n";
     out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
+        out << "#include <hidl/ServiceManagement.h>\n";
         out << "#include <hidl/Status.h>\n";
     }
 
@@ -282,7 +286,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         out << "\nstatic const ::android::String16 descriptor;\n\n";
 
-        out << "DECLARE_REGISTER_AND_GET_SERVICE(" << baseName << ")\n\n";
+        out << "DECLARE_SERVICE_MANAGER_INTERACTIONS(" << baseName << ")\n\n";
 
         out << "private: static int hidlStaticBlock;\n";
     }
@@ -798,7 +802,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     if (err == OK && isInterface) {
         const Interface *iface = mRootScope->getInterface();
 
-        out << "IMPLEMENT_REGISTER_AND_GET_SERVICE("
+        out << "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS("
             << baseName << ", "
             << "\"" << iface->fqName().package()
             << iface->fqName().atVersion()
