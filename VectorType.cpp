@@ -73,7 +73,7 @@ std::string VectorType::getJavaType(bool /* forInitializer */) const {
         elementJavaType = mElementType->getJavaWrapperType();
     }
 
-    return "ArrayList<"
+    return "java.util.ArrayList<"
         + elementJavaType
         + ">";
 }
@@ -451,7 +451,7 @@ void VectorType::emitJavaReaderWriter(
         out << "{\n";
         out.indent();
 
-        out << "HwBlob _hidl_blob = ";
+        out << "android.os.HwBlob _hidl_blob = ";
 
         if (isReader) {
             out << parcelObj
@@ -460,7 +460,7 @@ void VectorType::emitJavaReaderWriter(
             size_t align, size;
             getAlignmentAndSize(&align, &size);
 
-            out << "new HwBlob("
+            out << "new android.os.HwBlob("
                 << size
                 << " /* size */);\n";
         }
@@ -539,7 +539,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out << "{\n";
         out.indent();
 
-        out << "HwBlob childBlob = "
+        out << "android.os.HwBlob childBlob = "
             << parcelName
             << ".readEmbeddedBuffer(\n";
 
@@ -622,7 +622,7 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
     elementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
     // XXX make HwBlob constructor take a long instead of an int?
-    out << "HwBlob childBlob = new HwBlob((int)(_hidl_vec_size * "
+    out << "android.os.HwBlob childBlob = new android.os.HwBlob((int)(_hidl_vec_size * "
         << elementSize
         << "));\n";
 

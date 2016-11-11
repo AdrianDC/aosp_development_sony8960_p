@@ -432,25 +432,25 @@ status_t CompoundType::emitJavaTypeDeclarations(
         out << "\n";
     }
 
-    out << "public final void readFromParcel(HwParcel parcel) {\n";
+    out << "public final void readFromParcel(android.os.HwParcel parcel) {\n";
     out.indent();
-    out << "HwBlob blob = parcel.readBuffer();\n";
+    out << "android.os.HwBlob blob = parcel.readBuffer();\n";
     out << "readEmbeddedFromParcel(parcel, blob, 0 /* parentOffset */);\n";
     out.unindent();
     out << "}\n\n";
 
     ////////////////////////////////////////////////////////////////////////////
 
-    out << "public static final ArrayList<"
+    out << "public static final java.util.ArrayList<"
         << localName()
-        << "> readVectorFromParcel(HwParcel parcel) {\n";
+        << "> readVectorFromParcel(android.os.HwParcel parcel) {\n";
     out.indent();
 
-    out << "ArrayList<"
+    out << "java.util.ArrayList<"
         << localName()
-        << "> _hidl_vec = new ArrayList();\n";
+        << "> _hidl_vec = new java.util.ArrayList();\n";
 
-    out << "HwBlob _hidl_blob = parcel.readBuffer();\n\n";
+    out << "android.os.HwBlob _hidl_blob = parcel.readBuffer();\n\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
             out,
@@ -471,7 +471,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out << "public final void readEmbeddedFromParcel(\n";
     out.indent(2);
-    out << "HwParcel parcel, HwBlob _hidl_blob, long _hidl_offset) {\n";
+    out << "android.os.HwParcel parcel, android.os.HwBlob _hidl_blob, long _hidl_offset) {\n";
     out.unindent();
 
     size_t offset = 0;
@@ -504,10 +504,10 @@ status_t CompoundType::emitJavaTypeDeclarations(
     size_t structAlign, structSize;
     getAlignmentAndSize(&structAlign, &structSize);
 
-    out << "public final void writeToParcel(HwParcel parcel) {\n";
+    out << "public final void writeToParcel(android.os.HwParcel parcel) {\n";
     out.indent();
 
-    out << "HwBlob _hidl_blob = new HwBlob("
+    out << "android.os.HwBlob _hidl_blob = new android.os.HwBlob("
         << structSize
         << " /* size */);\n";
 
@@ -521,12 +521,12 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out << "public static final void writeVectorToParcel(\n";
     out.indent(2);
-    out << "HwParcel parcel, ArrayList<"
+    out << "android.os.HwParcel parcel, java.util.ArrayList<"
         << localName()
         << "> _hidl_vec) {\n";
     out.unindent();
 
-    out << "HwBlob _hidl_blob = new HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
+    out << "android.os.HwBlob _hidl_blob = new android.os.HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
             out,
@@ -547,7 +547,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out << "public final void writeEmbeddedToBlob(\n";
     out.indent(2);
-    out << "HwBlob _hidl_blob, long _hidl_offset) {\n";
+    out << "android.os.HwBlob _hidl_blob, long _hidl_offset) {\n";
     out.unindent();
 
     offset = 0;
