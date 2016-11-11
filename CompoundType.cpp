@@ -28,6 +28,10 @@ CompoundType::CompoundType(Style style, const char *localName, const Location &l
       mFields(NULL) {
 }
 
+CompoundType::Style CompoundType::style() const {
+    return mStyle;
+}
+
 bool CompoundType::setFields(
         std::vector<CompoundField *> *fields, std::string *errorMsg) {
     mFields = fields;
