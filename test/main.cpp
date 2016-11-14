@@ -25,9 +25,6 @@
 #error "GTest did not detect pthread library."
 #endif
 
-// TODO(b/32745840)
-#include <utils/String8.h>
-
 #include <algorithm>
 #include <condition_variable>
 #include <getopt.h>
@@ -416,7 +413,7 @@ TEST_F(HidlTest, ServiceListTest) {
 // passthrough TODO(b/32747392)
 TEST_F(HidlTest, ServiceListByInterfaceTest) {
     if (gMode == BINDERIZED) {
-        EXPECT_OK(manager->listByInterface(::android::String8(IParent::descriptor).string(),
+        EXPECT_OK(manager->listByInterface(IParent::descriptor,
             [](const hidl_vec<hidl_string> &registered) {
                 std::set<std::string> registeredSet;
 
@@ -474,8 +471,7 @@ TEST_F(HidlTest, ServiceNotificationTest) {
         EXPECT_EQ(registrations.size(), 1u);
 
         EXPECT_EQ(to_string(registrations.data(), registrations.size()),
-                  "['" + std::string(::android::String8(ISimple::descriptor))
-                  + "/" + instanceName + "']");
+                  std::string("['") + Simple::descriptor + "/" + instanceName + "']");
     }
 }
 
@@ -510,7 +506,7 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
 
         EXPECT_EQ(registrations.size(), 2u);
 
-        std::string descriptor = std::string(::android::String8(ISimple::descriptor));
+        std::string descriptor = ISimple::descriptor;
 
         EXPECT_EQ(to_string(registrations.data(), registrations.size()),
                   "['" + descriptor + "/" + instanceOne + "', '"
