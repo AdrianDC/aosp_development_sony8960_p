@@ -72,7 +72,9 @@ Method *Interface::createDescriptorChainMethod() const {
             out << "::android::hardware::hidl_vec<::android::hardware::hidl_string> _hidl_return;\n";
             out << "_hidl_return.resize(" << chain.size() << ");\n";
             for (size_t i = 0; i < chain.size(); ++i) {
-                out << "_hidl_return[" << i << "] = \"" << chain[i]->fqName().string() << "\";\n";
+                out << "_hidl_return[" << i << "] = "
+                    << chain[i]->fullName()
+                    << "::descriptor;\n";
             }
             out << "_hidl_cb(_hidl_return);\n";
             out << "return ::android::hardware::Void();";
@@ -84,7 +86,7 @@ Method *Interface::createDescriptorChainMethod() const {
             for (size_t i = 0; i < chain.size(); ++i) {
                 if (i != 0)
                     out << ",\n";
-                out << "\"" << chain[i]->fqName().string() << "\"";
+                out << chain[i]->fullJavaName() << ".kInterfaceName";
             }
             out << "));";
             out.unindent(); out.unindent();
