@@ -4,15 +4,18 @@
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hidl/manager/1.0/IServiceNotification.h>
 
-#include <android/hardware/tests/foo/1.0/BnFoo.h>
-#include <android/hardware/tests/foo/1.0/BnFooCallback.h>
-#include <android/hardware/tests/bar/1.0/BnBar.h>
-#include <android/hardware/tests/inheritance/1.0/BnFetcher.h>
-#include <android/hardware/tests/inheritance/1.0/BnGrandparent.h>
-#include <android/hardware/tests/inheritance/1.0/BnParent.h>
-#include <android/hardware/tests/inheritance/1.0/BnChild.h>
-#include <android/hardware/tests/pointer/1.0/BnGraph.h>
-#include <android/hardware/tests/pointer/1.0/BnPointer.h>
+// TODO(b/32756130): remove
+#include <android/hardware/tests/foo/1.0/BnSimple.h>
+
+#include <android/hardware/tests/foo/1.0/IFoo.h>
+#include <android/hardware/tests/foo/1.0/IFooCallback.h>
+#include <android/hardware/tests/bar/1.0/IBar.h>
+#include <android/hardware/tests/inheritance/1.0/IFetcher.h>
+#include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
+#include <android/hardware/tests/inheritance/1.0/IParent.h>
+#include <android/hardware/tests/inheritance/1.0/IChild.h>
+#include <android/hardware/tests/pointer/1.0/IGraph.h>
+#include <android/hardware/tests/pointer/1.0/IPointer.h>
 
 #include <gtest/gtest.h>
 #if GTEST_IS_THREADSAFE
@@ -71,7 +74,6 @@ using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::foo::V1_0::ISimple;
 using ::android::hardware::tests::bar::V1_0::IBar;
-using ::android::hardware::tests::bar::V1_0::IHwBar;
 using ::android::hardware::tests::inheritance::V1_0::IFetcher;
 using ::android::hardware::tests::inheritance::V1_0::IGrandparent;
 using ::android::hardware::tests::inheritance::V1_0::IParent;
