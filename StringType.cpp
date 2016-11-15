@@ -140,7 +140,8 @@ void StringType::emitReaderWriterEmbedded(
             parentName,
             offsetText,
             "::android::hardware::hidl_string",
-            "" /* childName */);
+            "" /* childName */,
+            "::android::hardware");
 }
 
 void StringType::emitJavaFieldInitializer(
