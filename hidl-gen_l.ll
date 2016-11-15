@@ -111,8 +111,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "handle"		{ yylval->type = new HandleType; return token::TYPE; }
 "string"		{ yylval->type = new StringType; return token::TYPE; }
 
-"MQDescriptorSync" { yylval->type = new PredefinedType("::android::hardware::MQDescriptorSync"); return token::TYPE; }
-"MQDescriptorUnsync" { yylval->type = new PredefinedType("::android::hardware::MQDescriptorUnsync"); return token::TYPE; }
+"MQDescriptorSync" { yylval->type = new PredefinedType("::android::hardware", "MQDescriptorSync"); return token::TYPE; }
+"MQDescriptorUnsync" { yylval->type = new PredefinedType("::android::hardware", "MQDescriptorUnsync"); return token::TYPE; }
 
 "("			{ return('('); }
 ")"			{ return(')'); }

@@ -21,18 +21,25 @@
 
 namespace android {
 
-PredefinedType::PredefinedType(const char *name)
-    : mName(name) {
+PredefinedType::PredefinedType(const char *nsp, const char *name)
+    : mNamespace(nsp), mName(name) {
 }
 
 void PredefinedType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
+
+std::string PredefinedType::fullName() const {
+    return mNamespace +
+            (mNamespace.empty() ? "" : "::") +
+            mName;
+}
+
 std::string PredefinedType::getCppType(
         StorageMode mode,
         bool) const {
 
-    const std::string base = mName;
+    const std::string base = fullName();
 
     switch (mode) {
         case StorageMode_Stack:
@@ -63,7 +70,7 @@ void PredefinedType::emitReaderWriter(
     if (isReader) {
         out << name
             << " = (const "
-            << mName
+            << fullName()
             << " *)"
             << parcelObjDeref
             << "readBuffer("
@@ -132,8 +139,9 @@ void PredefinedType::emitReaderWriterEmbedded(
             mode,
             parentName,
             offsetText,
-            mName,
-            "" /* childName */);
+            fullName(),
+            "" /* childName */,
+            mNamespace);
 }
 
 bool PredefinedType::isJavaCompatible() const {

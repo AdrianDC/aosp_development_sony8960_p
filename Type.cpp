@@ -154,7 +154,11 @@ void Type::emitResolveReferencesEmbedded(
 }
 
 bool Type::useParentInEmitResolveReferencesEmbedded() const {
-    return true;
+    return needsResolveReferences();
+}
+
+bool Type::useNameInEmitReaderWriterEmbedded(bool) const {
+    return needsEmbeddedReadWrite();
 }
 
 void Type::emitReaderWriterEmbedded(
@@ -273,31 +277,39 @@ void Type::emitReaderWriterEmbeddedForTypeName(
         const std::string &parentName,
         const std::string &offsetText,
         const std::string &typeName,
-        const std::string &childName) const {
-    const std::string parcelObjDeref =
+        const std::string &childName,
+        const std::string &funcNamespace) const {
+
+        const std::string parcelObjDeref =
         parcelObjIsPointer ? ("*" + parcelObj) : parcelObj;
 
     const std::string parcelObjPointer =
         parcelObjIsPointer ? parcelObj : ("&" + parcelObj);
 
-    const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+    const std::string nameDerefed = nameIsPointer ? ("*" + name) : name;
     const std::string namePointer = nameIsPointer ? name : ("&" + name);
 
     out << "_hidl_err = ";
+
+    if (!funcNamespace.empty()) {
+        out << funcNamespace << "::";
+    }
+
+    out << (isReader ? "readEmbeddedFromParcel(\n" : "writeEmbeddedToParcel(\n");
+
+    out.indent();
+    out.indent();
 
     if (isReader) {
         out << "const_cast<"
             << typeName
             << " *>("
             << namePointer
-            << ")->readEmbeddedFromParcel(\n";
+            << "),\n";
     } else {
-        out << nameDeref
-            << "writeEmbeddedToParcel(\n";
+        out << nameDerefed
+            << ",\n";
     }
-
-    out.indent();
-    out.indent();
 
     out << (isReader ? parcelObjDeref : parcelObjPointer)
         << ",\n"
@@ -323,6 +335,10 @@ status_t Type::emitTypeDeclarations(Formatter &) const {
 }
 
 status_t Type::emitGlobalTypeDeclarations(Formatter &) const {
+    return OK;
+}
+
+status_t Type::emitGlobalHwDeclarations(Formatter &) const {
     return OK;
 }
 

@@ -193,7 +193,8 @@ void CompoundType::emitReaderWriterEmbedded(
             parentName,
             offsetText,
             fullName(),
-            "" /* childName */);
+            "" /* childName */,
+            "" /* namespace */);
 }
 
 void CompoundType::emitJavaReaderWriter(
@@ -294,26 +295,33 @@ void CompoundType::emitResolveReferencesEmbedded(
     const std::string parcelObjPointer =
         parcelObjIsPointer ? parcelObj : ("&" + parcelObj);
 
-    const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+    const std::string nameDerefed = nameIsPointer ? ("*" + name) : name;
     const std::string namePointer = nameIsPointer ? name : ("&" + name);
 
     out << "_hidl_err = ";
 
     if (isReader) {
-        out << "const_cast<"
-            << fullName()
-            << " *"
-            << ">("
-            << namePointer
-            << ")->readEmbeddedReferenceFromParcel(\n";
+        out << "readEmbeddedReferenceFromParcel(\n";
     } else {
-        out << nameDeref
-            << "writeEmbeddedReferenceToParcel(\n";
+        out << "writeEmbeddedReferenceToParcel(\n";
     }
 
     out.indentBlock(2, [&]{
-        out << (isReader ? parcelObjDeref : parcelObjPointer)
-            << ",\n"
+        if (isReader) {
+            out << "const_cast<"
+                << fullName()
+                << " *"
+                << ">("
+                << namePointer
+                << "),\n"
+                << parcelObjDeref;
+        } else {
+            out << nameDerefed
+                << ",\n"
+                << parcelObjPointer;
+        }
+
+        out << ",\n"
             << parentName
             << ",\n"
             << offsetText
@@ -340,14 +348,23 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
             << ";\n";
     }
 
+    out.unindent();
+    out << "};\n\n";
+
+    return OK;
+}
+
+
+status_t CompoundType::emitGlobalHwDeclarations(Formatter &out) const  {
     if (needsEmbeddedReadWrite()) {
-        out << "\n::android::status_t readEmbeddedFromParcel(\n";
+        out << "::android::status_t readEmbeddedFromParcel(\n";
 
         out.indent(2);
 
-        out << "const ::android::hardware::Parcel &parcel,\n"
-                  << "size_t parentHandle,\n"
-                  << "size_t parentOffset);\n\n";
+        out << fullName() << " *obj,\n"
+            << "const ::android::hardware::Parcel &parcel,\n"
+            << "size_t parentHandle,\n"
+            << "size_t parentOffset);\n\n";
 
         out.unindent(2);
 
@@ -355,29 +372,28 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
 
         out.indent(2);
 
-        out << "::android::hardware::Parcel *parcel,\n"
-                  << "size_t parentHandle,\n"
-                  << "size_t parentOffset) const;\n";
+        out << "const " << fullName() << " &obj,\n"
+            << "::android::hardware::Parcel *parcel,\n"
+            << "size_t parentHandle,\n"
+            << "size_t parentOffset);\n\n";
 
         out.unindent(2);
     }
 
     if(needsResolveReferences()) {
-        out << "\n";
         out << "::android::status_t readEmbeddedReferenceFromParcel(\n";
         out.indent(2);
-        out << "const ::android::hardware::Parcel &parcel,\n"
-            << "size_t parentHandle, size_t parentOffset);\n";
+        out << fullName() << " *obj,\n"
+            << "const ::android::hardware::Parcel &parcel,\n"
+            << "size_t parentHandle, size_t parentOffset);\n\n";
         out.unindent(2);
         out << "::android::status_t writeEmbeddedReferenceToParcel(\n";
         out.indent(2);
-        out << "::android::hardware::Parcel *,\n"
-            << "size_t parentHandle, size_t parentOffset) const;\n";
+        out << "const " << fullName() << " &obj,\n"
+            << "::android::hardware::Parcel *,\n"
+            << "size_t parentHandle, size_t parentOffset);\n\n";
         out.unindent(2);
     }
-
-    out.unindent();
-    out << "};\n\n";
 
     return OK;
 }
@@ -583,27 +599,38 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
 void CompoundType::emitStructReaderWriter(
         Formatter &out, const std::string &prefix, bool isReader) const {
+
+    std::string space = prefix.empty() ? "" : (prefix + "::");
+
     out << "::android::status_t "
-              << (prefix.empty() ? "" : (prefix + "::"))
-              << localName()
-              << (isReader ? "::readEmbeddedFromParcel"
-                           : "::writeEmbeddedToParcel")
-              << "(\n";
+        << (isReader ? "readEmbeddedFromParcel"
+                     : "writeEmbeddedToParcel")
+        << "(\n";
 
     out.indent(2);
 
+    bool useName = false;
+    for (const auto &field : *mFields) {
+        if (field->type().useNameInEmitReaderWriterEmbedded(isReader)) {
+            useName = true;
+            break;
+        }
+    }
+    std::string name = useName ? "obj" : "/* obj */";
+    // if not useName, then obj  should not be used at all,
+    // then the #error should not be emitted.
+    std::string error = useName ? "" : "\n#error\n";
+
     if (isReader) {
+        out << space << localName() << " *" << name << ",\n";
         out << "const ::android::hardware::Parcel &parcel,\n";
     } else {
+        out << "const " << space << localName() << " &" << name << ",\n";
         out << "::android::hardware::Parcel *parcel,\n";
     }
 
     out << "size_t parentHandle,\n"
         << "size_t parentOffset)";
-
-    if (!isReader) {
-        out << " const";
-    }
 
     out << " {\n";
 
@@ -620,7 +647,7 @@ void CompoundType::emitStructReaderWriter(
         field->type().emitReaderWriterEmbedded(
                 out,
                 0 /* depth */,
-                field->name(),
+                name + (isReader ? "->" : ".") + field->name() + error,
                 field->name() /* sanitizedName */,
                 false /* nameIsPointer */,
                 "parcel",
@@ -646,10 +673,8 @@ void CompoundType::emitStructReaderWriter(
 
 void CompoundType::emitResolveReferenceDef(
         Formatter &out, const std::string prefix, bool isReader) const {
-    out << "::android::status_t "
-              << (prefix.empty() ? "" : (prefix + "::"))
-              << localName();
-
+    out << "::android::status_t ";
+    const std::string space(prefix.empty() ? "" : (prefix + "::"));
 
     bool useParent = false;
     for (const auto &field : *mFields) {
@@ -663,18 +688,20 @@ void CompoundType::emitResolveReferenceDef(
     std::string parentOffsetName = useParent ? "parentOffset" : "/* parentOffset */";
 
     if (isReader) {
-        out << "::readEmbeddedReferenceFromParcel(\n";
+        out << "readEmbeddedReferenceFromParcel(\n";
         out.indent(2);
-        out << "const ::android::hardware::Parcel &parcel,\n"
+        out << space + localName() + " *obj,\n"
+            << "const ::android::hardware::Parcel &parcel,\n"
             << "size_t " << parentHandleName << ", "
             << "size_t " << parentOffsetName << ")\n";
         out.unindent(2);
     } else {
-        out << "::writeEmbeddedReferenceToParcel(\n";
+        out << "writeEmbeddedReferenceToParcel(\n";
         out.indent(2);
-        out << "::android::hardware::Parcel *parcel,\n"
+        out << "const " << space + localName() + " &obj,\n"
+            << "::android::hardware::Parcel *parcel,\n"
             << "size_t " << parentHandleName << ", "
-            << "size_t " << parentOffsetName << ") const\n";
+            << "size_t " << parentOffsetName << ")\n";
         out.unindent(2);
     }
 
@@ -684,6 +711,7 @@ void CompoundType::emitResolveReferenceDef(
 
     out << "::android::status_t _hidl_err = ::android::OK;\n\n";
 
+    const std::string nameDeref(isReader ? "obj->" : "obj.");
     // if not useParent, then parentName and offsetText
     // should not be used at all, then the #error should not be emitted.
     std::string error = useParent ? "" : "\n#error\n";
@@ -696,7 +724,7 @@ void CompoundType::emitResolveReferenceDef(
         field->type().emitResolveReferencesEmbedded(
             out,
             0 /* depth */,
-            field->name(),
+            nameDeref + field->name(),
             field->name() /* sanitizedName */,
             false,    // nameIsPointer
             "parcel", // const std::string &parcelObj,
