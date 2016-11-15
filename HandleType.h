@@ -56,6 +56,8 @@ struct HandleType : public Type {
 
     bool isJavaCompatible() const override;
 
+    bool useNameInEmitReaderWriterEmbedded(bool isReader) const override;
+
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 };
 

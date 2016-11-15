@@ -313,22 +313,25 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
 status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     std::string ifaceName;
-    if(!AST::isInterface(&ifaceName)) {
-        // types.hal does not get an HwBinder header.
-        return OK;
+    bool isInterface = AST::isInterface(&ifaceName);
+    const Interface *iface = nullptr;
+    std::string baseName{};
+    std::string klassName{};
+
+    if(isInterface) {
+        iface = mRootScope->getInterface();
+        baseName = iface->getBaseName();
+        klassName = "IHw" + baseName;
+    } else {
+        klassName = "hwtypes";
     }
-
-    const Interface *iface = mRootScope->getInterface();
-    const std::string baseName = iface->getBaseName();
-
-    const std::string klassName = "IHw" + baseName;
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append(klassName + ".h");
 
-    FILE* file = fopen(path.c_str(), "w");
+    FILE *file = fopen(path.c_str(), "w");
 
     if (file == NULL) {
         return -errno;
@@ -341,16 +344,20 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    generateCppPackageInclude(out, mPackage, ifaceName);
+    if (isInterface) {
+        generateCppPackageInclude(out, mPackage, ifaceName);
+    } else {
+        generateCppPackageInclude(out, mPackage, "types");
+    }
 
     out << "\n";
 
     for (const auto &item : mImportedNames) {
         if (item.name() == "types") {
-            continue;
+            generateCppPackageInclude(out, item, "hwtypes");
+        } else {
+            generateCppPackageInclude(out, item, "Bn" + item.getInterfaceBaseName());
         }
-
-        generateCppPackageInclude(out, item, "Bn" + item.getInterfaceBaseName());
     }
 
     out << "\n";
@@ -363,26 +370,34 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
-    out << "\n";
 
-    out << "struct "
-        << klassName
-        << " : public "
-        << ifaceName;
+    if (isInterface) {
+        out << "\n";
 
-    const Interface *superType = iface->superType();
+        out << "struct "
+            << klassName
+            << " : public "
+            << ifaceName;
 
-    out << ", public ::android::hardware::IInterface";
+        const Interface *superType = iface->superType();
 
-    out << " {\n";
+        out << ", public ::android::hardware::IInterface";
 
-    out.indent();
+        out << " {\n";
 
-    out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
+        out.indent();
 
-    out.unindent();
+        out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
 
-    out << "};\n\n";
+        out.unindent();
+
+        out << "};\n\n";
+    }
+
+    status_t err = mRootScope->emitGlobalHwDeclarations(out);
+    if (err != OK) {
+        return err;
+    }
 
     enterLeaveNamespace(out, false /* enter */);
 
@@ -740,6 +755,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         }
     } else {
         generateCppPackageInclude(out, mPackage, "types");
+        generateCppPackageInclude(out, mPackage, "hwtypes");
     }
 
     out << "\n";

@@ -158,7 +158,7 @@ void RefType::emitResolveReferencesEmbedded(
             out,
             0 /* depth */,
             name,
-            name /* sanitizedName */,
+            sanitizedName,
             true /* nameIsPointer */, // for element type, name is a pointer.
             parcelObj,
             parcelObjIsPointer,
@@ -187,9 +187,6 @@ void RefType::emitResolveReferencesEmbedded(
     out.unindent();
     out << "}\n\n";
 }
-
-
-
 
 bool RefType::needsResolveReferences() const {
     return true;

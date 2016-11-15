@@ -144,6 +144,8 @@ struct Type {
 
     virtual bool useParentInEmitResolveReferencesEmbedded() const;
 
+    virtual bool useNameInEmitReaderWriterEmbedded(bool isReader) const;
+
     virtual void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
@@ -168,6 +170,10 @@ struct Type {
     // Emit any declarations pertaining to this type that have to be
     // at global scope, i.e. enum class operators.
     virtual status_t emitGlobalTypeDeclarations(Formatter &out) const;
+
+    // Emit any declarations pertaining to this type that have to be
+    // at global scope for transport, e.g. read/writeEmbeddedTo/FromParcel
+    virtual status_t emitGlobalHwDeclarations(Formatter &out) const;
 
     virtual status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const;
@@ -214,7 +220,8 @@ protected:
             const std::string &parentName,
             const std::string &offsetText,
             const std::string &typeName,
-            const std::string &childName) const;
+            const std::string &childName,
+            const std::string &funcNamespace) const;
 
     void emitJavaReaderWriterWithSuffix(
             Formatter &out,
