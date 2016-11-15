@@ -74,6 +74,10 @@ void HandleType::emitReaderWriter(
     }
 }
 
+bool HandleType::useNameInEmitReaderWriterEmbedded(bool isReader) const {
+    return !isReader;
+}
+
 void HandleType::emitReaderWriterEmbedded(
         Formatter &out,
         size_t /* depth */,

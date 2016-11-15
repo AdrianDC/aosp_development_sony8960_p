@@ -109,6 +109,7 @@ struct CompoundType : public Scope {
             bool isReader) const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
+    status_t emitGlobalHwDeclarations(Formatter &out) const override;
 
     status_t emitTypeDefinitions(
             Formatter &out, const std::string prefix) const override;

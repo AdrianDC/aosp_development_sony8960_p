@@ -23,9 +23,11 @@
 namespace android {
 
 struct PredefinedType : public Type {
-    PredefinedType(const char *name);
+    PredefinedType(const char *nsp, const char *name);
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
+
+    std::string fullName() const;
 
     std::string getCppType(
             StorageMode mode,
@@ -58,6 +60,7 @@ struct PredefinedType : public Type {
     bool resultNeedsDeref() const override;
 
 private:
+    std::string mNamespace;
     std::string mName;
 
     DISALLOW_COPY_AND_ASSIGN(PredefinedType);

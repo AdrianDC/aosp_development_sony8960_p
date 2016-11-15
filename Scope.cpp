@@ -116,9 +116,9 @@ bool Scope::containsInterfaces() const {
     return false;
 }
 
-status_t Scope::emitTypeDeclarations(Formatter &out) const {
+status_t Scope::forEachType(std::function<status_t(Type *)> func) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = mTypes[i]->emitTypeDeclarations(out);
+        status_t err = func(mTypes[i]);
 
         if (err != OK) {
             return err;
@@ -128,42 +128,36 @@ status_t Scope::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+status_t Scope::emitTypeDeclarations(Formatter &out) const {
+    return forEachType([&](Type *type) {
+        return type->emitTypeDeclarations(out);
+    });
+}
+
 status_t Scope::emitGlobalTypeDeclarations(Formatter &out) const {
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = mTypes[i]->emitGlobalTypeDeclarations(out);
+    return forEachType([&](Type *type) {
+        return type->emitGlobalTypeDeclarations(out);
+    });
+}
 
-        if (err != OK) {
-            return err;
-        }
-    }
-
-    return OK;
+status_t Scope::emitGlobalHwDeclarations(Formatter &out) const {
+    return forEachType([&](Type *type) {
+        return type->emitGlobalHwDeclarations(out);
+    });
 }
 
 status_t Scope::emitJavaTypeDeclarations(
         Formatter &out, bool atTopLevel) const {
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = mTypes[i]->emitJavaTypeDeclarations(out, atTopLevel);
-
-        if (err != OK) {
-            return err;
-        }
-    }
-
-    return OK;
+    return forEachType([&](Type *type) {
+        return type->emitJavaTypeDeclarations(out, atTopLevel);
+    });
 }
 
 status_t Scope::emitTypeDefinitions(
         Formatter &out, const std::string prefix) const {
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = mTypes[i]->emitTypeDefinitions(out, prefix);
-
-        if (err != OK) {
-            return err;
-        }
-    }
-
-    return OK;
+    return forEachType([&](Type *type) {
+        return type->emitTypeDefinitions(out, prefix);
+    });
 }
 
 const std::vector<NamedType *> &Scope::getSubTypes() const {
@@ -171,13 +165,9 @@ const std::vector<NamedType *> &Scope::getSubTypes() const {
 }
 
 status_t Scope::emitVtsTypeDeclarations(Formatter &out) const {
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t status = mTypes[i]->emitVtsTypeDeclarations(out);
-        if (status != OK) {
-            return status;
-        }
-    }
-    return OK;
+    return forEachType([&](Type *type) {
+        return type->emitVtsTypeDeclarations(out);
+    });
 }
 
 bool Scope::isJavaCompatible() const {
@@ -192,9 +182,10 @@ bool Scope::isJavaCompatible() const {
 
 void Scope::appendToExportedTypesVector(
         std::vector<const Type *> *exportedTypes) const {
-    for (const NamedType *type : mTypes) {
+    forEachType([&](Type *type) {
         type->appendToExportedTypesVector(exportedTypes);
-    }
+        return OK;
+    });
 }
 
 LocalIdentifier::LocalIdentifier(){}
