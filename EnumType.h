@@ -90,7 +90,10 @@ private:
     void getTypeChain(std::vector<const EnumType *> *out) const;
     const Annotation *findExportAnnotation() const;
 
-    void emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const;
+    void emitEnumBitwiseOperator(
+            Formatter &out,
+            bool mutating,
+            const std::string &op) const;
 
     std::vector<EnumValue *> mValues;
     Type *mStorageType;
