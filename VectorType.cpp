@@ -265,7 +265,8 @@ void VectorType::emitReaderWriterEmbedded(
             parentName,
             offsetText,
             baseType,
-            childName);
+            childName,
+            "::android::hardware");
 
     if (!mElementType->needsEmbeddedReadWrite()) {
         return;
