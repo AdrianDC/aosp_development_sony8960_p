@@ -182,16 +182,20 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-void EnumType::emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const {
+void EnumType::emitEnumBitwiseOperator(
+        Formatter &out,
+        bool mutating,
+        const std::string &op) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
 
     const std::string storageType = scalarType->getCppStackType();
 
     out << "inline "
-        << fullName()
+        << (mutating ? fullName() : storageType)
         << (mutating ? " &" : "")
-        << " operator|"
+        << " operator"
+        << op
         << (mutating ? "=" : "")
         << "(\n";
 
@@ -211,13 +215,15 @@ void EnumType::emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const {
         out << "return ";
     }
     out << "static_cast<"
-        << fullName()
+        << (mutating ? fullName() : storageType)
         << ">(\n";
     out.indent();
     out.indent();
     out << "static_cast<"
         << storageType
-        << ">(lhs) | static_cast<"
+        << ">(lhs) "
+        << op
+        <<" static_cast<"
         << storageType
         << ">(rhs));\n";
     out.unindent();
@@ -233,8 +239,10 @@ void EnumType::emitEnumBitwiseOrOperator(Formatter &out, bool mutating) const {
 }
 
 status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
-    emitEnumBitwiseOrOperator(out, false /* mutating */);
-    emitEnumBitwiseOrOperator(out, true /* mutating */);
+    emitEnumBitwiseOperator(out, false /* mutating */, "|");
+    emitEnumBitwiseOperator(out, true /* mutating */, "|");
+    emitEnumBitwiseOperator(out, false /* mutating */, "&");
+    emitEnumBitwiseOperator(out, true /* mutating */, "&");
 
     return OK;
 }
