@@ -1171,14 +1171,14 @@ int main(int argc, char **argv) {
 
             case 'L':
             {
-                CHECK(outputFormat == nullptr); // only one -L option
+                CHECK(outputFormat == nullptr) << "Only one -L option allowed.";
                 for (auto &e : formats) {
                     if (e.mKey == optarg) {
                         outputFormat = &e;
                         break;
                     }
                 }
-                CHECK(outputFormat != nullptr);
+                CHECK(outputFormat != nullptr) << "Output format not recognized.";
                 break;
             }
 
