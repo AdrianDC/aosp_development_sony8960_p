@@ -57,12 +57,12 @@ static void addPackageRootToMap(const std::string &val,
 
 static bool isPathPrefix(const std::string &prefix, const std::string &base) {
     if (prefix.size() >= base.size()) {
-        LOG(INFO) << "Not long enough";
+        LOG(DEBUG) << "Not long enough";
         return false;
     }
 
     if (base[prefix.size()] != '.') {
-        LOG(INFO) << "not full";
+        LOG(DEBUG) << "not full";
         return false;
     }
 
@@ -111,9 +111,10 @@ int main(int argc, char **argv) {
     std::string package;
     std::map<std::string, std::string> packageRootPaths;
     bool isOpenGl = false;
+    bool verbose = false;
 
     int res;
-    while ((res = getopt(argc, argv, "gho:p:r:")) >= 0) {
+    while ((res = getopt(argc, argv, "ghvo:p:r:")) >= 0) {
         switch (res) {
             case 'o': {
                 outputDir = optarg;
@@ -125,6 +126,10 @@ int main(int argc, char **argv) {
             }
             case 'g': {
                 isOpenGl = true;
+                break;
+            }
+            case 'v': {
+                verbose = true;
                 break;
             }
             case 'r':
@@ -148,6 +153,10 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
+    if (verbose) {
+        SetMinimumLogSeverity(android::base::VERBOSE);
+    }
+
     applyPackageRootPath(packageRootPaths, package, outputDir);
 
     if (package.empty()) {
@@ -165,7 +174,7 @@ int main(int argc, char **argv) {
     for(int i = optind; i < argc; i++) {
         std::string path = argv[i];
 
-        LOG(INFO) << "Processing " << path;
+        LOG(DEBUG) << "Processing " << path;
 
         AST ast(path, outputDir, package, isOpenGl);
 
