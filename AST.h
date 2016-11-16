@@ -225,6 +225,11 @@ private:
         PASSTHROUGH_EXIT,
     };
 
+    status_t generateCppAtraceCall(
+            Formatter &out,
+            InstrumentationEvent event,
+            const Method *method) const;
+
     status_t generateCppInstrumentationCall(
             Formatter &out,
             InstrumentationEvent event,
