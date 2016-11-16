@@ -408,10 +408,13 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    // b/32383557 this is a hack. We need to change this if we have more reserved methods.
     for (Method *method : iface->hidlReservedMethods()) {
+        // b/32383557 this is a hack. We need to change this if we have more reserved methods.
+        CHECK_LE(method->results().size(), 1u);
+        std::string resultType = method->results().size() == 0 ? "void" :
+                method->results()[0]->type().getJavaType();
         out << "public final "
-            << method->results()[0]->type().getJavaType()
+            << resultType
             << " "
             << method->name()
             << "() {\n";
