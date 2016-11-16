@@ -166,7 +166,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "#include <android/hidl/manager/1.0/IServiceNotification.h>\n\n";
     }
 
-    out << "#include <hidl/HidlSupport.h>\n";
+    // TODO b/32756130 change back to HidlSupport.h
+    out << "#include <hidl/HidlTransportSupport.h>\n";
     out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
@@ -362,7 +363,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 
     out << "\n";
 
-    out << "#include <hidl/HidlSupport.h>\n";
+    out << "#include <hidl/HidlTransportSupport.h>\n";
     out << "#include <hidl/Status.h>\n";
     out << "#include <hwbinder/IBinder.h>\n";
     out << "#include <hwbinder/IInterface.h>\n";
@@ -996,7 +997,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
     if (!method->isOneway()) {
-        out << "_hidl_err = _hidl_status.readFromParcel(_hidl_reply);\n";
+        out << "_hidl_err = ::android::hardware::readFromParcel(&_hidl_status, _hidl_reply);\n";
         out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
         out << "if (!_hidl_status.isOk()) { return _hidl_status; }\n\n";
 
@@ -1214,15 +1215,11 @@ status_t AST::generateStubSource(
 
     out << "if (_hidl_err == ::android::UNEXPECTED_NULL) {\n";
     out.indent();
-    out << "_hidl_err = ::android::hardware::Status::fromExceptionCode(\n";
+    out << "_hidl_err = ::android::hardware::writeToParcel(\n";
     out.indent();
     out.indent();
-    out << "::android::hardware::Status::EX_NULL_POINTER)\n";
-    out.indent();
-    out.indent();
-    out << ".writeToParcel(_hidl_reply);\n";
-    out.unindent();
-    out.unindent();
+    out << "::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER),\n";
+    out << "_hidl_reply);\n";
     out.unindent();
     out.unindent();
 
@@ -1318,8 +1315,8 @@ status_t AST::generateStubSourceForMethod(
         }
 
         out << ");\n\n";
-        out << "::android::hardware::Status::ok()"
-            << ".writeToParcel(_hidl_reply);\n\n";
+        out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
+            << "_hidl_reply);\n\n";
 
         elidedReturn->type().emitReaderWriter(
                 out,
@@ -1391,8 +1388,8 @@ status_t AST::generateStubSourceForMethod(
             out.indent();
             out << "_hidl_callbackCalled = true;\n\n";
 
-            out << "::android::hardware::Status::ok()"
-                      << ".writeToParcel(_hidl_reply);\n\n";
+            out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
+                << "_hidl_reply);\n\n";
 
             // First DFS: buffers
             for (const auto &arg : method->results()) {
@@ -1445,8 +1442,8 @@ status_t AST::generateStubSourceForMethod(
             out.indent();
         }
 
-        out << "::android::hardware::Status::ok()"
-            << ".writeToParcel(_hidl_reply);\n";
+        out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
+            << "_hidl_reply);\n\n";
 
         if (returnsValue) {
             out.unindent();
