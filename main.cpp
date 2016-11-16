@@ -721,7 +721,8 @@ static status_t generateAndroidBpForPackage(
         << "shared_libs: [\n";
 
     out.indent();
-    out << "\"libhidl\",\n"
+    out << "\"libhidlbase\",\n"
+        << "\"libhidltransport\",\n"
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
@@ -734,7 +735,8 @@ static status_t generateAndroidBpForPackage(
 
     out << "export_shared_lib_headers: [\n";
     out.indent();
-    out << "\"libhidl\",\n"
+    out << "\"libhidlbase\",\n"
+        << "\"libhidltransport\",\n"
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n";
     for (const auto &importedPackage : importedPackages) {
@@ -810,7 +812,8 @@ static status_t generateMakefileImplForPackage(
     out << "\n";
     out << "LOCAL_SHARED_LIBRARIES := \\\n";
     out.indent();
-    out << "libhidl \\\n"
+    out << "libhidlbase \\\n"
+        << "libhidltransport \\\n"
         << "libhwbinder \\\n"
         << "libutils \\\n"
         << makeLibraryName(packageFQName) << " \\\n";
