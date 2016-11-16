@@ -61,7 +61,8 @@ cc_library_shared {
     generated_sources: ["c2hal_test_genc++"],
     export_generated_headers: ["c2hal_test_genc++_headers"],
     shared_libs: [
-        "libhidl",
+        "libhidlbase",
+        "libhidltransport",
         "libhwbinder",
         "libutils",
         "libcutils",
