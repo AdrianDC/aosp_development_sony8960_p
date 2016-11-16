@@ -368,6 +368,7 @@ void VectorType::emitResolveReferencesEmbeddedHelper(
     CHECK(needsResolveReferences() && mElementType->needsResolveReferences());
 
     const std::string nameDeref = name + (nameIsPointer ? "->" : ".");
+    const std::string nameDerefed = (nameIsPointer ? "*" : "") + name;
     std::string elementType = mElementType->getCppStackType();
 
     std::string myChildName = childName, myChildOffset = childOffsetText;
@@ -377,7 +378,8 @@ void VectorType::emitResolveReferencesEmbeddedHelper(
         myChildOffset = "0";
 
         out << "size_t " << myChildName << ";\n";
-        out << "_hidl_err = " << nameDeref << "findInParcel("
+        out << "_hidl_err = ::android::hardware::findInParcel("
+            << nameDerefed << ", "
             << (parcelObjIsPointer ? "*" : "") << parcelObj << ", "
             << "&" << myChildName
             << ");\n";
