@@ -740,6 +740,8 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     Formatter out(file);
 
+
+    out << "#include <cutils/trace.h>\n\n";
     if (isInterface) {
         // This is a no-op for IServiceManager itself.
         out << "#include <android/hidl/manager/1.0/IServiceManager.h>\n";
@@ -954,7 +956,6 @@ status_t AST::generateProxyMethodSource(Formatter &out,
             << superInterface->getBaseName();
     }
     out << "::descriptor);\n";
-
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
     // First DFS: write all buffers and resolve pointers for parent
@@ -1043,13 +1044,13 @@ status_t AST::generateProxyMethodSource(Formatter &out,
 
             out << ");\n\n";
         }
-        status_t status = generateCppInstrumentationCall(
-                out,
-                InstrumentationEvent::CLIENT_API_EXIT,
-                method);
-        if (status != OK) {
-            return status;
-        }
+    }
+    status = generateCppInstrumentationCall(
+            out,
+            InstrumentationEvent::CLIENT_API_EXIT,
+            method);
+    if (status != OK) {
+        return status;
     }
 
     if (elidedReturn != nullptr) {
@@ -1430,7 +1431,6 @@ status_t AST::generateStubSourceForMethod(
             out.unindent();
             out << "}\n";
         }
-
         out << ");\n\n";
 
         // What to do if the stub implementation has a synchronous callback
@@ -1640,10 +1640,56 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
     return OK;
 }
 
+status_t AST::generateCppAtraceCall(Formatter &out,
+                                    InstrumentationEvent event,
+                                    const Method *method) const {
+    const Interface *iface = mRootScope->getInterface();
+    std::string baseString = "HIDL::I" + iface->getBaseName() + "::" + method->name();
+    switch (event) {
+        case SERVER_API_ENTRY:
+        {
+            out << "atrace_begin(ATRACE_TAG_HAL, \""
+                << baseString + "::server\");\n";
+            break;
+        }
+        case CLIENT_API_ENTRY:
+        {
+            out << "atrace_begin(ATRACE_TAG_HAL, \""
+                << baseString + "::client\");\n";
+            break;
+        }
+        case PASSTHROUGH_ENTRY:
+        {
+            out << "atrace_begin(ATRACE_TAG_HAL, \""
+                << baseString + "::passthrough\");\n";
+            break;
+        }
+        case SERVER_API_EXIT:
+        case CLIENT_API_EXIT:
+        case PASSTHROUGH_EXIT:
+        {
+            out << "atrace_end(ATRACE_TAG_HAL);\n";
+            break;
+        }
+        default:
+        {
+            LOG(ERROR) << "Unsupported instrumentation event: " << event;
+            return UNKNOWN_ERROR;
+        }
+    }
+
+    return OK;
+}
+
 status_t AST::generateCppInstrumentationCall(
         Formatter &out,
         InstrumentationEvent event,
         const Method *method) const {
+    status_t err = generateCppAtraceCall(out, event, method);
+    if (err != OK) {
+        return err;
+    }
+
     out << "if (UNLIKELY(mEnableInstrumentation)) {\n";
     out.indent();
     out << "std::vector<void *> _hidl_args;\n";
