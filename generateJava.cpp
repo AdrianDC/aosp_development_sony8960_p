@@ -320,25 +320,25 @@ status_t AST::generateJava(
         out << ") {\n";
         out.indent();
 
-        out << "android.os.HwParcel request = new android.os.HwParcel();\n";
-        out << "request.writeInterfaceToken("
+        out << "android.os.HwParcel _hidl_request = new android.os.HwParcel();\n";
+        out << "_hidl_request.writeInterfaceToken("
             << superInterface->fullJavaName()
             << ".kInterfaceName);\n";
 
         for (const auto &arg : method->args()) {
             emitJavaReaderWriter(
                     out,
-                    "request",
+                    "_hidl_request",
                     arg,
                     false /* isReader */);
         }
 
-        out << "\nandroid.os.HwParcel reply = new android.os.HwParcel();\n"
+        out << "\nandroid.os.HwParcel _hidl_reply = new android.os.HwParcel();\n"
             << "mRemote.transact("
             << method->getSerialId()
             << " /* "
             << method->name()
-            << " */, request, reply, ";
+            << " */, _hidl_request, _hidl_reply, ";
 
         if (method->isOneway()) {
             out << "android.os.IHwBinder.FLAG_ONEWAY";
@@ -349,12 +349,12 @@ status_t AST::generateJava(
         out << ");\n";
 
         if (!method->isOneway()) {
-            out << "reply.verifySuccess();\n";
+            out << "_hidl_reply.verifySuccess();\n";
         } else {
             CHECK(!returnsValue);
         }
 
-        out << "request.releaseTemporaryStorage();\n";
+        out << "_hidl_request.releaseTemporaryStorage();\n";
 
         if (returnsValue) {
             out << "\n";
@@ -362,7 +362,7 @@ status_t AST::generateJava(
             for (const auto &arg : method->results()) {
                 emitJavaReaderWriter(
                         out,
-                        "reply",
+                        "_hidl_reply",
                         arg,
                         true /* isReader */);
             }
@@ -442,12 +442,14 @@ status_t AST::generateJava(
     out << "}\n\n";
 
     out << "public void onTransact("
-        << "int code, android.os.HwParcel request, final android.os.HwParcel reply, "
-        << "int flags) {\n";
+        << "int _hidl_code, "
+        << "android.os.HwParcel _hidl_request, "
+        << "final android.os.HwParcel _hidl_reply, "
+        << "int _hidl_flags) {\n";
 
     out.indent();
 
-    out << "switch (code) {\n";
+    out << "switch (_hidl_code) {\n";
 
     out.indent();
 
@@ -465,14 +467,14 @@ status_t AST::generateJava(
 
         out.indent();
 
-        out << "request.enforceInterface("
+        out << "_hidl_request.enforceInterface("
             << superInterface->fullJavaName()
             << ".kInterfaceName);\n\n";
 
         for (const auto &arg : method->args()) {
             emitJavaReaderWriter(
                     out,
-                    "request",
+                    "_hidl_request",
                     arg,
                     true /* isReader */);
         }
@@ -514,17 +516,17 @@ status_t AST::generateJava(
                 << ") {\n";
 
             out.indent();
-            out << "reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
+            out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             for (const auto &arg : method->results()) {
                 emitJavaReaderWriter(
                         out,
-                        "reply",
+                        "_hidl_reply",
                         arg,
                         false /* isReader */);
             }
 
-            out << "reply.send();\n"
+            out << "_hidl_reply.send();\n"
                       << "}}";
 
             out.unindent();
@@ -534,19 +536,19 @@ status_t AST::generateJava(
         out << ");\n";
 
         if (!needsCallback) {
-            out << "reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
+            out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             if (returnsValue) {
                 const TypedVar *returnArg = method->results()[0];
 
                 emitJavaReaderWriter(
                         out,
-                        "reply",
+                        "_hidl_reply",
                         returnArg,
                         false /* isReader */);
             }
 
-            out << "reply.send();\n";
+            out << "_hidl_reply.send();\n";
         }
 
         out << "break;\n";
