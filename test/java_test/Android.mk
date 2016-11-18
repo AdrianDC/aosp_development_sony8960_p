@@ -39,7 +39,8 @@ LOCAL_SRC_FILES := hidl_test_java_native.cpp
 
 LOCAL_SHARED_LIBRARIES :=                 \
     libbase                               \
-    libhidl                               \
+    libhidlbase                           \
+    libhidltransport                      \
     libhwbinder                           \
     libutils                              \
     android.hardware.tests.baz@1.0        \
