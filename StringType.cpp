@@ -33,7 +33,6 @@ std::string StringType::getCppType(StorageMode mode,
         + "hidl_string";
 
     switch (mode) {
-        case StorageMode_Compound:
         case StorageMode_Stack:
             return base;
 
