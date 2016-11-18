@@ -52,7 +52,8 @@ struct Type {
     enum StorageMode {
         StorageMode_Stack,
         StorageMode_Argument,
-        StorageMode_Result
+        StorageMode_Result,
+        StorageMode_Compound // when stored in a compound type
     };
 
     virtual std::string getCppType(
@@ -81,6 +82,8 @@ struct Type {
     std::string getCppResultType(bool specifyNamespaces = true) const;
 
     std::string getCppArgumentType(bool specifyNamespaces = true) const;
+
+    std::string getCppCompoundType(bool specifyNamespaces = true) const;
 
     // For an array type, dimensionality information will be accumulated at the
     // end of the returned string.

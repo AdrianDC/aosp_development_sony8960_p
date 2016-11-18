@@ -47,6 +47,7 @@ std::string VectorType::getCppType(StorageMode mode,
         + ">";
 
     switch (mode) {
+        case StorageMode_Compound:
         case StorageMode_Stack:
             return base;
 
