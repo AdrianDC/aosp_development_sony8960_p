@@ -23,7 +23,6 @@
 #include "ConstantExpression.h"
 #include "EnumType.h"
 #include "FQName.h"
-#include "GenericBinder.h"
 #include "Interface.h"
 #include "Location.h"
 #include "Method.h"
@@ -52,7 +51,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
     static const std::vector<std::string> reserved({
         // Injected names to interfaces by auto-generated code
-        "isRemote", "interfaceChain", "descriptor", "hidlStaticBlock", "onTransact",
+        "isRemote", "descriptor", "hidlStaticBlock", "onTransact",
         "castFrom", "version", "getInterfaceVersion",
 
         // Inherited names by interfaces from IInterface / IBinder
@@ -585,7 +584,22 @@ type_declaration_body
 interface_declaration
     : INTERFACE valid_identifier opt_extends
       {
-          if ($3 != NULL && !$3->isInterface()) {
+          Type *parent = $3;
+
+          if (ast->package() != gIBasePackageFqName) {
+              if (!ast->addImport(gIBaseFqName.string().c_str())) {
+                  std::cerr << "ERROR: Unable to automatically import '"
+                            << gIBaseFqName.string()
+                            << "' at " << @$
+                            << "\n";
+                  YYERROR;
+              }
+              if (parent == nullptr) {
+                parent = ast->lookupType(gIBaseFqName);
+              }
+          }
+
+          if (parent != NULL && !parent->isInterface()) {
               std::cerr << "ERROR: You can only extend interfaces. at " << @3
                         << "\n";
 
@@ -599,7 +613,7 @@ interface_declaration
               YYERROR;
           }
 
-          Interface *iface = new Interface($2, convertYYLoc(@2), static_cast<Interface *>($3));
+          Interface *iface = new Interface($2, convertYYLoc(@2), static_cast<Interface *>(parent));
 
           // Register interface immediately so it can be referenced inside
           // definition.
@@ -975,7 +989,18 @@ type
     : array_type_base { $$ = $1; }
     | array_type { $$ = $1; }
     | annotated_compound_declaration { $$ = $1; }
-    | INTERFACE { $$ = new GenericBinder; }
+    | INTERFACE
+      {
+          // "interface" is a synonym of android.hidl.base@1.0::IBase
+          $$ = ast->lookupType(gIBaseFqName);
+          if ($$ == nullptr) {
+              std::cerr << "FATAL: Cannot find "
+                        << gIBaseFqName.string()
+                        << " at " << @1 << "\n";
+
+              YYERROR;
+      }
+    }
     ;
 
 %%

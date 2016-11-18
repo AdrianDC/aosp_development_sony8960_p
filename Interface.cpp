@@ -114,6 +114,11 @@ Method *Interface::createDescriptorChainMethod() const {
 
 
 bool Interface::addMethod(Method *method) {
+    if (isIBase()) {
+        // ignore addMethod requests for IBase; they are all HIDL reserved methods.
+        return true;
+    }
+
     CHECK(!method->isHidlReserved());
     if (lookupMethod(method->name()) != nullptr) {
         LOG(ERROR) << "Redefinition of method " << method->name();
@@ -188,7 +193,9 @@ std::vector<InterfaceAndMethod> Interface::allMethodsFromRoot() const {
         }
     }
     for (Method *reservedMethod : hidlReservedMethods()) {
-        v.push_back(InterfaceAndMethod(this, reservedMethod));
+        v.push_back(InterfaceAndMethod(
+                *chain.rbegin(), // IBase
+                reservedMethod));
     }
     return v;
 }

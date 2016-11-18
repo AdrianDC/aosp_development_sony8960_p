@@ -188,10 +188,11 @@ static void generateMakefileSectionForType(
     out.indent();
     out.indent();
     out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava"
-        << " -r"
-        << coordinator->getPackageRoot(packageFQName) << ":"
-        << coordinator->getPackageRootPath(packageFQName) << " \\\n";
+        << "\n-Ljava \\"
+        << "\n-r"
+        << coordinator->getPackageRootOption(packageFQName) << " \\"
+        << "\n-r"
+        << coordinator->getPackageRootOption(gIBasePackageFqName) << " \\\n";
 
     out << packageFQName.string()
         << "::"
@@ -364,10 +365,11 @@ static void generateMakefileSectionForJavaConstants(
     out.indent();
     out.indent();
     out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava-constants"
-        << " -r"
-        << coordinator->getPackageRoot(packageFQName) << ":"
-        << coordinator->getPackageRootPath(packageFQName) << " \\\n";
+        << "\n-Ljava-constants \\"
+        << "\n-r"
+        << coordinator->getPackageRootOption(packageFQName) << " \\"
+        << "\n-r"
+        << coordinator->getPackageRootOption(gIBasePackageFqName) << " \\\n";
 
     out << packageFQName.string();
     out << "\n";
@@ -587,8 +589,9 @@ static void generateAndroidBpGenSection(
     out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)"
         << " -L" << language
         << " -r"
-        << coordinator->getPackageRoot(packageFQName) << ":"
-        << coordinator->getPackageRootPath(packageFQName)
+        << coordinator->getPackageRootOption(packageFQName)
+        << " -r"
+        << coordinator->getPackageRootOption(gIBasePackageFqName)
         << " " << packageFQName.string() << "\",\n";
 
     out << "srcs: [\n";

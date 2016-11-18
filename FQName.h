@@ -96,6 +96,7 @@ struct FQName {
 
     bool operator<(const FQName &other) const;
     bool operator==(const FQName &other) const;
+    bool operator!=(const FQName &other) const;
 
     // Must be called on an interface
     // ::android::hardware::Foo::V1_0::IBar
@@ -161,6 +162,9 @@ private:
 
     void setVersion(const std::string &v);
 };
+
+static const FQName gIBaseFqName{"android.hidl.base@1.0::IBase"};
+static const FQName gIBasePackageFqName{gIBaseFqName.package(), gIBaseFqName.version(), ""};
 
 }  // namespace android
 

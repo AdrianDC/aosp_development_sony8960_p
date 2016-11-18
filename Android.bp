@@ -35,7 +35,6 @@ cc_library_shared {
         "ConstantExpression.cpp",
         "EnumType.cpp",
         "FQName.cpp",
-        "GenericBinder.cpp",
         "HandleType.cpp",
         "Interface.cpp",
         "MemoryType.cpp",

@@ -163,11 +163,14 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     }
 
     if (isInterface) {
-        out << "#include <android/hidl/manager/1.0/IServiceNotification.h>\n\n";
+        if (isIBase()) {
+            out << "// skipped #include IServiceNotification.h\n\n";
+        } else {
+            out << "#include <android/hidl/manager/1.0/IServiceNotification.h>\n\n";
+        }
     }
 
-    // TODO b/32756130 change back to HidlSupport.h
-    out << "#include <hidl/HidlTransportSupport.h>\n";
+    out << "#include <hidl/HidlSupport.h>\n";
     out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
@@ -189,7 +192,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *superType = iface->superType();
 
         if (superType == NULL) {
-            out << " : virtual public ::android::hardware::IBase";
+            out << " : virtual public ::android::RefBase";
         } else {
             out << " : public "
                 << superType->fullName();
@@ -220,7 +223,11 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "return version;\n";
         out.unindent();
         out << "}\n\n";
-        out << "virtual bool isRemote() const override { return false; }\n\n";
+        out << "virtual bool isRemote() const ";
+        if (!isIBase()) {
+            out << "override ";
+        }
+        out << "{ return false; }\n\n";
 
         for (const auto &method : iface->methods()) {
             out << "\n";
@@ -261,7 +268,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
             out << ")";
             if (method->isHidlReserved()) {
-                out << " override";
+                if (!isIBase()) {
+                    out << " override";
+                }
                 out << " {\n";
                 out.indent();
                 method->cppImpl(out);
@@ -288,7 +297,11 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         out << "\nstatic const char* descriptor;\n\n";
 
-        out << "DECLARE_SERVICE_MANAGER_INTERACTIONS(" << baseName << ")\n\n";
+        if (isIBase()) {
+            out << "// skipped DECLARE_SERVICE_MANAGER_INTERACTIONS\n\n";
+        } else {
+            out << "DECLARE_SERVICE_MANAGER_INTERACTIONS(" << baseName << ")\n\n";
+        }
 
         out << "private: static int hidlStaticBlock;\n";
     }
@@ -865,11 +878,15 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     if (err == OK && isInterface) {
         const Interface *iface = mRootScope->getInterface();
 
-        out << "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS("
-            << baseName << ", "
-            << "\"" << iface->fqName().package()
-            << iface->fqName().atVersion()
-            << "\")\n";
+        if (isIBase()) {
+            out << "// skipped IMPLEMENT_SERVICE_MANAGER_INTERACTIONS\n";
+        } else {
+            out << "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS("
+                << baseName << ", "
+                << "\"" << iface->fqName().package()
+                << iface->fqName().atVersion()
+                << "\")\n";
+        }
     }
 
     enterLeaveNamespace(out, false /* enter */);
@@ -993,13 +1010,9 @@ status_t AST::generateProxyMethodSource(Formatter &out,
             out, method->results(), true /* forResults */);
 
     out << "_hidl_err = _hidl_data.writeInterfaceToken(";
-    if (method->isHidlReserved()) {
-        out << "::android::hardware::IBase";
-    } else {
-        out << superInterface->fqName().cppNamespace()
-            << "::I"
-            << superInterface->getBaseName();
-    }
+    out << superInterface->fqName().cppNamespace()
+        << "::I"
+        << superInterface->getBaseName();
     out << "::descriptor);\n";
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
@@ -1282,13 +1295,9 @@ status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
     out << "if (!_hidl_data.enforceInterface(";
 
-    if (method->isHidlReserved()) {
-        out << "::android::hardware::IBase";
-    } else {
-        out << iface->fqName().cppNamespace()
-            << "::I"
-            << iface->getBaseName();
-    }
+    out << iface->fqName().cppNamespace()
+        << "::I"
+        << iface->getBaseName();
 
     out << "::descriptor)) {\n";
 

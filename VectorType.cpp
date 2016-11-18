@@ -191,18 +191,18 @@ void VectorType::emitReaderWriterForVectorOfBinders(
         out.indent();
 
         out << mElementType->getCppStackType(true /* specifyNamespaces */)
-            << " _hidl_binder;\n";
+            << " _hidl_base;\n";
 
         mElementType->emitReaderWriter(
                 out,
-                "_hidl_binder",
+                "_hidl_base",
                 parcelObj,
                 parcelObjIsPointer,
                 isReader,
                 mode);
 
         out << name
-            << "[_hidl_index] = _hidl_binder;\n";
+            << "[_hidl_index] = _hidl_base;\n";
 
         out.unindent();
         out << "}\n";
