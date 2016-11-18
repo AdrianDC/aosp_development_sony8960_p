@@ -27,13 +27,19 @@ void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
-std::string HandleType::getCppType(StorageMode,
+std::string HandleType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
           std::string(specifyNamespaces ? "::" : "")
         + "native_handle_t";
-
-    return "const " + base + "*";
+    if (mode == StorageMode_Compound) {
+        const std::string hidl_pointer_type =
+            std::string(specifyNamespaces ? "::android::hardware::details::hidl_pointer" :
+                                            "hidl_pointer");
+        return hidl_pointer_type + "<" + base  + ">";
+    } else {
+        return "const " + base + "*";
+    }
 }
 
 void HandleType::emitReaderWriter(
