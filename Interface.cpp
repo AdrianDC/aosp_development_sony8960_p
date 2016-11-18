@@ -217,7 +217,6 @@ std::string Interface::getCppType(StorageMode mode,
     switch (mode) {
         case StorageMode_Stack:
         case StorageMode_Result:
-        case StorageMode_Compound:
             return base;
 
         case StorageMode_Argument:

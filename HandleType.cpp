@@ -30,15 +30,18 @@ void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
 std::string HandleType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
-          std::string(specifyNamespaces ? "::" : "")
-        + "native_handle_t";
-    if (mode == StorageMode_Compound) {
-        const std::string hidl_pointer_type =
-            std::string(specifyNamespaces ? "::android::hardware::details::hidl_pointer" :
-                                            "hidl_pointer");
-        return hidl_pointer_type + "<" + base  + ">";
-    } else {
-        return "const " + base + "*";
+          std::string(specifyNamespaces ? "::android::hardware::" : "")
+        + "hidl_handle";
+
+    switch (mode) {
+        case StorageMode_Stack:
+            return base;
+
+        case StorageMode_Argument:
+            return "const " + base + "&";
+
+        case StorageMode_Result:
+            return base;
     }
 }
 

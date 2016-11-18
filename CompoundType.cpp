@@ -75,7 +75,6 @@ std::string CompoundType::getCppType(
         specifyNamespaces ? fullName() : partialCppName();
 
     switch (mode) {
-        case StorageMode_Compound:
         case StorageMode_Stack:
             return base;
 
@@ -343,7 +342,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     Scope::emitTypeDeclarations(out);
 
     for (const auto &field : *mFields) {
-        out << field->type().getCppCompoundType()
+        out << field->type().getCppStackType()
             << " "
             << field->name()
             << ";\n";

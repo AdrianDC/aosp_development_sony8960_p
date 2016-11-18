@@ -42,7 +42,6 @@ std::string PredefinedType::getCppType(
     const std::string base = fullName();
 
     switch (mode) {
-        case StorageMode_Compound:
         case StorageMode_Stack:
             return base;
 

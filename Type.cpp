@@ -375,10 +375,6 @@ std::string Type::getCppArgumentType(bool specifyNamespaces) const {
     return getCppType(StorageMode_Argument, specifyNamespaces);
 }
 
-std::string Type::getCppCompoundType(bool specifyNamespaces) const {
-    return getCppType(StorageMode_Compound, specifyNamespaces);
-}
-
 void Type::emitJavaReaderWriterWithSuffix(
         Formatter &out,
         const std::string &parcelObj,
