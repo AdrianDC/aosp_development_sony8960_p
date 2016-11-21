@@ -495,15 +495,58 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         if (!method->args().empty()) {
             out << ", ";
         }
+        out << "[&](";
+        first = true;
+        for (const auto &arg : method->results()) {
+            if (!first) {
+                out << ", ";
+            }
 
-        out << "_hidl_cb";
+            out << "const auto &" << arg->name();
+
+            first = false;
+        }
+
+        out << ") {\n";
+        out.indent();
+        status_t status = generateCppInstrumentationCall(
+                out,
+                InstrumentationEvent::PASSTHROUGH_EXIT,
+                method);
+        if (status != OK) {
+            return status;
+        }
+
+        out << "_hidl_cb(";
+        first = true;
+        for (const auto &arg : method->results()) {
+            if (!first) {
+                out << ", ";
+            }
+
+            out << arg->name();
+
+            first = false;
+        }
+        out << ");\n";
+        out.unindent();
+        out << "});\n\n";
+    } else {
+        out << ");\n\n";
+        if (elidedReturn != nullptr) {
+            out << elidedReturn->type().getCppResultType()
+                << " "
+                << elidedReturn->name()
+                << " = _hidl_return;\n";
+        }
+        status_t status = generateCppInstrumentationCall(
+                out,
+                InstrumentationEvent::PASSTHROUGH_EXIT,
+                method);
+        if (status != OK) {
+            return status;
+        }
     }
-    out << ");\n\n";
-
-    generateCppInstrumentationCall(
-        out,
-        InstrumentationEvent::PASSTHROUGH_EXIT,
-        method);
 
     if (method->isOneway()) {
         out.unindent();
@@ -1748,7 +1791,11 @@ status_t AST::generateCppInstrumentationCall(
         case PASSTHROUGH_EXIT:
         {
             event_str = "InstrumentationEvent::PASSTHROUGH_EXIT";
-            // TODO(b/32576620): passthrough return values
+            for (const auto &arg : method->results()) {
+                out << "_hidl_args.push_back((void *)&"
+                    << arg->name()
+                    << ");\n";
+            }
             break;
         }
         default:
