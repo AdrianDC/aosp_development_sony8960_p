@@ -785,7 +785,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     Formatter out(file);
 
-
+    out << "#include <android/log.h>\n";
     out << "#include <cutils/trace.h>\n\n";
     if (isInterface) {
         // This is a no-op for IServiceManager itself.
@@ -1430,6 +1430,13 @@ status_t AST::generateStubSourceForMethod(
 
             out << ") {\n";
             out.indent();
+            out << "if (_hidl_callbackCalled) {\n";
+            out.indent();
+            out << "LOG_ALWAYS_FATAL(\""
+                << method->name()
+                << ": _hidl_cb called a second time, but must be called once.\");\n";
+            out.unindent();
+            out << "}\n";
             out << "_hidl_callbackCalled = true;\n\n";
 
             out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
@@ -1474,24 +1481,18 @@ status_t AST::generateStubSourceForMethod(
         }
         out << ");\n\n";
 
-        // What to do if the stub implementation has a synchronous callback
-        // which does not get invoked?  This is not a transport error but a
-        // service error of sorts. For now, return OK to the caller, as this is
-        // not a transport error.
-        //
-        // TODO(b/31365311) Figure out how to deal with this later.
-
         if (returnsValue) {
             out << "if (!_hidl_callbackCalled) {\n";
             out.indent();
-        }
-
-        out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
-            << "_hidl_reply);\n\n";
-
-        if (returnsValue) {
+            out << "LOG_ALWAYS_FATAL(\""
+                << method->name()
+                << ": _hidl_cb not called, but must be called once.\");\n";
             out.unindent();
             out << "}\n\n";
+        } else {
+            out << "::android::hardware::writeToParcel("
+                << "::android::hardware::Status::ok(), "
+                << "_hidl_reply);\n\n";
         }
     }
 
