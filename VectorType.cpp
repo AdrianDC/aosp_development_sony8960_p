@@ -559,9 +559,9 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out.unindent();
 
         out << fieldName << ".clear();\n";
-        out << "long _hidl_vec_size = "
+        out << "int _hidl_vec_size = "
             << blobName
-            << ".getInt64("
+            << ".getInt32("
             << offset
             << " + 8 /* offsetof(hidl_vec<T>, mSize) */);\n";
 
@@ -608,19 +608,19 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
     out << "{\n";
     out.indent();
 
-    out << "long _hidl_vec_size = "
+    out << "int _hidl_vec_size = "
         << fieldName
         << ".size();\n";
 
     out << blobName
-        << ".putInt64("
+        << ".putInt32("
         << offset
         << " + 8 /* offsetof(hidl_vec<T>, mSize) */, _hidl_vec_size);\n";
 
     out << blobName
         << ".putBool("
         << offset
-        << " + 16 /* offsetof(hidl_vec<T>, mOwnsBuffer) */, false);\n";
+        << " + 12 /* offsetof(hidl_vec<T>, mOwnsBuffer) */, false);\n";
 
     size_t elementAlign, elementSize;
     elementType->getAlignmentAndSize(&elementAlign, &elementSize);
@@ -724,7 +724,7 @@ bool VectorType::isJavaCompatible() const {
 
 void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_vec<T>
-    *size = 24;
+    *size = 16;
 }
 
 }  // namespace android
