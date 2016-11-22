@@ -104,6 +104,7 @@ private:
     std::vector<Method *> mReservedMethods;
     mutable bool mIsJavaCompatibleInProgress;
     Method *createDescriptorChainMethod() const;
+    Method *createSyspropsChangedMethod() const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
