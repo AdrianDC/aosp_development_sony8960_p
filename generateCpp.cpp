@@ -175,7 +175,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "#include <hidl/Status.h>\n";
     }
 
-    out << "#include <utils/NativeHandle.h>\n\n";
+    out << "#include <utils/NativeHandle.h>\n";
+    out << "#include <utils/misc.h>\n\n"; /* for report_sysprop_change() */
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";

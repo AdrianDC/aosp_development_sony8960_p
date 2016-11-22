@@ -45,6 +45,7 @@ enum {
     /////////////////// HIDL reserved
     FIRST_HIDL_TRANSACTION  = 0x00f00000,
     HIDL_DESCRIPTOR_CHAIN_TRANSACTION = FIRST_HIDL_TRANSACTION,
+    HIDL_SYSPROPS_CHANGED_TRANSACTION,
     LAST_HIDL_TRANSACTION   = 0x00ffffff,
 };
 
@@ -53,6 +54,24 @@ Interface::Interface(const char *localName, const Location &location, Interface 
       mSuperType(super),
       mIsJavaCompatibleInProgress(false) {
     mReservedMethods.push_back(createDescriptorChainMethod());
+    mReservedMethods.push_back(createSyspropsChangedMethod());
+}
+
+Method *Interface::createSyspropsChangedMethod() const {
+    return new Method("notifySyspropsChanged",
+            new std::vector<TypedVar *>() /*args */,
+            new std::vector<TypedVar *>() /*results */,
+            true /*oneway */,
+            new std::vector<Annotation *>(),
+            HIDL_SYSPROPS_CHANGED_TRANSACTION,
+            [this](auto &out) { /*cppImpl */
+                out << "::android::report_sysprop_change();\n";
+                out << "return ::android::hardware::Void();";
+            },
+            [this](auto &out) { /* javaImpl */
+                out << "android.os.SystemProperties.reportSyspropChanged();";
+            }
+    );
 }
 
 Method *Interface::createDescriptorChainMethod() const {
