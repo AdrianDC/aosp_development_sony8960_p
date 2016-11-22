@@ -390,13 +390,21 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
     }
 
     std::string valuePrefix;
-
     const AnnotationParam *prefixParam = annotation->getParam("value_prefix");
     if (prefixParam != nullptr) {
         CHECK_EQ(prefixParam->getValues()->size(), 1u);
 
         std::string quotedString = prefixParam->getValues()->at(0);
         valuePrefix = quotedString.substr(1, quotedString.size() - 2);
+    }
+
+    std::string valueSuffix;
+    const AnnotationParam *suffixParam = annotation->getParam("value_suffix");
+    if (suffixParam != nullptr) {
+        CHECK_EQ(suffixParam->getValues()->size(), 1u);
+
+        std::string quotedString = suffixParam->getValues()->at(0);
+        valueSuffix = quotedString.substr(1, quotedString.size() - 2);
     }
 
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
@@ -428,6 +436,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
                     << " "
                     << valuePrefix
                     << entry->name()
+                    << valueSuffix
                     << " = ";
 
                 // javaValue will make the number signed.
@@ -470,7 +479,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
         const auto &type = *it;
 
         for (const auto &entry : type->values()) {
-            out << valuePrefix << entry->name();
+            out << valuePrefix << entry->name() << valueSuffix;
 
             std::string value = entry->cppValue(scalarType->getKind());
             CHECK(!value.empty()); // use autofilled values for c++.
