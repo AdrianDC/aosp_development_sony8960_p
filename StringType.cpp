@@ -209,7 +209,7 @@ status_t StringType::emitVtsTypeDeclarations(Formatter &out) const {
 
 void StringType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_string
-    *size = 24;
+    *size = 16;
 }
 
 }  // namespace android
