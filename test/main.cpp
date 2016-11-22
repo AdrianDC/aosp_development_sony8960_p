@@ -948,10 +948,11 @@ TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
 TEST_F(HidlTest, FooStructEmbeddedHandleTest) {
     EXPECT_OK(foo->createMyHandle([&](const auto &myHandle) {
         EXPECT_EQ(myHandle.guard, 666);
-        EXPECT_EQ(myHandle.h->numInts, 10);
-        EXPECT_EQ(myHandle.h->numFds, 0);
+        const native_handle_t* handle = myHandle.h.getNativeHandle();
+        EXPECT_EQ(handle->numInts, 10);
+        EXPECT_EQ(handle->numFds, 0);
         int data[] = {2,3,5,7,11,13,17,19,21,23};
-        EXPECT_ARRAYEQ(myHandle.h->data, data, 10);
+        EXPECT_ARRAYEQ(handle->data, data, 10);
     }));
 
     EXPECT_OK(foo->closeHandles());

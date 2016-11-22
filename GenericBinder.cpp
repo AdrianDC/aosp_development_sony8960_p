@@ -40,7 +40,6 @@ std::string GenericBinder::getCppType(
         + "IBinder>";
 
     switch (mode) {
-        case StorageMode_Compound:
         case StorageMode_Stack:
         case StorageMode_Result:
             return base;
