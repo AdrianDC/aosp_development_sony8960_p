@@ -79,7 +79,6 @@ std::string ArrayType::getCppType(StorageMode mode,
     arrayType += ">";
 
     switch (mode) {
-        case StorageMode_Compound:
         case StorageMode_Stack:
             return arrayType;
 
