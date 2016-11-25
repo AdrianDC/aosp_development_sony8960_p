@@ -724,6 +724,7 @@ static status_t generateAndroidBpForPackage(
     out << "\"libhidlbase\",\n"
         << "\"libhidltransport\",\n"
         << "\"libhwbinder\",\n"
+        << "\"liblog\",\n"
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
     for (const auto &importedPackage : importedPackages) {
