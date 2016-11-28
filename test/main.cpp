@@ -524,16 +524,18 @@ TEST_F(HidlTest, FooDoThisTest) {
 
 TEST_F(HidlTest, FooDoThatAndReturnSomethingTest) {
     ALOGI("CLIENT call doThatAndReturnSomething.");
-    int32_t result = foo->doThatAndReturnSomething(2.0f);
-    ALOGI("CLIENT doThatAndReturnSomething returned %d.", result);
-    EXPECT_EQ(result, 666);
+    Return<int32_t> result = foo->doThatAndReturnSomething(2.0f);
+    EXPECT_OK(result);
+    ALOGI("CLIENT doThatAndReturnSomething returned %d.", result.get());
+    EXPECT_EQ(result.get(), 666);
 }
 
 TEST_F(HidlTest, FooDoQuiteABitTest) {
     ALOGI("CLIENT call doQuiteABit");
-    double something = foo->doQuiteABit(1, 2, 3.0f, 4.0);
-    ALOGI("CLIENT doQuiteABit returned %f.", something);
-    EXPECT_DOUBLE_EQ(something, 666.5);
+    Return<double> result = foo->doQuiteABit(1, 2, 3.0f, 4.0);
+    EXPECT_OK(result);
+    ALOGI("CLIENT doQuiteABit returned %f.", result.get());
+    EXPECT_DOUBLE_EQ(result.get(), 666.5);
 }
 
 TEST_F(HidlTest, FooDoSomethingElseTest) {
@@ -637,13 +639,12 @@ TEST_F(HidlTest, ForReportResultsTest) {
     });
 }
 
-
-
 TEST_F(HidlTest, FooUseAnEnumTest) {
     ALOGI("CLIENT call useAnEnum.");
-    IFoo::SomeEnum sleepy = foo->useAnEnum(IFoo::SomeEnum::quux);
-    ALOGI("CLIENT useAnEnum returned %u", (unsigned)sleepy);
-    EXPECT_EQ(sleepy, IFoo::SomeEnum::goober);
+    Return<IFoo::SomeEnum> sleepy = foo->useAnEnum(IFoo::SomeEnum::quux);
+    EXPECT_OK(sleepy);
+    ALOGI("CLIENT useAnEnum returned %hhu", sleepy.get());
+    EXPECT_EQ(sleepy.get(), IFoo::SomeEnum::goober);
 }
 
 TEST_F(HidlTest, FooHaveAGooberTest) {
@@ -912,9 +913,11 @@ TEST_F(HidlTest, FooHaveAVectorOfInterfacesTest) {
                 [&](const auto &out) {
                     EXPECT_EQ(in.size(), out.size());
                     for (size_t i = 0; i < in.size(); ++i) {
-                        int32_t inCookie = in[i]->getCookie();
-                        int32_t outCookie = out[i]->getCookie();
-                        EXPECT_EQ(inCookie, outCookie);
+                        Return<int32_t> inCookie = in[i]->getCookie();
+                        Return<int32_t> outCookie = out[i]->getCookie();
+                        EXPECT_OK(inCookie);
+                        EXPECT_OK(outCookie);
+                        EXPECT_EQ(inCookie.get(), outCookie.get());
                     }
                 }));
 }
@@ -938,9 +941,11 @@ TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
                         sp<ISimple> inSimple = IHwSimple::asInterface(in[i]);
                         sp<ISimple> outSimple = IHwSimple::asInterface(out[i]);
 
-                        int32_t inCookie = inSimple->getCookie();
-                        int32_t outCookie = outSimple->getCookie();
-                        EXPECT_EQ(inCookie, outCookie);
+                        Return<int32_t> inCookie = inSimple->getCookie();
+                        Return<int32_t> outCookie = outSimple->getCookie();
+                        EXPECT_OK(inCookie);
+                        EXPECT_OK(outCookie);
+                        EXPECT_EQ(inCookie.get(), outCookie.get());
                     }
                 }));
 }
