@@ -35,6 +35,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include <hidl-test/FooHelper.h>
@@ -190,8 +191,7 @@ void signal_handler(int signal)
 }
 
 template <class T>
-static pid_t forkServer(const std::string &serviceName,
-                       const char *tag) {
+static pid_t forkServer(const std::string &serviceName) {
     pid_t pid;
 
     // use fork to create and kill to destroy server processes.
@@ -202,17 +202,17 @@ static pid_t forkServer(const std::string &serviceName,
         sp<T> server = T::getService(serviceName, true);
         gServiceName = serviceName;
         signal(SIGTERM, signal_handler);
-        ALOGD("SERVER(%s) registering %s", tag, serviceName.c_str());
+        ALOGD("SERVER registering %s", serviceName.c_str());
         ::android::status_t status = server->registerAsService(serviceName);
         if (status != ::android::OK) {
-            ALOGE("SERVER(%s) could not register %s", tag, serviceName.c_str());
+            ALOGE("SERVER could not register %s", serviceName.c_str());
             exit(-1);
         }
-        ALOGD("SERVER(%s) starting %s", tag, serviceName.c_str());
+        ALOGD("SERVER starting %s", serviceName.c_str());
         ProcessState::self()->setThreadPoolMaxThreadCount(0);
         ProcessState::self()->startThreadPool();
         IPCThreadState::self()->joinThreadPool();
-        ALOGD("SERVER(%s) %s ends.", tag, serviceName.c_str());
+        ALOGD("SERVER %s ends.", serviceName.c_str());
         exit(0);
     }
 
@@ -236,10 +236,8 @@ static void killServer(pid_t pid, const char *serverName) {
 
 class HidlEnvironmentBase : public ::testing::Environment {
 protected:
-    std::vector<pid_t> mPids;
-    const char * const serverNames[6] = {
-        "Child", "Fetcher", "Bar", "FooCallback", "Graph", "Pointer"
-    };
+    std::vector<std::pair<std::string, pid_t>> mPids;
+
 public:
     sp<IServiceManager> manager;
     sp<IFetcher> fetcher;
@@ -249,6 +247,11 @@ public:
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
+
+    template <class T>
+    void addServer(const std::string &name) {
+        mPids.push_back({name, forkServer<T>(name)});
+    }
 
     void getServices() {
 
@@ -297,8 +300,8 @@ public:
         ALOGI("Environment tear-down beginning...");
         ALOGI("Killing servers...");
         size_t i = 0;
-        for (pid_t pid : mPids) {
-            killServer(pid, serverNames[i++]);
+        for (const auto &pair : mPids) {
+            killServer(pair.second, pair.first.c_str());
         }
         ALOGI("Servers all killed.");
         ALOGI("Environment tear-down complete.");
@@ -311,7 +314,7 @@ private:
         ALOGI("Environment setup beginning...");
         // starts this even for passthrough mode.
         // this is used in Bar's default implementation
-        mPids.push_back(forkServer<IChild>("child", serverNames[0]));
+        addServer<IChild>("child");
         sleep(1);
         getServices();
         ALOGI("Environment setup complete.");
@@ -324,13 +327,13 @@ public:
         ALOGI("Environment setup beginning...");
 
         size_t i = 0;
-        mPids.push_back(forkServer<IChild>("child", serverNames[i++]));
-        mPids.push_back(forkServer<IParent>("parent", serverNames[i++]));
-        mPids.push_back(forkServer<IFetcher>("fetcher", serverNames[i++]));
-        mPids.push_back(forkServer<IBar>("foo", serverNames[i++]));
-        mPids.push_back(forkServer<IFooCallback>("foo callback", serverNames[i++]));
-        mPids.push_back(forkServer<IGraph>("graph", serverNames[i++]));
-        mPids.push_back(forkServer<IPointer>("pointer", serverNames[i++]));
+        addServer<IChild>("child");
+        addServer<IParent>("parent");
+        addServer<IFetcher>("fetcher");
+        addServer<IBar>("foo");
+        addServer<IFooCallback>("foo callback");
+        addServer<IGraph>("graph");
+        addServer<IPointer>("pointer");
 
         sleep(1);
         getServices();
