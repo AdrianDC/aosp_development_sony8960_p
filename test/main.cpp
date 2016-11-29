@@ -193,6 +193,7 @@ template <class T>
 static pid_t forkServer(const std::string &serviceName,
                        const char *tag) {
     pid_t pid;
+
     // use fork to create and kill to destroy server processes.
     // getStub = true to get the passthrough version as the backend for the
     // binderized service.
@@ -202,7 +203,11 @@ static pid_t forkServer(const std::string &serviceName,
         gServiceName = serviceName;
         signal(SIGTERM, signal_handler);
         ALOGD("SERVER(%s) registering %s", tag, serviceName.c_str());
-        server->registerAsService(serviceName);
+        ::android::status_t status = server->registerAsService(serviceName);
+        if (status != ::android::OK) {
+            ALOGE("SERVER(%s) could not register %s", tag, serviceName.c_str());
+            exit(-1);
+        }
         ALOGD("SERVER(%s) starting %s", tag, serviceName.c_str());
         ProcessState::self()->setThreadPoolMaxThreadCount(0);
         ProcessState::self()->startThreadPool();
@@ -210,6 +215,7 @@ static pid_t forkServer(const std::string &serviceName,
         ALOGD("SERVER(%s) %s ends.", tag, serviceName.c_str());
         exit(0);
     }
+
     // in main process
     return pid;
 }
@@ -457,7 +463,7 @@ TEST_F(HidlTest, ServiceNotificationTest) {
         ProcessState::self()->startThreadPool();
 
         Simple* instance = new Simple(1);
-        instance->registerAsService(instanceName);
+        EXPECT_EQ(::android::OK, instance->registerAsService(instanceName));
 
         std::unique_lock<std::mutex> lock(notification->mutex);
 
@@ -490,9 +496,9 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
         ProcessState::self()->startThreadPool();
 
         Simple* instanceA = new Simple(1);
-        instanceA->registerAsService(instanceOne);
+        EXPECT_EQ(::android::OK, instanceA->registerAsService(instanceOne));
         Simple* instanceB = new Simple(2);
-        instanceB->registerAsService(instanceTwo);
+        EXPECT_EQ(::android::OK, instanceB->registerAsService(instanceTwo));
 
         std::unique_lock<std::mutex> lock(notification->mutex);
 
