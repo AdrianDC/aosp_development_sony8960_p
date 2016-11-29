@@ -45,6 +45,10 @@ std::string HandleType::getCppType(StorageMode mode,
     }
 }
 
+std::string HandleType::getVtsType() const {
+    return "TYPE_HANDLE";
+}
+
 void HandleType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -162,6 +166,11 @@ bool HandleType::isJavaCompatible() const {
 
 void HandleType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = *size = 8;
+}
+
+status_t HandleType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: " << getVtsType() << "\n";
+    return OK;
 }
 
 }  // namespace android
