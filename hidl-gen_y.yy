@@ -227,7 +227,7 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
 %type<type> fqtype
 %type<str> valid_identifier
 
-%type<type> type opt_storage_type
+%type<type> type enum_storage_type
 %type<type> array_type_base
 %type<arrayType> array_type
 %type<type> opt_extends
@@ -843,9 +843,8 @@ compound_declaration
     | named_enum_declaration { $$ = $1; }
     ;
 
-opt_storage_type
-    : /* empty */ { $$ = NULL; }
-    | ':' fqtype
+enum_storage_type
+    : ':' fqtype
       {
           $$ = $2;
 
@@ -864,7 +863,7 @@ opt_comma
     ;
 
 named_enum_declaration
-    : ENUM valid_identifier opt_storage_type
+    : ENUM valid_identifier enum_storage_type
       {
           ast->enterScope(new EnumType($2, convertYYLoc(@2), $3));
       }

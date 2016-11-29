@@ -30,7 +30,7 @@ struct EnumValue;
 struct EnumType : public Scope {
     EnumType(const char *localName,
              const Location &location,
-             Type *storageType = NULL);
+             Type *storageType);
 
     const Type *storageType() const;
     const std::vector<EnumValue *> &values() const;
