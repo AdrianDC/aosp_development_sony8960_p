@@ -40,6 +40,7 @@ struct EnumType : public Scope {
 
     const ScalarType *resolveToScalarType() const override;
 
+    std::string typeName() const override;
     bool isEnum() const override;
 
     std::string getCppType(StorageMode mode,

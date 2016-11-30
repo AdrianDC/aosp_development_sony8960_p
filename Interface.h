@@ -35,6 +35,7 @@ struct Interface : public Scope {
     bool isBinder() const override;
     bool isRootType() const { return mSuperType == nullptr; }
     bool isIBase() const { return fqName() == gIBaseFqName; }
+    std::string typeName() const override;
 
     const Interface *superType() const;
 
