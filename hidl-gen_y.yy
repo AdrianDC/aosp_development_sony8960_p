@@ -940,9 +940,9 @@ array_type_base
     : fqtype { $$ = $1; }
     | TEMPLATED '<' type '>'
       {
-          if (!$1->isVector() && $3->isBinder()) {
-              std::cerr << "ERROR: TemplatedType of interface types are not "
-                        << "supported. at " << @3 << "\n";
+          if (!$1->isCompatibleElementType($3)) {
+              std::cerr << "ERROR: " << $1->typeName() << " of " << $3->typeName()
+                        << " is not supported. at " << @3 << "\n";
 
               YYERROR;
           }
@@ -951,13 +951,19 @@ array_type_base
       }
     | TEMPLATED '<' TEMPLATED '<' type RSHIFT
       {
-          if ($5->isBinder()) {
-              std::cerr << "ERROR: TemplatedType of interface types are not "
-                        << "supported. at " << @5 << "\n";
+          if (!$3->isCompatibleElementType($5)) {
+              std::cerr << "ERROR: " << $3->typeName() << " of " << $5->typeName()
+                        << " is not supported. at " << @3 << "\n";
 
               YYERROR;
           }
           $3->setElementType($5);
+          if (!$1->isCompatibleElementType($3)) {
+              std::cerr << "ERROR: " << $1->typeName() << " of " << $3->typeName()
+                        << " is not supported. at " << @3 << "\n";
+
+              YYERROR;
+          }
           $1->setElementType($3);
           $$ = $1;
       }

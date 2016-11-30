@@ -25,6 +25,9 @@ namespace android {
 struct RefType : public TemplatedType {
     RefType();
 
+    std::string typeName() const override;
+    bool isCompatibleElementType(Type *elementType) const override;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
