@@ -202,7 +202,7 @@ bool StringType::resultNeedsDeref() const {
 }
 
 status_t StringType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "type: TYPE_STRING\n";
+    out << "type: " << getVtsType() << "\n";
     return OK;
 }
 

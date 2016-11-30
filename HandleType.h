@@ -31,6 +31,8 @@ struct HandleType : public Type {
             StorageMode mode,
             bool specifyNamespaces) const override;
 
+    std::string getVtsType() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -59,6 +61,8 @@ struct HandleType : public Type {
     bool useNameInEmitReaderWriterEmbedded(bool isReader) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
+
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
 };
 
 }  // namespace android
