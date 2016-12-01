@@ -295,10 +295,12 @@ std::string FQName::tokenName() const {
     std::vector<std::string> components;
     getPackageAndVersionComponents(&components, true /* cpp_compatible */);
 
-    std::vector<std::string> nameComponents;
-    StringHelper::SplitString(mName, '.', &nameComponents);
+    if (!mName.empty()) {
+        std::vector<std::string> nameComponents;
+        StringHelper::SplitString(mName, '.', &nameComponents);
 
-    components.insert(components.end(), nameComponents.begin(), nameComponents.end());
+        components.insert(components.end(), nameComponents.begin(), nameComponents.end());
+    }
 
     return StringHelper::JoinStrings(components, "_");
 }
