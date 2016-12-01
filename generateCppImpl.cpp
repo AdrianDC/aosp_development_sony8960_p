@@ -149,6 +149,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     }
 
     out << "using ::android::hardware::hidl_array;\n";
+    out << "using ::android::hardware::hidl_memory;\n";
     out << "using ::android::hardware::hidl_string;\n";
     out << "using ::android::hardware::hidl_vec;\n";
     out << "using ::android::hardware::Return;\n";

@@ -74,6 +74,10 @@ bool Type::isVector() const {
     return false;
 }
 
+bool Type::isPointer() const {
+    return false;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
