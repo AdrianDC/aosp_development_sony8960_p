@@ -535,12 +535,10 @@ status_t AST::generatePassthroughMethod(Formatter &out,
     } else {
         out << ");\n\n";
         if (elidedReturn != nullptr) {
-            // Can get() without checking isOk() since we are checking the value
-            // returned by an in-process implementation.
             out << elidedReturn->type().getCppResultType()
                 << " "
                 << elidedReturn->name()
-                << " = _hidl_return.get();\n";
+                << " = _hidl_return;\n";
         }
         status_t status = generateCppInstrumentationCall(
                 out,
@@ -1360,9 +1358,7 @@ status_t AST::generateStubSourceForMethod(
             first = false;
         }
 
-        // Can get() without checking isOk() since we are checking the value
-        // returned by an in-process implementation.
-        out << ").get();\n\n";
+        out << ");\n\n";
         out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
             << "_hidl_reply);\n\n";
 
