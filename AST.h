@@ -90,6 +90,10 @@ struct AST {
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
+    // Run getImportedPackages on this, then run getImportedPackages on
+    // each AST in each package referenced in importSet.
+    void getImportedPackagesHierarchy(std::set<FQName> *importSet) const;
+
     status_t generateVts(const std::string &outputPath) const;
 
     bool isJavaCompatible() const;
