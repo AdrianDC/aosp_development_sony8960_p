@@ -457,6 +457,17 @@ void AST::getImportedPackages(std::set<FQName> *importSet) const {
     }
 }
 
+void AST::getImportedPackagesHierarchy(std::set<FQName> *importSet) const {
+    getImportedPackages(importSet);
+    std::set<FQName> newSet;
+    for (const auto &ast : mImportedASTs) {
+        if (importSet->find(ast->package()) != importSet->end()) {
+            ast->getImportedPackagesHierarchy(&newSet);
+        }
+    }
+    importSet->insert(newSet.begin(), newSet.end());
+}
+
 bool AST::isJavaCompatible() const {
     std::string ifaceName;
     if (!AST::isInterface(&ifaceName)) {

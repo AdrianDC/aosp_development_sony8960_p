@@ -419,7 +419,7 @@ static status_t generateMakefileForPackage(
             typesAST = ast;
         }
 
-        ast->getImportedPackages(&importedPackages);
+        ast->getImportedPackagesHierarchy(&importedPackages);
         ast->appendToExportedTypesVector(&exportedTypes);
     }
 
