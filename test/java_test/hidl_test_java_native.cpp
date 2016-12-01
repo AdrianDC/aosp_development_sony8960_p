@@ -105,6 +105,9 @@ struct Baz : public IBaz {
             haveAStringVec_cb _hidl_cb) override;
 
     Return<void> returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) override;
+
+    Return<void> takeAMask(IBase::BitField bf, uint8_t first,
+            const IBase::MyMask& second, uint8_t third, takeAMask_cb _hidl_cb) override;
 };
 
 Return<void> Baz::someBaseMethod() {
@@ -545,6 +548,13 @@ Return<void> Baz::returnABunchOfStrings(returnABunchOfStrings_cb _hidl_cb) {
     hidl_string drei; drei = "Drei";
     _hidl_cb(eins, zwei, drei);
 
+    return Void();
+}
+
+
+Return<void> Baz::takeAMask(IBase::BitField bf, uint8_t first,
+        const IBase::MyMask& second, uint8_t third, takeAMask_cb _hidl_cb) {
+    _hidl_cb(bf, bf | first, second.value & bf, (bf | bf) & third);
     return Void();
 }
 

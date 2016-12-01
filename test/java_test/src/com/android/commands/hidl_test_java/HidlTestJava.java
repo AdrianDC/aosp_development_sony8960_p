@@ -850,6 +850,12 @@ public final class HidlTestJava {
             return out;
         }
 
+        public void takeAMask(byte bf, byte first, IBase.MyMask second, byte third,
+                takeAMaskCallback cb) {
+            cb.onValues(bf, (byte)(bf | first),
+                    (byte)(second.value & bf), (byte)((bf | bf) & third));
+        }
+
         class BazCallback extends IBazCallback.Stub {
             public void heyItsMe(IBazCallback cb) {
                 Log.d(TAG, "SERVER: heyItsMe");
