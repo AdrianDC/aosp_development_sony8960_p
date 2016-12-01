@@ -31,10 +31,7 @@ EnumType::EnumType(
         Type *storageType)
     : Scope(localName, location),
       mValues(),
-      mStorageType(
-              storageType != NULL
-                ? storageType
-                : new ScalarType(ScalarType::KIND_INT32)) {
+      mStorageType(storageType) {
 }
 
 const Type *EnumType::storageType() const {
