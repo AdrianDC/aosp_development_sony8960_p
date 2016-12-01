@@ -185,65 +185,79 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
 
 void EnumType::emitEnumBitwiseOperator(
         Formatter &out,
-        bool mutating,
+        bool lhsIsEnum,
+        bool rhsIsEnum,
         const std::string &op) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
 
     const std::string storageType = scalarType->getCppStackType();
 
-    out << "inline "
-        << (mutating ? fullName() : storageType)
-        << (mutating ? " &" : "")
+    out << "constexpr "
+        << storageType
         << " operator"
         << op
-        << (mutating ? "=" : "")
-        << "(\n";
-
-    out.indent();
-    out.indent();
-
-    out << fullName()
-        << (mutating ? " &" : " ")
-        << "lhs, "
-        << fullName()
+        << "(const "
+        << (lhsIsEnum ? fullName() : storageType)
+        << " lhs, const "
+        << (rhsIsEnum ? fullName() : storageType)
         << " rhs) {\n";
-    out.unindent();
 
-    if (mutating) {
-        out << "lhs = ";
-    } else {
-        out << "return ";
-    }
-    out << "static_cast<"
-        << (mutating ? fullName() : storageType)
-        << ">(\n";
-    out.indent();
-    out.indent();
-    out << "static_cast<"
-        << storageType
-        << ">(lhs) "
-        << op
-        <<" static_cast<"
-        << storageType
-        << ">(rhs));\n";
-    out.unindent();
-    out.unindent();
+    out.indentBlock([&] {
+        out << "return static_cast<"
+            << storageType
+            << ">(";
 
-    if (mutating) {
-        out << "return lhs;\n";
-    }
+        if (lhsIsEnum) {
+            out << "static_cast<"
+                << storageType
+                << ">(lhs)";
+        } else {
+            out << "lhs";
+        }
+        out << " " << op << " ";
+        if (rhsIsEnum) {
+            out << "static_cast<"
+                << storageType
+                << ">(rhs)";
+        } else {
+            out << "rhs";
+        }
+        out << ");\n";
+    });
 
-    out.unindent();
+    out << "}\n\n";
+}
+
+void EnumType::emitBitFieldBitwiseAssignmentOperator(
+        Formatter &out,
+        const std::string &op) const {
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != nullptr);
+
+    const std::string storageType = scalarType->getCppStackType();
+
+    out << "constexpr " << storageType << " &operator" << op << "=("
+        << storageType << "& v, const " << fullName() << " e) {\n";
+
+    out.indentBlock([&] {
+        out << "v " << op << "= static_cast<" << storageType << ">(e);\n";
+        out << "return v;\n";
+    });
 
     out << "}\n\n";
 }
 
 status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
-    emitEnumBitwiseOperator(out, false /* mutating */, "|");
-    emitEnumBitwiseOperator(out, true /* mutating */, "|");
-    emitEnumBitwiseOperator(out, false /* mutating */, "&");
-    emitEnumBitwiseOperator(out, true /* mutating */, "&");
+    emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
+    emitEnumBitwiseOperator(out, false /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
+    emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, false /* rhsIsEnum */, "|");
+    emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, true  /* rhsIsEnum */, "&");
+    emitEnumBitwiseOperator(out, false /* lhsIsEnum */, true  /* rhsIsEnum */, "&");
+    emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, false /* rhsIsEnum */, "&");
+
+    emitBitFieldBitwiseAssignmentOperator(out, "|");
+    emitBitFieldBitwiseAssignmentOperator(out, "&");
 
     return OK;
 }
@@ -565,6 +579,101 @@ bool EnumValue::isAutoFill() const {
 
 bool EnumValue::isEnumValue() const {
     return true;
+}
+
+std::string BitFieldType::typeName() const {
+    return "mask" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
+}
+
+void BitFieldType::addNamedTypesToSet(std::set<const FQName> &) const {
+}
+
+bool BitFieldType::isCompatibleElementType(Type *elementType) const {
+    return elementType->isEnum();
+}
+
+const ScalarType *BitFieldType::resolveToScalarType() const {
+    return mElementType->resolveToScalarType();
+}
+
+std::string BitFieldType::getCppType(StorageMode mode,
+                                 bool specifyNamespaces) const {
+    return resolveToScalarType()->getCppType(mode, specifyNamespaces);
+}
+
+std::string BitFieldType::getJavaType(bool forInitializer) const {
+    return resolveToScalarType()->getJavaType(forInitializer);
+}
+
+std::string BitFieldType::getJavaSuffix() const {
+    return resolveToScalarType()->getJavaSuffix();
+}
+
+std::string BitFieldType::getJavaWrapperType() const {
+    return resolveToScalarType()->getJavaWrapperType();
+}
+
+std::string BitFieldType::getVtsType() const {
+    return "TYPE_MASK";
+}
+
+status_t BitFieldType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: " << getVtsType() << "\n";
+    out << "enum_value: {\n";
+    out.indent();
+    status_t err = mElementType->emitVtsTypeDeclarations(out);
+    if (err != OK) {
+        return err;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
+status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
+    out << "type: " << getVtsType() << "\n";
+    out << "enum_value: {\n";
+    out.indent();
+    status_t err = mElementType->emitVtsAttributeType(out);
+    if (err != OK) {
+        return err;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
+void BitFieldType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    resolveToScalarType()->getAlignmentAndSize(align, size);
+}
+
+void BitFieldType::emitReaderWriter(
+        Formatter &out,
+        const std::string &name,
+        const std::string &parcelObj,
+        bool parcelObjIsPointer,
+        bool isReader,
+        ErrorMode mode) const {
+    resolveToScalarType()->emitReaderWriterWithCast(
+            out,
+            name,
+            parcelObj,
+            parcelObjIsPointer,
+            isReader,
+            mode,
+            true /* needsCast */);
+}
+
+void BitFieldType::emitJavaFieldReaderWriter(
+        Formatter &out,
+        size_t depth,
+        const std::string &parcelName,
+        const std::string &blobName,
+        const std::string &fieldName,
+        const std::string &offset,
+        bool isReader) const {
+    return resolveToScalarType()->emitJavaFieldReaderWriter(
+            out, depth, parcelName, blobName, fieldName, offset, isReader);
 }
 
 }  // namespace android

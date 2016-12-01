@@ -70,6 +70,11 @@ interface IEx1 {
 
     typedef bad;
 
+    typedef ref<IEx1> NotAllowed;
+    typedef mask<ForgetASemicolon> Ok;
+    typedef vec<IEx1> OkToo;
+    typedef mask<IEx1> NotAllowedToo;
+
     struct Quux {
         string first;
         typedef bad;
