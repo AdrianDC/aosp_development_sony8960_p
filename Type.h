@@ -35,14 +35,15 @@ struct Type {
     Type();
     virtual ~Type();
 
-    virtual bool isScope() const;
-    virtual bool isInterface() const;
-    virtual bool isEnum() const;
-    virtual bool isTypeDef() const;
-    virtual bool isBinder() const;
-    virtual bool isNamedType() const;
-    virtual bool isCompoundType() const;
     virtual bool isArray() const;
+    virtual bool isBinder() const;
+    virtual bool isCompoundType() const;
+    virtual bool isEnum() const;
+    virtual bool isInterface() const;
+    virtual bool isNamedType() const;
+    virtual bool isPointer() const;
+    virtual bool isScope() const;
+    virtual bool isTypeDef() const;
     virtual bool isVector() const;
 
     virtual const ScalarType *resolveToScalarType() const;

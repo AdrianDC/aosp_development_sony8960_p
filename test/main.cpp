@@ -4,6 +4,9 @@
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hidl/manager/1.0/IServiceNotification.h>
 
+#include <android/hidl/memory/1.0/IAllocator.h>
+#include <android/hidl/memory/1.0/IMemory.h>
+
 // TODO(b/32756130): remove
 #include <android/hardware/tests/foo/1.0/BnSimple.h>
 
@@ -14,6 +17,7 @@
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
 #include <android/hardware/tests/inheritance/1.0/IChild.h>
+#include <android/hardware/tests/memory/1.0/IMemoryTest.h>
 #include <android/hardware/tests/pointer/1.0/IGraph.h>
 #include <android/hardware/tests/pointer/1.0/IPointer.h>
 
@@ -42,6 +46,7 @@
 #include <hidl-test/PointerHelper.h>
 
 #include <hidl/Status.h>
+#include <hidlmemory/mapping.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/ProcessState.h>
 
@@ -81,15 +86,19 @@ using ::android::hardware::tests::inheritance::V1_0::IParent;
 using ::android::hardware::tests::inheritance::V1_0::IChild;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
+using ::android::hardware::tests::memory::V1_0::IMemoryTest;
 using ::android::hardware::IPCThreadState;
 using ::android::hardware::ProcessState;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
-using ::android::hardware::hidl_vec;
+using ::android::hardware::hidl_memory;
 using ::android::hardware::hidl_string;
+using ::android::hardware::hidl_vec;
 using ::android::hidl::manager::V1_0::IServiceManager;
 using ::android::hidl::manager::V1_0::IServiceNotification;
+using ::android::hidl::memory::V1_0::IAllocator;
+using ::android::hidl::memory::V1_0::IMemory;
 using ::android::sp;
 using ::android::to_string;
 using ::android::Mutex;
@@ -240,6 +249,8 @@ protected:
 
 public:
     sp<IServiceManager> manager;
+    sp<IAllocator> ashmemAllocator;
+    sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
@@ -265,6 +276,14 @@ public:
 
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
+
+        ashmemAllocator = IAllocator::getService("ashmem", gMode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(ashmemAllocator, nullptr);
+        ASSERT_EQ(ashmemAllocator->isRemote(), gMode == BINDERIZED);
+
+        memoryTest = IMemoryTest::getService("memory", gMode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(memoryTest, nullptr);
+        ASSERT_EQ(memoryTest->isRemote(), gMode == BINDERIZED);
 
         fetcher = IFetcher::getService("fetcher", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(fetcher, nullptr);
@@ -327,6 +346,8 @@ public:
         ALOGI("Environment setup beginning...");
 
         size_t i = 0;
+        addServer<IAllocator>("ashmem");
+        addServer<IMemoryTest>("memory");
         addServer<IChild>("child");
         addServer<IParent>("parent");
         addServer<IFetcher>("fetcher");
@@ -344,6 +365,8 @@ public:
 class HidlTest : public ::testing::Test {
 public:
     sp<IServiceManager> manager;
+    sp<IAllocator> ashmemAllocator;
+    sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
     sp<IBar> bar;
@@ -361,6 +384,8 @@ public:
             env = gPassthroughEnvironment;
         }
         manager = env->manager;
+        ashmemAllocator = env->ashmemAllocator;
+        memoryTest = env->memoryTest;
         fetcher = env->fetcher;
         foo = env->foo;
         bar = env->bar;
@@ -522,6 +547,45 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
         EXPECT_EQ(to_string(registrations.data(), registrations.size()),
                   "['" + descriptor + "/" + instanceOne + "', '"
                        + descriptor + "/" + instanceTwo + "']");
+    }
+}
+
+TEST_F(HidlTest, TestSharedMemory) {
+    const uint8_t kValue = 0xCA;
+    hidl_memory mem_copy;
+    EXPECT_OK(ashmemAllocator->allocate(1024, [&](bool success, const hidl_memory& mem) {
+        EXPECT_EQ(success, true);
+
+        sp<IMemory> memory = mapMemory(mem);
+
+        EXPECT_NE(memory, nullptr);
+
+        uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+        EXPECT_NE(data, nullptr);
+
+        EXPECT_EQ(memory->getSize(), mem.size());
+
+        memory->update();
+        memset(data, 0, memory->getSize());
+        memory->commit();
+
+        mem_copy = mem;
+        memoryTest->fillMemory(mem, kValue);
+        for (size_t i = 0; i < mem.size(); i++) {
+            EXPECT_EQ(kValue, data[i]);
+        }
+    }));
+
+    // Test the memory persists after the call
+    sp<IMemory> memory = mapMemory(mem_copy);
+
+    EXPECT_NE(memory, nullptr);
+
+    uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+    EXPECT_NE(data, nullptr);
+
+    for (size_t i = 0; i < mem_copy.size(); i++) {
+        EXPECT_EQ(kValue, data[i]);
     }
 }
 
