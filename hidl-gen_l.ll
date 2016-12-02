@@ -36,7 +36,9 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "ConstantExpression.h"
 #include "EnumType.h"
 #include "HandleType.h"
+#include "MemoryType.h"
 #include "Method.h"
+#include "PointerType.h"
 #include "ScalarType.h"
 #include "StringType.h"
 #include "VectorType.h"
@@ -109,6 +111,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
 "handle"		{ yylval->type = new HandleType; return token::TYPE; }
+"memory"		{ yylval->type = new MemoryType; return token::TYPE; }
+"pointer"		{ yylval->type = new PointerType; return token::TYPE; }
 "string"		{ yylval->type = new StringType; return token::TYPE; }
 
 "MQDescriptorSync" { yylval->type = new PredefinedType("::android::hardware", "MQDescriptorSync"); return token::TYPE; }
