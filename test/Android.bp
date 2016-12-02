@@ -13,6 +13,7 @@ cc_test {
         "libcutils",
         "libhidlbase",
         "libhidltransport",
+        "libhidlmemory",
         "libfootest",
         "libhwbinder",
         "libnativehelper",
@@ -22,6 +23,8 @@ cc_test {
         "android.hardware.tests.bar@1.0",
         "android.hardware.tests.inheritance@1.0",
         "android.hardware.tests.pointer@1.0",
+        "android.hardware.tests.memory@1.0",
+        "android.hidl.memory@1.0"
     ],
     static_libs: ["libgtest"],
 

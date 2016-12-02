@@ -216,6 +216,10 @@ const TypedVar* Method::canElideCallback() const {
         return typedVar;
     }
 
+    if (typedVar->type().isPointer()) {
+        return typedVar;
+    }
+
     return nullptr;
 }
 
