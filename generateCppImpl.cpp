@@ -243,7 +243,7 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
     out.unindent();
     out << "}\n\n";
 
-    out << "} // namespace implementation\n";
+    out << "}  // namespace implementation\n";
     enterLeaveNamespace(out, false /* leave */);
 
     return OK;
