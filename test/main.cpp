@@ -993,23 +993,29 @@ TEST_F(HidlTest, FooHaveAVectorOfInterfacesTest) {
 }
 
 TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
-    using ::android::hardware::tests::foo::V1_0::IHwSimple;
-    using ::android::hardware::tests::foo::V1_0::BnSimple;
 
-    hidl_vec<sp<android::hardware::IBinder> > in;
+    hidl_vec<sp<::android::hidl::base::V1_0::IBase> > in;
     in.resize(16);
     for (size_t i = 0; i < in.size(); ++i) {
-        sp<BnSimple> simpleStub = new BnSimple(new Simple(i));
-        in[i] = IHwSimple::asBinder(simpleStub);
+        sp<ISimple> s = new Simple(i);
+        in[i] = s;
     }
 
     EXPECT_OK(foo->haveAVectorOfGenericInterfaces(
                 in,
                 [&](const auto &out) {
                     EXPECT_EQ(in.size(), out.size());
+
+                    EXPECT_OK(out[0]->interfaceChain([](const auto &names) {
+                        ASSERT_GT(names.size(), 0u);
+                        ASSERT_STREQ(names[0].c_str(), ISimple::descriptor);
+                    }));
                     for (size_t i = 0; i < in.size(); ++i) {
-                        sp<ISimple> inSimple = IHwSimple::asInterface(in[i]);
-                        sp<ISimple> outSimple = IHwSimple::asInterface(out[i]);
+                        sp<ISimple> inSimple = ISimple::castFrom(in[i]);
+                        sp<ISimple> outSimple = ISimple::castFrom(out[i]);
+
+                        ASSERT_NE(inSimple.get(), nullptr);
+                        ASSERT_NE(outSimple.get(), nullptr);
 
                         int32_t inCookie = inSimple->getCookie();
                         int32_t outCookie = outSimple->getCookie();

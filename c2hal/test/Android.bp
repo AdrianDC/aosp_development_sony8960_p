@@ -23,6 +23,7 @@ genrule {
          "-p android.hardware.c2hal_test@1.0 $(in) && " +
          "$(location hidl-gen) -o $(genDir) -Lc++ " +
          "-r android.hardware:$(genDir) " +
+         "-r android.hidl:system/libhidl/transport " +
          "android.hardware.c2hal_test@1.0::ISimple",
     srcs: [
         "simple.h",
@@ -46,6 +47,7 @@ genrule {
          "-p android.hardware.c2hal_test@1.0 $(in) && " +
          "$(location hidl-gen) -o $(genDir) -Lc++ " +
          "-r android.hardware:$(genDir) " +
+         "-r android.hidl:system/libhidl/transport " +
          "android.hardware.c2hal_test@1.0::ISimple",
     srcs: [
         "simple.h",

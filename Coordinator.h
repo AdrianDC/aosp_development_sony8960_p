@@ -70,6 +70,9 @@ struct Coordinator {
 
     std::string getPackageRootPath(const FQName &fqName) const;
 
+    // return getPackageRoot + ":" + getPackageRootPath
+    std::string getPackageRootOption(const FQName &fqName) const;
+
     // Given an FQName of "android.hardware.nfc@1.0::INfc", return
     // "android/hardware/".
     std::string convertPackageRootToPath(const FQName &fqName) const;
