@@ -189,6 +189,10 @@ std::string Coordinator::getPackageRootPath(const FQName &fqName) const {
     return root;
 }
 
+std::string Coordinator::getPackageRootOption(const FQName &fqName) const {
+    return getPackageRoot(fqName) + ":" + getPackageRootPath(fqName);
+}
+
 std::string Coordinator::getPackagePath(
         const FQName &fqName, bool relative) const {
 

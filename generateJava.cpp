@@ -77,9 +77,6 @@ status_t AST::generateJavaTypes(
 
         out << "package " << mPackage.javaPackage() << ";\n\n";
 
-        for (const auto &item : mImportedNamesForJava) {
-            out << "import " << item.javaName() << ";\n";
-        }
         out << "\n";
 
         status_t err =
@@ -135,14 +132,6 @@ status_t AST::generateJava(
             &packageComponents, true /* cpp_compatible */);
 
     out << "package " << mPackage.javaPackage() << ";\n\n";
-
-    for (const auto &item : mImportedNamesForJava) {
-        out << "import " << item.javaName() << ";\n";
-    }
-
-    if (!mImportedNamesForJava.empty()) {
-        out << "\n";
-    }
 
     out.setNamespace(mPackage.javaPackage() + ".");
 
