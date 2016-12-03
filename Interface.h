@@ -34,6 +34,7 @@ struct Interface : public Scope {
     bool isInterface() const override;
     bool isBinder() const override;
     bool isRootType() const { return mSuperType == nullptr; }
+    bool isIBase() const { return fqName() == gIBaseFqName; }
 
     const Interface *superType() const;
 

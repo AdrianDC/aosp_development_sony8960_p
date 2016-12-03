@@ -407,11 +407,6 @@ Type *AST::lookupType(const FQName &fqName) {
                     resolvedName.package(), resolvedName.version(), "types");
 
             mImportedNames.insert(typesName);
-
-            if (resolvedType->isNamedType() && !resolvedType->isTypeDef()) {
-                mImportedNamesForJava.insert(
-                        static_cast<NamedType *>(resolvedType)->fqName());
-            }
         } else {
             // Do _not_ use fqName, i.e. the name we used to look up the type,
             // but instead use the name of the interface we found.
@@ -420,9 +415,6 @@ Type *AST::lookupType(const FQName &fqName) {
             // name of the typedef instead of the proper name of the interface.
 
             mImportedNames.insert(
-                    static_cast<Interface *>(resolvedType)->fqName());
-
-            mImportedNamesForJava.insert(
                     static_cast<Interface *>(resolvedType)->fqName());
         }
     }
@@ -487,6 +479,11 @@ bool AST::isJavaCompatible() const {
 void AST::appendToExportedTypesVector(
         std::vector<const Type *> *exportedTypes) const {
     mRootScope->appendToExportedTypesVector(exportedTypes);
+}
+
+bool AST::isIBase() const {
+    Interface *iface = mRootScope->getInterface();
+    return iface != nullptr && iface->isIBase();
 }
 
 }  // namespace android;
