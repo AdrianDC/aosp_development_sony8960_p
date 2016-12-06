@@ -23,6 +23,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 LOCAL_MODULE := platform-robolectric-prebuilt
 
 LOCAL_SDK_VERSION := current
+LOCAL_MIN_SDK_VERSION := o-b1
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -44,10 +45,20 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-shadows-core-v22:lib/shadows-core-v22-3.1.1.jar \
     platform-robolectric-shadows-core-v23:lib/shadows-core-v23-3.1.1.jar \
     platform-robolectric-shadows-httpclient:lib/shadows-httpclient-3.1.1.jar\
-    platform-robolectric-snapshot:lib/robolectric-3.1.1.jar \
-    platform-robolectric-utils:lib/robolectric-utils-3.1.1.jar
+    platform-robolectric-snapshot:lib/robolectric-3.1.1.jar
 
 include $(BUILD_MULTI_PREBUILT)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := platform-robolectric-utils
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_SRC_FILES := lib/robolectric-utils-3.1.1.jar
+LOCAL_UNINSTALLABLE_MODULE := true
+LOCAL_MIN_SDK_VERSION := o-b1
+
+include $(BUILD_PREBUILT)
 
 ############################
 # Target for a runnable Robolectric bundled with JUnit. This is the one you probably want.
