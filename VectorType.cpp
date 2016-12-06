@@ -26,6 +26,14 @@ namespace android {
 VectorType::VectorType() {
 }
 
+std::string VectorType::typeName() const {
+    return "vector" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
+}
+
+bool VectorType::isCompatibleElementType(Type *) const {
+    return true;
+}
+
 void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
     mElementType->addNamedTypesToSet(set);
 }

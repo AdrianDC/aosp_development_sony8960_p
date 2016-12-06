@@ -78,6 +78,10 @@ bool Type::isPointer() const {
     return false;
 }
 
+std::string Type::typeName() const {
+    return "";
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
@@ -431,8 +435,10 @@ status_t Type::emitExportedHeader(
 
 TemplatedType::TemplatedType() : mElementType(nullptr) {
 }
+
 void TemplatedType::setElementType(Type *elementType) {
     CHECK(mElementType == nullptr); // can only be set once.
+    CHECK(isCompatibleElementType(elementType));
     mElementType = elementType;
 }
 

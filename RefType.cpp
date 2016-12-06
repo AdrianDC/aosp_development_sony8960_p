@@ -24,6 +24,14 @@ namespace android {
 RefType::RefType() {
 }
 
+std::string RefType::typeName() const {
+    return "ref" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
+}
+
+bool RefType::isCompatibleElementType(Type *elementType) const {
+    return !elementType->isBinder();
+}
+
 /* return something like "T const *".
  * The reason we don't return "const T *" is to handle cases like
  * ref<ref<ref<T>>> t_3ptr;
