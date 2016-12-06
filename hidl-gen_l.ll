@@ -94,6 +94,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "struct"		{ return token::STRUCT; }
 "typedef"		{ return token::TYPEDEF; }
 "union"			{ return token::UNION; }
+"bitfield"		{ yylval->templatedType = new BitFieldType; return token::TEMPLATED; }
 "vec"			{ yylval->templatedType = new VectorType; return token::TEMPLATED; }
 "ref"			{ yylval->templatedType = new RefType; return token::TEMPLATED; }
 "oneway"		{ return token::ONEWAY; }
