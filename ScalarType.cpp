@@ -37,6 +37,10 @@ void ScalarType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
+bool ScalarType::isScalar() const {
+    return true;
+}
+
 std::string ScalarType::typeName() const {
     return getCppStackType();
 }

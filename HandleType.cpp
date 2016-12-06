@@ -27,6 +27,10 @@ void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
+bool HandleType::isHandle() const {
+    return true;
+}
+
 std::string HandleType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
