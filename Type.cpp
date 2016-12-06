@@ -46,7 +46,23 @@ bool Type::isInterface() const {
     return false;
 }
 
+bool Type::isScalar() const {
+    return false;
+}
+
+bool Type::isString() const {
+    return false;
+}
+
 bool Type::isEnum() const {
+    return false;
+}
+
+bool Type::isBitField() const {
+    return false;
+}
+
+bool Type::isHandle() const {
     return false;
 }
 
@@ -71,6 +87,10 @@ bool Type::isArray() const {
 }
 
 bool Type::isVector() const {
+    return false;
+}
+
+bool Type::isTemplatedType() const {
     return false;
 }
 
@@ -440,6 +460,14 @@ void TemplatedType::setElementType(Type *elementType) {
     CHECK(mElementType == nullptr); // can only be set once.
     CHECK(isCompatibleElementType(elementType));
     mElementType = elementType;
+}
+
+Type *TemplatedType::getElementType() const {
+    return mElementType;
+}
+
+bool TemplatedType::isTemplatedType() const {
+    return true;
 }
 
 }  // namespace android

@@ -581,6 +581,12 @@ bool EnumValue::isEnumValue() const {
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool BitFieldType::isBitField() const {
+    return true;
+}
+
 std::string BitFieldType::typeName() const {
     return "mask" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
 }

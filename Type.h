@@ -37,12 +37,17 @@ struct Type {
 
     virtual bool isArray() const;
     virtual bool isBinder() const;
+    virtual bool isBitField() const;
     virtual bool isCompoundType() const;
     virtual bool isEnum() const;
+    virtual bool isHandle() const;
     virtual bool isInterface() const;
     virtual bool isNamedType() const;
     virtual bool isPointer() const;
     virtual bool isScope() const;
+    virtual bool isScalar() const;
+    virtual bool isString() const;
+    virtual bool isTemplatedType() const;
     virtual bool isTypeDef() const;
     virtual bool isVector() const;
 
@@ -243,6 +248,8 @@ private:
 /* Base type for VectorType and RefType. */
 struct TemplatedType : public Type {
     void setElementType(Type *elementType);
+    Type *getElementType() const;
+    bool isTemplatedType() const override;
     virtual bool isCompatibleElementType(Type *elementType) const = 0;
 protected:
     TemplatedType();
