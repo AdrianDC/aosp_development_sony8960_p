@@ -41,6 +41,7 @@ struct ScalarType : public Type {
 
     const ScalarType *resolveToScalarType() const override;
 
+    std::string typeName() const override;
     bool isValidEnumStorageType() const;
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;

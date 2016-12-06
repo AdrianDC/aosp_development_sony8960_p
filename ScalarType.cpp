@@ -37,6 +37,10 @@ void ScalarType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
+std::string ScalarType::typeName() const {
+    return getCppStackType();
+}
+
 std::string ScalarType::getCppType(StorageMode, bool) const {
     static const char *const kName[] = {
         "bool",

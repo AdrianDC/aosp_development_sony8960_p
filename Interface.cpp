@@ -57,6 +57,10 @@ Interface::Interface(const char *localName, const Location &location, Interface 
     mReservedMethods.push_back(createSyspropsChangedMethod());
 }
 
+std::string Interface::typeName() const {
+    return "interface " + localName();
+}
+
 Method *Interface::createSyspropsChangedMethod() const {
     return new Method("notifySyspropsChanged",
             new std::vector<TypedVar *>() /*args */,
