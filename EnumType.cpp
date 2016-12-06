@@ -64,6 +64,10 @@ const ScalarType *EnumType::resolveToScalarType() const {
     return mStorageType->resolveToScalarType();
 }
 
+std::string EnumType::typeName() const {
+    return "enum " + localName();
+}
+
 bool EnumType::isEnum() const {
     return true;
 }

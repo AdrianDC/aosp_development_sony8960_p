@@ -48,6 +48,8 @@ struct Type {
 
     virtual const ScalarType *resolveToScalarType() const;
 
+    virtual std::string typeName() const;
+
     bool isValidEnumStorageType() const;
 
     enum StorageMode {
@@ -241,6 +243,7 @@ private:
 /* Base type for VectorType and RefType. */
 struct TemplatedType : public Type {
     void setElementType(Type *elementType);
+    virtual bool isCompatibleElementType(Type *elementType) const = 0;
 protected:
     TemplatedType();
     Type *mElementType;
