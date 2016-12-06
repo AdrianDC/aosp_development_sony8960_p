@@ -39,6 +39,8 @@ struct ScalarType : public Type {
 
     ScalarType(Kind kind);
 
+    bool isScalar() const override;
+
     const ScalarType *resolveToScalarType() const override;
 
     std::string typeName() const override;

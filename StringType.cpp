@@ -26,6 +26,10 @@ void StringType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
+bool StringType::isString() const {
+    return true;
+}
+
 std::string StringType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
