@@ -25,6 +25,8 @@ namespace android {
 struct HandleType : public Type {
     HandleType();
 
+    bool isHandle() const override;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getCppType(

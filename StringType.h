@@ -27,6 +27,8 @@ struct StringType : public Type {
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
+    bool isString() const override;
+
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;
