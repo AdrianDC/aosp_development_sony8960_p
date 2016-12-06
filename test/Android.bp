@@ -38,6 +38,7 @@ cc_test {
         "android.hardware.tests.bar@1.0-impl",
         "android.hardware.tests.inheritance@1.0-impl",
         "android.hardware.tests.pointer@1.0-impl",
+        "android.hardware.tests.memory@1.0-impl",
     ],
 
     cflags: [
