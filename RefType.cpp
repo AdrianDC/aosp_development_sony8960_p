@@ -16,6 +16,9 @@
 
 #include "RefType.h"
 
+#include "ArrayType.h"
+#include "CompoundType.h"
+
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -29,7 +32,29 @@ std::string RefType::typeName() const {
 }
 
 bool RefType::isCompatibleElementType(Type *elementType) const {
-    return !elementType->isBinder();
+    if (elementType->isScalar()) {
+        return true;
+    }
+    if (elementType->isString()) {
+        return true;
+    }
+    if (elementType->isEnum()) {
+        return true;
+    }
+    if (elementType->isBitField()) {
+        return true;
+    }
+    if (elementType->isCompoundType()
+            && static_cast<CompoundType *>(elementType)->style() == CompoundType::STYLE_STRUCT) {
+        return true;
+    }
+    if (elementType->isTemplatedType()) {
+        return this->isCompatibleElementType(static_cast<TemplatedType *>(elementType)->getElementType());
+    }
+    if (elementType->isArray()) {
+        return this->isCompatibleElementType(static_cast<ArrayType *>(elementType)->getElementType());
+    }
+    return false;
 }
 
 /* return something like "T const *".
