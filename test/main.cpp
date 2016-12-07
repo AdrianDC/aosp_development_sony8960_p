@@ -1093,13 +1093,13 @@ TEST_F(HidlTest, InheritLocalGrandparentTest) {
     }));
 }
 
-TEST_F(HidlTest, BarRemoteParentTest) {
+TEST_F(HidlTest, InheritRemoteParentTest) {
     EXPECT_OK(fetcher->getParent(true, [&](const sp<IParent>& parent) {
         expectGoodParent(parent);
     }));
 }
 
-TEST_F(HidlTest, BarLocalParentTest) {
+TEST_F(HidlTest, InheritLocalParentTest) {
     EXPECT_OK(fetcher->getParent(false, [&](const sp<IParent>& parent) {
         expectGoodParent(parent);
     }));
