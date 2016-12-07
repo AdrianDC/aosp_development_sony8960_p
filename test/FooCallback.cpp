@@ -93,7 +93,7 @@ Return<void> FooCallback::reportResults(int64_t ns, reportResults_cb cb) {
                 ALOGW("SERVER(FooCallback)::reportResults(%" PRId64 " ns) Condition::waitRelative(%" PRId64 ") returned error (%d)", ns, leftToWaitNs, rc);
                 if (rc == -ETIMEDOUT) {
                     // time's up
-                    leftToWaitNs = -1;
+                    leftToWaitNs = -INT32_MAX;
                 }
                 break;
             }
