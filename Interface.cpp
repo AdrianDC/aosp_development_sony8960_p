@@ -219,10 +219,6 @@ std::string Interface::getBaseName() const {
     return fqName().getInterfaceBaseName();
 }
 
-FQName Interface::getHwName() const {
-    return FQName(fqName().package(), fqName().version(), "IHw" + getBaseName());
-}
-
 FQName Interface::getProxyName() const {
     return FQName(fqName().package(), fqName().version(), "Bp" + getBaseName());
 }
@@ -295,10 +291,13 @@ void Interface::emitReaderWriter(
 
         out << name
             << " = "
-            << fqName().cppNamespace()
-            << "::IHw"
-            << getBaseName()
-            << "::asInterface("
+            << "::android::hardware::fromBinder<"
+            << fqName().cppName()
+            << ","
+            << getProxyName().cppName()
+            << ","
+            << getStubName().cppName()
+            << ">("
             << binderName
             << ");\n";
 
@@ -316,13 +315,9 @@ void Interface::emitReaderWriter(
         out << "::android::sp<::android::hardware::IBinder> _hidl_binder = "
             << "::android::hardware::toBinder<\n";
         out.indentBlock(2, [&] {
-            out << fqName().cppNamespace()
-                << "::I"
-                << getBaseName()
+            out << fqName().cppName()
                 << ", "
-                << fqName().cppNamespace()
-                << "::IHw"
-                << getBaseName()
+                << getProxyName().cppName()
                 << ">("
                 << name
                 << ");\n";
