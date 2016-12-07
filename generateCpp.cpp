@@ -280,18 +280,16 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             }
         }
 
-        if (!iface->isRootType()) {
-            out << "// cast static functions\n";
-            std::string childTypeResult = iface->getCppResultType();
+        out << "// cast static functions\n";
+        std::string childTypeResult = iface->getCppResultType();
 
-            for (const Interface *superType : iface->superTypeChain()) {
-                out << "static "
-                    << childTypeResult
-                    << " castFrom("
-                    << superType->getCppArgumentType()
-                    << " parent"
-                    << ");\n";
-            }
+        for (const Interface *superType : iface->typeChain()) {
+            out << "static "
+                << childTypeResult
+                << " castFrom("
+                << superType->getCppArgumentType()
+                << " parent"
+                << ");\n";
         }
 
         out << "\nstatic const char* descriptor;\n\n";
@@ -1610,18 +1608,20 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
     const Interface *iface = mRootScope->getInterface();
 
     // generate castFrom functions
-    if (!iface->isRootType()) {
-        std::string childTypeResult = iface->getCppResultType();
+    std::string childTypeResult = iface->getCppResultType();
 
-        for (const Interface *superType : iface->superTypeChain()) {
-            out << "// static \n"
-                << childTypeResult
-                << " I"
-                << iface->getBaseName()
-                << "::castFrom("
-                << superType->getCppArgumentType()
-                << " parent) {\n";
-            out.indent();
+    for (const Interface *superType : iface->typeChain()) {
+        out << "// static \n"
+            << childTypeResult
+            << " I"
+            << iface->getBaseName()
+            << "::castFrom("
+            << superType->getCppArgumentType()
+            << " parent) {\n";
+        out.indent();
+        if (iface == superType) {
+            out << "return parent;\n";
+        } else {
             out << "return ::android::hardware::castInterface<";
             out << "I" << iface->getBaseName() << ", "
                 << superType->fqName().cppName() << ", "
@@ -1635,9 +1635,9 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
                 << "\");\n";
             out.unindent();
             out.unindent();
-            out.unindent();
-            out << "}\n\n";
         }
+        out.unindent();
+        out << "}\n\n";
     }
 
     return OK;
