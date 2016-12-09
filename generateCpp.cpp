@@ -174,7 +174,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     out << "#include <hidl/MQDescriptor.h>\n";
 
     if (isInterface) {
-        out << "#include <hidl/ServiceManagement.h>\n";
         out << "#include <hidl/Status.h>\n";
     }
 
@@ -813,6 +812,8 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                                       superType->fqName(),
                                       "Bp" + superType->getBaseName());
         }
+
+        out << "#include <hidl/ServiceManagement.h>\n";
     } else {
         generateCppPackageInclude(out, mPackage, "types");
         generateCppPackageInclude(out, mPackage, "hwtypes");
