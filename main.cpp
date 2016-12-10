@@ -436,6 +436,10 @@ static status_t generateMakefileForPackage(
     bool haveJavaConstants = !exportedTypes.empty();
 
     if (!packageIsJavaCompatible && !haveJavaConstants) {
+        // TODO(b/33420795)
+        fprintf(stderr,
+                "WARNING: %s is not java compatible. No java makefile created.\n",
+                packageFQName.string().c_str());
         return OK;
     }
 
