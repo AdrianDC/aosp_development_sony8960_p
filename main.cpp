@@ -759,7 +759,7 @@ static status_t generateAndroidBpForPackage(
     return OK;
 }
 
-static status_t generateMakefileImplForPackage(
+static status_t generateAndroidBpImplForPackage(
         const FQName &packageFQName,
         const char *,
         Coordinator *coordinator,
@@ -804,36 +804,35 @@ static status_t generateMakefileImplForPackage(
 
     Formatter out(file);
 
-    out << "LOCAL_PATH := $(call my-dir)\n\n"
-        << "include $(CLEAR_VARS)\n"
-        << "LOCAL_MODULE := " << libraryName << "\n"
-        << "LOCAL_MODULE_RELATIVE_PATH := hw\n"
-        << "LOCAL_SRC_FILES := \\\n";
-    out.indent();
-    for (const auto &fqName : packageInterfaces) {
-        if (fqName.name() == "types") {
-            continue;
-        }
-        out << fqName.getInterfaceBaseName() << ".cpp \\\n";
-    }
-    out.unindent();
-    out << "\n";
-    out << "LOCAL_SHARED_LIBRARIES := \\\n";
-    out.indent();
-    out << "libhidlbase \\\n"
-        << "libhidltransport \\\n"
-        << "libhwbinder \\\n"
-        << "libutils \\\n"
-        << makeLibraryName(packageFQName) << " \\\n";
+    out << "cc_library_shared {\n";
+    out.indentBlock([&] {
+        out << "name: \"" << libraryName << "\",\n"
+            << "relative_install_path: \"hw\",\n"
+            << "srcs: [\n";
+        out.indentBlock([&] {
+            for (const auto &fqName : packageInterfaces) {
+                if (fqName.name() == "types") {
+                    continue;
+                }
+                out << "\"" << fqName.getInterfaceBaseName() << ".cpp\",\n";
+            }
+        });
+        out << "],\n"
+            << "shared_libs: [\n";
+        out.indentBlock([&] {
+            out << "\"libhidlbase\",\n"
+                << "\"libhidltransport\",\n"
+                << "\"libhwbinder\",\n"
+                << "\"libutils\",\n"
+                << "\"" << makeLibraryName(packageFQName) << "\",\n";
 
-    for (const auto &importedPackage : importedPackages) {
-        out << makeLibraryName(importedPackage)
-            << " \\\n";
-    }
-    out.unindent();
-    out << "\n";
-
-    out << "include $(BUILD_SHARED_LIBRARY)\n";
+            for (const auto &importedPackage : importedPackages) {
+                out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+            }
+        });
+        out << "],\n";
+    });
+    out << "}\n";
 
     return OK;
 }
@@ -1125,10 +1124,10 @@ static std::vector<OutputHandler> formats = {
      generateAndroidBpForPackage,
     },
 
-    {"makefile-impl",
+    {"androidbp-impl",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForMakefile,
-     generateMakefileImplForPackage,
+     generateAndroidBpImplForPackage,
     }
 };
 
