@@ -116,8 +116,8 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
     });
     static const std::vector<std::string> cppCollide({
         "size_t", "offsetof",
-        "DECLARE_REGISTER_AND_GET_SERVICE", "IMPLEMENT_HWBINDER_META_INTERFACE",
-        "IMPLEMENT_REGISTER_AND_GET_SERVICE"
+        "DECLARE_SERVICE_MANAGER_INTERACTIONS", "IMPLEMENT_HWBINDER_META_INTERFACE",
+        "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS"
     });
     static const std::vector<std::string> hidlReserved({
         // Part of HidlSupport
