@@ -60,6 +60,10 @@ void EnumType::addValue(EnumValue *value) {
     mValues.push_back(value);
 }
 
+bool EnumType::isElidableType() const {
+    return mStorageType->isElidableType();
+}
+
 const ScalarType *EnumType::resolveToScalarType() const {
     return mStorageType->resolveToScalarType();
 }

@@ -116,6 +116,10 @@ bool Type::isValidEnumStorageType() const {
     return scalarType->isValidEnumStorageType();
 }
 
+bool Type::isElidableType() const {
+    return false;
+}
+
 std::string Type::getCppType(StorageMode, bool) const {
     CHECK(!"Should not be here");
     return std::string();

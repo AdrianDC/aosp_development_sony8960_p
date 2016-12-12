@@ -27,6 +27,8 @@ struct PointerType : public Type {
 
     bool isPointer() const override;
 
+    bool isElidableType() const override;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getCppType(
