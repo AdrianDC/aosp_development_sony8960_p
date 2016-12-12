@@ -41,6 +41,7 @@ struct ScalarType : public Type {
 
     bool isScalar() const override;
 
+    bool isElidableType() const override;
     const ScalarType *resolveToScalarType() const override;
 
     std::string typeName() const override;

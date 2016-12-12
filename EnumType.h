@@ -38,6 +38,7 @@ struct EnumType : public Scope {
 
     LocalIdentifier *lookupIdentifier(const std::string &name) const override;
 
+    bool isElidableType() const override;
     const ScalarType *resolveToScalarType() const override;
 
     std::string typeName() const override;

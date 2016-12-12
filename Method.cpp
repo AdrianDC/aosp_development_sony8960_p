@@ -202,21 +202,14 @@ bool Method::isJavaCompatible() const {
 }
 
 const TypedVar* Method::canElideCallback() const {
-    auto &res = results();
-
     // Can't elide callback for void or tuple-returning methods
-    if (res.size() != 1) {
+    if (mResults->size() != 1) {
         return nullptr;
     }
 
-    const TypedVar *typedVar = res.at(0);
+    const TypedVar *typedVar = mResults->at(0);
 
-    // We only elide callbacks for methods returning a single scalar.
-    if (typedVar->type().resolveToScalarType() != nullptr) {
-        return typedVar;
-    }
-
-    if (typedVar->type().isPointer()) {
+    if (typedVar->type().isElidableType()) {
         return typedVar;
     }
 

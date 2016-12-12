@@ -27,6 +27,10 @@ bool PointerType::isPointer() const {
     return true;
 }
 
+bool PointerType::isElidableType() const {
+    return true;
+}
+
 void PointerType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
