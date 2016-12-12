@@ -56,6 +56,7 @@ struct Type {
     virtual std::string typeName() const;
 
     bool isValidEnumStorageType() const;
+    virtual bool isElidableType() const;
 
     enum StorageMode {
         StorageMode_Stack,
