@@ -41,6 +41,10 @@ bool ScalarType::isScalar() const {
     return true;
 }
 
+bool ScalarType::isElidableType() const {
+    return true;
+}
+
 std::string ScalarType::typeName() const {
     return getCppStackType();
 }
