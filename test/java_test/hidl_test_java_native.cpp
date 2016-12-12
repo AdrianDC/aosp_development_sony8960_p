@@ -108,6 +108,8 @@ struct Baz : public IBaz {
 
     Return<void> takeAMask(IBase::BitField bf, uint8_t first,
             const IBase::MyMask& second, uint8_t third, takeAMask_cb _hidl_cb) override;
+
+    Return<uint8_t> returnABitField() override;
 };
 
 Return<void> Baz::someBaseMethod() {
@@ -556,6 +558,10 @@ Return<void> Baz::takeAMask(IBase::BitField bf, uint8_t first,
         const IBase::MyMask& second, uint8_t third, takeAMask_cb _hidl_cb) {
     _hidl_cb(bf, bf | first, second.value & bf, (bf | bf) & third);
     return Void();
+}
+
+Return<uint8_t> Baz::returnABitField() {
+    return 0;
 }
 
 static void usage(const char *me) {
