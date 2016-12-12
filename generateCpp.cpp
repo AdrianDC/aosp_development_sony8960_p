@@ -513,7 +513,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
                 out << ", ";
             }
 
-            out << "const auto &" << arg->name();
+            out << "const auto &_hidl_out_" << arg->name();
 
             first = false;
         }
@@ -535,7 +535,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
                 out << ", ";
             }
 
-            out << arg->name();
+            out << "_hidl_out_" << arg->name();
 
             first = false;
         }
@@ -546,7 +546,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         out << ");\n\n";
         if (elidedReturn != nullptr) {
             out << elidedReturn->type().getCppResultType()
-                << " "
+                << " _hidl_out_"
                 << elidedReturn->name()
                 << " = _hidl_return;\n";
         }
@@ -1345,9 +1345,9 @@ status_t AST::generateStubSourceForMethod(
 
     if (elidedReturn != nullptr) {
         out << elidedReturn->type().getCppResultType()
-            << " "
+            << " _hidl_out_"
             << elidedReturn->name()
-            << " = "
+            << " = this->"
             << method->name()
             << "(";
 
@@ -1372,7 +1372,7 @@ status_t AST::generateStubSourceForMethod(
 
         elidedReturn->type().emitReaderWriter(
                 out,
-                elidedReturn->name(),
+                "_hidl_out_" + elidedReturn->name(),
                 "_hidl_reply",
                 true, /* parcelObjIsPointer */
                 false, /* isReader */
@@ -1385,7 +1385,7 @@ status_t AST::generateStubSourceForMethod(
                 elidedReturn,
                 false /* reader */,
                 Type::ErrorMode_Ignore,
-                false /* addPrefixToName */);
+                true /* addPrefixToName */);
 
         status_t status = generateCppInstrumentationCall(
                 out,
@@ -1431,7 +1431,7 @@ status_t AST::generateStubSourceForMethod(
                     out << ", ";
                 }
 
-                out << "const auto &" << arg->name();
+                out << "const auto &_hidl_out_" << arg->name();
 
                 first = false;
             }
@@ -1459,7 +1459,7 @@ status_t AST::generateStubSourceForMethod(
                         arg,
                         false /* reader */,
                         Type::ErrorMode_Ignore,
-                        false /* addPrefixToName */);
+                        true /* addPrefixToName */);
             }
 
             // Second DFS: resolve references
@@ -1471,7 +1471,7 @@ status_t AST::generateStubSourceForMethod(
                         arg,
                         false /* reader */,
                         Type::ErrorMode_Ignore,
-                        false /* addPrefixToName */);
+                        true /* addPrefixToName */);
             }
 
             status_t status = generateCppInstrumentationCall(
@@ -1762,7 +1762,7 @@ status_t AST::generateCppInstrumentationCall(
         {
             event_str = "InstrumentationEvent::SERVER_API_EXIT";
             for (const auto &arg : method->results()) {
-                out << "_hidl_args.push_back((void *)&"
+                out << "_hidl_args.push_back((void *)&_hidl_out_"
                     << arg->name()
                     << ");\n";
             }
@@ -1804,7 +1804,7 @@ status_t AST::generateCppInstrumentationCall(
         {
             event_str = "InstrumentationEvent::PASSTHROUGH_EXIT";
             for (const auto &arg : method->results()) {
-                out << "_hidl_args.push_back((void *)&"
+                out << "_hidl_args.push_back((void *)&_hidl_out_"
                     << arg->name()
                     << ");\n";
             }
