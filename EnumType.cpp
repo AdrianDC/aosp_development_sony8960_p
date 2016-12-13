@@ -627,6 +627,10 @@ std::string BitFieldType::getVtsType() const {
     return "TYPE_MASK";
 }
 
+bool BitFieldType::isElidableType() const {
+    return resolveToScalarType()->isElidableType();
+}
+
 status_t BitFieldType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
     out << "enum_value: {\n";
