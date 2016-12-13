@@ -50,12 +50,10 @@ struct Coordinator {
     // "vendor/<something>/interfaces"], package roots of
     // ["android.hardware", "vendor.<something>.hardware"], and a
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackagePath()
-    // will return "hardware/interfaces/nfc/1.0" (if sanitized = false)
-    // or "hardware/interfaces/nfc/V1_0" (if sanitized = true).
+    // will return "hardware/interfaces/nfc/V1_0".
 
     std::string getPackagePath(
-            const FQName &fqName, bool relative = false,
-            bool sanitized = false) const;
+            const FQName &fqName, bool relative = false) const;
 
     // Given package roots of ["android.hardware",
     // "vendor.<something>.hardware"] and a FQName of

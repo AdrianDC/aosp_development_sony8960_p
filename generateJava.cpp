@@ -62,8 +62,7 @@ status_t AST::generateJavaTypes(
 
         std::string path = outputPath;
         path.append(mCoordinator->convertPackageRootToPath(mPackage));
-        path.append(mCoordinator->getPackagePath(mPackage, true /* relative */,
-                true /* sanitized */));
+        path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
         path.append(typeName);
         path.append(".java");
 
@@ -119,8 +118,7 @@ status_t AST::generateJava(
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */,
-            true /* sanitized */));
+    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
     path.append(ifaceName);
     path.append(".java");
 
