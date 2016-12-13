@@ -264,7 +264,8 @@ private:
             Formatter &out,
             const std::string &parcelObj,
             const TypedVar *arg,
-            bool isReader) const;
+            bool isReader,
+            bool addPrefixToName) const;
 
     status_t emitTypeDeclarations(Formatter &out) const;
     status_t emitJavaTypeDeclarations(Formatter &out) const;

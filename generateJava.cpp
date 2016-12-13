@@ -30,15 +30,19 @@ void AST::emitJavaReaderWriter(
         Formatter &out,
         const std::string &parcelObj,
         const TypedVar *arg,
-        bool isReader) const {
+        bool isReader,
+        bool addPrefixToName) const {
     if (isReader) {
         out << arg->type().getJavaType()
             << " "
+            << (addPrefixToName ? "_hidl_out_" : "")
             << arg->name()
             << " = ";
     }
 
-    arg->type().emitJavaReaderWriter(out, parcelObj, arg->name(), isReader);
+    arg->type().emitJavaReaderWriter(out, parcelObj,
+            (addPrefixToName ? "_hidl_out_" : "") + arg->name(),
+            isReader);
 }
 
 status_t AST::generateJavaTypes(
@@ -319,7 +323,8 @@ status_t AST::generateJava(
                     out,
                     "_hidl_request",
                     arg,
-                    false /* isReader */);
+                    false /* isReader */,
+                    false /* addPrefixToName */);
         }
 
         out << "\nandroid.os.HwParcel _hidl_reply = new android.os.HwParcel();\n"
@@ -353,7 +358,8 @@ status_t AST::generateJava(
                         out,
                         "_hidl_reply",
                         arg,
-                        true /* isReader */);
+                        true /* isReader */,
+                        true /* addPrefixToName */);
             }
 
             if (needsCallback) {
@@ -365,14 +371,14 @@ status_t AST::generateJava(
                         out << ", ";
                     }
 
-                    out << arg->name();
+                    out << "_hidl_out_" << arg->name();
                     firstField = false;
                 }
 
                 out << ");\n";
             } else {
                 const std::string returnName = method->results()[0]->name();
-                out << "return " << returnName << ";\n";
+                out << "return _hidl_out_" << returnName << ";\n";
             }
         }
 
@@ -468,14 +474,15 @@ status_t AST::generateJava(
                     out,
                     "_hidl_request",
                     arg,
-                    true /* isReader */);
+                    true /* isReader */,
+                    false /* addPrefixToName */);
         }
 
         if (!needsCallback && returnsValue) {
             const TypedVar *returnArg = method->results()[0];
 
             out << returnArg->type().getJavaType()
-                << " "
+                << " _hidl_out_"
                 << returnArg->name()
                 << " = ";
         }
@@ -515,7 +522,9 @@ status_t AST::generateJava(
                         out,
                         "_hidl_reply",
                         arg,
-                        false /* isReader */);
+                        false /* isReader */,
+                        false /* addPrefixToName */);
+                // no need to add _hidl_out because out vars are are scoped
             }
 
             out << "_hidl_reply.send();\n"
@@ -537,7 +546,8 @@ status_t AST::generateJava(
                         out,
                         "_hidl_reply",
                         returnArg,
-                        false /* isReader */);
+                        false /* isReader */,
+                        true /* addPrefixToName */);
             }
 
             out << "_hidl_reply.send();\n";
