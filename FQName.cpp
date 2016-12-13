@@ -175,6 +175,14 @@ std::string FQName::version() const {
     return mMajor + "." + mMinor;
 }
 
+std::string FQName::sanitizedVersion() const {
+    CHECK(mMajor.empty() == mMinor.empty());
+    if (mMajor.empty() && mMinor.empty()) {
+        return "";
+    }
+    return "V" + mMajor + "_" + mMinor;
+}
+
 std::string FQName::atVersion() const {
     std::string v = version();
     return v.empty() ? "" : ("@" + v);
@@ -368,13 +376,7 @@ void FQName::getPackageAndVersionComponents(
         return;
     }
 
-    // Form "Vmajor_minor".
-    std::string versionString = "V";
-    versionString.append(getPackageMajorVersion());
-    versionString.append("_");
-    versionString.append(getPackageMinorVersion());
-
-    components->push_back(versionString);
+    components->push_back(sanitizedVersion());
 }
 
 std::string FQName::getPackageMajorVersion() const {
