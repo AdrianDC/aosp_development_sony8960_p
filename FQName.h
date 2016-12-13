@@ -51,8 +51,6 @@ struct FQName {
     std::string atVersion() const;
     // Return version in the form "1.0" if it is present, otherwise empty string.
     std::string version() const;
-    // Return version in the form "V1_0" if it is present, otherwise empty string.
-    std::string sanitizedVersion() const;
 
     // The next two methods return the name part of the FQName, that is, the
     // part after the version field.  For example:
