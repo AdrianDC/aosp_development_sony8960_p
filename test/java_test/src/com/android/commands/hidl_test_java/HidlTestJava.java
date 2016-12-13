@@ -856,6 +856,10 @@ public final class HidlTestJava {
                     (byte)(second.value & bf), (byte)((bf | bf) & third));
         }
 
+        public byte returnABitField() {
+            return 0;
+        }
+
         class BazCallback extends IBazCallback.Stub {
             public void heyItsMe(IBazCallback cb) {
                 Log.d(TAG, "SERVER: heyItsMe");
