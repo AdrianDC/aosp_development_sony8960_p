@@ -860,6 +860,10 @@ public final class HidlTestJava {
             return 0;
         }
 
+        public int size(int size) {
+            return size;
+        }
+
         class BazCallback extends IBazCallback.Stub {
             public void heyItsMe(IBazCallback cb) {
                 Log.d(TAG, "SERVER: heyItsMe");
