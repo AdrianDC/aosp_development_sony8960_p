@@ -314,7 +314,7 @@ void Interface::emitReaderWriter(
         out.indent();
         out << "::android::sp<::android::hardware::IBinder> _hidl_binder = "
             << "::android::hardware::toBinder<\n";
-        out.indentBlock(2, [&] {
+        out.indent(2, [&] {
             out << fqName().cppName()
                 << ", "
                 << getProxyName().cppName()
@@ -323,13 +323,13 @@ void Interface::emitReaderWriter(
                 << ");\n";
         });
         out << "if (_hidl_binder.get() != nullptr) {\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             out << "_hidl_err = "
                 << parcelObjDeref
                 << "writeStrongBinder(_hidl_binder);\n";
         });
         out << "} else {\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
         });
         out << "}\n";

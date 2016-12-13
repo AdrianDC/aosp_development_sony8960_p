@@ -32,14 +32,14 @@ struct Formatter {
     void indent(size_t level = 1);
     void unindent(size_t level = 1);
 
-    // out.indentBlock(2, [&] {
+    // out.indent(2, [&] {
     //     out << "Meow\n";
     // });
-    void indentBlock(size_t level, std::function<void(void)> func);
-    // out.indentBlock([&] {
+    void indent(size_t level, std::function<void(void)> func);
+    // out.indent([&] {
     //     out << "Meow\n";
     // });
-    void indentBlock(std::function<void(void)> func);
+    void indent(std::function<void(void)> func);
 
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
