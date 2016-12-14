@@ -21,6 +21,7 @@
 #include <android-base/macros.h>
 #include <functional>
 #include <hidl-util/Formatter.h>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ struct Formatter;
 struct ScalarType;
 struct Type;
 struct TypedVar;
+struct TypedVarVector;
 
 using MethodImpl = std::function<void(Formatter &)>;
 
@@ -105,6 +107,14 @@ private:
     Type *mType;
 
     DISALLOW_COPY_AND_ASSIGN(TypedVar);
+};
+
+struct TypedVarVector : public std::vector<TypedVar *> {
+    TypedVarVector() = default;
+
+    bool add(TypedVar *v);
+private:
+    std::set<std::string> mNames;
 };
 
 }  // namespace android
