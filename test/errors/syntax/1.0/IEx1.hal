@@ -99,4 +99,8 @@ interface IEx1 {
 
     }
     struct Good {};
+
+    duplicatedArg(int32_t bar, MultiDimensional bar);
+    duplicatedResult() generates (uint32_t baz, bool baz);
+
 } // another semicolon

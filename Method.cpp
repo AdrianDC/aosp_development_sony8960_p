@@ -235,5 +235,14 @@ bool TypedVar::isJavaCompatible() const {
     return mType->isJavaCompatible();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+bool TypedVarVector::add(TypedVar *v) {
+    if (mNames.emplace(v->name()).second) {
+        push_back(v);
+        return true;
+    }
+    return false;
+}
+
 }  // namespace android
 
