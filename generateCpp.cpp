@@ -840,16 +840,12 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
 // static
 void AST::generateCheckNonNull(Formatter &out, const std::string &nonNull) {
-    out << "if (" << nonNull << " == nullptr) {\n";
-    out.indent();
-    out << "return ::android::hardware::Status::fromExceptionCode(\n";
-    out.indent();
-    out.indent();
-    out << "::android::hardware::Status::EX_ILLEGAL_ARGUMENT);\n";
-    out.unindent();
-    out.unindent();
-    out.unindent();
-    out << "}\n\n";
+    out.sIf(nonNull + " == nullptr", [&] {
+        out << "return ::android::hardware::Status::fromExceptionCode(\n";
+        out.indent(2, [&] {
+            out << "::android::hardware::Status::EX_ILLEGAL_ARGUMENT);\n";
+        });
+    }).endl().endl();
 }
 
 status_t AST::generateTypeSource(
@@ -1229,18 +1225,13 @@ status_t AST::generateStubSource(
     out.unindent();
     out << "}\n\n";
 
-    out << "if (_hidl_err == ::android::UNEXPECTED_NULL) {\n";
-    out.indent();
-    out << "_hidl_err = ::android::hardware::writeToParcel(\n";
-    out.indent();
-    out.indent();
-    out << "::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER),\n";
-    out << "_hidl_reply);\n";
-    out.unindent();
-    out.unindent();
-
-    out.unindent();
-    out << "}\n\n";
+    out.sIf("_hidl_err == ::android::UNEXPECTED_NULL", [&] {
+        out << "_hidl_err = ::android::hardware::writeToParcel(\n";
+        out.indent(2, [&] {
+            out << "::android::hardware::Status::fromExceptionCode(::android::hardware::Status::EX_NULL_POINTER),\n";
+            out << "_hidl_reply);\n";
+        });
+    });
 
     out << "return _hidl_err;\n";
 

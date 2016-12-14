@@ -24,7 +24,13 @@
 
 namespace android {
 
+// Two styles to use a Formatter.
+// One is with .indent() calls and operator<<.
+//     out << "if (good) {\n"; out.indent(); out << "blah\nblah\n"; out.unindent(); out << "}\n";
+// The other is with chain calls and lambda functions
+//     out.sIf("good", [&] { out("blah").endl()("blah").endl(); }).endl();
 struct Formatter {
+
     // Assumes ownership of file. Directed to stdout if file == NULL.
     Formatter(FILE *file = NULL);
     ~Formatter();
@@ -32,14 +38,46 @@ struct Formatter {
     void indent(size_t level = 1);
     void unindent(size_t level = 1);
 
+    // Note that The last \n after the last line is NOT added automatically.
     // out.indent(2, [&] {
     //     out << "Meow\n";
     // });
-    void indent(size_t level, std::function<void(void)> func);
+    Formatter &indent(size_t level, std::function<void(void)> func);
+
+    // Note that The last \n after the last line is NOT added automatically.
     // out.indent([&] {
     //     out << "Meow\n";
     // });
-    void indent(std::function<void(void)> func);
+    Formatter &indent(std::function<void(void)> func);
+
+    // A block inside braces.
+    // * No space will be added before the opening brace.
+    // * The last \n before the closing brace is added automatically.
+    // * There will NOT be a \n after the closing brace.
+    // out.block([&] {
+    //     out << "one();\n"
+    //         << "two();\n";
+    // });
+    // is equivalent to
+    // out << "{\n"
+    //     << "one();\ntwo();\n" // func()
+    //     << "}";
+    Formatter &block(std::function<void(void)> func);
+
+    // A synonym to (*this) << "\n";
+    Formatter &endl();
+
+    // out.sIf("z == 1", [&] {
+    //     out << "doGoodStuff();\n";
+    // }).sElseIf("z == 2", [&] {
+    //     out << "doBadStuff();\n";
+    // }).sElse([&] {
+    //     out << "logFatal();\n";
+    // }).endl();
+    // note that there will be a space before the "else"-s.
+    Formatter &sIf(const std::string &cond, std::function<void(void)> block);
+    Formatter &sElseIf(const std::string &cond, std::function<void(void)> block);
+    Formatter &sElse(std::function<void(void)> block);
 
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
