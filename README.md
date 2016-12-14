@@ -25,7 +25,8 @@ defined in $TOP.
 
 examples:
 
-hidl-gen -o output -L c++ android.hardware.nfc@1.0::INfc.hal
-hidl-gen -o output -L vts android.hardware.nfc@1.0
-hidl-gen -o test -L c++ -r android.hardware:/home/android/master/hardware/interfaces android.hardware.nfc@1.0
+croot
+hidl-gen -o output -L c++ -r android.hardware:hardware/interfaces -r android.hidl:system/libhidl/transport android.hardware.nfc@1.0::INfc.hal
+hidl-gen -o output -L vts -r android.hardware:hardware/interfaces -r android.hidl:system/libhidl/transport android.hardware.nfc@1.0
+hidl-gen -o test -L c++ -r android.hardware:hardware/interfaces -r android.hidl:system/libhidl/transport android.hardware.nfc@1.0
 ```
