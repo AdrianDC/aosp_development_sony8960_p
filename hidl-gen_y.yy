@@ -268,7 +268,7 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
     android::ConstantExpression *constantExpression;
     std::vector<android::EnumValue *> *enumValues;
     android::TypedVar *typedVar;
-    std::vector<android::TypedVar *> *typedVars;
+    android::TypedVarVector *typedVars;
     android::Method *method;
     android::CompoundType::Style compoundStyle;
     std::vector<std::string> *stringVec;
@@ -746,17 +746,25 @@ method_declaration
 typed_vars
     : /* empty */
       {
-          $$ = new std::vector<TypedVar *>;
+          $$ = new TypedVarVector();
       }
     | typed_var
       {
-          $$ = new std::vector<TypedVar *>;
-          $$->push_back($1);
+          $$ = new TypedVarVector();
+          if (!$$->add($1)) {
+              std::cerr << "ERROR: duplicated argument or result name "
+                  << $1->name() << " at " << @1 << "\n";
+              ast->addSyntaxError();
+          }
       }
     | typed_vars ',' typed_var
       {
           $$ = $1;
-          $$->push_back($3);
+          if (!$$->add($3)) {
+              std::cerr << "ERROR: duplicated argument or result name "
+                  << $3->name() << " at " << @3 << "\n";
+              ast->addSyntaxError();
+          }
       }
     ;
 
