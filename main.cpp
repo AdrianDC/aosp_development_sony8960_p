@@ -148,7 +148,8 @@ static void generateMakefileSectionForType(
     out << "\n#"
         << "\nGEN := $(intermediates)/"
         << coordinator->convertPackageRootToPath(packageFQName)
-        << coordinator->getPackagePath(packageFQName, true /* relative */);
+        << coordinator->getPackagePath(packageFQName, true /* relative */,
+                true /* sanitized */);
     if (typeName == nullptr) {
         out << fqName.name() << ".java";
     } else {
@@ -353,7 +354,7 @@ static void generateMakefileSectionForJavaConstants(
     out << "\n#"
         << "\nGEN := $(intermediates)/"
         << coordinator->convertPackageRootToPath(packageFQName)
-        << coordinator->getPackagePath(packageFQName, true /* relative */)
+        << coordinator->getPackagePath(packageFQName, true /* relative */, true /* sanitized */)
         << "Constants.java";
 
     out << "\n$(GEN): $(HIDL)\n";
@@ -940,7 +941,7 @@ static status_t generateExportHeaderForPackage(
         path.append(coordinator->convertPackageRootToPath(packageFQName));
 
         path.append(coordinator->getPackagePath(
-                    packageFQName, true /* relative */));
+                    packageFQName, true /* relative */, true /* sanitized */));
 
         path.append("Constants.java");
     }
