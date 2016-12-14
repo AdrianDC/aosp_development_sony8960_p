@@ -795,7 +795,7 @@ static status_t generateAndroidBpImplForPackage(
         ast->getImportedPackages(&importedPackages);
     }
 
-    std::string path = outputDir + "Android.mk";
+    std::string path = outputDir + "Android.bp";
 
     CHECK(Coordinator::MakeParentHierarchy(path));
     FILE *file = fopen(path.c_str(), "w");
