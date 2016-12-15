@@ -1016,7 +1016,7 @@ TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
 
                         ASSERT_NE(inSimple.get(), nullptr);
                         ASSERT_NE(outSimple.get(), nullptr);
-
+                        EXPECT_EQ(in[i], inSimple.get()); // pointers must be equal!
                         int32_t inCookie = inSimple->getCookie();
                         int32_t outCookie = outSimple->getCookie();
                         EXPECT_EQ(inCookie, outCookie);
