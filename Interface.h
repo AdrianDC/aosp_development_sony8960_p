@@ -65,7 +65,6 @@ struct Interface : public Scope {
 
     std::string getBaseName() const;
 
-    FQName getHwName() const;
     FQName getProxyName() const;
     FQName getStubName() const;
     FQName getPassthroughName() const;
