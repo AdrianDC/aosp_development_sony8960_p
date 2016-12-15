@@ -369,6 +369,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
             generateCppPackageInclude(out, item, "hwtypes");
         } else {
             generateCppPackageInclude(out, item, "Bn" + item.getInterfaceBaseName());
+            generateCppPackageInclude(out, item, "Bp" + item.getInterfaceBaseName());
         }
     }
 
@@ -377,34 +378,10 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     out << "#include <hidl/HidlTransportSupport.h>\n";
     out << "#include <hidl/Status.h>\n";
     out << "#include <hwbinder/IBinder.h>\n";
-    out << "#include <hwbinder/IInterface.h>\n";
 
     out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
-
-    if (isInterface) {
-        out << "\n";
-
-        out << "struct "
-            << klassName
-            << " : public "
-            << ifaceName;
-
-        const Interface *superType = iface->superType();
-
-        out << ", public ::android::hardware::IInterface";
-
-        out << " {\n";
-
-        out.indent();
-
-        out << "DECLARE_HWBINDER_META_INTERFACE(" << baseName << ");\n\n";
-
-        out.unindent();
-
-        out << "};\n\n";
-    }
 
     status_t err = mRootScope->emitGlobalHwDeclarations(out);
     if (err != OK) {
@@ -643,7 +620,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         << "Bn"
         << baseName
         << " : public ::android::hardware::BnInterface<I"
-        << baseName << ", IHw" << baseName
+        << baseName
         << ">, public ::android::hardware::HidlInstrumentor {\n";
 
     out.indent();
@@ -725,7 +702,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     out << "struct "
         << "Bp"
         << baseName
-        << " : public ::android::hardware::BpInterface<IHw"
+        << " : public ::android::hardware::BpInterface<I"
         << baseName
         << ">, public ::android::hardware::HidlInstrumentor {\n";
 
@@ -1150,7 +1127,7 @@ status_t AST::generateProxySource(
     out.indent();
 
     out << ": BpInterface"
-        << "<IHw"
+        << "<I"
         << baseName
         << ">(_hidl_impl),\n"
         << "  ::android::hardware::HidlInstrumentor(\""
@@ -1172,14 +1149,6 @@ status_t AST::generateProxySource(
 
 status_t AST::generateStubSource(
         Formatter &out, const std::string &baseName) const {
-    out << "IMPLEMENT_HWBINDER_META_INTERFACE("
-        << baseName
-        << ", "
-        << mPackage.cppNamespace()
-        << "::I"
-        << baseName
-        << "::descriptor);\n\n";
-
     const std::string klassName = "Bn" + baseName;
 
     out << klassName
@@ -1192,8 +1161,6 @@ status_t AST::generateStubSource(
 
     out << ": BnInterface"
         << "<I"
-        << baseName
-        << ", IHw"
         << baseName
         << ">(_hidl_impl),\n"
         << "  ::android::hardware::HidlInstrumentor(\""
@@ -1251,7 +1218,7 @@ status_t AST::generateStubSource(
     out.indent();
 
     out << "return ::android::hardware::BnInterface<I"
-        << baseName << ", IHw" << baseName
+        << baseName
         << ">::onTransact(\n";
 
     out.indent();
@@ -1625,8 +1592,8 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out << "return ::android::hardware::castInterface<";
             out << "I" << iface->getBaseName() << ", "
                 << superType->fqName().cppName() << ", "
-                << "Bp" << iface->getBaseName() << ", "
-                << superType->getHwName().cppName()
+                << iface->getProxyName().cppLocalName() << ", "
+                << superType->getProxyName().cppName()
                 << ">(\n";
             out.indent();
             out.indent();
