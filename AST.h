@@ -187,8 +187,6 @@ private:
     status_t generateStubImplSource(const std::string &outputPath) const;
 
     status_t generateMethods(Formatter &out, MethodGenerator gen) const;
-    status_t generateStubMethod(Formatter &out,
-                                const Method *method) const;
     status_t generateStubImplMethod(Formatter &out,
                                     const std::string &className,
                                     const Method *method) const;
@@ -205,7 +203,7 @@ private:
             Formatter &out, const std::string &baseName) const;
 
     status_t generateStubSource(
-            Formatter &out, const std::string &baseName) const;
+            Formatter &out, const Interface *iface, const std::string &baseName) const;
 
     status_t generateStubSourceForMethod(
             Formatter &out, const Interface *iface, const Method *method) const;
