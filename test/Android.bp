@@ -40,7 +40,6 @@ cc_test {
         "android.hardware.tests.inheritance@1.0-impl",
         "android.hardware.tests.pointer@1.0-impl",
         "android.hardware.tests.memory@1.0-impl",
-        "android.hidl.memory@1.0-impl", // TODO remove this line when b/32185232 is fixed
     ],
 
     cflags: [
