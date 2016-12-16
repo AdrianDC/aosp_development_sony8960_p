@@ -132,7 +132,7 @@ void CompoundType::emitReaderWriter(
             << name
             << " == nullptr) {\n";
 
-        out.indentBlock([&]{
+        out.indent([&]{
             out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
             handleError2(out, mode);
         });
@@ -306,7 +306,7 @@ void CompoundType::emitResolveReferencesEmbedded(
         out << "writeEmbeddedReferenceToParcel(\n";
     }
 
-    out.indentBlock(2, [&]{
+    out.indent(2, [&]{
         if (isReader) {
             out << "const_cast<"
                 << fullName()

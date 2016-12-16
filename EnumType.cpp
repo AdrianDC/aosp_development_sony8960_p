@@ -207,7 +207,7 @@ void EnumType::emitEnumBitwiseOperator(
         << (rhsIsEnum ? fullName() : storageType)
         << " rhs) {\n";
 
-    out.indentBlock([&] {
+    out.indent([&] {
         out << "return static_cast<"
             << storageType
             << ">(";
@@ -244,7 +244,7 @@ void EnumType::emitBitFieldBitwiseAssignmentOperator(
     out << "constexpr " << storageType << " &operator" << op << "=("
         << storageType << "& v, const " << fullName() << " e) {\n";
 
-    out.indentBlock([&] {
+    out.indent([&] {
         out << "v " << op << "= static_cast<" << storageType << ">(e);\n";
         out << "return v;\n";
     });

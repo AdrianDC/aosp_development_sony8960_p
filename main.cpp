@@ -807,11 +807,11 @@ static status_t generateAndroidBpImplForPackage(
     Formatter out(file);
 
     out << "cc_library_shared {\n";
-    out.indentBlock([&] {
+    out.indent([&] {
         out << "name: \"" << libraryName << "\",\n"
             << "relative_install_path: \"hw\",\n"
             << "srcs: [\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             for (const auto &fqName : packageInterfaces) {
                 if (fqName.name() == "types") {
                     continue;
@@ -821,7 +821,7 @@ static status_t generateAndroidBpImplForPackage(
         });
         out << "],\n"
             << "shared_libs: [\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             out << "\"libhidlbase\",\n"
                 << "\"libhidltransport\",\n"
                 << "\"libhwbinder\",\n"
