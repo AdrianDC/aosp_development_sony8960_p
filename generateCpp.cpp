@@ -785,13 +785,13 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "int I"
             << iface->getBaseName()
             << "::hidlStaticBlock = []() -> int {\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             out << "::android::hardware::gBnConstructorMap[I"
                 << iface->getBaseName()
                 << "::descriptor]\n";
-            out.indentBlock(2, [&] {
+            out.indent(2, [&] {
                 out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
-                out.indentBlock([&] {
+                out.indent([&] {
                     out << "return new Bn"
                         << iface->getBaseName()
                         << "(reinterpret_cast<I"
@@ -1620,7 +1620,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         << "\"), mImpl(impl) {";
     if (iface->hasOnewayMethods()) {
         out << "\n";
-        out.indentBlock([&] {
+        out.indent([&] {
             out << "mOnewayQueue.setLimit(3000 /* similar limit to binderized */);\n";
         });
     }
