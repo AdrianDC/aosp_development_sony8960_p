@@ -222,13 +222,13 @@ status_t AST::generateJava(
         const bool needsCallback = method->results().size() > 1;
 
         if (needsCallback) {
-            out << "\npublic abstract class "
+            out << "\npublic interface "
                 << method->name()
                 << "Callback {\n";
 
             out.indent();
 
-            out << "public abstract void onValues("
+            out << "public void onValues("
                 << Method::GetJavaArgSignature(method->results())
                 << ");\n";
 
