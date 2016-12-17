@@ -42,14 +42,21 @@ void Formatter::unindent(size_t level) {
     mIndentDepth -= level;
 }
 
-void Formatter::indent(size_t level, std::function<void(void)> func) {
+Formatter &Formatter::indent(size_t level, std::function<void(void)> func) {
     this->indent(level);
     func();
     this->unindent(level);
+    return *this;
 }
 
-void Formatter::indent(std::function<void(void)> func) {
-    this->indent(1, func);
+Formatter &Formatter::indent(std::function<void(void)> func) {
+    return this->indent(1, func);
+}
+
+Formatter &Formatter::block(std::function<void(void)> func) {
+    (*this) << "{\n";
+    this->indent(func);
+    return (*this) << "}";
 }
 
 void Formatter::setLinePrefix(const std::string &prefix) {
@@ -59,6 +66,26 @@ void Formatter::setLinePrefix(const std::string &prefix) {
 void Formatter::unsetLinePrefix() {
     mLinePrefix = "";
 }
+
+Formatter &Formatter::endl() {
+    return (*this) << "\n";
+}
+
+Formatter &Formatter::sIf(const std::string &cond, std::function<void(void)> block) {
+    (*this) << "if (" << cond << ") ";
+    return this->block(block);
+}
+
+Formatter &Formatter::sElseIf(const std::string &cond, std::function<void(void)> block) {
+    (*this) << " else if (" << cond << ") ";
+    return this->block(block);
+}
+
+Formatter &Formatter::sElse(std::function<void(void)> block) {
+    (*this) << " else ";
+    return this->block(block);
+}
+
 
 Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
