@@ -7,11 +7,14 @@
 #include <android/hidl/memory/1.0/IAllocator.h>
 #include <android/hidl/memory/1.0/IMemory.h>
 
-// TODO(b/32756130): remove
-#include <android/hardware/tests/foo/1.0/BnSimple.h>
-
 #include <android/hardware/tests/foo/1.0/IFoo.h>
 #include <android/hardware/tests/foo/1.0/IFooCallback.h>
+#include <android/hardware/tests/foo/1.0/BnSimple.h>
+// TODO(b/33669138): remove
+#include <cutils/trace.h>
+#include <android/hardware/tests/foo/1.0/BsSimple.h>
+#include <android/hardware/tests/foo/1.0/BpSimple.h>
+
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
@@ -646,6 +649,43 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
             int32_t expect[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
             EXPECT_TRUE(isArrayEqual(something, expect, something.size()));
         }));
+}
+
+TEST_F(HidlTest, WrapTest) {
+    using ::android::hardware::tests::foo::V1_0::BnSimple;
+    using ::android::hardware::tests::foo::V1_0::BsSimple;
+    using ::android::hardware::tests::foo::V1_0::BpSimple;
+    using ::android::hardware::HidlInstrumentor;
+    nsecs_t now;
+    int i = 0;
+
+    now = systemTime();
+    new BnSimple(new Simple(1));
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BnSimple(nonnull)";
+
+    now = systemTime();
+    new BnSimple(nullptr);
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BnSimple(null)";
+
+    now = systemTime();
+    new BsSimple(new Simple(1));
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BsSimple(nonnull)";
+
+    now = systemTime();
+    new BsSimple(nullptr);
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BsSimple(null)";
+
+    now = systemTime();
+    new BpSimple(nullptr);
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BpSimple(null)";
+
+    now = systemTime();
+    new ::android::hardware::HidlInstrumentor("");
+    EXPECT_LT(systemTime() - now, 2000000) << "    for HidlInstrumentor";
+
+    now = systemTime();
+    i++;
+    EXPECT_LT(systemTime() - now,    1000) << "    for nothing";
 }
 
 // TODO: b/31819198
