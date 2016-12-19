@@ -71,7 +71,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     guava \
 
 LOCAL_JAVA_LIBRARIES += \
-    junit4-target \
+    junit \
     platform-robolectric-prebuilt \
 
 LOCAL_SDK_VERSION := current
