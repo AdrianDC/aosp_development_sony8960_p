@@ -34,6 +34,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "ArrayType.h"
 #include "CompoundType.h"
 #include "ConstantExpression.h"
+#include "DeathRecipientType.h"
 #include "EnumType.h"
 #include "HandleType.h"
 #include "MemoryType.h"
@@ -111,6 +112,7 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "float"			{ SCALAR_TYPE(KIND_FLOAT); }
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
+"death_recipient"	{ yylval->type = new DeathRecipientType; return token::TYPE; }
 "handle"		{ yylval->type = new HandleType; return token::TYPE; }
 "memory"		{ yylval->type = new MemoryType; return token::TYPE; }
 "pointer"		{ yylval->type = new PointerType; return token::TYPE; }

@@ -21,6 +21,7 @@
 #include <android-base/macros.h>
 #include <functional>
 #include <hidl-util/Formatter.h>
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -34,7 +35,13 @@ struct Type;
 struct TypedVar;
 struct TypedVarVector;
 
-using MethodImpl = std::function<void(Formatter &)>;
+enum MethodImplType {
+    IMPL_HEADER,
+    IMPL_PROXY,
+    IMPL_STUB
+};
+
+using MethodImpl = std::map<MethodImplType, std::function<void(Formatter &)>>;
 
 struct Method {
     Method(const char *name,
@@ -55,8 +62,10 @@ struct Method {
     const std::vector<TypedVar *> &args() const;
     const std::vector<TypedVar *> &results() const;
     bool isOneway() const { return mOneway; }
-    void cppImpl(Formatter &out) const;
-    void javaImpl(Formatter &out) const;
+    bool overridesCppImpl(MethodImplType type) const;
+    bool overridesJavaImpl(MethodImplType type) const;
+    void cppImpl(MethodImplType type, Formatter &out) const;
+    void javaImpl(MethodImplType type, Formatter &out) const;
     bool isHidlReserved() const { return mIsHidlReserved; }
     const std::vector<Annotation *> &annotations() const;
 
@@ -86,10 +95,10 @@ private:
     std::vector<Annotation *> *mAnnotations;
 
     bool mIsHidlReserved = false;
-    // The following fields has no meaning if mIsHidlReserved is false.
+    // The following fields have no meaning if mIsHidlReserved is false.
     // hard-coded implementation for HIDL reserved methods.
-    MethodImpl mCppImpl = nullptr;
-    MethodImpl mJavaImpl = nullptr;
+    MethodImpl mCppImpl;
+    MethodImpl mJavaImpl;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };

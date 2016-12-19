@@ -33,6 +33,7 @@ cc_library_shared {
         "ArrayType.cpp",
         "CompoundType.cpp",
         "ConstantExpression.cpp",
+        "DeathRecipientType.cpp",
         "EnumType.cpp",
         "FQName.cpp",
         "HandleType.cpp",

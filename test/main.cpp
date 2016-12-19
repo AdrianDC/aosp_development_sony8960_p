@@ -97,14 +97,17 @@ using ::android::hardware::ProcessState;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
+using ::android::hardware::hidl_death_recipient;
 using ::android::hardware::hidl_memory;
 using ::android::hardware::hidl_string;
 using ::android::hardware::hidl_vec;
+using ::android::hidl::base::V1_0::IBase;
 using ::android::hidl::manager::V1_0::IServiceManager;
 using ::android::hidl::manager::V1_0::IServiceNotification;
 using ::android::hidl::memory::V1_0::IAllocator;
 using ::android::hidl::memory::V1_0::IMemory;
 using ::android::sp;
+using ::android::wp;
 using ::android::to_string;
 using ::android::Mutex;
 using ::android::MultiDimensionalToString;
@@ -318,6 +321,7 @@ public:
     sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
+    sp<IFoo> dyingFoo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
@@ -358,6 +362,10 @@ public:
         ASSERT_NE(foo, nullptr);
         ASSERT_EQ(foo->isRemote(), gMode == BINDERIZED);
 
+        dyingFoo = IFoo::getService("dyingFoo", gMode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(foo, nullptr);
+        ASSERT_EQ(foo->isRemote(), gMode == BINDERIZED);
+
         bar = IBar::getService("foo", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(bar, nullptr);
         ASSERT_EQ(bar->isRemote(), gMode == BINDERIZED);
@@ -379,13 +387,21 @@ public:
         ASSERT_NE(validationPointerInterface, nullptr);
     }
 
+    void killServer(const char *serverName) {
+        for (const auto &pair : mPids) {
+            if (pair.first == serverName) {
+                ::killServer(pair.second, pair.first.c_str());
+            }
+        }
+    }
+
     virtual void TearDown() {
         // clean up by killing server processes.
         ALOGI("Environment tear-down beginning...");
         ALOGI("Killing servers...");
         size_t i = 0;
         for (const auto &pair : mPids) {
-            killServer(pair.second, pair.first.c_str());
+            ::killServer(pair.second, pair.first.c_str());
         }
         ALOGI("Servers all killed.");
         ALOGI("Environment tear-down complete.");
@@ -417,6 +433,7 @@ public:
         addServer<IParent>("parent");
         addServer<IFetcher>("fetcher");
         addServer<IBar>("foo");
+        addServer<IFoo>("dyingFoo");
         addServer<IFooCallback>("foo callback");
         addServer<IGraph>("graph");
         addServer<IPointer>("pointer");
@@ -434,11 +451,22 @@ public:
     sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
     sp<IFoo> foo;
+    sp<IFoo> dyingFoo;
     sp<IBar> bar;
     sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
+
+    void killServer(const char *serverName) {
+        HidlEnvironmentBase *env;
+        if (gMode == BINDERIZED) {
+            env = gBinderizedEnvironment;
+        } else {
+            env = gPassthroughEnvironment;
+        }
+        env->killServer(serverName);
+    }
 
     virtual void SetUp() override {
         ALOGI("Test setup beginning...");
@@ -453,6 +481,7 @@ public:
         memoryTest = env->memoryTest;
         fetcher = env->fetcher;
         foo = env->foo;
+        dyingFoo = env->dyingFoo;
         bar = env->bar;
         fooCb = env->fooCb;
         graphInterface = env->graphInterface;
@@ -1152,6 +1181,65 @@ TEST_F(HidlTest, FooHandleVecTest) {
     }));
 
     EXPECT_OK(foo->closeHandles());
+}
+
+struct HidlDeathRecipient : hidl_death_recipient {
+    std::mutex mutex;
+    std::condition_variable condition;
+    wp<IBase> who;
+    bool fired = false;
+    uint64_t cookie = 0;
+
+    virtual void serviceDied(uint64_t cookie, const wp<IBase>& who) {
+        std::unique_lock<std::mutex> lock(mutex);
+        fired = true;
+        this->cookie = cookie;
+        this->who = who;
+        condition.notify_one();
+    };
+};
+
+TEST_F(HidlTest, DeathRecipientTest) {
+    // Need a threadpool to receive death calls from the kernel
+    ProcessState::self()->setThreadPoolMaxThreadCount(0);
+    ProcessState::self()->startThreadPool();
+
+    sp<HidlDeathRecipient> recipient = new HidlDeathRecipient();
+    sp<HidlDeathRecipient> recipient2 = new HidlDeathRecipient();
+
+    EXPECT_TRUE(dyingFoo->linkToDeath(recipient, 0x1481));
+    EXPECT_TRUE(dyingFoo->linkToDeath(recipient2, 0x2592));
+    EXPECT_TRUE(dyingFoo->unlinkToDeath(recipient2));
+
+    if (gMode != BINDERIZED) {
+        // Passthrough doesn't fire, nor does it keep state of
+        // registered death recipients (so it won't fail unlinking
+        // the same recipient twice).
+        return;
+    }
+
+    EXPECT_FALSE(dyingFoo->unlinkToDeath(recipient2));
+    killServer("dyingFoo");
+
+    std::unique_lock<std::mutex> lock(recipient->mutex);
+    recipient->condition.wait_for(lock, std::chrono::milliseconds(1000), [&recipient]() {
+            return recipient->fired;
+    });
+    EXPECT_TRUE(recipient->fired);
+    EXPECT_EQ(recipient->cookie, 0x1481u);
+    EXPECT_EQ(recipient->who, dyingFoo);
+    std::unique_lock<std::mutex> lock2(recipient2->mutex);
+    recipient2->condition.wait_for(lock2, std::chrono::milliseconds(1000), [&recipient2]() {
+            return recipient2->fired;
+    });
+    EXPECT_FALSE(recipient2->fired);
+
+    // Verify servicemanager dropped its reference too
+    sp<IFoo> deadFoo = IFoo::getService("dyingFoo", false);
+    if (deadFoo != nullptr) {
+        // Got a passthrough
+        EXPECT_FALSE(deadFoo->isRemote());
+    }
 }
 
 TEST_F(HidlTest, BarThisIsNewTest) {
