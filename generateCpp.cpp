@@ -125,6 +125,126 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
+static void declareServiceManagerInteractions(Formatter &out, const std::string &baseName) {
+    out << "static ::android::sp<I" << baseName << "> getService("
+        << "const std::string &serviceName, bool getStub=false);\n";
+    out << "::android::status_t registerAsService(const std::string &serviceName);\n";
+    out << "static bool registerForNotifications(\n";
+    out.indent(2, [&] {
+        out << "const std::string &serviceName,\n"
+            << "const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification> "
+            << "&notification);\n";
+    });
+
+}
+
+static void implementServiceManagerInteractions(Formatter &out,
+        const std::string &baseName, const std::string &package) {
+
+    out << "// static\n"
+        << "::android::sp<I" << baseName << "> I" << baseName << "::getService("
+        << "const std::string &serviceName, bool getStub) ";
+    out.block([&] {
+        out << "::android::sp<I" << baseName << "> iface;\n"
+            << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::defaultServiceManager();\n";
+        });
+        out.sIf("sm != nullptr && !getStub", [&] {
+            out << "::android::sp<::android::hidl::base::V1_0::IBase> base;\n"
+                << "::android::hardware::Return<void> ret =\n";
+            out.indent(2, [&] {
+                out << "sm->get(\"" << package << "::I" << baseName << "\", serviceName.c_str(),\n";
+                out.indent(2, [&] {
+                    out << "[&base](::android::sp<::android::hidl::base::V1_0::IBase> found) ";
+                    out.block([&] {
+                        out << "base = found;\n";
+                    });
+                    out << ");\n";
+                });
+            });
+            out.sIf("ret.getStatus().isOk()", [&] {
+                out << "iface = I" << baseName << "::castFrom(base);\n";
+                out.sIf("iface != nullptr", [&] {
+                    out << "return iface;\n";
+                }).endl();
+            }).endl();
+        }).endl();
+        out << "const int dlMode = RTLD_LAZY;\n";
+        out << "void *handle = nullptr;\n";
+        for (const auto &path : std::vector<std::string>({
+            "HAL_LIBRARY_PATH_ODM", "HAL_LIBRARY_PATH_VENDOR", "HAL_LIBRARY_PATH_SYSTEM"
+        })) {
+            out.sIf("handle == nullptr", [&] {
+                out << "handle = dlopen("
+                    << path << " \"" << package << "-impl.so\", dlMode);\n";
+            }).endl();
+        }
+        out.sIf("handle == nullptr", [&] {
+            out << "return iface;\n";
+        }).endl();
+        out << "I" << baseName << "* (*generator)(const char* name);\n"
+            << "*(void **)(&generator) = dlsym(handle, \"HIDL_FETCH_I" << baseName << "\");\n";
+        out.sIf("generator", [&] {
+            out << "iface = (*generator)(serviceName.c_str());\n";
+            out.sIf("iface != nullptr", [&] {
+                out << "iface = new Bs" << baseName << "(iface);\n";
+            }).endl();
+        }).endl();
+        out << "return iface;\n";
+    }).endl().endl();
+
+    out << "::android::status_t I" << baseName << "::registerAsService("
+        << "const std::string &serviceName) ";
+    out.block([&] {
+        out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::defaultServiceManager();\n";
+        });
+        out.sIf("sm == nullptr", [&] {
+            out << "return ::android::INVALID_OPERATION;\n";
+        }).endl();
+        out << "bool success = false;\n"
+            << "::android::hardware::Return<void> ret =\n";
+        out.indent(2, [&] {
+            out << "this->interfaceChain("
+                << "[&success, &sm, &serviceName, this](const auto &chain) ";
+            out.block([&] {
+                out << "::android::hardware::Return<bool> addRet = "
+                    << "sm->add(chain, serviceName.c_str(), this);\n";
+                out << "success = addRet.isOk() && addRet;\n";
+            });
+            out << ");\n";
+            out << "success = success && ret.getStatus().isOk();\n";
+        });
+        out << "return success ? ::android::OK : ::android::UNKNOWN_ERROR;\n";
+    }).endl().endl();
+
+    out << "bool I" << baseName << "::registerForNotifications(\n";
+    out.indent(2, [&] {
+        out << "const std::string &serviceName,\n"
+            << "const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification> "
+            << "&notification) ";
+    });
+    out.block([&] {
+        out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::defaultServiceManager();\n";
+        });
+        out.sIf("sm == nullptr", [&] {
+            out << "return false;\n";
+        }).endl();
+        out << "::android::hardware::Return<bool> success =\n";
+        out.indent(2, [&] {
+            out << "sm->registerForNotifications(\"" << package << "::I" << baseName << "\",\n";
+            out.indent(2, [&] {
+                out << "serviceName, notification);\n";
+            });
+        });
+        out << "return success.isOk() && success;\n";
+    }).endl().endl();
+}
+
 status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
     std::string path = outputPath;
@@ -295,9 +415,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "\nstatic const char* descriptor;\n\n";
 
         if (isIBase()) {
-            out << "// skipped DECLARE_SERVICE_MANAGER_INTERACTIONS\n\n";
+            out << "// skipped getService, registerAsService, registerForNotifications\n\n";
         } else {
-            out << "DECLARE_SERVICE_MANAGER_INTERACTIONS(" << baseName << ")\n\n";
+            declareServiceManagerInteractions(out, baseName);
         }
 
         out << "private: static int hidlStaticBlock;\n";
@@ -823,13 +943,12 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
 
         if (isIBase()) {
-            out << "// skipped IMPLEMENT_SERVICE_MANAGER_INTERACTIONS\n";
+            out << "// skipped getService, registerAsService, registerForNotifications\n";
         } else {
-            out << "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS("
-                << baseName << ", "
-                << "\"" << iface->fqName().package()
-                << iface->fqName().atVersion()
-                << "\")\n";
+            std::string package = iface->fqName().package()
+                    + iface->fqName().atVersion();
+
+            implementServiceManagerInteractions(out, baseName, package);
         }
     }
 
