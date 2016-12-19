@@ -16,6 +16,7 @@
 #include <android/hardware/tests/foo/1.0/BpSimple.h>
 
 #include <android/hardware/tests/bar/1.0/IBar.h>
+#include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
@@ -83,6 +84,7 @@ using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::foo::V1_0::ISimple;
 using ::android::hardware::tests::bar::V1_0::IBar;
+using ::android::hardware::tests::bar::V1_0::IComplicated;
 using ::android::hardware::tests::inheritance::V1_0::IFetcher;
 using ::android::hardware::tests::inheritance::V1_0::IGrandparent;
 using ::android::hardware::tests::inheritance::V1_0::IParent;
@@ -156,6 +158,66 @@ struct Simple : public ISimple {
 
     Return<int32_t> getCookie() override {
         return mCookie;
+    }
+
+    Return<void> customVecInt(customVecInt_cb _cb) override {
+        _cb(hidl_vec<int32_t>());
+        return Void();
+    }
+
+    Return<void> customVecStr(customVecStr_cb _cb) override {
+        hidl_vec<hidl_string> vec;
+        vec.resize(2);
+        _cb(vec);
+        return Void();
+    }
+
+    Return<void> mystr(mystr_cb _cb) override {
+        _cb(hidl_string());
+        return Void();
+    }
+
+    Return<void> myhandle(myhandle_cb _cb) override {
+        auto h = native_handle_create(0, 1);
+        _cb(h);
+        native_handle_delete(h);
+        return Void();
+    }
+
+private:
+    int32_t mCookie;
+};
+
+struct Complicated : public IComplicated {
+    Complicated(int32_t cookie)
+        : mCookie(cookie) {
+    }
+
+    Return<int32_t> getCookie() override {
+        return mCookie;
+    }
+
+    Return<void> customVecInt(customVecInt_cb _cb) override {
+        _cb(hidl_vec<int32_t>());
+        return Void();
+    }
+    Return<void> customVecStr(customVecStr_cb _cb) override {
+        hidl_vec<hidl_string> vec;
+        vec.resize(2);
+        _cb(vec);
+        return Void();
+    }
+
+    Return<void> mystr(mystr_cb _cb) override {
+        _cb(hidl_string());
+        return Void();
+    }
+
+    Return<void> myhandle(myhandle_cb _cb) override {
+        auto h = native_handle_create(0, 1);
+        _cb(h);
+        native_handle_delete(h);
+        return Void();
     }
 
 private:
@@ -1119,6 +1181,23 @@ static void expectGoodGrandparent(const sp<IGrandparent> &grandparent) {
     EXPECT_OK(grandparent->doGrandparent());
     sp<IParent> parent = IParent::castFrom(grandparent);
     expectGoodParent(parent);
+}
+
+TEST_F(HidlTest, FooHaveAnInterfaceTest) {
+
+    sp<ISimple> in = new Complicated(42);
+
+    EXPECT_OK(bar->haveAInterface(
+                in,
+                [&](const auto &out) {
+                    ASSERT_NE(out.get(), nullptr);
+                    EXPECT_EQ(out->getCookie(), 42);
+                    EXPECT_OK(out->customVecInt([&](const auto &) { }));
+                    EXPECT_OK(out->customVecStr([&](const auto &) { }));
+                    EXPECT_OK(out->interfaceChain([&](const auto &) { }));
+                    EXPECT_OK(out->mystr([&](const auto &) { }));
+                    EXPECT_OK(out->myhandle([&](const auto &) { }));
+                }));
 }
 
 TEST_F(HidlTest, InheritRemoteGrandparentTest) {
