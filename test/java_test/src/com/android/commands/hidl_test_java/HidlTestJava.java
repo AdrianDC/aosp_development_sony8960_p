@@ -689,6 +689,8 @@ public final class HidlTestJava {
                         Expect(c, "Drei");
                     }
                 });
+
+        proxy.returnABunchOfStrings((a,b,c) -> Expect(a + b + c, "EinsZweiDrei"));
     }
 
     class Baz extends IBaz.Stub {
