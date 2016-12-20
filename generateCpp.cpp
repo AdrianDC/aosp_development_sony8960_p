@@ -52,7 +52,7 @@ status_t AST::generateCpp(const std::string &outputPath) const {
     }
 
     if (err == OK) {
-        generatePassthroughHeader(outputPath);
+        err = generatePassthroughHeader(outputPath);
     }
 
     return err;
@@ -519,6 +519,34 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope->emitTypeDeclarations(out);
 }
 
+static void wrapPassthroughArg(Formatter &out,
+        const TypedVar *arg, bool addPrefixToName,
+        std::function<void(void)> handleError) {
+    if (!arg->type().isInterface()) {
+        return;
+    }
+    std::string name = (addPrefixToName ? "_hidl_out_" : "") + arg->name();
+    std::string wrappedName = (addPrefixToName ? "_hidl_out_wrapped_" : "_hidl_wrapped_")
+            + arg->name();
+    const Interface &iface = static_cast<const Interface &>(arg->type());
+    out << iface.getCppStackType() << " " << wrappedName << ";\n";
+    // TODO(elsk): b/33754152 Should not wrap this if object is Bs*
+    out.sIf(name + " != nullptr && !" + name + "->isRemote()", [&] {
+        out << wrappedName
+            << " = "
+            << iface.fqName().cppName()
+            << "::castFrom(::android::hardware::wrapPassthrough("
+            << name << "));\n";
+        out.sIf(wrappedName + " == nullptr", [&] {
+            // Fatal error. Happens when the BsFoo class is not found in the binary
+            // or any dynamic libraries.
+            handleError();
+        }).endl();
+    }).sElse([&] {
+        out << wrappedName << " = " << name << ";\n";
+    }).endl().endl();
+}
+
 status_t AST::generatePassthroughMethod(Formatter &out,
                                         const Method *method) const {
     method->generateCppSignature(out);
@@ -538,12 +566,26 @@ status_t AST::generatePassthroughMethod(Formatter &out,
             InstrumentationEvent::PASSTHROUGH_ENTRY,
             method);
 
+
+    for (const auto &arg : method->args()) {
+        wrapPassthroughArg(out, arg, false /* addPrefixToName */, [&] {
+            out << "return ::android::hardware::Status::fromExceptionCode(\n";
+            out.indent(2, [&] {
+                out << "::android::hardware::Status::EX_TRANSACTION_FAILED,\n"
+                    << "::android::String8(\"Cannot wrap passthrough interface.\"));\n";
+            });
+        });
+    }
+
+    out << "auto _hidl_error = ::android::hardware::Void();\n";
     out << "auto _hidl_return = ";
 
     if (method->isOneway()) {
-        out << "addOnewayTask([this";
+        out << "addOnewayTask([this, &_hidl_error";
         for (const auto &arg : method->args()) {
-            out << ", " << arg->name();
+            out << ", "
+                << (arg->type().isInterface() ? "_hidl_wrapped_" : "")
+                << arg->name();
         }
         out << "] {\n";
         out.indent();
@@ -560,7 +602,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
             out << ", ";
         }
         first = false;
-        out << arg->name();
+        out << (arg->type().isInterface() ? "_hidl_wrapped_" : "") << arg->name();
     }
     if (returnsValue && elidedReturn == nullptr) {
         if (!method->args().empty()) {
@@ -573,7 +615,8 @@ status_t AST::generatePassthroughMethod(Formatter &out,
                 out << ", ";
             }
 
-            out << "const auto &_hidl_out_" << arg->name();
+            out << "const auto &_hidl_out_"
+                << arg->name();
 
             first = false;
         }
@@ -588,16 +631,26 @@ status_t AST::generatePassthroughMethod(Formatter &out,
             return status;
         }
 
+        for (const auto &arg : method->results()) {
+            wrapPassthroughArg(out, arg, true /* addPrefixToName */, [&] {
+                out << "_hidl_error = ::android::hardware::Status::fromExceptionCode(\n";
+                out.indent(2, [&] {
+                    out << "::android::hardware::Status::EX_TRANSACTION_FAILED,\n"
+                        << "::android::String8(\"Cannot wrap passthrough interface.\"));\n";
+                });
+                out << "return;\n";
+            });
+        }
+
         out << "_hidl_cb(";
         first = true;
         for (const auto &arg : method->results()) {
             if (!first) {
                 out << ", ";
             }
-
-            out << "_hidl_out_" << arg->name();
-
             first = false;
+            out << (arg->type().isInterface() ? "_hidl_out_wrapped_" : "_hidl_out_")
+                << arg->name();
         }
         out << ");\n";
         out.unindent();
@@ -913,6 +966,22 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                 out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
                 out.indent([&] {
                     out << "return new Bn"
+                        << iface->getBaseName()
+                        << "(reinterpret_cast<I"
+                        << iface->getBaseName()
+                        << " *>(iIntf));\n";
+                });
+                out << "};\n";
+            });
+            out << "::android::hardware::gBsConstructorMap[I"
+                << iface->getBaseName()
+                << "::descriptor]\n";
+            out.indent(2, [&] {
+                out << "= [](void *iIntf) -> ::android::sp<"
+                    << gIBaseFqName.cppName()
+                    << "> {\n";
+                out.indent([&] {
+                    out << "return new Bs"
                         << iface->getBaseName()
                         << "(reinterpret_cast<I"
                         << iface->getBaseName()
@@ -1623,6 +1692,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     generateCppPackageInclude(out, mPackage, ifaceName);
     out << "\n";
 
+    out << "#include <hidl/HidlPassthroughSupport.h>\n";
     if (supportOneway) {
         out << "#include <hidl/TaskRunner.h>\n";
     }
