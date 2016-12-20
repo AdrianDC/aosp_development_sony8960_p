@@ -17,19 +17,19 @@
 if (!configurations.findByName("default")) {
     configurations.create("default")
 }
-artifacts.add("default", file("runner/runner-0.5-release.jar"))
-artifacts.add("default", file("rules/rules-0.5-release.jar"))
+artifacts.add("default", file("runner/runner-0.6-beta-2-release.jar"))
+artifacts.add("default", file("rules/rules-0.6-beta-2-release.jar"))
 
 // To use the "android-support-test.jar" and the "esspresso-core.jar" add the following dependency:
 //     compile project(path: ":android-support-test", configuration: "espresso-core")
 if (!configurations.findByName("espresso-core")) {
     configurations.create("espresso-core")
 }
-artifacts.add("espresso-core", file("espresso/espresso-core-2.2.2-release.jar"))
+artifacts.add("espresso-core", file("espresso/espresso-core-0.6-beta-2-release.jar"))
 
 // To use the "runner-no-dep.jar", add the following dependency:
 //     compile project(path: ":android-support-test", configuration: "runner-no-dep")
 if (!configurations.findByName("runner-no-dep")) {
     configurations.create("runner-no-dep")
 }
-artifacts.add("runner-no-dep", file("runner/runner-0.5-release-no-dep.jar"))
+artifacts.add("runner-no-dep", file("runner/runner-0.6-beta-2-release-no-dep.jar"))
