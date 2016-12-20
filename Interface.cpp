@@ -92,14 +92,13 @@ Method *Interface::createDescriptorChainMethod() const {
         HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
         [this](auto &out) { /* cppImpl */
             std::vector<const Interface *> chain = typeChain();
-            out << "::android::hardware::hidl_vec<::android::hardware::hidl_string> _hidl_return;\n";
-            out << "_hidl_return.resize(" << chain.size() << ");\n";
-            for (size_t i = 0; i < chain.size(); ++i) {
-                out << "_hidl_return[" << i << "] = "
-                    << chain[i]->fullName()
-                    << "::descriptor;\n";
-            }
-            out << "_hidl_cb(_hidl_return);\n";
+            out << "_hidl_cb(";
+            out.block([&] {
+                for (const Interface *iface : chain) {
+                    out << iface->fullName() << "::descriptor,\n";
+                }
+            });
+            out << ");\n";
             out << "return ::android::hardware::Void();";
         },
         [this](auto &out) { /* javaImpl */
