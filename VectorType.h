@@ -30,6 +30,8 @@ struct VectorType : public TemplatedType {
     std::string typeName() const override;
     bool isCompatibleElementType(Type *elementType) const override;
 
+    bool canCheckEquality() const override;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getCppType(

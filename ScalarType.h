@@ -44,6 +44,8 @@ struct ScalarType : public Type {
     bool isElidableType() const override;
     const ScalarType *resolveToScalarType() const override;
 
+    bool canCheckEquality() const override;
+
     std::string typeName() const override;
     bool isValidEnumStorageType() const;
 
