@@ -111,7 +111,10 @@ status_t AST::generateVts(const std::string &outputPath) const {
     out << "package: \"" << mPackage.package() << "\"\n\n";
 
     for (const auto &item : mImportedNames) {
-        out << "import: \"" << item.string() << "\"\n";
+        // ignore IBase.
+        if (item != gIBaseFqName) {
+            out << "import: \"" << item.string() << "\"\n";
+        }
     }
 
     out << "\n";
