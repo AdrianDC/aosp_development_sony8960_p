@@ -33,6 +33,7 @@ struct ArrayType : public Type {
     ArrayType(Type *elementType, ConstantExpression *size);
 
     bool isArray() const override;
+    bool canCheckEquality() const override;
 
     Type *getElementType() const;
 

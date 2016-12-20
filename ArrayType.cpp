@@ -54,6 +54,10 @@ bool ArrayType::isArray() const {
     return true;
 }
 
+bool ArrayType::canCheckEquality() const {
+    return mElementType->canCheckEquality();
+}
+
 Type *ArrayType::getElementType() const {
     return mElementType;
 }

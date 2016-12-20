@@ -43,6 +43,7 @@ struct EnumType : public Scope {
 
     std::string typeName() const override;
     bool isEnum() const override;
+    bool canCheckEquality() const override;
 
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
