@@ -25,11 +25,18 @@ using ::android::hardware::Void;
 
 struct BazCallback : public IBazCallback {
     Return<void> heyItsMe(const sp<IBazCallback> &cb) override;
+    Return<void> hey() override;
 };
 
 Return<void> BazCallback::heyItsMe(
         const sp<IBazCallback> &cb) {
     LOG(INFO) << "SERVER: heyItsMe cb = " << cb.get();
+
+    return Void();
+}
+
+Return<void> BazCallback::hey() {
+    LOG(INFO) << "SERVER: hey";
 
     return Void();
 }
@@ -94,6 +101,10 @@ struct Baz : public IBaz {
             const hidl_vec<int32_t>& param, mapThisVector_cb _hidl_cb) override;
 
     Return<void> callMe(const sp<IBazCallback>& cb) override;
+
+    Return<void> callMeLater(const sp<IBazCallback>& cb) override;
+    Return<void> iAmFreeNow() override;
+
     Return<IBaz::SomeEnum> useAnEnum(IBaz::SomeEnum zzz) override;
 
     Return<void> haveSomeStrings(
@@ -112,6 +123,9 @@ struct Baz : public IBaz {
     Return<uint8_t> returnABitField() override;
 
     Return<uint32_t> size(uint32_t size) override;
+
+private:
+    sp<IBazCallback> mStoredCallback;
 };
 
 Return<void> Baz::someBaseMethod() {
@@ -506,6 +520,21 @@ Return<void> Baz::callMe(const sp<IBazCallback>& cb) {
         cb->heyItsMe(my_cb);
     }
 
+    return Void();
+}
+
+Return<void> Baz::callMeLater(const sp<IBazCallback>& cb) {
+    LOG(INFO) << "callMeLater " << cb.get();
+
+    mStoredCallback = cb;
+
+    return Void();
+}
+
+Return<void> Baz::iAmFreeNow() {
+    if (mStoredCallback != nullptr) {
+        mStoredCallback->hey();
+    }
     return Void();
 }
 
@@ -955,6 +984,11 @@ TEST_F(HidlTest, BazMapThisVectorMethodTest) {
 
 TEST_F(HidlTest, BazCallMeMethodTest) {
     EXPECT_OK(baz->callMe(new BazCallback()));
+}
+
+TEST_F(HidlTest, BazCallMeLaterMethodTest) {
+    EXPECT_OK(baz->callMeLater(new BazCallback()));
+    EXPECT_OK(baz->iAmFreeNow());
 }
 
 TEST_F(HidlTest, BazUseAnEnumMethodTest) {
