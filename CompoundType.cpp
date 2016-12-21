@@ -16,6 +16,7 @@
 
 #include "CompoundType.h"
 
+#include "ArrayType.h"
 #include "VectorType.h"
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
@@ -488,6 +489,50 @@ status_t CompoundType::emitJavaTypeDeclarations(
     if (!mFields->empty()) {
         out << "\n";
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    if (canCheckEquality()) {
+        out << "public final boolean equals(" << localName() << " other) ";
+        out.block([&] {
+            for (const auto &field : *mFields) {
+                std::string condition = field->type().isScalar()
+                    ? "this." + field->name() + " != other." + field->name()
+                    : ("!java.util.Objects.deepEquals(this." + field->name()
+                            + ", other." + field->name() + ")");
+                out.sIf(condition, [&] {
+                    out << "return false;\n";
+                }).endl();
+            }
+            out << "return true;\n";
+        }).endl().endl();
+
+        out << "public final int hashCode() ";
+        out.block([&] {
+            out << "return java.util.Objects.hash(";
+            bool first = true;
+            for (const auto &field : *mFields) {
+                if (!first) {
+                    out << ", ";
+                }
+                first = false;
+                if (field->type().isArray()) {
+                    const ArrayType &type = static_cast<const ArrayType &>(field->type());
+                    if (type.countDimensions() == 1 &&
+                        type.getElementType()->resolveToScalarType() != nullptr) {
+                        out << "java.util.Arrays.hashCode(this." << field->name() << ")";
+                    } else {
+                        out << "java.util.Arrays.deepHashCode(this." << field->name() << ")";
+                    }
+                } else {
+                    out << "this." << field->name();
+                }
+            }
+            out << ");\n";
+        }).endl().endl();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
 
     out << "public final void readFromParcel(android.os.HwParcel parcel) {\n";
     out.indent();
