@@ -927,7 +927,18 @@ static status_t generateAndroidBpForPackage(
     // For VTS driver
     // TODO(yim): b/31930023 remove below check when all HAL's driver
     // and profiler are auto-generated.
-    if (packageFQName.string() != "android.hardware.nfc@1.0") {
+    if (packageFQName.string() != "android.hardware.nfc@1.0"
+        && packageFQName.string() != "android.hardware.vibrator@1.0"
+        && packageFQName.string() != "android.hardware.light@2.0"
+        && packageFQName.string() != "android.hardware.thermal@1.0"
+        && packageFQName.string() != "android.hardware.vr@1.0"
+        && packageFQName.string() != "android.hardware.vehicle@2.0"
+        && packageFQName.string() != "android.hardware.boot@1.0"
+        && packageFQName.string() != "android.hardware.input@1.0"
+        && packageFQName.string() != "android.hardware.power@1.0"
+        && packageFQName.string() != "android.hardware.tv.cec@1.0"
+        && packageFQName.string() != "android.hardware.memtrack@1.0"
+        && packageFQName.string() != "android.hardware.sensor@1.0") {
         fprintf(stderr,
                 "%s not yet has auto-generated VTS driver & profiler.\n",
                 packageFQName.string().c_str());
