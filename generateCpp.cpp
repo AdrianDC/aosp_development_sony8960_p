@@ -572,7 +572,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
             out << "return ::android::hardware::Status::fromExceptionCode(\n";
             out.indent(2, [&] {
                 out << "::android::hardware::Status::EX_TRANSACTION_FAILED,\n"
-                    << "::android::String8(\"Cannot wrap passthrough interface.\"));\n";
+                    << "\"Cannot wrap passthrough interface.\");\n";
             });
         });
     }
@@ -636,7 +636,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
                 out << "_hidl_error = ::android::hardware::Status::fromExceptionCode(\n";
                 out.indent(2, [&] {
                     out << "::android::hardware::Status::EX_TRANSACTION_FAILED,\n"
-                        << "::android::String8(\"Cannot wrap passthrough interface.\"));\n";
+                        << "\"Cannot wrap passthrough interface.\");\n";
                 });
                 out << "return;\n";
             });
