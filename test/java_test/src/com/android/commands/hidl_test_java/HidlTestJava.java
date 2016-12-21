@@ -350,6 +350,10 @@ public final class HidlTestJava {
 
             cb.heyItsMe(null);
         }
+
+        public void hey() {
+            mCalled = true;
+        }
     }
 
     private String numberToEnglish(int x) {
@@ -691,6 +695,10 @@ public final class HidlTestJava {
                 });
 
         proxy.returnABunchOfStrings((a,b,c) -> Expect(a + b + c, "EinsZweiDrei"));
+
+        proxy.callMeLater(new BazCallback());
+        System.gc();
+        proxy.iAmFreeNow();
     }
 
     class Baz extends IBaz.Stub {
@@ -870,11 +878,26 @@ public final class HidlTestJava {
             public void heyItsMe(IBazCallback cb) {
                 Log.d(TAG, "SERVER: heyItsMe");
             }
+
+            public void hey() {
+                Log.d(TAG, "SERVER: hey");
+            }
         }
 
         public void callMe(IBazCallback cb) {
             Log.d(TAG, "callMe");
             cb.heyItsMe(new BazCallback());
+        }
+
+        private IBazCallback mStoredCallback;
+        public void callMeLater(IBazCallback cb) {
+            mStoredCallback = cb;
+        }
+
+        public void iAmFreeNow() {
+            if (mStoredCallback != null) {
+                mStoredCallback.hey();
+            }
         }
 
         public byte useAnEnum(byte zzz) {
