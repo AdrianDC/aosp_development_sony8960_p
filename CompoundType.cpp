@@ -335,7 +335,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
         << " "
         << localName()
-        << " {\n";
+        << " final {\n";
 
     out.indent();
 
