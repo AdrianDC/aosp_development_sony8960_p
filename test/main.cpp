@@ -7,6 +7,8 @@
 #include <android/hidl/memory/1.0/IAllocator.h>
 #include <android/hidl/memory/1.0/IMemory.h>
 
+#include <android/hidl/token/1.0/ITokenManager.h>
+
 #include <android/hardware/tests/foo/1.0/IFoo.h>
 #include <android/hardware/tests/foo/1.0/IFooCallback.h>
 #include <android/hardware/tests/foo/1.0/BnSimple.h>
@@ -106,6 +108,7 @@ using ::android::hidl::manager::V1_0::IServiceManager;
 using ::android::hidl::manager::V1_0::IServiceNotification;
 using ::android::hidl::memory::V1_0::IAllocator;
 using ::android::hidl::memory::V1_0::IMemory;
+using ::android::hidl::token::V1_0::ITokenManager;
 using ::android::sp;
 using ::android::wp;
 using ::android::to_string;
@@ -317,6 +320,7 @@ protected:
 
 public:
     sp<IServiceManager> manager;
+    sp<ITokenManager> tokenManager;
     sp<IAllocator> ashmemAllocator;
     sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
@@ -342,6 +346,10 @@ public:
 
         ASSERT_NE(manager, nullptr);
         ASSERT_TRUE(manager->isRemote()); // manager is always remote
+
+        tokenManager = ITokenManager::getService("manager");
+        ASSERT_NE(tokenManager, nullptr);
+        ASSERT_TRUE(tokenManager->isRemote()); // tokenManager is always remote
 
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
@@ -447,6 +455,7 @@ public:
 class HidlTest : public ::testing::Test {
 public:
     sp<IServiceManager> manager;
+    sp<ITokenManager> tokenManager;
     sp<IAllocator> ashmemAllocator;
     sp<IMemoryTest> memoryTest;
     sp<IFetcher> fetcher;
@@ -477,6 +486,7 @@ public:
             env = gPassthroughEnvironment;
         }
         manager = env->manager;
+        tokenManager = env->tokenManager;
         ashmemAllocator = env->ashmemAllocator;
         memoryTest = env->memoryTest;
         fetcher = env->fetcher;
@@ -641,6 +651,29 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
         EXPECT_EQ(to_string(registrations.data(), registrations.size()),
                   "['" + descriptor + "/" + instanceOne + "', '"
                        + descriptor + "/" + instanceTwo + "']");
+    }
+}
+
+TEST_F(HidlTest, TestToken) {
+    Return<uint64_t> ret = tokenManager->createToken(manager);
+    EXPECT_OK(ret);
+    uint64_t token = ret;
+
+    EXPECT_OK(tokenManager->get(token, [&](const auto &store) {
+        EXPECT_NE(nullptr, store.get());
+        sp<IServiceManager> retManager = IServiceManager::castFrom(store);
+
+        // TODO(b/33818800): should have only one Bp per process
+        // EXPECT_EQ(manager, retManager);
+
+        EXPECT_NE(nullptr, retManager.get());
+    }));
+
+    Return<bool> unregisterRet = tokenManager->unregister(token);
+
+    EXPECT_OK(unregisterRet);
+    if (unregisterRet.isOk()) {
+        EXPECT_TRUE(ret);
     }
 }
 
