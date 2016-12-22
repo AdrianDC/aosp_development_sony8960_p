@@ -334,9 +334,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *superType = iface->superType();
         const std::string baseName = iface->getBaseName();
         out << "constexpr static ::android::hardware::hidl_version version = {"
-            << mPackage.getPackageMajorVersion() << ","
+            << mPackage.getPackageMajorVersion() << ", "
             << mPackage.getPackageMinorVersion() << "};\n";
-        out << "virtual const ::android::hardware::hidl_version&"
+        out << "virtual const ::android::hardware::hidl_version &"
             << "getInterfaceVersion() const {\n";
         out.indent();
         out << "return version;\n";
