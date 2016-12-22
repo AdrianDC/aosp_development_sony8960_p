@@ -193,7 +193,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public android.os.IHwBinder asBinder();\n\n";
+    out << "@Override\npublic android.os.IHwBinder asBinder();\n\n";
 
     out << "public static "
         << ifaceName
@@ -272,7 +272,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public android.os.IHwBinder asBinder() {\n";
+    out << "@Override\npublic android.os.IHwBinder asBinder() {\n";
     out.indent();
     out << "return mRemote;\n";
     out.unindent();
@@ -291,7 +291,7 @@ status_t AST::generateJava(
         const bool returnsValue = !method->results().empty();
         const bool needsCallback = method->results().size() > 1;
 
-        out << "public ";
+        out << "@Override\npublic ";
         if (returnsValue && !needsCallback) {
             out << method->results()[0]->type().getJavaType();
         } else {
@@ -405,7 +405,7 @@ status_t AST::generateJava(
 
     out.indent();
 
-    out << "public android.os.IHwBinder asBinder() {\n";
+    out << "@Override\npublic android.os.IHwBinder asBinder() {\n";
     out.indent();
     out << "return this;\n";
     out.unindent();
@@ -416,7 +416,7 @@ status_t AST::generateJava(
         CHECK_LE(method->results().size(), 1u);
         std::string resultType = method->results().size() == 0 ? "void" :
                 method->results()[0]->type().getJavaType();
-        out << "public final "
+        out << "@Override\npublic final "
             << resultType
             << " "
             << method->name()
@@ -430,7 +430,8 @@ status_t AST::generateJava(
         out << "\n}\n\n";
     }
 
-    out << "public android.os.IHwInterface queryLocalInterface(String descriptor) {\n";
+    out << "@Override\n"
+        << "public android.os.IHwInterface queryLocalInterface(String descriptor) {\n";
     out.indent();
     // XXX what about potential superClasses?
     out << "if (kInterfaceName.equals(descriptor)) {\n";
@@ -450,7 +451,8 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public void onTransact("
+    out << "@Override\n"
+        << "public void onTransact("
         << "int _hidl_code, "
         << "android.os.HwParcel _hidl_request, "
         << "final android.os.HwParcel _hidl_reply, "
