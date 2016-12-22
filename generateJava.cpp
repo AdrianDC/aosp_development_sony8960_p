@@ -315,6 +315,12 @@ status_t AST::generateJava(
         out << ") {\n";
         out.indent();
 
+        if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_PROXY)) {
+            method->javaImpl(IMPL_PROXY, out);
+            out.unindent();
+            out << "}\n";
+            continue;
+        }
         out << "android.os.HwParcel _hidl_request = new android.os.HwParcel();\n";
         out << "_hidl_request.writeInterfaceToken("
             << superInterface->fullJavaName()
@@ -414,9 +420,12 @@ status_t AST::generateJava(
             << resultType
             << " "
             << method->name()
-            << "() {\n";
+            << "("
+            << Method::GetJavaArgSignature(method->args())
+            << ") {\n";
+
         out.indent();
-        method->javaImpl(out);
+        method->javaImpl(IMPL_HEADER, out);
         out.unindent();
         out << "\n}\n\n";
     }
@@ -466,6 +475,13 @@ status_t AST::generateJava(
             << " */:\n{\n";
 
         out.indent();
+        if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_STUB)) {
+            method->javaImpl(IMPL_STUB, out);
+            out.unindent();
+            out << "break;\n";
+            out << "}\n\n";
+            continue;
+        }
 
         out << "_hidl_request.enforceInterface("
             << superInterface->fullJavaName()

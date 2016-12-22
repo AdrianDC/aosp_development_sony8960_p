@@ -71,18 +71,30 @@ const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
 }
 
-void Method::cppImpl(Formatter &out) const {
+void Method::cppImpl(MethodImplType type, Formatter &out) const {
     CHECK(mIsHidlReserved);
-    if (mCppImpl) {
-        mCppImpl(out);
+    auto it = mCppImpl.find(type);
+    if (it != mCppImpl.end()) {
+        it->second(out);
     }
 }
 
-void Method::javaImpl(Formatter &out) const {
+void Method::javaImpl(MethodImplType type, Formatter &out) const {
     CHECK(mIsHidlReserved);
-    if (mJavaImpl) {
-        mJavaImpl(out);
+    auto it = mJavaImpl.find(type);
+    if (it != mJavaImpl.end()) {
+        it->second(out);
     }
+}
+
+bool Method::overridesCppImpl(MethodImplType type) const {
+    CHECK(mIsHidlReserved);
+    return mCppImpl.find(type) != mCppImpl.end();
+}
+
+bool Method::overridesJavaImpl(MethodImplType type) const {
+    CHECK(mIsHidlReserved);
+    return mJavaImpl.find(type) != mJavaImpl.end();
 }
 
 void Method::setSerialId(size_t serial) {
