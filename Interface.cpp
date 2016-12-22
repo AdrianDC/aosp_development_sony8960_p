@@ -17,7 +17,9 @@
 #include "Interface.h"
 
 #include "Annotation.h"
+#include "DeathRecipientType.h"
 #include "Method.h"
+#include "ScalarType.h"
 #include "StringType.h"
 #include "VectorType.h"
 
@@ -46,6 +48,8 @@ enum {
     FIRST_HIDL_TRANSACTION  = 0x00f00000,
     HIDL_DESCRIPTOR_CHAIN_TRANSACTION = FIRST_HIDL_TRANSACTION,
     HIDL_SYSPROPS_CHANGED_TRANSACTION,
+    HIDL_LINK_TO_DEATH_TRANSACTION,
+    HIDL_UNLINK_TO_DEATH_TRANSACTION,
     LAST_HIDL_TRANSACTION   = 0x00ffffff,
 };
 
@@ -55,12 +59,132 @@ Interface::Interface(const char *localName, const Location &location, Interface 
       mIsJavaCompatibleInProgress(false) {
     mReservedMethods.push_back(createDescriptorChainMethod());
     mReservedMethods.push_back(createSyspropsChangedMethod());
+    mReservedMethods.push_back(createLinkToDeathMethod());
+    mReservedMethods.push_back(createUnlinkToDeathMethod());
 }
 
 std::string Interface::typeName() const {
     return "interface " + localName();
 }
 
+Method *Interface::createLinkToDeathMethod() const {
+    auto *results = new std::vector<TypedVar *> {
+        new TypedVar("success", new ScalarType(ScalarType::KIND_BOOL)) };
+    auto *args = new std::vector<TypedVar *> {
+        new TypedVar("recipient", new DeathRecipientType()),
+        new TypedVar("cookie", new ScalarType(ScalarType::KIND_UINT64)) };
+
+    return new Method("linkToDeath",
+            args,
+            results,
+            false /*oneway */,
+            new std::vector<Annotation *>(),
+            HIDL_LINK_TO_DEATH_TRANSACTION,
+            {
+                {IMPL_HEADER,
+                    [](auto &out) {
+                        out << "(void)cookie;\n"
+                            << "return (recipient != nullptr);\n";
+                    }
+                },
+                {IMPL_PROXY,
+                    [](auto &out) {
+                        out << "::android::hardware::hidl_binder_death_recipient *binder_recipient"
+                            << " = new ::android::hardware::hidl_binder_death_recipient(recipient, cookie, this);\n"
+                            << "std::unique_lock<std::mutex> lock(_hidl_mMutex);\n"
+                            << "_hidl_mDeathRecipients.push_back(binder_recipient);\n"
+                            << "return (remote()->linkToDeath(binder_recipient)"
+                            << " == ::android::OK);\n";
+                    }
+                },
+                {IMPL_STUB,
+                    [](auto &/*out*/) {
+                        // Do nothing
+                    }
+                }
+            }, /*cppImpl*/
+            {
+                {IMPL_HEADER,
+                    [this](auto &out) {
+                        out << "return true;";
+                    }
+                },
+                {IMPL_PROXY,
+                    [this](auto &out) {
+                        // TODO (b/31632518)
+                        out << "return false;";
+                    }
+                },
+                {IMPL_STUB,
+                    [this](auto &/*out*/) {
+                        // Do nothing
+                    }
+                }
+            } /*javaImpl*/
+    );
+}
+
+Method *Interface::createUnlinkToDeathMethod() const {
+    auto *results = new std::vector<TypedVar *> {
+        new TypedVar("success", new ScalarType(ScalarType::KIND_BOOL)) };
+    auto *args = new std::vector<TypedVar *> {
+        new TypedVar("recipient", new DeathRecipientType()) };
+
+    return new Method("unlinkToDeath",
+            args,
+            results,
+            false /*oneway */,
+            new std::vector<Annotation *>(),
+            HIDL_UNLINK_TO_DEATH_TRANSACTION,
+            {
+                {IMPL_HEADER,
+                    [](auto &out) {
+                        out << "return (recipient != nullptr);\n";
+                    }
+                },
+                {IMPL_PROXY,
+                    [](auto &out) {
+                        out << "std::unique_lock<std::mutex> lock(_hidl_mMutex);\n"
+                            << "for (auto it = _hidl_mDeathRecipients.begin();"
+                            << "it != _hidl_mDeathRecipients.end();"
+                            << "++it) {\n";
+                        out.indent([&] {
+                            out.sIf("(*it)->getRecipient() == recipient", [&] {
+                                out << "::android::status_t status = remote()->unlinkToDeath(*it);\n"
+                                    << "_hidl_mDeathRecipients.erase(it);\n"
+                                    << "return status == ::android::OK;\n";
+                                });
+                            });
+                        out << "}\n";
+                        out << "return false;\n";
+                    }
+                },
+                {IMPL_STUB,
+                    [](auto &/*out*/) {
+                        // Do nothing
+                    }
+                }
+            }, /*cppImpl*/
+            {
+                {IMPL_HEADER,
+                    [this](auto &out) {
+                        out << "return true;";
+                    }
+                },
+                {IMPL_PROXY,
+                    [this](auto &out) {
+                        // TODO (b/31632518)
+                        out << "return false;";
+                    }
+                },
+                {IMPL_STUB,
+                    [this](auto &/*out*/) {
+                        // Do nothing
+                    }
+                }
+            } /*javaImpl*/
+    );
+}
 Method *Interface::createSyspropsChangedMethod() const {
     return new Method("notifySyspropsChanged",
             new std::vector<TypedVar *>() /*args */,
@@ -68,13 +192,13 @@ Method *Interface::createSyspropsChangedMethod() const {
             true /*oneway */,
             new std::vector<Annotation *>(),
             HIDL_SYSPROPS_CHANGED_TRANSACTION,
-            [this](auto &out) { /*cppImpl */
+            { { IMPL_HEADER, [this](auto &out) {
                 out << "::android::report_sysprop_change();\n";
                 out << "return ::android::hardware::Void();";
-            },
-            [this](auto &out) { /* javaImpl */
+            } } }, /*cppImpl */
+            { { IMPL_HEADER, [](auto &out) { /* javaImpl */
                 out << "android.os.SystemProperties.reportSyspropChanged();";
-            }
+            } } } /*javaImpl */
     );
 }
 
@@ -90,7 +214,7 @@ Method *Interface::createDescriptorChainMethod() const {
         false /* oneway */,
         new std::vector<Annotation *>(),
         HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
-        [this](auto &out) { /* cppImpl */
+        { { IMPL_HEADER, [this](auto &out) {
             std::vector<const Interface *> chain = typeChain();
             out << "_hidl_cb(";
             out.block([&] {
@@ -100,8 +224,8 @@ Method *Interface::createDescriptorChainMethod() const {
             });
             out << ");\n";
             out << "return ::android::hardware::Void();";
-        },
-        [this](auto &out) { /* javaImpl */
+        } } }, /* cppImpl */
+        { { IMPL_HEADER, [this](auto &out) {
             std::vector<const Interface *> chain = typeChain();
             out << "return new java.util.ArrayList<String>(java.util.Arrays.asList(\n";
             out.indent(); out.indent();
@@ -112,7 +236,8 @@ Method *Interface::createDescriptorChainMethod() const {
             }
             out << "));";
             out.unindent(); out.unindent();
-        });
+         } } } /* javaImpl */
+    );
 }
 
 

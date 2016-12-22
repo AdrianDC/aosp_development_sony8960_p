@@ -106,6 +106,8 @@ private:
     mutable bool mIsJavaCompatibleInProgress;
     Method *createDescriptorChainMethod() const;
     Method *createSyspropsChangedMethod() const;
+    Method *createLinkToDeathMethod() const;
+    Method *createUnlinkToDeathMethod() const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
