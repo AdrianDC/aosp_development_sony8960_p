@@ -1014,7 +1014,7 @@ static status_t generateAndroidBpForPackage(
         && packageFQName.string() != "android.hardware.memtrack@1.0"
         && packageFQName.string() != "android.hardware.sensors@1.0") {
         fprintf(stderr,
-                "%s not yet has auto-generated VTS driver & profiler.\n",
+                "WARNING: %s does not yet have auto-generated VTS driver & profiler.\n",
                 packageFQName.string().c_str());
         return OK;
     }
