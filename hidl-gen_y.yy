@@ -59,8 +59,8 @@ bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
 
         // Inherited names by interfaces from IInterface / IBinder
         "onAsBinder", "asBinder", "queryLocalInterface", "getInterfaceDescriptor", "isBinderAlive",
-        "pingBinder", "dump", "transact", "linkToDeath", "unlinkToDeath", "checkSubclass",
-        "attachObject", "findObject", "detachObject", "localBinder", "remoteBinder", "mImpl",
+        "pingBinder", "dump", "transact", "checkSubclass", "attachObject", "findObject",
+        "detachObject", "localBinder", "remoteBinder", "mImpl",
     });
     std::string idstr(identifier);
     if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {

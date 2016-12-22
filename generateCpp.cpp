@@ -392,7 +392,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                 }
                 out << " {\n";
                 out.indent();
-                method->cppImpl(out);
+                method->cppImpl(IMPL_HEADER, out);
                 out.unindent();
                 out << "\n}\n";
             } else {
@@ -829,6 +829,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
+    out << "#include <hidl/HidlTransportSupport.h>\n\n";
+
     std::vector<std::string> packageComponents;
     getPackageAndVersionComponents(
             &packageComponents, false /* cpp_compatible */);
@@ -865,6 +867,12 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         return err;
     }
 
+    out.unindent();
+    out << "private:\n";
+    out.indent();
+    out << "std::mutex _hidl_mMutex;\n"
+        << "std::vector<::android::sp<::android::hardware::hidl_binder_death_recipient>>"
+        << " _hidl_mDeathRecipients;\n";
     out.unindent();
     out << "};\n\n";
 
@@ -1116,6 +1124,13 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     out << " {\n";
 
     out.indent();
+
+    if (method->isHidlReserved() && method->overridesCppImpl(IMPL_PROXY)) {
+        method->cppImpl(IMPL_PROXY, out);
+        out.unindent();
+        out << "}\n\n";
+        return OK;
+    }
 
     if (returnsValue && elidedReturn == nullptr) {
         generateCheckNonNull(out, "_hidl_cb");
@@ -1431,6 +1446,12 @@ status_t AST::generateStubSource(
 
 status_t AST::generateStubSourceForMethod(
         Formatter &out, const Interface *iface, const Method *method) const {
+    if (method->isHidlReserved() && method->overridesCppImpl(IMPL_STUB)) {
+        method->cppImpl(IMPL_STUB, out);
+        out << "break;\n";
+        return OK;
+    }
+
     out << "if (!_hidl_data.enforceInterface(";
 
     out << iface->fqName().cppNamespace()
