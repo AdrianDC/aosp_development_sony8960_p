@@ -351,12 +351,12 @@ public:
         ASSERT_NE(tokenManager, nullptr);
         ASSERT_TRUE(tokenManager->isRemote()); // tokenManager is always remote
 
+        ashmemAllocator = IAllocator::getService("ashmem");
+        ASSERT_NE(ashmemAllocator, nullptr);
+        ASSERT_TRUE(ashmemAllocator->isRemote()); // allocator is always remote
+
         // getStub is true if we are in passthrough mode to skip checking
         // binderized server, false for binderized mode.
-
-        ashmemAllocator = IAllocator::getService("ashmem", gMode == PASSTHROUGH /* getStub */);
-        ASSERT_NE(ashmemAllocator, nullptr);
-        ASSERT_EQ(ashmemAllocator->isRemote(), gMode == BINDERIZED);
 
         memoryTest = IMemoryTest::getService("memory", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(memoryTest, nullptr);
@@ -435,7 +435,6 @@ public:
         ALOGI("Environment setup beginning...");
 
         size_t i = 0;
-        addServer<IAllocator>("ashmem");
         addServer<IMemoryTest>("memory");
         addServer<IChild>("child");
         addServer<IParent>("parent");
