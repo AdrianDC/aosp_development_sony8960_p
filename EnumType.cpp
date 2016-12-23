@@ -76,6 +76,10 @@ bool EnumType::isEnum() const {
     return true;
 }
 
+bool EnumType::canCheckEquality() const {
+    return true;
+}
+
 std::string EnumType::getCppType(StorageMode,
                                  bool specifyNamespaces) const {
     return specifyNamespaces ? fullName() : partialCppName();

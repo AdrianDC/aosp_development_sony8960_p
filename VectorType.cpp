@@ -77,6 +77,10 @@ bool VectorType::isVectorOfBinders() const {
     return mElementType->isBinder();
 }
 
+bool VectorType::canCheckEquality() const {
+    return mElementType->canCheckEquality();
+}
+
 std::string VectorType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =

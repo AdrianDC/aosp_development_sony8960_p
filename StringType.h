@@ -29,6 +29,8 @@ struct StringType : public Type {
 
     bool isString() const override;
 
+    bool canCheckEquality() const override;
+
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;
