@@ -45,6 +45,10 @@ bool ScalarType::isElidableType() const {
     return true;
 }
 
+bool ScalarType::canCheckEquality() const {
+    return true;
+}
+
 std::string ScalarType::typeName() const {
     return getCppStackType();
 }

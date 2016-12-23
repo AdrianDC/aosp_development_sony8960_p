@@ -57,6 +57,7 @@ struct Type {
 
     bool isValidEnumStorageType() const;
     virtual bool isElidableType() const;
+    virtual bool canCheckEquality() const;
 
     enum StorageMode {
         StorageMode_Stack,
