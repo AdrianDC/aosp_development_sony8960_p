@@ -40,6 +40,8 @@ struct CompoundType : public Scope {
 
     bool isCompoundType() const override;
 
+    bool canCheckEquality() const override;
+
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 
@@ -109,6 +111,7 @@ struct CompoundType : public Scope {
             bool isReader) const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
+    status_t emitGlobalTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalHwDeclarations(Formatter &out) const override;
 
     status_t emitTypeDefinitions(

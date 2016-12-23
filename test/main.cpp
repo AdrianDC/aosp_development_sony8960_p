@@ -1366,6 +1366,48 @@ TEST_F(HidlTest, TestArrayDimensionality) {
     EXPECT_EQ(threeDim.size(), std::make_tuple(2u, 3u, 4u));
 }
 
+TEST_F(HidlTest, StructEqualTest) {
+    using G = IFoo::Goober;
+    using F = IFoo::Fumble;
+    G g1{
+        .q = 42,
+        .name = "The Ultimate Question of Life, the Universe, and Everything",
+        .address = "North Pole",
+        .numbers = std::array<double, 10>{ {1, 2, 3, 4, 5, 6, 7, 8, 9, 10} },
+        .fumble = F{.data = {.data = 50}},
+        .gumble = F{.data = {.data = 60}}
+    };
+    G g2{
+        .q = 42,
+        .name = "The Ultimate Question of Life, the Universe, and Everything",
+        .address = "North Pole",
+        .numbers = std::array<double, 10>{ {1, 2, 3, 4, 5, 6, 7, 8, 9, 10} },
+        .fumble = F{.data = {.data = 50}},
+        .gumble = F{.data = {.data = 60}}
+    };
+    G g3{
+        .q = 42,
+        .name = "The Ultimate Question of Life, the Universe, and Everything",
+        .address = "North Pole",
+        .numbers = std::array<double, 10>{ {1, 2, 3, 4, 5, 6, 7, 8, 9, 10} },
+        .fumble = F{.data = {.data = 50}},
+        .gumble = F{.data = {.data = 61}}
+    };
+    // explicitly invoke operator== here.
+    EXPECT_TRUE(g1 == g2);
+    EXPECT_TRUE(g1 != g3);
+}
+
+TEST_F(HidlTest, EnumEqualTest) {
+    using E = IFoo::SomeEnum;
+    E e1 = E::quux;
+    E e2 = E::quux;
+    E e3 = E::goober;
+    // explicitly invoke operator== here.
+    EXPECT_TRUE(e1 == e2);
+    EXPECT_TRUE(e1 != e3);
+}
+
 #if HIDL_RUN_POINTER_TESTS
 
 TEST_F(HidlTest, PassAGraphTest) {
