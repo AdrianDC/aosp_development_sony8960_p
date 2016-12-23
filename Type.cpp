@@ -120,6 +120,10 @@ bool Type::isElidableType() const {
     return false;
 }
 
+bool Type::canCheckEquality() const {
+    return false;
+}
+
 std::string Type::getCppType(StorageMode, bool) const {
     CHECK(!"Should not be here");
     return std::string();

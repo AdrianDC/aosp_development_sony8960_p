@@ -68,6 +68,19 @@ bool CompoundType::isCompoundType() const {
     return true;
 }
 
+bool CompoundType::canCheckEquality() const {
+    if (mStyle == STYLE_UNION) {
+        return false;
+    }
+    for (const auto &field : *mFields) {
+        if (!field->type().canCheckEquality()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 std::string CompoundType::getCppType(
         StorageMode mode,
         bool specifyNamespaces) const {
@@ -354,6 +367,34 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+
+status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
+    Scope::emitGlobalTypeDeclarations(out);
+
+    if (!canCheckEquality()) {
+        return OK;
+    }
+
+    out << "inline bool operator==("
+        << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
+        << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
+    out.block([&] {
+        for (const auto &field : *mFields) {
+            out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
+                out << "return false;\n";
+            }).endl();
+        }
+        out << "return true;\n";
+    }).endl().endl();
+
+    out << "inline bool operator!=("
+        << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
+    out.block([&] {
+        out << "return !(lhs == rhs);\n";
+    }).endl().endl();
+
+    return OK;
+}
 
 status_t CompoundType::emitGlobalHwDeclarations(Formatter &out) const  {
     if (needsEmbeddedReadWrite()) {
