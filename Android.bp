@@ -42,7 +42,7 @@ cc_library_shared {
         "Method.cpp",
         "NamedType.cpp",
         "PointerType.cpp",
-        "PredefinedType.cpp",
+        "FmqType.cpp",
         "RefType.cpp",
         "ScalarType.cpp",
         "Scope.cpp",
