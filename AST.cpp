@@ -22,7 +22,7 @@
 #include "HandleType.h"
 #include "Interface.h"
 #include "Location.h"
-#include "PredefinedType.h"
+#include "FmqType.h"
 #include "Scope.h"
 #include "TypeDef.h"
 
