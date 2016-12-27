@@ -48,7 +48,8 @@ std::string DeathRecipientType::getCppType(StorageMode mode,
 }
 
 std::string DeathRecipientType::getJavaType(bool /* forInitializer */) const {
-    return "android.os.IBinder.DeathRecipient";
+    // TODO(b/33440494) decouple from hwbinder
+    return "android.os.IHwBinder.DeathRecipient";
 }
 
 std::string DeathRecipientType::getVtsType() const {
