@@ -17,7 +17,8 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-    asm-5.0$(COMMON_JAVA_PACKAGE_SUFFIX)
+    asm-5.0$(COMMON_JAVA_PACKAGE_SUFFIX) \
+    asm-commons-5.0$(COMMON_JAVA_PACKAGE_SUFFIX) \
 
 LOCAL_MODULE_TAGS := optional
 
