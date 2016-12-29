@@ -97,11 +97,7 @@ Method *Interface::createLinkToDeathMethod() const {
                             << " == ::android::OK);\n";
                     }
                 },
-                {IMPL_STUB,
-                    [](auto &/*out*/) {
-                        // Do nothing
-                    }
-                }
+                {IMPL_STUB, nullptr}
             }, /*cppImpl*/
             {
                 {IMPL_HEADER,
@@ -111,15 +107,10 @@ Method *Interface::createLinkToDeathMethod() const {
                 },
                 {IMPL_PROXY,
                     [this](auto &out) {
-                        // TODO (b/31632518)
-                        out << "return false;";
+                        out << "return mRemote.linkToDeath(recipient, cookie);\n";
                     }
                 },
-                {IMPL_STUB,
-                    [this](auto &/*out*/) {
-                        // Do nothing
-                    }
-                }
+                {IMPL_STUB, nullptr}
             } /*javaImpl*/
     );
 }
@@ -159,29 +150,20 @@ Method *Interface::createUnlinkToDeathMethod() const {
                         out << "return false;\n";
                     }
                 },
-                {IMPL_STUB,
-                    [](auto &/*out*/) {
-                        // Do nothing
-                    }
-                }
+                {IMPL_STUB, nullptr /* don't generate code */}
             }, /*cppImpl*/
             {
                 {IMPL_HEADER,
                     [this](auto &out) {
-                        out << "return true;";
+                        out << "return true;\n";
                     }
                 },
                 {IMPL_PROXY,
                     [this](auto &out) {
-                        // TODO (b/31632518)
-                        out << "return false;";
+                        out << "return mRemote.unlinkToDeath(recipient);\n";
                     }
                 },
-                {IMPL_STUB,
-                    [this](auto &/*out*/) {
-                        // Do nothing
-                    }
-                }
+                {IMPL_STUB, nullptr /* don't generate code */}
             } /*javaImpl*/
     );
 }
