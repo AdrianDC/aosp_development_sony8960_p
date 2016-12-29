@@ -104,6 +104,7 @@ struct Baz : public IBaz {
 
     Return<void> callMeLater(const sp<IBazCallback>& cb) override;
     Return<void> iAmFreeNow() override;
+    Return<void> dieNow() override;
 
     Return<IBaz::SomeEnum> useAnEnum(IBaz::SomeEnum zzz) override;
 
@@ -535,6 +536,11 @@ Return<void> Baz::iAmFreeNow() {
     if (mStoredCallback != nullptr) {
         mStoredCallback->hey();
     }
+    return Void();
+}
+
+Return<void> Baz::dieNow() {
+    exit(1);
     return Void();
 }
 
