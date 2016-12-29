@@ -75,7 +75,9 @@ void Method::cppImpl(MethodImplType type, Formatter &out) const {
     CHECK(mIsHidlReserved);
     auto it = mCppImpl.find(type);
     if (it != mCppImpl.end()) {
-        it->second(out);
+        if (it->second != nullptr) {
+            it->second(out);
+        }
     }
 }
 
@@ -83,7 +85,9 @@ void Method::javaImpl(MethodImplType type, Formatter &out) const {
     CHECK(mIsHidlReserved);
     auto it = mJavaImpl.find(type);
     if (it != mJavaImpl.end()) {
-        it->second(out);
+        if (it->second != nullptr) {
+            it->second(out);
+        }
     }
 }
 

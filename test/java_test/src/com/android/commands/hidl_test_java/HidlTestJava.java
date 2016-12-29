@@ -317,6 +317,41 @@ public final class HidlTestJava {
         return out.toString();
     }
 
+    final class HidlDeathRecipient implements HwBinder.DeathRecipient {
+        final Object mLock = new Object();
+        boolean mCalled = false;
+        long mCookie = 0;
+
+        @Override
+        public void serviceDied(long cookie) {
+            synchronized (mLock) {
+                mCalled = true;
+                mCookie = cookie;
+                mLock.notify();
+            }
+        }
+
+        public boolean cookieMatches(long cookie) {
+            synchronized (mLock) {
+                return mCookie == cookie;
+            }
+        }
+
+        public boolean waitUntilServiceDied(long timeoutMillis) {
+            synchronized(mLock) {
+                while (!mCalled) {
+                    try {
+                        mLock.wait(timeoutMillis);
+                    } catch (InterruptedException e) {
+                        continue; // Spin for another loop
+                    }
+                    break; // got notified or timeout hit
+                }
+                return mCalled;
+            }
+        }
+    };
+
     private void ExpectTrue(boolean x) {
         if (x) {
             return;
@@ -699,6 +734,26 @@ public final class HidlTestJava {
         proxy.callMeLater(new BazCallback());
         System.gc();
         proxy.iAmFreeNow();
+
+        // --- DEATH RECIPIENT TESTING ---
+        // This must always be done last, since it will kill the native server process
+        HidlDeathRecipient recipient1 = new HidlDeathRecipient();
+        HidlDeathRecipient recipient2 = new HidlDeathRecipient();
+
+        final int cookie1 = 0x1481;
+        final int cookie2 = 0x1482;
+        ExpectTrue(proxy.linkToDeath(recipient1, cookie1));
+        ExpectTrue(proxy.linkToDeath(recipient2, cookie2));
+        ExpectTrue(proxy.unlinkToDeath(recipient2));
+        try {
+            proxy.dieNow();
+        } catch (RuntimeException e) {
+            // Expected
+        }
+        ExpectTrue(recipient1.waitUntilServiceDied(2000 /*timeoutMillis*/));
+        ExpectTrue(!recipient2.waitUntilServiceDied(2000 /*timeoutMillis*/));
+        ExpectTrue(recipient1.cookieMatches(cookie1));
+        Log.d(TAG, "OK, exiting");
     }
 
     class Baz extends IBaz.Stub {
@@ -898,6 +953,10 @@ public final class HidlTestJava {
             if (mStoredCallback != null) {
                 mStoredCallback.hey();
             }
+        }
+
+        public void dieNow() {
+            // Not tested in Java
         }
 
         public byte useAnEnum(byte zzz) {
