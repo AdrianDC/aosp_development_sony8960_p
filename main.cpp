@@ -1029,6 +1029,16 @@ static status_t generateAndroidBpForPackage(
     if (status != OK) {
         return status;
     }
+
+    // For VTS profiler
+    // TODO(yuexima): b/33966927 remove below check when HAL's profiler below are auto-generated.
+    if (packageFQName.string() == "android.hardware.tv.input@1.0") {
+        fprintf(stderr,
+                "WARNING: %s does not yet have auto-generated VTS profiler.\n",
+                packageFQName.string().c_str());
+        return OK;
+    }
+
     // Generate Profiler packages.
     status = generateAndroidBpForVtsProfilerPackage(out,
                                                     importedPackages,
