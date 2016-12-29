@@ -163,7 +163,7 @@ static void implementServiceManagerInteractions(Formatter &out,
                     out << ");\n";
                 });
             });
-            out.sIf("ret.getStatus().isOk()", [&] {
+            out.sIf("ret.isOk()", [&] {
                 out << "iface = I" << baseName << "::castFrom(base);\n";
                 out.sIf("iface != nullptr", [&] {
                     out << "return iface;\n";
@@ -215,7 +215,7 @@ static void implementServiceManagerInteractions(Formatter &out,
                 out << "success = addRet.isOk() && addRet;\n";
             });
             out << ");\n";
-            out << "success = success && ret.getStatus().isOk();\n";
+            out << "success = success && ret.isOk();\n";
         });
         out << "return success ? ::android::OK : ::android::UNKNOWN_ERROR;\n";
     }).endl().endl();
