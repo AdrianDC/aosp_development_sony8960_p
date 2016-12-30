@@ -1159,8 +1159,12 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     out << "::descriptor);\n";
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
+    bool hasInterfaceArgument;
     // First DFS: write all buffers and resolve pointers for parent
     for (const auto &arg : method->args()) {
+        if (arg->type().isInterface()) {
+            hasInterfaceArgument = true;
+        }
         emitCppReaderWriter(
                 out,
                 "_hidl_data",
@@ -1183,6 +1187,10 @@ status_t AST::generateProxyMethodSource(Formatter &out,
                 false /* addPrefixToName */);
     }
 
+    if (hasInterfaceArgument) {
+        // Start binder threadpool to handle incoming transactions
+        out << "::android::hardware::ProcessState::self()->startThreadPool();\n";
+    }
     out << "_hidl_err = remote()->transact("
         << method->getSerialId()
         << " /* "
