@@ -89,6 +89,7 @@ Method *Interface::createLinkToDeathMethod() const {
                 },
                 {IMPL_PROXY,
                     [](auto &out) {
+                        out << "::android::hardware::ProcessState::self()->startThreadPool();\n";
                         out << "::android::hardware::hidl_binder_death_recipient *binder_recipient"
                             << " = new ::android::hardware::hidl_binder_death_recipient(recipient, cookie, this);\n"
                             << "std::unique_lock<std::mutex> lock(_hidl_mMutex);\n"
