@@ -53,8 +53,8 @@
 
 #include <hidl/Status.h>
 #include <hidlmemory/mapping.h>
+
 #include <hwbinder/IPCThreadState.h>
-#include <hwbinder/ProcessState.h>
 
 #include <utils/Condition.h>
 #include <utils/Timers.h>
@@ -95,9 +95,10 @@ using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::tests::memory::V1_0::IMemoryTest;
 using ::android::hardware::IPCThreadState;
-using ::android::hardware::ProcessState;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
+using ::android::hardware::configureRpcThreadpool;
+using ::android::hardware::joinRpcThreadpool;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_death_recipient;
 using ::android::hardware::hidl_memory;
@@ -279,6 +280,7 @@ static pid_t forkServer(const std::string &serviceName) {
     // binderized service.
     if ((pid = fork()) == 0) {
         // in child process
+        configureRpcThreadpool(1, true /*callerWillJoin*/);
         sp<T> server = T::getService(serviceName, true);
         gServiceName = serviceName;
         signal(SIGTERM, signal_handler);
@@ -289,9 +291,7 @@ static pid_t forkServer(const std::string &serviceName) {
             exit(-1);
         }
         ALOGD("SERVER starting %s", serviceName.c_str());
-        ProcessState::self()->setThreadPoolMaxThreadCount(0);
-        ProcessState::self()->startThreadPool();
-        IPCThreadState::self()->joinThreadPool();
+        joinRpcThreadpool();
         ALOGD("SERVER %s ends.", serviceName.c_str());
         exit(0);
     }
@@ -338,7 +338,6 @@ public:
     }
 
     void getServices() {
-
         manager = IServiceManager::getService("manager");
 
         // alternatively:
@@ -590,9 +589,6 @@ TEST_F(HidlTest, ServiceNotificationTest) {
         std::string instanceName = "test-instance";
         EXPECT_TRUE(ISimple::registerForNotifications(instanceName, notification));
 
-        ProcessState::self()->setThreadPoolMaxThreadCount(0);
-        ProcessState::self()->startThreadPool();
-
         Simple* instance = new Simple(1);
         EXPECT_EQ(::android::OK, instance->registerAsService(instanceName));
 
@@ -622,9 +618,6 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
         std::string instanceOne = "test-instance-one";
         std::string instanceTwo = "test-instance-two";
         EXPECT_TRUE(ISimple::registerForNotifications("", notification));
-
-        ProcessState::self()->setThreadPoolMaxThreadCount(0);
-        ProcessState::self()->startThreadPool();
 
         Simple* instanceA = new Simple(1);
         EXPECT_EQ(::android::OK, instanceA->registerAsService(instanceOne));
@@ -1232,10 +1225,6 @@ struct HidlDeathRecipient : hidl_death_recipient {
 };
 
 TEST_F(HidlTest, DeathRecipientTest) {
-    // Need a threadpool to receive death calls from the kernel
-    ProcessState::self()->setThreadPoolMaxThreadCount(0);
-    ProcessState::self()->startThreadPool();
-
     sp<HidlDeathRecipient> recipient = new HidlDeathRecipient();
     sp<HidlDeathRecipient> recipient2 = new HidlDeathRecipient();
 
