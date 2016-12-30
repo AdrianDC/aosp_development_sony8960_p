@@ -7,12 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <hidl/HidlTransportSupport.h>
 #include <hidl/Status.h>
-#include <hwbinder/IPCThreadState.h>
-#include <hwbinder/ProcessState.h>
-
 using ::android::sp;
-using ::android::Thread;
 using ::android::hardware::tests::baz::V1_0::IBase;
 using ::android::hardware::tests::baz::V1_0::IBaz;
 using ::android::hardware::tests::baz::V1_0::IBazCallback;
@@ -20,6 +17,8 @@ using ::android::hardware::tests::baz::V1_0::IBazCallback;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_vec;
 using ::android::hardware::hidl_string;
+using ::android::hardware::configureRpcThreadpool;
+using ::android::hardware::joinRpcThreadpool;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 
@@ -1090,12 +1089,9 @@ int main(int argc, char **argv) {
         return status;
     } else {
         sp<Baz> baz = new Baz;
-
+        configureRpcThreadpool(1, true /* callerWillJoin */);
         baz->registerAsService("baz");
-
-        ProcessState::self()->startThreadPool();
-        ProcessState::self()->setThreadPoolMaxThreadCount(0);
-        IPCThreadState::self()->joinThreadPool();
+        joinRpcThreadpool();
     }
 
     return 0;
