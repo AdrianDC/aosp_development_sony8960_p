@@ -31,6 +31,7 @@ struct Interface : public Scope {
 
     bool addMethod(Method *method);
 
+    bool isElidableType() const override;
     bool isInterface() const override;
     bool isBinder() const override;
     bool isRootType() const { return mSuperType == nullptr; }
