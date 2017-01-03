@@ -44,7 +44,7 @@ VERSION                 {AT}{D}+{DOT}{D}+
 #include "StringType.h"
 #include "VectorType.h"
 #include "RefType.h"
-#include "PredefinedType.h"
+#include "FmqType.h"
 
 #include "hidl-gen_y.h"
 
@@ -118,8 +118,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "pointer"		{ yylval->type = new PointerType; return token::TYPE; }
 "string"		{ yylval->type = new StringType; return token::TYPE; }
 
-"MQDescriptorSync" { yylval->type = new PredefinedType("::android::hardware", "MQDescriptorSync"); return token::TYPE; }
-"MQDescriptorUnsync" { yylval->type = new PredefinedType("::android::hardware", "MQDescriptorUnsync"); return token::TYPE; }
+"fmq_sync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorSync"); return token::TEMPLATED; }
+"fmq_unsync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorUnsync"); return token::TEMPLATED; }
 
 "("			{ return('('); }
 ")"			{ return(')'); }
