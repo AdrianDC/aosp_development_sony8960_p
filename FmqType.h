@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef PREDEFINED_TYPE_H_
+#ifndef FMQ_TYPE_H_
 
-#define PREDEFINED_TYPE_H_
+#define FMQ_TYPE_H_
 
 #include "Type.h"
 
 namespace android {
 
-struct PredefinedType : public Type {
-    PredefinedType(const char *nsp, const char *name);
+struct FmqType : public TemplatedType {
+    FmqType(const char *nsp, const char *name);
 
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
@@ -58,14 +58,14 @@ struct PredefinedType : public Type {
 
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
-
+    bool isCompatibleElementType(Type *elementType) const override;
 private:
     std::string mNamespace;
     std::string mName;
 
-    DISALLOW_COPY_AND_ASSIGN(PredefinedType);
+    DISALLOW_COPY_AND_ASSIGN(FmqType);
 };
 
 }  // namespace android
 
-#endif  // PREDEFINED_TYPE_H_
+#endif  // FMQ_TYPE_H_
