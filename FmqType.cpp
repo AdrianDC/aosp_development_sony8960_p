@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-#include "PredefinedType.h"
+#include "FmqType.h"
 
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
 namespace android {
 
-PredefinedType::PredefinedType(const char *nsp, const char *name)
+FmqType::FmqType(const char *nsp, const char *name)
     : mNamespace(nsp), mName(name) {
 }
 
-void PredefinedType::addNamedTypesToSet(std::set<const FQName> &) const {
+void FmqType::addNamedTypesToSet(std::set<const FQName> &) const {
     // do nothing
 }
 
-std::string PredefinedType::fullName() const {
+std::string FmqType::fullName() const {
     return mNamespace +
             (mNamespace.empty() ? "" : "::") +
-            mName;
+            mName + "<" + mElementType->getCppStackType(true) + ">";
 }
 
-std::string PredefinedType::getCppType(
+std::string FmqType::getCppType(
         StorageMode mode,
         bool) const {
 
@@ -53,7 +53,7 @@ std::string PredefinedType::getCppType(
     }
 }
 
-void PredefinedType::emitReaderWriter(
+void FmqType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
         const std::string &parcelObj,
@@ -117,7 +117,7 @@ void PredefinedType::emitReaderWriter(
             "0 /* parentOffset */");
 }
 
-void PredefinedType::emitReaderWriterEmbedded(
+void FmqType::emitReaderWriterEmbedded(
         Formatter &out,
         size_t /* depth */,
         const std::string &name,
@@ -144,16 +144,20 @@ void PredefinedType::emitReaderWriterEmbedded(
             mNamespace);
 }
 
-bool PredefinedType::isJavaCompatible() const {
+bool FmqType::isJavaCompatible() const {
     return false;
 }
 
-bool PredefinedType::needsEmbeddedReadWrite() const {
+bool FmqType::needsEmbeddedReadWrite() const {
     return true;
 }
 
-bool PredefinedType::resultNeedsDeref() const {
+bool FmqType::resultNeedsDeref() const {
     return true;
+}
+
+bool FmqType::isCompatibleElementType(Type *elementType) const {
+    return (!elementType->isInterface() && !elementType->needsEmbeddedReadWrite());
 }
 
 }  // namespace android

@@ -90,7 +90,7 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
         "int8_t", "int16_t", "int32_t", "int64_t", "bool", "float", "double",
         "interface", "struct", "union", "string", "vec", "enum", "ref", "handle",
         "package", "import", "typedef", "generates", "oneway", "extends",
-        "MQDescriptorSync", "MQDescriptorUnsync",
+        "fmq_sync", "fmq_unsync",
     });
     static const std::vector<std::string> cppKeywords({
         "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit",
