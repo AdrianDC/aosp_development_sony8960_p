@@ -139,6 +139,8 @@ status_t AST::generateJava(
 
     out << "package " << mPackage.javaPackage() << ";\n\n";
 
+    out << "import android.os.RemoteException;\n\n";
+
     out.setNamespace(mPackage.javaPackage() + ".");
 
     const Interface *superType = iface->superType();
@@ -256,7 +258,10 @@ status_t AST::generateJava(
                 << "Callback cb";
         }
 
-        out << ");\n";
+        out << ")\n";
+        out.indent();
+        out << "throws RemoteException;\n";
+        out.unindent();
     }
 
     out << "\npublic static final class Proxy implements "
@@ -312,8 +317,11 @@ status_t AST::generateJava(
                 << "Callback cb";
         }
 
-        out << ") {\n";
+        out << ")\n";
         out.indent();
+        out.indent();
+        out << "throws RemoteException {\n";
+        out.unindent();
 
         if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_PROXY)) {
             method->javaImpl(IMPL_PROXY, out);
@@ -456,9 +464,11 @@ status_t AST::generateJava(
         << "int _hidl_code, "
         << "android.os.HwParcel _hidl_request, "
         << "final android.os.HwParcel _hidl_reply, "
-        << "int _hidl_flags) {\n";
-
+        << "int _hidl_flags)\n";
     out.indent();
+    out.indent();
+    out << "throws RemoteException {\n";
+    out.unindent();
 
     out << "switch (_hidl_code) {\n";
 
