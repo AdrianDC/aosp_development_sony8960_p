@@ -1159,7 +1159,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
     out << "::descriptor);\n";
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
-    bool hasInterfaceArgument;
+    bool hasInterfaceArgument = false;
     // First DFS: write all buffers and resolve pointers for parent
     for (const auto &arg : method->args()) {
         if (arg->type().isInterface()) {
