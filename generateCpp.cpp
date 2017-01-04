@@ -537,6 +537,14 @@ status_t AST::generatePassthroughMethod(Formatter &out,
     out << " {\n";
     out.indent();
 
+    if (method->isHidlReserved()
+        && method->overridesCppImpl(IMPL_PASSTHROUGH)) {
+        method->cppImpl(IMPL_PASSTHROUGH, out);
+        out.unindent();
+        out << "}\n\n";
+        return OK;
+    }
+
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
 
