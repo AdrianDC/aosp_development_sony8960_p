@@ -325,15 +325,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
         const std::string baseName = iface->getBaseName();
-        out << "constexpr static ::android::hardware::hidl_version version = {"
-            << mPackage.getPackageMajorVersion() << ", "
-            << mPackage.getPackageMinorVersion() << "};\n";
-        out << "virtual const ::android::hardware::hidl_version &"
-            << "getInterfaceVersion() const {\n";
-        out.indent();
-        out << "return version;\n";
-        out.unindent();
-        out << "}\n\n";
         out << "virtual bool isRemote() const ";
         if (!isIBase()) {
             out << "override ";
@@ -944,9 +935,6 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     if (err == OK && isInterface) {
         const Interface *iface = mRootScope->getInterface();
-        out << "constexpr ::android::hardware::hidl_version "
-            << ifaceName
-            << "::version;\n\n";
 
         // need to be put here, generateStubSource is using this.
         out << "const char* I"
