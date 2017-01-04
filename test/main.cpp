@@ -124,9 +124,9 @@ using std::to_string;
 
 template <typename T>
 static inline ::testing::AssertionResult isOk(::android::hardware::Return<T> ret) {
-    return ret.getStatus().isOk()
-        ? (::testing::AssertionSuccess() << ret.getStatus())
-        : (::testing::AssertionFailure() << ret.getStatus());
+    return ret.isOk()
+        ? (::testing::AssertionSuccess() << ret.description())
+        : (::testing::AssertionFailure() << ret.description());
 }
 
 template<typename T, typename S>
