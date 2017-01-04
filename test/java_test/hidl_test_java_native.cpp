@@ -633,7 +633,7 @@ struct HidlTest : public ::testing::Test {
 
 template <typename T>
 static void EXPECT_OK(::android::hardware::Return<T> ret) {
-    EXPECT_TRUE(ret.getStatus().isOk());
+    EXPECT_TRUE(ret.isOk());
 }
 
 TEST_F(HidlTest, BazSomeBaseMethodTest) {
