@@ -20,6 +20,7 @@ import android.hardware.tests.baz.V1_0.IBase;
 import android.hardware.tests.baz.V1_0.IBaz;
 import android.hardware.tests.baz.V1_0.IBazCallback;
 import android.os.HwBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public final class HidlTestJava {
         System.exit(exitCode);
     }
 
-    public int run(String[] args) {
+    public int run(String[] args) throws RemoteException {
         if (args[0].equals("-c")) {
             client();
         } else if (args[0].equals("-s")) {
@@ -380,7 +381,7 @@ public final class HidlTestJava {
             return mCalled;
         }
 
-        public void heyItsMe(IBazCallback cb) {
+        public void heyItsMe(IBazCallback cb) throws RemoteException {
             mCalled = true;
 
             cb.heyItsMe(null);
@@ -437,7 +438,7 @@ public final class HidlTestJava {
         return "positively huge!";
     }
 
-    private void client() {
+    private void client() throws RemoteException {
         {
             // Test access through base interface binder.
             IBase baseProxy = IBase.getService("baz");
@@ -747,7 +748,7 @@ public final class HidlTestJava {
         ExpectTrue(proxy.unlinkToDeath(recipient2));
         try {
             proxy.dieNow();
-        } catch (RuntimeException e) {
+        } catch (RemoteException e) {
             // Expected
         }
         ExpectTrue(recipient1.waitUntilServiceDied(2000 /*timeoutMillis*/));
@@ -939,7 +940,7 @@ public final class HidlTestJava {
             }
         }
 
-        public void callMe(IBazCallback cb) {
+        public void callMe(IBazCallback cb) throws RemoteException {
             Log.d(TAG, "callMe");
             cb.heyItsMe(new BazCallback());
         }
@@ -949,7 +950,7 @@ public final class HidlTestJava {
             mStoredCallback = cb;
         }
 
-        public void iAmFreeNow() {
+        public void iAmFreeNow() throws RemoteException {
             if (mStoredCallback != null) {
                 mStoredCallback.hey();
             }
