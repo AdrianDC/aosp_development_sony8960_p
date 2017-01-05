@@ -736,6 +736,20 @@ public final class HidlTestJava {
         System.gc();
         proxy.iAmFreeNow();
 
+        {
+            IBaz.T t1 = new IBaz.T();
+            IBaz.T t2 = new IBaz.T();
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 3; j++) {
+                    t1.matrix5x3[i][j] = t2.matrix5x3[i][j] = (i + 1) * (j + 1);
+                }
+            }
+            ExpectTrue(t1.equals(t2));
+            ExpectTrue(t1.hashCode() == t2.hashCode());
+            t2.matrix5x3[4][2] = -60;
+            ExpectTrue(!t1.equals(t2));
+        }
+
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process
         HidlDeathRecipient recipient1 = new HidlDeathRecipient();
@@ -755,6 +769,7 @@ public final class HidlTestJava {
         ExpectTrue(!recipient2.waitUntilServiceDied(2000 /*timeoutMillis*/));
         ExpectTrue(recipient1.cookieMatches(cookie1));
         Log.d(TAG, "OK, exiting");
+
     }
 
     class Baz extends IBaz.Stub {
