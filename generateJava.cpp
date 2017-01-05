@@ -273,7 +273,7 @@ status_t AST::generateJava(
     out << "private android.os.IHwBinder mRemote;\n\n";
     out << "public Proxy(android.os.IHwBinder remote) {\n";
     out.indent();
-    out << "mRemote = remote;\n";
+    out << "mRemote = java.util.Objects.requireNonNull(remote);\n";
     out.unindent();
     out << "}\n\n";
 
