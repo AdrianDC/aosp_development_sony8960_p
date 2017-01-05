@@ -89,6 +89,10 @@ struct Interface : public Scope {
             bool isReader,
             ErrorMode mode) const override;
 
+    status_t emitGlobalTypeDeclarations(Formatter &out) const override;
+    status_t emitTypeDefinitions(
+            Formatter &out, const std::string prefix) const override;
+
     void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,

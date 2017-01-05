@@ -75,6 +75,7 @@ struct EnumType : public Scope {
 
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
+    status_t emitTypeDefinitions(Formatter &out, const std::string prefix) const override;
 
     status_t emitJavaTypeDeclarations(
             Formatter &out, bool atTopLevel) const override;
@@ -169,6 +170,11 @@ struct BitFieldType : public TemplatedType {
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const override;
+
+    void emitDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const override;
 
     void emitJavaFieldReaderWriter(
         Formatter &out,

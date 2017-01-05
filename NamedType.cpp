@@ -58,5 +58,12 @@ const Location &NamedType::location() const {
     return mLocation;
 }
 
+void NamedType::emitDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    emitDumpWithMethod(out, streamName, fqName().cppNamespace() + "::toString", name);
+}
+
 }  // namespace android
 
