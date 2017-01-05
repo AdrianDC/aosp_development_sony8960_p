@@ -199,7 +199,7 @@ status_t AST::generateJava(
 
     out << "public static "
         << ifaceName
-        << " getService(String serviceName) {\n";
+        << " getService(String serviceName) throws RemoteException {\n";
 
     out.indent();
 
@@ -451,7 +451,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public void registerAsService(String serviceName) {\n";
+    out << "public void registerAsService(String serviceName) throws RemoteException {\n";
     out.indent();
 
     out << "registerService(interfaceChain(), serviceName);\n";
