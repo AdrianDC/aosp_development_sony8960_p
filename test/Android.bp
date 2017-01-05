@@ -5,7 +5,7 @@ subdirs = [
 cc_test {
     name: "hidl_test",
     gtest: false,
-    srcs: ["main.cpp"],
+    srcs: ["main.cpp", "FooCallback.cpp"],
 
     shared_libs: [
         "libbase",
