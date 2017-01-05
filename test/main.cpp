@@ -651,15 +651,18 @@ TEST_F(HidlTest, TestToken) {
     EXPECT_OK(ret);
     uint64_t token = ret;
 
-    EXPECT_OK(tokenManager->get(token, [&](const auto &store) {
-        EXPECT_NE(nullptr, store.get());
-        sp<IServiceManager> retManager = IServiceManager::castFrom(store);
+    Return<sp<IBase>> retService = tokenManager->get(token);
+    EXPECT_OK(retService);
+    if (retService.isOk()) {
+        sp<IBase> service = retService;
+        EXPECT_NE(nullptr, service.get());
+        sp<IServiceManager> retManager = IServiceManager::castFrom(service);
 
         // TODO(b/33818800): should have only one Bp per process
         // EXPECT_EQ(manager, retManager);
 
         EXPECT_NE(nullptr, retManager.get());
-    }));
+    }
 
     Return<bool> unregisterRet = tokenManager->unregister(token);
 
@@ -1295,54 +1298,52 @@ static void expectGoodGrandparent(const sp<IGrandparent> &grandparent) {
 TEST_F(HidlTest, FooHaveAnInterfaceTest) {
 
     sp<ISimple> in = new Complicated(42);
-
-    EXPECT_OK(bar->haveAInterface(
-                in,
-                [&](const auto &out) {
-                    ASSERT_NE(out.get(), nullptr);
-                    EXPECT_EQ(out->getCookie(), 42);
-                    EXPECT_OK(out->customVecInt([&](const auto &) { }));
-                    EXPECT_OK(out->customVecStr([&](const auto &) { }));
-                    EXPECT_OK(out->interfaceChain([&](const auto &) { }));
-                    EXPECT_OK(out->mystr([&](const auto &) { }));
-                    EXPECT_OK(out->myhandle([&](const auto &) { }));
-                }));
+    Return<sp<ISimple>> ret = bar->haveAInterface(in);
+    EXPECT_OK(ret);
+    sp<ISimple> out = ret;
+    ASSERT_NE(out.get(), nullptr);
+    EXPECT_EQ(out->getCookie(), 42);
+    EXPECT_OK(out->customVecInt([&](const auto &) { }));
+    EXPECT_OK(out->customVecStr([&](const auto &) { }));
+    EXPECT_OK(out->interfaceChain([&](const auto &) { }));
+    EXPECT_OK(out->mystr([&](const auto &) { }));
+    EXPECT_OK(out->myhandle([&](const auto &) { }));
 }
 
 TEST_F(HidlTest, InheritRemoteGrandparentTest) {
-    EXPECT_OK(fetcher->getGrandparent(true, [&](const sp<IGrandparent>& grandparent) {
-        expectGoodGrandparent(grandparent);
-    }));
+    Return<sp<IGrandparent>> ret = fetcher->getGrandparent(true);
+    EXPECT_OK(ret);
+    expectGoodGrandparent(ret);
 }
 
 TEST_F(HidlTest, InheritLocalGrandparentTest) {
-    EXPECT_OK(fetcher->getGrandparent(false, [&](const sp<IGrandparent>& grandparent) {
-        expectGoodGrandparent(grandparent);
-    }));
+    Return<sp<IGrandparent>> ret = fetcher->getGrandparent(false);
+    EXPECT_OK(ret);
+    expectGoodGrandparent(ret);
 }
 
 TEST_F(HidlTest, InheritRemoteParentTest) {
-    EXPECT_OK(fetcher->getParent(true, [&](const sp<IParent>& parent) {
-        expectGoodParent(parent);
-    }));
+    Return<sp<IParent>> ret = fetcher->getParent(true);
+    EXPECT_OK(ret);
+    expectGoodParent(ret);
 }
 
 TEST_F(HidlTest, InheritLocalParentTest) {
-    EXPECT_OK(fetcher->getParent(false, [&](const sp<IParent>& parent) {
-        expectGoodParent(parent);
-    }));
+    Return<sp<IParent>> ret = fetcher->getParent(false);
+    EXPECT_OK(ret);
+    expectGoodParent(ret);
 }
 
 TEST_F(HidlTest, InheritRemoteChildTest) {
-    EXPECT_OK(fetcher->getChild(true, [&](const sp<IChild>& child) {
-        expectGoodChild(child);
-    }));
+    Return<sp<IChild>> ret = fetcher->getChild(true);
+    EXPECT_OK(ret);
+    expectGoodChild(ret);
 }
 
 TEST_F(HidlTest, InheritLocalChildTest) {
-    EXPECT_OK(fetcher->getChild(false, [&](const sp<IChild>& child) {
-        expectGoodChild(child);
-    }));
+    Return<sp<IChild>> ret = fetcher->getChild(false);
+    EXPECT_OK(ret);
+    expectGoodChild(ret);
 }
 
 TEST_F(HidlTest, TestArrayDimensionality) {
