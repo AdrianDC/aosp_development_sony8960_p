@@ -125,8 +125,8 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
-static void declareServiceManagerInteractions(Formatter &out, const std::string &baseName) {
-    out << "static ::android::sp<I" << baseName << "> getService("
+static void declareServiceManagerInteractions(Formatter &out, const std::string &interfaceName) {
+    out << "static ::android::sp<" << interfaceName << "> getService("
         << "const std::string &serviceName, bool getStub=false);\n";
     out << "::android::status_t registerAsService(const std::string &serviceName);\n";
     out << "static bool registerForNotifications(\n";
@@ -139,24 +139,26 @@ static void declareServiceManagerInteractions(Formatter &out, const std::string 
 }
 
 static void implementServiceManagerInteractions(Formatter &out,
-        const std::string &baseName, const std::string &package) {
+        const FQName &fqName, const std::string &package) {
+
+    const std::string interfaceName = fqName.getInterfaceName();
 
     out << "// static\n"
-        << "::android::sp<I" << baseName << "> I" << baseName << "::getService("
+        << "::android::sp<" << interfaceName << "> " << interfaceName << "::getService("
         << "const std::string &serviceName, bool getStub) ";
     out.block([&] {
-        out << "::android::sp<I" << baseName << "> iface;\n"
+        out << "::android::sp<" << interfaceName << "> iface;\n"
             << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
         out.indent(2, [&] {
             out << "= ::android::hardware::defaultServiceManager();\n";
         });
         out.sIf("sm != nullptr && !getStub", [&] {
-            out << "::android::hardware::Return<::android::sp<::android::hidl::base::V1_0::IBase>> ret = \n";
+            out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
             out.indent(2, [&] {
-                out << "sm->get(\"" << package << "::I" << baseName << "\", serviceName.c_str());\n";
+                out << "sm->get(\"" << package << "::" << interfaceName << "\", serviceName.c_str());\n";
             });
             out.sIf("ret.isOk()", [&] {
-                out << "iface = I" << baseName << "::castFrom(ret);\n";
+                out << "iface = " << interfaceName << "::castFrom(ret);\n";
                 out.sIf("iface != nullptr", [&] {
                     out << "return iface;\n";
                 }).endl();
@@ -175,18 +177,18 @@ static void implementServiceManagerInteractions(Formatter &out,
         out.sIf("handle == nullptr", [&] {
             out << "return iface;\n";
         }).endl();
-        out << "I" << baseName << "* (*generator)(const char* name);\n"
-            << "*(void **)(&generator) = dlsym(handle, \"HIDL_FETCH_I" << baseName << "\");\n";
+        out << "" << interfaceName << "* (*generator)(const char* name);\n"
+            << "*(void **)(&generator) = dlsym(handle, \"HIDL_FETCH_" << interfaceName << "\");\n";
         out.sIf("generator", [&] {
             out << "iface = (*generator)(serviceName.c_str());\n";
             out.sIf("iface != nullptr", [&] {
-                out << "iface = new Bs" << baseName << "(iface);\n";
+                out << "iface = new " << fqName.getInterfacePassthroughName() << "(iface);\n";
             }).endl();
         }).endl();
         out << "return iface;\n";
     }).endl().endl();
 
-    out << "::android::status_t I" << baseName << "::registerAsService("
+    out << "::android::status_t " << interfaceName << "::registerAsService("
         << "const std::string &serviceName) ";
     out.block([&] {
         out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
@@ -212,7 +214,7 @@ static void implementServiceManagerInteractions(Formatter &out,
         out << "return success ? ::android::OK : ::android::UNKNOWN_ERROR;\n";
     }).endl().endl();
 
-    out << "bool I" << baseName << "::registerForNotifications(\n";
+    out << "bool " << interfaceName << "::registerForNotifications(\n";
     out.indent(2, [&] {
         out << "const std::string &serviceName,\n"
             << "const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification> "
@@ -228,7 +230,7 @@ static void implementServiceManagerInteractions(Formatter &out,
         }).endl();
         out << "::android::hardware::Return<bool> success =\n";
         out.indent(2, [&] {
-            out << "sm->registerForNotifications(\"" << package << "::I" << baseName << "\",\n";
+            out << "sm->registerForNotifications(\"" << package << "::" << interfaceName << "\",\n";
             out.indent(2, [&] {
                 out << "serviceName, notification);\n";
             });
@@ -324,7 +326,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     if (isInterface) {
         const Interface *iface = mRootScope->getInterface();
         const Interface *superType = iface->superType();
-        const std::string baseName = iface->getBaseName();
+
         out << "virtual bool isRemote() const ";
         if (!isIBase()) {
             out << "override ";
@@ -400,7 +402,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         if (isIBase()) {
             out << "// skipped getService, registerAsService, registerForNotifications\n\n";
         } else {
-            declareServiceManagerInteractions(out, baseName);
+            declareServiceManagerInteractions(out, iface->localName());
         }
 
         out << "private: static int hidlStaticBlock;\n";
@@ -430,13 +432,11 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     std::string ifaceName;
     bool isInterface = AST::isInterface(&ifaceName);
     const Interface *iface = nullptr;
-    std::string baseName{};
     std::string klassName{};
 
     if(isInterface) {
         iface = mRootScope->getInterface();
-        baseName = iface->getBaseName();
-        klassName = "IHw" + baseName;
+        klassName = iface->getHwName();
     } else {
         klassName = "hwtypes";
     }
@@ -471,8 +471,8 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
         if (item.name() == "types") {
             generateCppPackageInclude(out, item, "hwtypes");
         } else {
-            generateCppPackageInclude(out, item, "Bn" + item.getInterfaceBaseName());
-            generateCppPackageInclude(out, item, "Bp" + item.getInterfaceBaseName());
+            generateCppPackageInclude(out, item, item.getInterfaceStubName());
+            generateCppPackageInclude(out, item, item.getInterfaceProxyName());
         }
     }
 
@@ -706,8 +706,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     }
 
     const Interface *iface = mRootScope->getInterface();
-    const std::string baseName = iface->getBaseName();
-    const std::string klassName = "Bn" + baseName;
+    const std::string klassName = iface->getStubName();
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
@@ -729,29 +728,30 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    generateCppPackageInclude(out, mPackage, "IHw" + baseName);
+    generateCppPackageInclude(out, mPackage, iface->getHwName());
     out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
 
     out << "struct "
-        << "Bn"
-        << baseName;
+        << klassName;
     if (iface->isIBase()) {
         out << " : public ::android::hardware::BBinder";
         out << ", public ::android::hardware::HidlInstrumentor {\n";
     } else {
-        out << " : public ::android::hidl::base::V1_0::BnBase {\n";
+        out << " : public "
+            << gIBaseFqName.getInterfaceStubFqName().cppName()
+            << " {\n";
     }
 
     out.indent();
-    out << "explicit Bn"
-        << baseName
+    out << "explicit "
+        << klassName
         << "(const ::android::sp<" << ifaceName << "> &_hidl_impl);"
         << "\n";
-    out << "explicit Bn"
-        << baseName
+    out << "explicit "
+        << klassName
         << "(const ::android::sp<" << ifaceName << "> &_hidl_impl,"
         << " const std::string& prefix);"
         << "\n\n";
@@ -789,13 +789,12 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     }
 
     const Interface *iface = mRootScope->getInterface();
-    const std::string baseName = iface->getBaseName();
+    const std::string proxyName = iface->getProxyName();
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
     path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append("Bp");
-    path.append(baseName);
+    path.append(proxyName);
     path.append(".h");
 
     CHECK(Coordinator::MakeParentHierarchy(path));
@@ -807,7 +806,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
 
     Formatter out(file);
 
-    const std::string guard = makeHeaderGuard("Bp" + baseName);
+    const std::string guard = makeHeaderGuard(proxyName);
 
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
@@ -818,23 +817,22 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     getPackageAndVersionComponents(
             &packageComponents, false /* cpp_compatible */);
 
-    generateCppPackageInclude(out, mPackage, "IHw" + baseName);
+    generateCppPackageInclude(out, mPackage, iface->getHwName());
     out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
     out << "\n";
 
     out << "struct "
-        << "Bp"
-        << baseName
-        << " : public ::android::hardware::BpInterface<I"
-        << baseName
+        << proxyName
+        << " : public ::android::hardware::BpInterface<"
+        << iface->localName()
         << ">, public ::android::hardware::HidlInstrumentor {\n";
 
     out.indent();
 
-    out << "explicit Bp"
-        << baseName
+    out << "explicit "
+        << proxyName
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
 
@@ -910,14 +908,14 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         // This is a no-op for IServiceManager itself.
         out << "#include <android/hidl/manager/1.0/IServiceManager.h>\n";
 
-        generateCppPackageInclude(out, mPackage, "Bp" + baseName);
-        generateCppPackageInclude(out, mPackage, "Bn" + baseName);
-        generateCppPackageInclude(out, mPackage, "Bs" + baseName);
+        generateCppPackageInclude(out, mPackage, iface->getProxyName());
+        generateCppPackageInclude(out, mPackage, iface->getStubName());
+        generateCppPackageInclude(out, mPackage, iface->getPassthroughName());
 
         for (const Interface *superType : iface->superTypeChain()) {
             generateCppPackageInclude(out,
                                       superType->fqName(),
-                                      "Bp" + superType->getBaseName());
+                                      superType->fqName().getInterfaceProxyName());
         }
 
         out << "#include <hidl/ServiceManagement.h>\n";
@@ -937,42 +935,42 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         const Interface *iface = mRootScope->getInterface();
 
         // need to be put here, generateStubSource is using this.
-        out << "const char* I"
-            << iface->getBaseName()
+        out << "const char* "
+            << iface->localName()
             << "::descriptor(\""
             << iface->fqName().string()
             << "\");\n\n";
 
-        out << "int I"
-            << iface->getBaseName()
+        out << "int "
+            << iface->localName()
             << "::hidlStaticBlock = []() -> int {\n";
         out.indent([&] {
-            out << "::android::hardware::gBnConstructorMap[I"
-                << iface->getBaseName()
+            out << "::android::hardware::gBnConstructorMap["
+                << iface->localName()
                 << "::descriptor]\n";
             out.indent(2, [&] {
                 out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
                 out.indent([&] {
-                    out << "return new Bn"
-                        << iface->getBaseName()
-                        << "(reinterpret_cast<I"
-                        << iface->getBaseName()
+                    out << "return new "
+                        << iface->getStubName()
+                        << "(reinterpret_cast<"
+                        << iface->localName()
                         << " *>(iIntf));\n";
                 });
                 out << "};\n";
             });
-            out << "::android::hardware::gBsConstructorMap[I"
-                << iface->getBaseName()
+            out << "::android::hardware::gBsConstructorMap["
+                << iface->localName()
                 << "::descriptor]\n";
             out.indent(2, [&] {
                 out << "= [](void *iIntf) -> ::android::sp<"
                     << gIBaseFqName.cppName()
                     << "> {\n";
                 out.indent([&] {
-                    out << "return new Bs"
-                        << iface->getBaseName()
-                        << "(reinterpret_cast<I"
-                        << iface->getBaseName()
+                    out << "return new "
+                        << iface->getPassthroughName()
+                        << "(reinterpret_cast<"
+                        << iface->localName()
                         << " *>(iIntf));\n";
                 });
                 out << "};\n";
@@ -985,11 +983,11 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     }
 
     if (err == OK && isInterface) {
-        err = generateProxySource(out, baseName);
+        err = generateProxySource(out, iface->fqName());
     }
 
     if (err == OK && isInterface) {
-        err = generateStubSource(out, iface, baseName);
+        err = generateStubSource(out, iface);
     }
 
     if (err == OK && isInterface) {
@@ -1005,7 +1003,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             std::string package = iface->fqName().package()
                     + iface->fqName().atVersion();
 
-            implementServiceManagerInteractions(out, baseName, package);
+            implementServiceManagerInteractions(out, iface->fqName(), package);
         }
     }
 
@@ -1133,9 +1131,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
             out, method->results(), true /* forResults */);
 
     out << "_hidl_err = _hidl_data.writeInterfaceToken(";
-    out << superInterface->fqName().cppNamespace()
-        << "::I"
-        << superInterface->getBaseName();
+    out << superInterface->fqName().cppName();
     out << "::descriptor);\n";
     out << "if (_hidl_err != ::android::OK) { goto _hidl_error; }\n\n";
 
@@ -1270,8 +1266,8 @@ status_t AST::generateProxyMethodSource(Formatter &out,
 }
 
 status_t AST::generateProxySource(
-        Formatter &out, const std::string &baseName) const {
-    const std::string klassName = "Bp" + baseName;
+        Formatter &out, const FQName &fqName) const {
+    const std::string klassName = fqName.getInterfaceProxyName();
 
     out << klassName
         << "::"
@@ -1282,13 +1278,13 @@ status_t AST::generateProxySource(
     out.indent();
 
     out << ": BpInterface"
-        << "<I"
-        << baseName
+        << "<"
+        << fqName.getInterfaceName()
         << ">(_hidl_impl),\n"
         << "  ::android::hardware::HidlInstrumentor(\""
         << mPackage.string()
-        << "::I"
-        << baseName
+        << "::"
+        << fqName.getInterfaceName()
         << "\") {\n";
 
     out.unindent();
@@ -1304,14 +1300,14 @@ status_t AST::generateProxySource(
 
 status_t AST::generateStubSource(
         Formatter &out,
-        const Interface *iface,
-        const std::string &baseName) const {
-    const std::string klassName = "Bn" + baseName;
+        const Interface *iface) const {
+    const std::string interfaceName = iface->localName();
+    const std::string klassName = iface->getStubName();
 
     out << klassName
         << "::"
         << klassName
-        << "(const ::android::sp<I" << baseName <<"> &_hidl_impl)\n";
+        << "(const ::android::sp<" << interfaceName <<"> &_hidl_impl)\n";
 
     out.indent();
     out.indent();
@@ -1319,12 +1315,14 @@ status_t AST::generateStubSource(
     if (iface->isIBase()) {
         out << ": ::android::hardware::HidlInstrumentor(\"";
     } else {
-        out << ": ::android::hidl::base::V1_0::BnBase(_hidl_impl, \"";
+        out << ": "
+            << gIBaseFqName.getInterfaceStubFqName().cppName()
+            << "(_hidl_impl, \"";
     }
 
     out << mPackage.string()
-        << "::I"
-        << baseName
+        << "::"
+        << interfaceName
         << "\") { \n";
     out.indent();
     out << "_hidl_mImpl = _hidl_impl;\n";
@@ -1340,7 +1338,7 @@ status_t AST::generateStubSource(
         out << klassName
             << "::"
             << klassName
-            << "(const ::android::sp<I" << baseName <<"> &_hidl_impl,"
+            << "(const ::android::sp<" << interfaceName <<"> &_hidl_impl,"
             << " const std::string &prefix)\n";
 
         out.indent();
@@ -1440,13 +1438,9 @@ status_t AST::generateStubSourceForMethod(
         return OK;
     }
 
-    out << "if (!_hidl_data.enforceInterface(";
-
-    out << iface->fqName().cppNamespace()
-        << "::I"
-        << iface->getBaseName();
-
-    out << "::descriptor)) {\n";
+    out << "if (!_hidl_data.enforceInterface("
+        << iface->fullName()
+        << "::descriptor)) {\n";
 
     out.indent();
     out << "_hidl_err = ::android::BAD_TYPE;\n";
@@ -1666,8 +1660,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 
     const Interface *iface = mRootScope->getInterface();
 
-    const std::string baseName = iface->getBaseName();
-    const std::string klassName = "Bs" + baseName;
+    const std::string klassName = iface->getPassthroughName();
 
     bool supportOneway = iface->hasOnewayMethods();
 
@@ -1763,8 +1756,8 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
     for (const Interface *superType : iface->typeChain()) {
         out << "// static \n"
             << childTypeResult
-            << " I"
-            << iface->getBaseName()
+            << " "
+            << iface->localName()
             << "::castFrom("
             << superType->getCppArgumentType()
             << " parent) {\n";
@@ -1773,9 +1766,9 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out << "return parent;\n";
         } else {
             out << "return ::android::hardware::castInterface<";
-            out << "I" << iface->getBaseName() << ", "
+            out << iface->localName() << ", "
                 << superType->fqName().cppName() << ", "
-                << iface->getProxyFqName().cppLocalName() << ", "
+                << iface->getProxyName() << ", "
                 << superType->getProxyFqName().cppName()
                 << ">(\n";
             out.indent();
@@ -1796,8 +1789,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
 status_t AST::generatePassthroughSource(Formatter &out) const {
     const Interface *iface = mRootScope->getInterface();
 
-    const std::string baseName = iface->getBaseName();
-    const std::string klassName = "Bs" + baseName;
+    const std::string klassName = iface->getPassthroughName();
 
     out << klassName
         << "::"
@@ -1846,7 +1838,7 @@ status_t AST::generateCppAtraceCall(Formatter &out,
                                     InstrumentationEvent event,
                                     const Method *method) const {
     const Interface *iface = mRootScope->getInterface();
-    std::string baseString = "HIDL::I" + iface->getBaseName() + "::" + method->name();
+    std::string baseString = "HIDL::" + iface->localName() + "::" + method->name();
     switch (event) {
         case SERVER_API_ENTRY:
         {

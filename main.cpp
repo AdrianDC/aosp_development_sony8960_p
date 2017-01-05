@@ -953,10 +953,10 @@ static status_t generateAndroidBpForPackage(
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 out << "\"" << pathPrefix << fqName.name() << ".h\",\n";
                 if (fqName.name() != "types") {
-                    out << "\"" << pathPrefix << "IHw" << fqName.name().substr(1) << ".h\",\n";
-                    out << "\"" << pathPrefix << "Bn" << fqName.name().substr(1) << ".h\",\n";
-                    out << "\"" << pathPrefix << "Bp" << fqName.name().substr(1) << ".h\",\n";
-                    out << "\"" << pathPrefix << "Bs" << fqName.name().substr(1) << ".h\",\n";
+                    out << "\"" << pathPrefix << fqName.getInterfaceHwName() << ".h\",\n";
+                    out << "\"" << pathPrefix << fqName.getInterfaceStubName() << ".h\",\n";
+                    out << "\"" << pathPrefix << fqName.getInterfaceProxyName() << ".h\",\n";
+                    out << "\"" << pathPrefix << fqName.getInterfacePassthroughName() << ".h\",\n";
                 }
             });
 

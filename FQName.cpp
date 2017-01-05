@@ -281,12 +281,44 @@ bool FQName::operator!=(const FQName &other) const {
     return !(*this == other);
 }
 
-std::string FQName::getInterfaceBaseName() const {
+std::string FQName::getInterfaceName() const {
     CHECK(names().size() == 1) << "Must be a top level type";
     CHECK(!mName.empty() && mName[0] == 'I') << mName;
 
+    return mName;
+}
+
+std::string FQName::getInterfaceBaseName() const {
     // cut off the leading 'I'.
-    return mName.substr(1);
+    return getInterfaceName().substr(1);
+}
+
+std::string FQName::getInterfaceHwName() const {
+    return "IHw" + getInterfaceBaseName();
+}
+
+std::string FQName::getInterfaceProxyName() const {
+    return "Bp" + getInterfaceBaseName();
+}
+
+std::string FQName::getInterfaceStubName() const {
+    return "Bn" + getInterfaceBaseName();
+}
+
+std::string FQName::getInterfacePassthroughName() const {
+    return "Bs" + getInterfaceBaseName();
+}
+
+FQName FQName::getInterfaceProxyFqName() const {
+    return FQName(package(), version(), getInterfaceProxyName());
+}
+
+FQName FQName::getInterfaceStubFqName() const {
+    return FQName(package(), version(), getInterfaceStubName());
+}
+
+FQName FQName::getInterfacePassthroughFqName() const {
+    return FQName(package(), version(), getInterfacePassthroughName());
 }
 
 FQName FQName::getTypesForPackage() const {

@@ -200,10 +200,10 @@ private:
     void generateFetchSymbol(Formatter &out, const std::string &ifaceName) const;
 
     status_t generateProxySource(
-            Formatter &out, const std::string &baseName) const;
+            Formatter &out, const FQName &fqName) const;
 
     status_t generateStubSource(
-            Formatter &out, const Interface *iface, const std::string &baseName) const;
+            Formatter &out, const Interface *iface) const;
 
     status_t generateStubSourceForMethod(
             Formatter &out, const Interface *iface, const Method *method) const;
