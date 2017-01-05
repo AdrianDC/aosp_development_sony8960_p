@@ -828,21 +828,27 @@ TEST_F(HidlTest, FooCallMeTest) {
     // verify that eachof them executed, as expected, and took the length of
     // time to execute that we also expect.
 
+    const nsecs_t waitNs =
+        3 * DELAY_NS + TOLERANCE_NS;
     const nsecs_t reportResultsNs =
         2 * DELAY_NS + TOLERANCE_NS;
 
     ALOGI("CLIENT: Waiting for up to %" PRId64 " seconds.",
-          nanoseconds_to_seconds(reportResultsNs));
+          nanoseconds_to_seconds(waitNs));
 
-    fooCb->reportResults(reportResultsNs,
+    fooCb->reportResults(waitNs,
                 [&](int64_t timeLeftNs,
                     const hidl_array<IFooCallback::InvokeInfo, 3> &invokeResults) {
         ALOGI("CLIENT: FooCallback::reportResults() is returning data.");
         ALOGI("CLIENT: Waited for %" PRId64 " milliseconds.",
-              nanoseconds_to_milliseconds(reportResultsNs - timeLeftNs));
+              nanoseconds_to_milliseconds(waitNs - timeLeftNs));
 
-        EXPECT_LE(0, timeLeftNs);
-        EXPECT_LE(timeLeftNs, reportResultsNs);
+        EXPECT_LE(waitNs - timeLeftNs, reportResultsNs)
+                << "waited for "
+                << (timeLeftNs >= 0 ? "" : "more than ")
+                << (timeLeftNs >= 0 ? (waitNs - timeLeftNs) : waitNs)
+                << "ns, expect to finish in "
+                << reportResultsNs << " ns";
 
         // two-way method, was supposed to return right away
         EXPECT_TRUE(invokeResults[0].invoked);
