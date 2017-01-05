@@ -52,7 +52,7 @@ bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
     static const std::vector<std::string> reserved({
         // Injected names to interfaces by auto-generated code
         "isRemote", "descriptor", "hidlStaticBlock", "onTransact",
-        "castFrom", "version", "getInterfaceVersion", "Proxy", "Stub",
+        "castFrom", "Proxy", "Stub",
 
         // Inherited methods from IBase is detected in addMethod. Not added here
         // because we need hidl-gen to compile IBase.
