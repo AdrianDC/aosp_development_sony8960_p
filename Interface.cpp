@@ -272,6 +272,10 @@ std::vector<const Interface *> Interface::superTypeChain() const {
     return superType()->typeChain(); // should work even if superType is nullptr
 }
 
+bool Interface::isElidableType() const {
+    return true;
+}
+
 bool Interface::isInterface() const {
     return true;
 }

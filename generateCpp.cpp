@@ -151,20 +151,12 @@ static void implementServiceManagerInteractions(Formatter &out,
             out << "= ::android::hardware::defaultServiceManager();\n";
         });
         out.sIf("sm != nullptr && !getStub", [&] {
-            out << "::android::sp<::android::hidl::base::V1_0::IBase> base;\n"
-                << "::android::hardware::Return<void> ret =\n";
+            out << "::android::hardware::Return<::android::sp<::android::hidl::base::V1_0::IBase>> ret = \n";
             out.indent(2, [&] {
-                out << "sm->get(\"" << package << "::I" << baseName << "\", serviceName.c_str(),\n";
-                out.indent(2, [&] {
-                    out << "[&base](::android::sp<::android::hidl::base::V1_0::IBase> found) ";
-                    out.block([&] {
-                        out << "base = found;\n";
-                    });
-                    out << ");\n";
-                });
+                out << "sm->get(\"" << package << "::I" << baseName << "\", serviceName.c_str());\n";
             });
             out.sIf("ret.isOk()", [&] {
-                out << "iface = I" << baseName << "::castFrom(base);\n";
+                out << "iface = I" << baseName << "::castFrom(ret);\n";
                 out.sIf("iface != nullptr", [&] {
                     out << "return iface;\n";
                 }).endl();
