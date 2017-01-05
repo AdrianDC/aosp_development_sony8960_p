@@ -64,11 +64,15 @@ struct Interface : public Scope {
     // this->hidlReservedMethods()
     std::vector<InterfaceAndMethod> allMethodsFromRoot() const;
 
+    // aliases for corresponding methods in this->fqName()
     std::string getBaseName() const;
-
-    FQName getProxyName() const;
-    FQName getStubName() const;
-    FQName getPassthroughName() const;
+    std::string getProxyName() const;
+    std::string getStubName() const;
+    std::string getPassthroughName() const;
+    std::string getHwName() const;
+    FQName getProxyFqName() const;
+    FQName getStubFqName() const;
+    FQName getPassthroughFqName() const;
 
     std::string getCppType(
             StorageMode mode,

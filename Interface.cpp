@@ -330,18 +330,33 @@ std::string Interface::getBaseName() const {
     return fqName().getInterfaceBaseName();
 }
 
-FQName Interface::getProxyName() const {
-    return FQName(fqName().package(), fqName().version(), "Bp" + getBaseName());
+std::string Interface::getProxyName() const {
+    return fqName().getInterfaceProxyName();
 }
 
-FQName Interface::getStubName() const {
-    return FQName(fqName().package(), fqName().version(), "Bn" + getBaseName());
+std::string Interface::getStubName() const {
+    return fqName().getInterfaceStubName();
 }
 
-FQName Interface::getPassthroughName() const {
-    return FQName(fqName().package(), fqName().version(), "Bs" + getBaseName());
+std::string Interface::getHwName() const {
+    return fqName().getInterfaceHwName();
 }
 
+std::string Interface::getPassthroughName() const {
+    return fqName().getInterfacePassthroughName();
+}
+
+FQName Interface::getProxyFqName() const {
+    return fqName().getInterfaceProxyFqName();
+}
+
+FQName Interface::getStubFqName() const {
+    return fqName().getInterfaceStubFqName();
+}
+
+FQName Interface::getPassthroughFqName() const {
+    return fqName().getInterfacePassthroughFqName();
+}
 
 std::string Interface::getCppType(StorageMode mode,
                                   bool specifyNamespaces) const {
@@ -405,9 +420,9 @@ void Interface::emitReaderWriter(
             << "::android::hardware::fromBinder<"
             << fqName().cppName()
             << ","
-            << getProxyName().cppName()
+            << getProxyFqName().cppName()
             << ","
-            << getStubName().cppName()
+            << getStubFqName().cppName()
             << ">("
             << binderName
             << ");\n";
@@ -428,7 +443,7 @@ void Interface::emitReaderWriter(
         out.indent(2, [&] {
             out << fqName().cppName()
                 << ", "
-                << getProxyName().cppName()
+                << getProxyFqName().cppName()
                 << ">("
                 << name
                 << ");\n";
