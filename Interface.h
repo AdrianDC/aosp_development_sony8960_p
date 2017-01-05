@@ -66,9 +66,9 @@ struct Interface : public Scope {
 
     std::string getBaseName() const;
 
-    FQName getProxyName() const;
-    FQName getStubName() const;
-    FQName getPassthroughName() const;
+    FQName getProxyFqName() const;
+    FQName getStubFqName() const;
+    FQName getPassthroughFqName() const;
 
     std::string getCppType(
             StorageMode mode,

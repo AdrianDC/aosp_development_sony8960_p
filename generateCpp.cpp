@@ -1775,8 +1775,8 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out << "return ::android::hardware::castInterface<";
             out << "I" << iface->getBaseName() << ", "
                 << superType->fqName().cppName() << ", "
-                << iface->getProxyName().cppLocalName() << ", "
-                << superType->getProxyName().cppName()
+                << iface->getProxyFqName().cppLocalName() << ", "
+                << superType->getProxyFqName().cppName()
                 << ">(\n";
             out.indent();
             out.indent();
