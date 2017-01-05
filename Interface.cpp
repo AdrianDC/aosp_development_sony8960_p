@@ -330,16 +330,32 @@ std::string Interface::getBaseName() const {
     return fqName().getInterfaceBaseName();
 }
 
+std::string Interface::getProxyName() const {
+    return fqName().getInterfaceProxyName();
+}
+
+std::string Interface::getStubName() const {
+    return fqName().getInterfaceStubName();
+}
+
+std::string Interface::getHwName() const {
+    return fqName().getInterfaceHwName();
+}
+
+std::string Interface::getPassthroughName() const {
+    return fqName().getInterfacePassthroughName();
+}
+
 FQName Interface::getProxyFqName() const {
-    return FQName(fqName().package(), fqName().version(), "Bp" + getBaseName());
+    return fqName().getInterfaceProxyFqName();
 }
 
 FQName Interface::getStubFqName() const {
-    return FQName(fqName().package(), fqName().version(), "Bn" + getBaseName());
+    return fqName().getInterfaceStubFqName();
 }
 
 FQName Interface::getPassthroughFqName() const {
-    return FQName(fqName().package(), fqName().version(), "Bs" + getBaseName());
+    return fqName().getInterfacePassthroughFqName();
 }
 
 std::string Interface::getCppType(StorageMode mode,
