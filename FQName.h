@@ -101,9 +101,49 @@ struct FQName {
     bool operator!=(const FQName &other) const;
 
     // Must be called on an interface
-    // ::android::hardware::Foo::V1_0::IBar
+    // android.hardware.foo@1.0::IBar
     // -> Bar
     std::string getInterfaceBaseName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> IBar
+    std::string getInterfaceName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> IHwBar
+    std::string getInterfaceHwName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> BpBar
+    std::string getInterfaceProxyName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> BnBar
+    std::string getInterfaceStubName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> BsBar
+    std::string getInterfacePassthroughName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> android.hardware.foo@1.0::BpBar
+    FQName getInterfaceProxyFqName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> android.hardware.foo@1.0::BnBar
+    FQName getInterfaceStubFqName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> android.hardware.foo@1.0::BsBar
+    FQName getInterfacePassthroughFqName() const;
 
     // Replace whatever after :: with "types"
     // android.hardware.foo@1.0::Abc.Type:VALUE

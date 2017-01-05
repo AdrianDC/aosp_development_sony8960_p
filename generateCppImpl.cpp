@@ -108,7 +108,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    generateCppPackageInclude(out, mPackage, "I" + baseName);
+    generateCppPackageInclude(out, mPackage, iface->localName());
 
     out << "#include <hidl/MQDescriptor.h>\n";
     out << "#include <hidl/Status.h>\n\n";
