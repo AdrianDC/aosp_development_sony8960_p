@@ -1,4 +1,7 @@
 #define LOG_TAG "hidl_test"
+
+#include "FooCallback.h"
+
 #include <android-base/logging.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
@@ -10,13 +13,11 @@
 #include <android/hidl/token/1.0/ITokenManager.h>
 
 #include <android/hardware/tests/foo/1.0/IFoo.h>
-#include <android/hardware/tests/foo/1.0/IFooCallback.h>
 #include <android/hardware/tests/foo/1.0/BnSimple.h>
 // TODO(b/33669138): remove
 #include <cutils/trace.h>
 #include <android/hardware/tests/foo/1.0/BsSimple.h>
 #include <android/hardware/tests/foo/1.0/BpSimple.h>
-
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
@@ -85,6 +86,7 @@ using ::android::hardware::tests::foo::V1_0::Abc;
 using ::android::hardware::tests::foo::V1_0::IFoo;
 using ::android::hardware::tests::foo::V1_0::IFooCallback;
 using ::android::hardware::tests::foo::V1_0::ISimple;
+using ::android::hardware::tests::foo::V1_0::implementation::FooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IComplicated;
 using ::android::hardware::tests::inheritance::V1_0::IFetcher;
@@ -327,7 +329,6 @@ public:
     sp<IFoo> foo;
     sp<IFoo> dyingFoo;
     sp<IBar> bar;
-    sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
@@ -376,10 +377,6 @@ public:
         bar = IBar::getService("foo", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(bar, nullptr);
         ASSERT_EQ(bar->isRemote(), gMode == BINDERIZED);
-
-        fooCb = IFooCallback::getService("foo callback", gMode == PASSTHROUGH /* getStub */);
-        ASSERT_NE(fooCb, nullptr);
-        ASSERT_EQ(fooCb->isRemote(), gMode == BINDERIZED);
 
         graphInterface = IGraph::getService("graph", gMode == PASSTHROUGH /* getStub */);
         ASSERT_NE(graphInterface, nullptr);
@@ -440,7 +437,6 @@ public:
         addServer<IFetcher>("fetcher");
         addServer<IBar>("foo");
         addServer<IFoo>("dyingFoo");
-        addServer<IFooCallback>("foo callback");
         addServer<IGraph>("graph");
         addServer<IPointer>("pointer");
 
@@ -460,7 +456,6 @@ public:
     sp<IFoo> foo;
     sp<IFoo> dyingFoo;
     sp<IBar> bar;
-    sp<IFooCallback> fooCb;
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
@@ -491,7 +486,6 @@ public:
         foo = env->foo;
         dyingFoo = env->dyingFoo;
         bar = env->bar;
-        fooCb = env->fooCb;
         graphInterface = env->graphInterface;
         pointerInterface = env->pointerInterface;
         validationPointerInterface = env->validationPointerInterface;
@@ -504,7 +498,6 @@ TEST_F(HidlTest, ServiceListTest) {
         "android.hardware.tests.pointer@1.0::IPointer/pointer",
         "android.hardware.tests.bar@1.0::IBar/foo",
         "android.hardware.tests.inheritance@1.0::IFetcher/fetcher",
-        "android.hardware.tests.foo@1.0::IFooCallback/foo callback",
         "android.hardware.tests.inheritance@1.0::IParent/parent",
         "android.hardware.tests.inheritance@1.0::IParent/child",
         "android.hardware.tests.inheritance@1.0::IChild/child",
@@ -807,8 +800,10 @@ TEST_F(HidlTest, WrapTest) {
     EXPECT_LT(systemTime() - now,    1000) << "    for nothing";
 }
 
-// TODO: b/31819198
 TEST_F(HidlTest, FooCallMeTest) {
+
+    sp<IFooCallback> fooCb = new FooCallback();
+
     ALOGI("CLIENT call callMe.");
     // callMe is oneway, should return instantly.
     nsecs_t now;
@@ -816,10 +811,6 @@ TEST_F(HidlTest, FooCallMeTest) {
     EXPECT_OK(foo->callMe(fooCb));
     EXPECT_LT(systemTime() - now, ONEWAY_TOLERANCE_NS);
     ALOGI("CLIENT callMe returned.");
-}
-
-// TODO: b/31819198
-TEST_F(HidlTest, ForReportResultsTest) {
 
     // Bar::callMe will invoke three methods on FooCallback; one will return
     // right away (even though it is a two-way method); the second one will
