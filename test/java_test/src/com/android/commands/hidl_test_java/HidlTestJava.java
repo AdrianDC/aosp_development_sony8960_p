@@ -1011,7 +1011,7 @@ public final class HidlTestJava {
         }
     }
 
-    private void server() {
+    private void server() throws RemoteException {
         Baz baz = new Baz();
         baz.registerAsService("baz");
 
