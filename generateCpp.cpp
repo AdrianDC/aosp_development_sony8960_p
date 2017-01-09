@@ -1627,9 +1627,17 @@ status_t AST::generateStubSourceForMethod(
             out << "_hidl_cb(*_hidl_reply);\n";
 
             out.unindent();
-            out << "}\n";
+            out << "});\n\n";
+        } else {
+            out << ");\n\n";
+            status_t status = generateCppInstrumentationCall(
+                    out,
+                    InstrumentationEvent::SERVER_API_EXIT,
+                    method);
+            if (status != OK) {
+                return status;
+            }
         }
-        out << ");\n\n";
 
         if (returnsValue) {
             out << "if (!_hidl_callbackCalled) {\n";
