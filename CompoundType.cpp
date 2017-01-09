@@ -355,15 +355,71 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
 
     Scope::emitTypeDeclarations(out);
 
-    for (const auto &field : *mFields) {
-        out << field->type().getCppStackType()
-            << " "
-            << field->name()
-            << ";\n";
+    if (!isJavaCompatible()) {
+        for (const auto &field : *mFields) {
+            out << field->type().getCppStackType()
+                << " "
+                << field->name()
+                << ";\n";
+        }
+
+        out.unindent();
+        out << "};\n\n";
+
+        return OK;
     }
 
-    out.unindent();
-    out << "};\n\n";
+    for (int pass = 0; pass < 2; ++pass) {
+        size_t offset = 0;
+        for (const auto &field : *mFields) {
+            size_t fieldAlign, fieldSize;
+            field->type().getAlignmentAndSize(&fieldAlign, &fieldSize);
+
+            size_t pad = offset % fieldAlign;
+            if (pad > 0) {
+                offset += fieldAlign - pad;
+            }
+
+            if (pass == 0) {
+                out << field->type().getCppStackType()
+                    << " "
+                    << field->name()
+                    << " __attribute__ ((aligned("
+                    << fieldAlign
+                    << ")));\n";
+            } else {
+                out << "static_assert(offsetof("
+                    << fullName()
+                    << ", "
+                    << field->name()
+                    << ") == "
+                    << offset
+                    << ", \"wrong offset\");\n";
+            }
+
+            offset += fieldSize;
+        }
+
+        if (pass == 0) {
+            out.unindent();
+            out << "};\n\n";
+        }
+    }
+
+    size_t structAlign, structSize;
+    getAlignmentAndSize(&structAlign, &structSize);
+
+    out << "static_assert(sizeof("
+        << fullName()
+        << ") == "
+        << structSize
+        << ", \"wrong size\");\n";
+
+    out << "static_assert(__alignof("
+        << fullName()
+        << ") == "
+        << structAlign
+        << ", \"wrong alignment\");\n\n";
 
     return OK;
 }
@@ -973,6 +1029,11 @@ void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {
     }
 
     *size = offset;
+
+    if (*size == 0) {
+        // An empty struct still occupies a byte of space in C++.
+        *size = 1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
