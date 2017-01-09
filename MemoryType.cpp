@@ -46,7 +46,7 @@ std::string MemoryType::getCppType(StorageMode mode,
 }
 
 std::string MemoryType::getVtsType() const {
-    return "TYPE_MEMORY";
+    return "TYPE_HIDL_MEMORY";
 }
 
 void MemoryType::emitReaderWriter(
