@@ -14,8 +14,6 @@
 
 #include <android/hardware/tests/foo/1.0/IFoo.h>
 #include <android/hardware/tests/foo/1.0/BnSimple.h>
-// TODO(b/33669138): remove
-#include <cutils/trace.h>
 #include <android/hardware/tests/foo/1.0/BsSimple.h>
 #include <android/hardware/tests/foo/1.0/BpSimple.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
