@@ -16,6 +16,7 @@
 
 #include "Annotation.h"
 
+#include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 #include <vector>
 
@@ -41,6 +42,36 @@ const std::string &AnnotationParam::getName() const {
 
 const std::vector<std::string> *AnnotationParam::getValues() const {
     return mValues;
+}
+
+const std::string &AnnotationParam::getSingleValue() const {
+    CHECK_EQ(mValues->size(), 1u) << mName << " requires one values but has multiple";
+    return mValues->at(0);
+}
+
+std::string AnnotationParam::getSingleString() const {
+    std::string value = getSingleValue();
+
+    CHECK(value.size() >= 2 && value[0] == '"' && value[value.size() - 1] == '"')
+        << mName << " must be a string";
+
+    // unquote string
+    value = value.substr(1, value.size() - 2);
+
+    return value;
+}
+
+bool AnnotationParam::getSingleBool() const {
+    std::string value = getSingleString();
+
+    if (value == "true") {
+        return true;
+    } else if (value == "false") {
+        return false;
+    }
+
+    CHECK(false) << mName << " must be of boolean value (true/false).";
+    return false;
 }
 
 Annotation::Annotation(const char *name,AnnotationParamVector *params)
