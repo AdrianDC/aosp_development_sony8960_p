@@ -37,6 +37,14 @@ struct AnnotationParam {
     const std::string &getName() const;
     const std::vector<std::string> *getValues() const;
 
+    const std::string &getSingleValue() const;
+
+    /* Returns unquoted version of getSingleValue */
+    std::string getSingleString() const;
+
+    /* Returns value interpretted as a boolean */
+    bool getSingleBool() const;
+
 private:
     const std::string mName;
     std::vector<std::string> *mValues;
