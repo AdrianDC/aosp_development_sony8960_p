@@ -406,32 +406,36 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
 
     const AnnotationParam *nameParam = annotation->getParam("name");
     if (nameParam != nullptr) {
-        CHECK_EQ(nameParam->getValues()->size(), 1u);
+        name = nameParam->getSingleString();
+    }
 
-        std::string quotedString = nameParam->getValues()->at(0);
-        name = quotedString.substr(1, quotedString.size() - 2);
+    bool exportParent = true;
+    const AnnotationParam *exportParentParam = annotation->getParam("export_parent");
+    if (exportParentParam != nullptr) {
+        exportParent = exportParentParam->getSingleBool();
     }
 
     std::string valuePrefix;
     const AnnotationParam *prefixParam = annotation->getParam("value_prefix");
     if (prefixParam != nullptr) {
-        CHECK_EQ(prefixParam->getValues()->size(), 1u);
-
-        std::string quotedString = prefixParam->getValues()->at(0);
-        valuePrefix = quotedString.substr(1, quotedString.size() - 2);
+        valuePrefix = prefixParam->getSingleString();
     }
 
     std::string valueSuffix;
     const AnnotationParam *suffixParam = annotation->getParam("value_suffix");
     if (suffixParam != nullptr) {
-        CHECK_EQ(suffixParam->getValues()->size(), 1u);
-
-        std::string quotedString = suffixParam->getValues()->at(0);
-        valueSuffix = quotedString.substr(1, quotedString.size() - 2);
+        valueSuffix = suffixParam->getSingleString();
     }
 
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
+
+    std::vector<const EnumType *> chain;
+    if (exportParent) {
+        getTypeChain(&chain);
+    } else {
+        chain = { this };
+    }
 
     if (forJava) {
         if (!name.empty()) {
@@ -446,9 +450,6 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
 
         const std::string typeName =
             scalarType->getJavaType(false /* forInitializer */);
-
-        std::vector<const EnumType *> chain;
-        getTypeChain(&chain);
 
         for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
             const auto &type = *it;
@@ -494,9 +495,6 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
     out << "enum {\n";
 
     out.indent();
-
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
