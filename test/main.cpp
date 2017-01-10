@@ -13,9 +13,9 @@
 #include <android/hidl/token/1.0/ITokenManager.h>
 
 #include <android/hardware/tests/foo/1.0/IFoo.h>
-#include <android/hardware/tests/foo/1.0/BnSimple.h>
+#include <android/hardware/tests/foo/1.0/BnHwSimple.h>
 #include <android/hardware/tests/foo/1.0/BsSimple.h>
-#include <android/hardware/tests/foo/1.0/BpSimple.h>
+#include <android/hardware/tests/foo/1.0/BpHwSimple.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
@@ -762,20 +762,20 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
 }
 
 TEST_F(HidlTest, WrapTest) {
-    using ::android::hardware::tests::foo::V1_0::BnSimple;
+    using ::android::hardware::tests::foo::V1_0::BnHwSimple;
     using ::android::hardware::tests::foo::V1_0::BsSimple;
-    using ::android::hardware::tests::foo::V1_0::BpSimple;
+    using ::android::hardware::tests::foo::V1_0::BpHwSimple;
     using ::android::hardware::HidlInstrumentor;
     nsecs_t now;
     int i = 0;
 
     now = systemTime();
-    new BnSimple(new Simple(1));
-    EXPECT_LT(systemTime() - now, 2000000) << "    for BnSimple(nonnull)";
+    new BnHwSimple(new Simple(1));
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BnHwSimple(nonnull)";
 
     now = systemTime();
-    new BnSimple(nullptr);
-    EXPECT_LT(systemTime() - now, 2000000) << "    for BnSimple(null)";
+    new BnHwSimple(nullptr);
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BnHwSimple(null)";
 
     now = systemTime();
     new BsSimple(new Simple(1));
@@ -786,8 +786,8 @@ TEST_F(HidlTest, WrapTest) {
     EXPECT_LT(systemTime() - now, 2000000) << "    for BsSimple(null)";
 
     now = systemTime();
-    new BpSimple(nullptr);
-    EXPECT_LT(systemTime() - now, 2000000) << "    for BpSimple(null)";
+    new BpHwSimple(nullptr);
+    EXPECT_LT(systemTime() - now, 2000000) << "    for BpHwSimple(null)";
 
     now = systemTime();
     new ::android::hardware::HidlInstrumentor("");

@@ -22,8 +22,8 @@ genrule {
     out: [
         "tests/vendor/1.0/IVendor.h",
         "tests/vendor/1.0/IHwVendor.h",
-        "tests/vendor/1.0/BnVendor.h",
-        "tests/vendor/1.0/BpVendor.h",
+        "tests/vendor/1.0/BnHwVendor.h",
+        "tests/vendor/1.0/BpHwVendor.h",
         "tests/vendor/1.0/BsVendor.h",
     ],
 }
