@@ -50,6 +50,7 @@ enum {
     HIDL_SYSPROPS_CHANGED_TRANSACTION,
     HIDL_LINK_TO_DEATH_TRANSACTION,
     HIDL_UNLINK_TO_DEATH_TRANSACTION,
+    HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
     LAST_HIDL_TRANSACTION   = 0x00ffffff,
 };
 
@@ -61,6 +62,7 @@ Interface::Interface(const char *localName, const Location &location, Interface 
     mReservedMethods.push_back(createSyspropsChangedMethod());
     mReservedMethods.push_back(createLinkToDeathMethod());
     mReservedMethods.push_back(createUnlinkToDeathMethod());
+    mReservedMethods.push_back(createSetHALInstrumentationMethod());
 }
 
 std::string Interface::typeName() const {
@@ -181,6 +183,44 @@ Method *Interface::createSyspropsChangedMethod() const {
             } } }, /*cppImpl */
             { { IMPL_HEADER, [](auto &out) { /* javaImpl */
                 out << "android.os.SystemProperties.reportSyspropChanged();";
+            } } } /*javaImpl */
+    );
+}
+
+Method *Interface::createSetHALInstrumentationMethod() const {
+    return new Method("setHALInstrumentation",
+            new std::vector<TypedVar *>() /*args */,
+            new std::vector<TypedVar *>() /*results */,
+            true /*oneway */,
+            new std::vector<Annotation *>(),
+            HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
+            {
+                {IMPL_HEADER,
+                    [this](auto &out) {
+                        // do nothing for base class.
+                        out << "return ::android::hardware::Void();\n";
+                    }
+                },
+                {IMPL_PROXY,
+                    [](auto &out) {
+                        out << "configureInstrumentation();\n";
+                        out << "return ::android::hardware::Void();\n";
+                    }
+                },
+                {IMPL_STUB,
+                    [](auto &out) {
+                        out << "configureInstrumentation();\n";
+                    }
+                },
+                {IMPL_PASSTHROUGH,
+                    [](auto &out) {
+                        out << "configureInstrumentation();\n";
+                        out << "return ::android::hardware::Void();\n";
+                    }
+                },
+            }, /*cppImpl */
+            { { IMPL_HEADER, [](auto & /*out*/) { /* javaImpl */
+                // Not support for Java Impl for now.
             } } } /*javaImpl */
     );
 }
