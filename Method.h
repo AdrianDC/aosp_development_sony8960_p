@@ -38,7 +38,8 @@ struct TypedVarVector;
 enum MethodImplType {
     IMPL_HEADER,
     IMPL_PROXY,
-    IMPL_STUB
+    IMPL_STUB,
+    IMPL_PASSTHROUGH,
 };
 
 using MethodImpl = std::map<MethodImplType, std::function<void(Formatter &)>>;

@@ -113,6 +113,7 @@ private:
     Method *createSyspropsChangedMethod() const;
     Method *createLinkToDeathMethod() const;
     Method *createUnlinkToDeathMethod() const;
+    Method *createSetHALInstrumentationMethod() const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
