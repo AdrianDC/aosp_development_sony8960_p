@@ -1097,16 +1097,13 @@ TEST_F(HidlTest, FooTranspose2Test) {
                 }));
 }
 
-// TODO: enable for passthrough mode after b/30814137
 TEST_F(HidlTest, FooNullNativeHandleTest) {
-    if (gMode == BINDERIZED) {
-        Abc xyz;
-        xyz.z = nullptr;
-        EXPECT_FAIL(bar->expectNullHandle(nullptr, xyz, [](bool hIsNull, bool xyzHasNull) {
-            EXPECT_TRUE(hIsNull);
-            EXPECT_TRUE(xyzHasNull);
-        }));
-    }
+    Abc xyz;
+    xyz.z = nullptr;
+    EXPECT_OK(bar->expectNullHandle(nullptr, xyz, [](bool hIsNull, bool xyzHasNull) {
+        EXPECT_TRUE(hIsNull);
+        EXPECT_TRUE(xyzHasNull);
+    }));
 }
 
 TEST_F(HidlTest, FooNullCallbackTest) {
