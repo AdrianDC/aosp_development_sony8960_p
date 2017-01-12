@@ -298,11 +298,11 @@ std::string FQName::getInterfaceHwName() const {
 }
 
 std::string FQName::getInterfaceProxyName() const {
-    return "Bp" + getInterfaceBaseName();
+    return "BpHw" + getInterfaceBaseName();
 }
 
 std::string FQName::getInterfaceStubName() const {
-    return "Bn" + getInterfaceBaseName();
+    return "BnHw" + getInterfaceBaseName();
 }
 
 std::string FQName::getInterfacePassthroughName() const {
