@@ -132,26 +132,17 @@ void CompoundType::emitReaderWriter(
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
     if (isReader) {
-        out << name
-            << " = (const "
-            << fullName()
-            << " *)"
+        out << "_hidl_err = "
             << parcelObjDeref
             << "readBuffer("
             << "&"
             << parentName
-            << ");\n";
+            << ", "
+            << " reinterpret_cast<const void **>("
+            << "&" << name
+            << "));\n";
 
-        out << "if ("
-            << name
-            << " == nullptr) {\n";
-
-        out.indent([&]{
-            out << "_hidl_err = ::android::UNKNOWN_ERROR;\n";
-            handleError2(out, mode);
-        });
-
-        out << "}\n\n";
+        handleError(out, mode);
     } else {
         out << "_hidl_err = "
             << parcelObjDeref

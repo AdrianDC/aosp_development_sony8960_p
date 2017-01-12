@@ -274,34 +274,6 @@ void Type::handleError(Formatter &out, ErrorMode mode) const {
     }
 }
 
-void Type::handleError2(Formatter &out, ErrorMode mode) const {
-    switch (mode) {
-        case ErrorMode_Goto:
-        {
-            out << "goto _hidl_error;\n";
-            break;
-        }
-
-        case ErrorMode_Break:
-        {
-            out << "break;\n";
-            break;
-        }
-
-        case ErrorMode_Ignore:
-        {
-            out << "/* ignoring _hidl_error! */";
-            break;
-        }
-
-        case ErrorMode_Return:
-        {
-            out << "return _hidl_err;\n";
-            break;
-        }
-    }
-}
-
 void Type::emitReaderWriterEmbeddedForTypeName(
         Formatter &out,
         const std::string &name,
