@@ -1,21 +1,27 @@
 base=/system
 export CLASSPATH=$base/framework/hidl_test_java.jar:$base/framework/android.hardware.tests.baz@1.0-java.jar:$base/framework/android.hidl.base@1.0-java.jar
 
-# Test native server with Java client
-hidl_test_java_native -s &
-sleep 1
-NATIVE_PID=$!
-(app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -c     \
-    && echo "Java client => native server PASS")                               \
-    || echo "Java client => native server FAIL"
+for SIZE in 64 32; do
+    if [ -f /system/bin/hidl_test_java_native$SIZE ]; then
+        echo "Testing $SIZE bit native client/server"
 
-kill $NATIVE_PID
+        # Test native server with Java client
+        hidl_test_java_native$SIZE -s &
+        sleep 1
+        NATIVE_PID=$!
+        (app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -c     \
+            && echo "Java client => native server PASS")                               \
+            || echo "Java client => native server FAIL"
 
-# Test Java server with native client
-app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -s &
-NATIVE_PID=$!
-sleep 1
-(hidl_test_java_native -c && echo "native client => Java server PASS")         \
-    || echo "native client => Java server FAIL"
+        kill $NATIVE_PID 2>/dev/null
 
-kill $NATIVE_PID
+        # Test Java server with native client
+        app_process $base/bin com.android.commands.hidl_test_java.HidlTestJava -s &
+        NATIVE_PID=$!
+        sleep 1
+        (hidl_test_java_native$SIZE -c && echo "native client => Java server PASS")   \
+            || echo "native client => Java server FAIL"
+
+        kill $NATIVE_PID 2>/dev/null
+    fi
+done
