@@ -1170,6 +1170,16 @@ TEST_F(HidlTest, FooSendVecTest) {
                 }));
 }
 
+TEST_F(HidlTest, FooSendEmptyVecTest) {
+    hidl_vec<uint8_t> in;
+    EXPECT_OK(foo->sendVec(
+                in,
+                [&](const auto &out) {
+                    EXPECT_EQ(out.size(), 0u);
+                    EXPECT_EQ(to_string(in), to_string(out));
+                }));
+}
+
 TEST_F(HidlTest, FooHaveAVectorOfInterfacesTest) {
     hidl_vec<sp<ISimple> > in;
     in.resize(16);
