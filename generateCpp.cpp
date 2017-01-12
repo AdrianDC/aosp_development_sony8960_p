@@ -1341,7 +1341,7 @@ status_t AST::generateStubSource(
     out << "}\n\n";
 
     if (iface->isIBase()) {
-        // BnBase has a constructor to initialize the HidlInstrumentor
+        // BnHwBase has a constructor to initialize the HidlInstrumentor
         // class properly.
         out << klassName
             << "::"
