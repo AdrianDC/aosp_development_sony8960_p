@@ -217,7 +217,6 @@ struct Type {
 
 protected:
     void handleError(Formatter &out, ErrorMode mode) const;
-    void handleError2(Formatter &out, ErrorMode mode) const;
 
     void emitReaderWriterEmbeddedForTypeName(
             Formatter &out,
