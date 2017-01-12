@@ -45,29 +45,33 @@ status_t AST::emitVtsTypeDeclarationsHelper(
         }
         allImportSet->insert(ast);
         std::string ifaceName;
-        // We only care about types.hal.
-        if (!ast->isInterface(&ifaceName)) {
-            status_t status = ast->emitVtsTypeDeclarationsHelper(
-                    out, allImportSet);
+        // Skip the process of ast within the same package.
+        if (ast->package() != mPackage) {
+            status_t status = ast->emitVtsTypeDeclarationsHelper(out,
+                                                                 allImportSet);
             if (status != OK) {
                 return status;
             }
         }
     }
     // Next, generate vts type declaration for the current AST.
-    for (const auto &type : mRootScope->getSubTypes()) {
-        // Skip for TypeDef as it is just an alias of a defined type.
-        if (type->isTypeDef()) {
-            continue;
+    std::string ifaceName;
+    // We only care about types.hal.
+    if (!AST::isInterface(&ifaceName)) {
+        for (const auto &type : mRootScope->getSubTypes()) {
+            // Skip for TypeDef as it is just an alias of a defined type.
+            if (type->isTypeDef()) {
+                continue;
+            }
+            out << "attribute: {\n";
+            out.indent();
+            status_t status = type->emitVtsTypeDeclarations(out);
+            if (status != OK) {
+                return status;
+            }
+            out.unindent();
+            out << "}\n\n";
         }
-        out << "attribute: {\n";
-        out.indent();
-        status_t status = type->emitVtsTypeDeclarations(out);
-        if (status != OK) {
-            return status;
-        }
-        out.unindent();
-        out << "}\n\n";
     }
     return OK;
 }
@@ -127,6 +131,10 @@ status_t AST::generateVts(const std::string &outputPath) const {
         std::vector<const Interface *> chain = iface->typeChain();
 
         // Generate all the attribute declarations first.
+        status_t status = emitVtsTypeDeclarations(out);
+        if (status != OK) {
+            return status;
+        }
         for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
             const Interface *superInterface = *it;
             status_t status = superInterface->emitVtsAttributeDeclaration(out);
