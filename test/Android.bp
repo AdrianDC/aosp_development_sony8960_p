@@ -1,5 +1,6 @@
 subdirs = [
     "vendor/1.0",
+    "java_test",
 ]
 
 cc_test {

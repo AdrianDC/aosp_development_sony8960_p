@@ -1,0 +1,27 @@
+cc_binary {
+    name: "hidl_test_java_native",
+    srcs: ["hidl_test_java_native.cpp"],
+
+    shared_libs: [
+        "libbase",
+        "libhidlbase",
+        "libhidltransport",
+        "libhwbinder",
+        "libutils",
+        "android.hardware.tests.baz@1.0",
+        "android.hardware.tests.expression@1.0",
+        "android.hardware.tests.inheritance@1.0",
+    ],
+
+    static_libs: ["libgtest"],
+
+    compile_multilib: "both",
+    multilib: {
+        lib32: {
+            suffix: "32",
+        },
+        lib64: {
+            suffix: "64",
+        },
+    },
+}
