@@ -702,6 +702,16 @@ TEST_F(HidlTest, TestSharedMemory) {
     }
 }
 
+TEST_F(HidlTest, NullSharedMemory) {
+    hidl_memory memory{};
+
+    EXPECT_EQ(nullptr, memory.handle());
+
+    EXPECT_OK(memoryTest->haveSomeMemory(memory, [&](const hidl_memory &mem) {
+        EXPECT_EQ(nullptr, mem.handle());
+    }));
+}
+
 TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
