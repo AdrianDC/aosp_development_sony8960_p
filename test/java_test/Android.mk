@@ -22,7 +22,7 @@ LOCAL_SRC_FILES := hidl_test_java
 
 LOCAL_ADDITIONAL_DEPENDENCIES :=                \
     hidl_test_java_lib                          \
-    hidl_test_java_native
+    hidl_test_java_native                       \
 
 LOCAL_REQUIRED_MODULES :=                       \
     hidl_test_java_lib                          \
@@ -30,26 +30,3 @@ LOCAL_REQUIRED_MODULES :=                       \
     android.hardware.tests.baz@1.0-java
 
 include $(BUILD_PREBUILT)
-
-################################################################################
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := hidl_test_java_native
-
-LOCAL_SRC_FILES := hidl_test_java_native.cpp
-
-LOCAL_SHARED_LIBRARIES :=                 \
-    libbase                               \
-    libhidlbase                           \
-    libhidltransport                      \
-    libhwbinder                           \
-    libutils                              \
-    android.hardware.tests.baz@1.0        \
-    android.hardware.tests.expression@1.0 \
-    android.hardware.tests.inheritance@1.0
-
-LOCAL_STATIC_LIBRARIES := \
-    libgtest
-
-include $(BUILD_EXECUTABLE)
