@@ -740,6 +740,14 @@ TEST_F(HidlTest, NullSharedMemory) {
     }));
 }
 
+TEST_F(HidlTest, FooGetDescriptorTest) {
+    EXPECT_OK(foo->interfaceDescriptor([&] (const auto &desc) {
+        EXPECT_EQ(desc, gMode == BINDERIZED
+                ? IBar::descriptor // service is actually IBar in binderized mode
+                : IFoo::descriptor); // dlopened, so service is IFoo
+    }));
+}
+
 TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
