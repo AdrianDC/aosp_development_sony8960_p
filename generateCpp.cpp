@@ -127,8 +127,19 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
 
 static void declareServiceManagerInteractions(Formatter &out, const std::string &interfaceName) {
     out << "static ::android::sp<" << interfaceName << "> getService("
-        << "const std::string &serviceName, bool getStub=false);\n";
-    out << "::android::status_t registerAsService(const std::string &serviceName);\n";
+        << "const std::string &serviceName=\"default\", bool getStub=false);\n";
+    out << "static ::android::sp<" << interfaceName << "> getService("
+        << "const char serviceName[], bool getStub=false)"
+        << "  { std::string str(serviceName ? serviceName : \"\");"
+        << "      return getService(str, getStub); }\n";
+    out << "static ::android::sp<" << interfaceName << "> getService("
+        << "const ::android::hardware::hidl_string& serviceName, bool getStub=false)"
+        // without c_str the std::string constructor is ambiguous
+        << "  { std::string str(serviceName.c_str());"
+        << "      return getService(str, getStub); }\n";
+    out << "static ::android::sp<" << interfaceName << "> getService("
+        << "bool getStub) { return getService(\"default\", getStub); }\n";
+    out << "::android::status_t registerAsService(const std::string &serviceName=\"default\");\n";
     out << "static bool registerForNotifications(\n";
     out.indent(2, [&] {
         out << "const std::string &serviceName,\n"
@@ -1999,4 +2010,3 @@ status_t AST::generateCppInstrumentationCall(
 }
 
 }  // namespace android
-
