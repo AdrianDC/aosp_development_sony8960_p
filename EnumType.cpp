@@ -267,6 +267,55 @@ status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
     emitBitFieldBitwiseAssignmentOperator(out, "|");
     emitBitFieldBitwiseAssignmentOperator(out, "&");
 
+    out << "template<typename>\n"
+        << "std::string toString("
+        << resolveToScalarType()->getCppArgumentType()
+        << " o);\n";
+    out << "template<>\n"
+        << "std::string toString<" << getCppStackType() << ">("
+        << resolveToScalarType()->getCppArgumentType()
+        << " o);\n\n";
+
+    out << "inline std::string toString("
+        << getCppArgumentType()
+        << " o) ";
+
+    out.block([&] {
+        out << "return toString<" << getCppStackType() << ">("
+            << "static_cast<" << resolveToScalarType()->getCppStackType() << ">(o));\n";
+    }).endl().endl();
+
+    return OK;
+}
+
+status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* prefix */) const {
+
+    const ScalarType *scalarType = mStorageType->resolveToScalarType();
+    CHECK(scalarType != NULL);
+
+    out << "template<>\n"
+        << "std::string toString<" << getCppStackType() << ">("
+        << resolveToScalarType()->getCppArgumentType()
+        << " o) ";
+    out.block([&] {
+        // include toHexString for scalar types
+        out << "using ::android::hardware::details::toHexString;\n"
+            << "std::string os;\n";
+        out << "bool first = true;\n";
+        for (EnumValue *value : values()) {
+            out.sIf("o & " + fullName() + "::" + value->name(), [&] {
+                out << "os += (first ? \"\" : \" | \"); "
+                    << "first = false;\n"
+                    << "os += \"" << value->name() << "\";\n";
+            }).endl();
+        }
+        out << "os += \" (\";\n";
+        scalarType->emitHexDump(out, "os", "o");
+        out << "os += \")\";\n";
+
+        out << "return os;\n";
+    }).endl().endl();
+
     return OK;
 }
 
@@ -678,6 +727,20 @@ void BitFieldType::emitReaderWriter(
             isReader,
             mode,
             true /* needsCast */);
+}
+
+// a bitfield maps to the underlying scalar type in C++, so operator<< is
+// already defined. We can still emit useful information if the bitfield is
+// in a struct / union by overriding emitDump as below.
+void BitFieldType::emitDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    CHECK(mElementType->isEnum());
+    const EnumType *enumType = static_cast<EnumType *>(mElementType);
+    out << streamName << " += "<< enumType->fqName().cppNamespace()
+        << "::toString<" << enumType->getCppStackType()
+        << ">(" << name << ");\n";
 }
 
 void BitFieldType::emitJavaFieldReaderWriter(

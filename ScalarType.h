@@ -80,6 +80,11 @@ struct ScalarType : public Type {
             ErrorMode mode,
             bool needsCast) const;
 
+    void emitHexDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const;
+
     void emitJavaFieldReaderWriter(
             Formatter &out,
             size_t depth,

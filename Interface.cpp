@@ -500,6 +500,53 @@ void Interface::emitReaderWriter(
     }
 }
 
+status_t Interface::emitGlobalTypeDeclarations(Formatter &out) const {
+    status_t status = Scope::emitGlobalTypeDeclarations(out);
+    if (status != OK) {
+        return status;
+    }
+    out << "std::string toString("
+        << getCppArgumentType()
+        << ");\n";
+    return OK;
+}
+
+
+status_t Interface::emitTypeDefinitions(
+        Formatter &out, const std::string prefix) const {
+    std::string space = prefix.empty() ? "" : (prefix + "::");
+    status_t err = Scope::emitTypeDefinitions(out, space + localName());
+    if (err != OK) {
+        return err;
+    }
+
+    out << "std::string toString("
+        << getCppArgumentType()
+        << " o) ";
+
+    out.block([&] {
+        out << "std::string os;\nbool ok = false;\n";
+        // TODO b/34136228 use interfaceDescriptor instead
+        out << "auto ret = o->interfaceChain([&os, &ok] (const auto &chain) ";
+        out.block([&] {
+            out.sIf("chain.size() >= 1", [&] {
+                out << "os += chain[0].c_str();\n"
+                    << "ok = true;\n";
+            }).endl();
+        });
+        out << ");\n";
+        out.sIf("!ret.isOk() || !ok", [&] {
+            out << "os += \"[class or subclass of \";\n"
+                << "os += " << fullName() << "::descriptor;\n"
+                << "os += \"]\";\n";
+        }).endl();
+        out << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
+            << "return os;\n";
+    }).endl().endl();
+
+    return OK;
+}
+
 void Interface::emitJavaReaderWriter(
         Formatter &out,
         const std::string &parcelObj,
