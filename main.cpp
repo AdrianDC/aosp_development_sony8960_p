@@ -1013,7 +1013,9 @@ static status_t generateAndroidBpForPackage(
         && packageFQName.string() != "android.hardware.tv.cec@1.0"
         && packageFQName.string() != "android.hardware.tv.input@1.0"
         && packageFQName.string() != "android.hardware.memtrack@1.0"
-        && packageFQName.string() != "android.hardware.sensors@1.0") {
+        && packageFQName.string() != "android.hardware.sensors@1.0"
+        && packageFQName.string()
+            != "android.hardware.graphics.allocator@2.0") {
         fprintf(stderr,
                 "WARNING: %s does not yet have auto-generated VTS driver & profiler.\n",
                 packageFQName.string().c_str());
