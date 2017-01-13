@@ -47,6 +47,7 @@ enum {
     /////////////////// HIDL reserved
     FIRST_HIDL_TRANSACTION  = 0x00f00000,
     HIDL_DESCRIPTOR_CHAIN_TRANSACTION = FIRST_HIDL_TRANSACTION,
+    HIDL_GET_DESCRIPTOR_TRANSACTION,
     HIDL_SYSPROPS_CHANGED_TRANSACTION,
     HIDL_LINK_TO_DEATH_TRANSACTION,
     HIDL_UNLINK_TO_DEATH_TRANSACTION,
@@ -59,6 +60,7 @@ Interface::Interface(const char *localName, const Location &location, Interface 
       mSuperType(super),
       mIsJavaCompatibleInProgress(false) {
     mReservedMethods.push_back(createDescriptorChainMethod());
+    mReservedMethods.push_back(createGetDescriptorMethod());
     mReservedMethods.push_back(createSyspropsChangedMethod());
     mReservedMethods.push_back(createLinkToDeathMethod());
     mReservedMethods.push_back(createUnlinkToDeathMethod());
@@ -223,7 +225,7 @@ Method *Interface::createDescriptorChainMethod() const {
     VectorType *vecType = new VectorType();
     vecType->setElementType(new StringType());
     std::vector<TypedVar *> *results = new std::vector<TypedVar *>();
-    results->push_back(new TypedVar("indicator", vecType));
+    results->push_back(new TypedVar("descriptors", vecType));
 
     return new Method("interfaceChain",
         new std::vector<TypedVar *>() /* args */,
@@ -257,6 +259,29 @@ Method *Interface::createDescriptorChainMethod() const {
     );
 }
 
+Method *Interface::createGetDescriptorMethod() const {
+    std::vector<TypedVar *> *results = new std::vector<TypedVar *>();
+    results->push_back(new TypedVar("descriptor", new StringType()));
+
+    return new Method("interfaceDescriptor",
+        new std::vector<TypedVar *>() /* args */,
+        results,
+        false /* oneway */,
+        new std::vector<Annotation *>(),
+        HIDL_GET_DESCRIPTOR_TRANSACTION,
+        { { IMPL_HEADER, [this](auto &out) {
+            out << "_hidl_cb("
+                << fullName()
+                << "::descriptor);\n"
+                << "return ::android::hardware::Void();";
+        } } }, /* cppImpl */
+        { { IMPL_HEADER, [this](auto &out) {
+            out << "return "
+                << fullJavaName()
+                << ".kInterfaceName;\n";
+         } } } /* javaImpl */
+    );
+}
 
 bool Interface::addMethod(Method *method) {
     if (isIBase()) {
