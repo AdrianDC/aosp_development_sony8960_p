@@ -213,6 +213,22 @@ status_t AST::generateJava(
 
     out << "}\n\n";
 
+    out << "public static "
+        << ifaceName
+        << " getService() throws RemoteException {\n";
+
+    out.indent();
+
+    out << "return "
+        << ifaceName
+        << ".asInterface(android.os.HwBinder.getService(\""
+        << iface->fqName().string()
+        << "\",\"default\"));\n";
+
+    out.unindent();
+
+    out << "}\n\n";
+
     status_t err = emitJavaTypeDeclarations(out);
 
     if (err != OK) {
@@ -608,4 +624,3 @@ status_t AST::emitJavaTypeDeclarations(Formatter &out) const {
 }
 
 }  // namespace android
-
