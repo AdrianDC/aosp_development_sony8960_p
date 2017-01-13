@@ -449,6 +449,10 @@ public final class HidlTestJava {
         proxy.someBaseMethod();
 
         {
+            Expect(proxy.interfaceDescriptor(), IBaz.kInterfaceName);
+        }
+
+        {
             IBase.Foo foo = new IBase.Foo();
             foo.x = 1;
 

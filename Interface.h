@@ -114,6 +114,7 @@ private:
     std::vector<Method *> mReservedMethods;
     mutable bool mIsJavaCompatibleInProgress;
     Method *createDescriptorChainMethod() const;
+    Method *createGetDescriptorMethod() const;
     Method *createSyspropsChangedMethod() const;
     Method *createLinkToDeathMethod() const;
     Method *createUnlinkToDeathMethod() const;
