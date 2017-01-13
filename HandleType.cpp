@@ -69,7 +69,7 @@ void HandleType::emitReaderWriter(
 
         out << "_hidl_err = "
             << parcelObjDeref
-            << "readNativeHandleNoDup("
+            << "readNullableNativeHandleNoDup("
             << "&" << name << "_ptr"
             << ");\n\n";
 
@@ -111,7 +111,7 @@ void HandleType::emitReaderWriterEmbedded(
             << "_hidl_err = "
             << parcelObj
             << (parcelObjIsPointer ? "->" : ".")
-            << "readEmbeddedNativeHandle(\n";
+            << "readNullableEmbeddedNativeHandle(\n";
 
         out.indent();
         out.indent();
