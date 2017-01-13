@@ -49,6 +49,11 @@ struct NamedType : public Type {
     // returns null if no location is set for this type.
     const Location &location() const;
 
+    void emitDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const override;
+
 private:
     std::string mLocalName;
     FQName mFullName;

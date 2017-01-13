@@ -318,7 +318,6 @@ void ArrayType::emitResolveReferencesEmbedded(
     out << "}\n\n";
 }
 
-
 bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
 }

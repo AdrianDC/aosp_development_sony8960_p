@@ -211,6 +211,13 @@ void ScalarType::emitReaderWriterWithCast(
     handleError(out, mode);
 }
 
+void ScalarType::emitHexDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    out << streamName << " += toHexString(" << name << ");\n";
+}
+
 void ScalarType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t /* depth */,
