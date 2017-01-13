@@ -201,12 +201,6 @@ Method *Interface::createSetHALInstrumentationMethod() const {
                         out << "return ::android::hardware::Void();\n";
                     }
                 },
-                {IMPL_PROXY,
-                    [](auto &out) {
-                        out << "configureInstrumentation();\n";
-                        out << "return ::android::hardware::Void();\n";
-                    }
-                },
                 {IMPL_STUB,
                     [](auto &out) {
                         out << "configureInstrumentation();\n";
