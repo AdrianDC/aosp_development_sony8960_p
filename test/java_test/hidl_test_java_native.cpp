@@ -636,6 +636,12 @@ static void EXPECT_OK(::android::hardware::Return<T> ret) {
     EXPECT_TRUE(ret.isOk());
 }
 
+TEST_F(HidlTest, GetDescriptorTest) {
+    EXPECT_OK(baz->interfaceDescriptor([&] (const auto &desc) {
+        EXPECT_EQ(desc, IBaz::descriptor);
+    }));
+}
+
 TEST_F(HidlTest, BazSomeBaseMethodTest) {
     EXPECT_OK(baz->someBaseMethod());
 }
