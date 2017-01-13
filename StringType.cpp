@@ -166,10 +166,13 @@ void StringType::emitJavaFieldReaderWriter(
         out.indent();
         out.indent();
 
+        // hidl_string's embedded buffer is never null(able), because it defaults to a
+        // buffer containing an empty string.
         out << blobName
             << ".handle(),\n"
             << offset
-            << " + 0 /* offsetof(hidl_string, mBuffer) */);\n\n";
+            << " + 0 /* offsetof(hidl_string, mBuffer) */,"
+            << "false /* nullable */);\n\n";
 
         out.unindent();
         out.unindent();
