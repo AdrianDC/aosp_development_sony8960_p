@@ -189,6 +189,26 @@ void Type::emitResolveReferencesEmbedded(
     CHECK(!"Should not be here");
 }
 
+void Type::emitDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    emitDumpWithMethod(out, streamName, "::android::hardware::details::toString", name);
+}
+
+void Type::emitDumpWithMethod(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &methodName,
+        const std::string &name) const {
+    out << streamName
+        << " += "
+        << methodName
+        << "("
+        << name
+        << ");\n";
+}
+
 bool Type::useParentInEmitResolveReferencesEmbedded() const {
     return needsResolveReferences();
 }

@@ -152,6 +152,11 @@ struct Type {
             const std::string &parentName,
             const std::string &offsetText) const;
 
+    virtual void emitDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const;
+
     virtual bool useParentInEmitResolveReferencesEmbedded() const;
 
     virtual bool useNameInEmitReaderWriterEmbedded(bool isReader) const;
@@ -239,6 +244,12 @@ protected:
             bool isReader,
             const std::string &suffix,
             const std::string &extra) const;
+
+    void emitDumpWithMethod(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &methodName,
+            const std::string &name) const;
 
 private:
     std::vector<Annotation *> *mAnnotations;
