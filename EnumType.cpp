@@ -697,14 +697,8 @@ status_t BitFieldType::emitVtsTypeDeclarations(Formatter &out) const {
 
 status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
-    out << "enum_value: {\n";
-    out.indent();
-    status_t err = mElementType->emitVtsAttributeType(out);
-    if (err != OK) {
-        return err;
-    }
-    out.unindent();
-    out << "}\n";
+    out << "predefined_type: \""
+        << static_cast<NamedType *>(mElementType)->fullName() << "\"\n";
     return OK;
 }
 
