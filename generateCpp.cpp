@@ -756,7 +756,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "struct "
         << klassName;
     if (iface->isIBase()) {
-        out << " : public ::android::hardware::BBinder";
+        out << " : public ::android::hardware::BHwBinder";
         out << ", public ::android::hardware::HidlInstrumentor {\n";
     } else {
         out << " : public "
