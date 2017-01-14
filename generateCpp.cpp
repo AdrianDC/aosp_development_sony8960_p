@@ -920,6 +920,10 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
 
     Formatter out(file);
 
+    out << "#define LOG_TAG \""
+        << mPackage.string() << "::" << baseName
+        << "\"\n\n";
+
     out << "#include <android/log.h>\n";
     out << "#include <cutils/trace.h>\n";
     out << "#include <hidl/HidlTransportSupport.h>\n\n";
