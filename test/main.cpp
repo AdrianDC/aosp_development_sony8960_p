@@ -496,14 +496,18 @@ TEST_F(HidlTest, ToStringTest) {
 
     LOG(INFO) << toString(IFoo::Everything{});
 
+    // Note that handles don't need to be deleted because MQDescriptor takes ownership
+    // and deletes them when destructed.
     auto handle = native_handle_create(0, 1);
+    auto handle2 = native_handle_create(0, 1);
     handle->data[0] = 5;
+    handle2->data[0] = 6;
     IFoo::Everything e {
         .u = {.p = reinterpret_cast<void *>(0x5)},
         .number = 10,
         .h = handle,
         .descSync = {std::vector<GrantorDescriptor>(), handle, 5},
-        .descUnsync = {std::vector<GrantorDescriptor>(), handle, 6},
+        .descUnsync = {std::vector<GrantorDescriptor>(), handle2, 6},
         .mem = hidl_memory("mymem", handle, 5),
         .p = reinterpret_cast<void *>(0x6),
         .vs = {"hello", "world"},
@@ -516,7 +520,6 @@ TEST_F(HidlTest, ToStringTest) {
     LOG(INFO) << toString(foo);
     // toString is for debugging purposes only; no good EXPECT
     // statement can be written here.
-    native_handle_delete(handle);
 }
 
 TEST_F(HidlTest, ServiceListTest) {
