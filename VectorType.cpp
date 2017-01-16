@@ -587,7 +587,8 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out << blobName
             << ".handle(),\n"
             << offset
-            << " + 0 /* offsetof(hidl_vec<T>, mBuffer) */);\n\n";
+            << " + 0 /* offsetof(hidl_vec<T>, mBuffer) */,"
+            << "true /* nullable */);\n\n";
 
         out.unindent();
         out.unindent();
