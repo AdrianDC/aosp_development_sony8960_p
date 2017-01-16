@@ -124,6 +124,8 @@ struct Baz : public IBaz {
 
     Return<uint32_t> size(uint32_t size) override;
 
+    Return<void> getNestedStructs(getNestedStructs_cb _hidl_cb) override;
+
 private:
     sp<IBazCallback> mStoredCallback;
 };
@@ -602,6 +604,20 @@ Return<uint8_t> Baz::returnABitField() {
 
 Return<uint32_t> Baz::size(uint32_t size) {
     return size;
+}
+
+Return<void> Baz::getNestedStructs(IBaz::getNestedStructs_cb _hidl_cb) {
+    int size = 5;
+    hidl_vec<IBaz::NestedStruct> result;
+    result.resize(size);
+    for (int i = 0; i < size; i++) {
+        result[i].a = i;
+        if (i == 1) {
+            result[i].matrices.resize(6);
+        }
+    }
+    _hidl_cb(result);
+    return Void();
 }
 
 static void usage(const char *me) {
