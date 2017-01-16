@@ -1,4 +1,8 @@
 #!/bin/bash
 
-hidl-gen -Lmakefile -r tests:system/tools/hidl/test/ -randroid.hidl:system/libhidl/transport tests.vendor@1.0;
-hidl-gen -Landroidbp -r tests:system/tools/hidl/test/ -randroid.hidl:system/libhidl/transport tests.vendor@1.0;
+options="-r tests:system/tools/hidl/test/ \
+         -r android.hidl:system/libhidl/transport \
+         -r android.hardware:hardware/interfaces"
+
+hidl-gen -Lmakefile $options tests.vendor@1.0;
+hidl-gen -Landroidbp $options tests.vendor@1.0;
