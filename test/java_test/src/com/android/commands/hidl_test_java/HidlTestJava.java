@@ -18,6 +18,7 @@ package com.android.commands.hidl_test_java;
 
 import android.hardware.tests.baz.V1_0.IBase;
 import android.hardware.tests.baz.V1_0.IBaz;
+import android.hardware.tests.baz.V1_0.IBaz.NestedStruct;
 import android.hardware.tests.baz.V1_0.IBazCallback;
 import android.os.HwBinder;
 import android.os.RemoteException;
@@ -754,6 +755,10 @@ public final class HidlTestJava {
             ExpectTrue(!t1.equals(t2));
         }
 
+        ArrayList<NestedStruct> structs = proxy.getNestedStructs();
+        ExpectTrue(structs.size() == 5);
+        ExpectTrue(structs.get(1).matrices.size() == 6);
+
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process
         HidlDeathRecipient recipient1 = new HidlDeathRecipient();
@@ -947,6 +952,11 @@ public final class HidlTestJava {
 
         public int size(int size) {
             return size;
+        }
+
+        @Override
+        public ArrayList<NestedStruct> getNestedStructs() throws RemoteException {
+            return new ArrayList<>();
         }
 
         class BazCallback extends IBazCallback.Stub {
