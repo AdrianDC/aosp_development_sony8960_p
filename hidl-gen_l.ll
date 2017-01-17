@@ -155,13 +155,13 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 "?"			{ return('?'); }
 "@"			{ return('@'); }
 
-{PATH}{VERSION}?"::"{PATH}      { yylval->str = strdup(yytext); return token::FQNAME; }
+{PATH}{VERSION}"::"{PATH}       { yylval->str = strdup(yytext); return token::FQNAME; }
 {VERSION}"::"{PATH}             { yylval->str = strdup(yytext); return token::FQNAME; }
 {PATH}{VERSION}                 { yylval->str = strdup(yytext); return token::FQNAME; }
 {COMPONENT}({DOT}{COMPONENT})+  { yylval->str = strdup(yytext); return token::FQNAME; }
 {COMPONENT}                     { yylval->str = strdup(yytext); return token::IDENTIFIER; }
 
-{PATH}{VERSION}?"::"{PATH}":"{COMPONENT}      { yylval->str = strdup(yytext); return token::FQNAME; }
+{PATH}{VERSION}"::"{PATH}":"{COMPONENT}       { yylval->str = strdup(yytext); return token::FQNAME; }
 {VERSION}"::"{PATH}":"{COMPONENT}             { yylval->str = strdup(yytext); return token::FQNAME; }
 {PATH}":"{COMPONENT}                          { yylval->str = strdup(yytext); return token::FQNAME; }
 
