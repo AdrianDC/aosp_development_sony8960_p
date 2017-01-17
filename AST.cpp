@@ -272,22 +272,84 @@ Type *AST::lookupType(const FQName &fqName) {
         return nullptr;
     }
 
+    Type *returnedType = nullptr;
+
     if (fqName.package().empty() && fqName.version().empty()) {
-        // This is just a plain identifier, resolve locally first if possible.
-
-        for (size_t i = mScopePath.size(); i-- > 0;) {
-            Type *type = mScopePath[i]->lookupType(fqName);
-
-            if (type != nullptr) {
-                // Resolve typeDefs to the target type.
-                while (type->isTypeDef()) {
-                    type = static_cast<TypeDef *>(type)->referencedType();
-                }
-
-                return type;
-            }
+        // resolve locally first if possible.
+        returnedType = lookupTypeLocally(fqName);
+        if (returnedType != nullptr) {
+            return returnedType;
         }
     }
+
+    if (!fqName.isFullyQualified()) {
+        status_t status = lookupAutofilledType(fqName, &returnedType);
+        if (status != OK) {
+            return nullptr;
+        }
+        if (returnedType != nullptr) {
+            return returnedType;
+        }
+    }
+
+    return lookupTypeFromImports(fqName);
+}
+
+// Rule 0: try resolve locally
+Type *AST::lookupTypeLocally(const FQName &fqName) {
+    CHECK(fqName.package().empty() && fqName.version().empty()
+        && !fqName.name().empty() && fqName.valueName().empty());
+
+    for (size_t i = mScopePath.size(); i-- > 0;) {
+        Type *type = mScopePath[i]->lookupType(fqName);
+
+        if (type != nullptr) {
+            // Resolve typeDefs to the target type.
+            while (type->isTypeDef()) {
+                type = static_cast<TypeDef *>(type)->referencedType();
+            }
+
+            return type;
+        }
+    }
+
+    return nullptr;
+}
+
+// Rule 1: auto-fill with current package
+status_t AST::lookupAutofilledType(const FQName &fqName, Type **returnedType) {
+    CHECK(!fqName.isFullyQualified() && !fqName.name().empty() && fqName.valueName().empty());
+
+    FQName autofilled = fqName;
+    autofilled.applyDefaults(mPackage.package(), mPackage.version());
+    FQName matchingName;
+    // Given this fully-qualified name, the type may be defined in this AST, or other files
+    // in import.
+    Type *local = findDefinedType(autofilled, &matchingName);
+    CHECK(local == nullptr || autofilled == matchingName);
+    Type *fromImport = lookupType(autofilled);
+
+    if (local != nullptr && fromImport != nullptr && local != fromImport) {
+        // Something bad happen; two types have the same FQName.
+        std::cerr << "ERROR: Unable to resolve type name '"
+                  << fqName.string()
+                  << "' (i.e. '"
+                  << autofilled.string()
+                  << "'), multiple definitions found.\n";
+
+        return UNKNOWN_ERROR;
+    }
+    if (local != nullptr) {
+        *returnedType = local;
+        return OK;
+    }
+    // If fromImport is nullptr as well, return nullptr to fall through to next rule.
+    *returnedType = fromImport;
+    return OK;
+}
+
+// Rule 2: look at imports
+Type *AST::lookupTypeFromImports(const FQName &fqName) {
 
     Type *resolvedType = nullptr;
     Type *returnedType = nullptr;
