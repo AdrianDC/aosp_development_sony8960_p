@@ -131,11 +131,34 @@ static std::string makeLibraryName(const FQName &packageFQName) {
     return packageFQName.string();
 }
 
+static void generatePackagePathsSection(
+        Formatter &out,
+        Coordinator *coordinator,
+        const FQName &packageFQName,
+        const std::set<FQName> &importedPackages,
+        bool forMakefiles = false) {
+    std::set<std::string> options{};
+    for (const auto &interface : importedPackages) {
+        options.insert(coordinator->getPackageRootOption(interface));
+    }
+    options.insert(coordinator->getPackageRootOption(packageFQName));
+    options.insert(coordinator->getPackageRootOption(gIBasePackageFqName));
+    for (const auto &option : options) {
+        out << "-r"
+            << option
+            << " ";
+        if (forMakefiles) {
+            out << "\\\n";
+        }
+    }
+}
+
 static void generateMakefileSectionForType(
         Formatter &out,
         Coordinator *coordinator,
         const FQName &packageFQName,
         const FQName &fqName,
+        const std::set<FQName> &importedPackages,
         const char *typeName) {
     out << "\n"
         << "\n#"
@@ -190,11 +213,9 @@ static void generateMakefileSectionForType(
     out.indent();
     out.indent();
     out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava \\"
-        << "\n-r"
-        << coordinator->getPackageRootOption(packageFQName) << " \\"
-        << "\n-r"
-        << coordinator->getPackageRootOption(gIBasePackageFqName) << " \\\n";
+        << "\n-Ljava \\\n";
+
+    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages, true /* forJava */);
 
     out << packageFQName.string()
         << "::"
@@ -219,6 +240,7 @@ static void generateMakefileSection(
         Coordinator *coordinator,
         const FQName &packageFQName,
         const std::vector<FQName> &packageInterfaces,
+        const std::set<FQName> &importedPackages,
         AST *typesAST) {
     for (const auto &fqName : packageInterfaces) {
         if (fqName.name() == "types") {
@@ -244,6 +266,7 @@ static void generateMakefileSection(
                         coordinator,
                         packageFQName,
                         fqName,
+                        importedPackages,
                         type->localName().c_str());
             }
 
@@ -255,6 +278,7 @@ static void generateMakefileSection(
                 coordinator,
                 packageFQName,
                 fqName,
+                importedPackages,
                 nullptr /* typeName */);
     }
 }
@@ -350,7 +374,8 @@ static void generateMakefileSectionForJavaConstants(
         Formatter &out,
         Coordinator *coordinator,
         const FQName &packageFQName,
-        const std::vector<FQName> &packageInterfaces) {
+        const std::vector<FQName> &packageInterfaces,
+        const std::set<FQName> &importedPackages) {
     out << "\n#"
         << "\nGEN := $(intermediates)/"
         << coordinator->convertPackageRootToPath(packageFQName)
@@ -367,11 +392,9 @@ static void generateMakefileSectionForJavaConstants(
     out.indent();
     out.indent();
     out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava-constants \\"
-        << "\n-r"
-        << coordinator->getPackageRootOption(packageFQName) << " \\"
-        << "\n-r"
-        << coordinator->getPackageRootOption(gIBasePackageFqName) << " \\\n";
+        << "\n-Ljava-constants \\\n";
+
+    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages, true /* forJava */);
 
     out << packageFQName.string();
     out << "\n";
@@ -518,6 +541,7 @@ static status_t generateMakefileForPackage(
                 coordinator,
                 packageFQName,
                 packageInterfaces,
+                importedPackages,
                 typesAST);
 
         out << "\ninclude $(BUILD_"
@@ -541,7 +565,7 @@ static status_t generateMakefileForPackage(
             << "$(HOST_EXECUTABLE_SUFFIX)";
 
         generateMakefileSectionForJavaConstants(
-                out, coordinator, packageFQName, packageInterfaces);
+                out, coordinator, packageFQName, packageInterfaces, importedPackages);
 
         out << "\n# Avoid dependency cycle of framework.jar -> this-library "
             << "-> framework.jar\n"
@@ -585,6 +609,7 @@ static void generateAndroidBpGenSection(
         const std::string &genName,
         const char *language,
         const std::vector<FQName> &packageInterfaces,
+        const std::set<FQName> &importedPackages,
         const std::function<void(Formatter&, const FQName)> outputFn) {
 
     out << "genrule {\n";
@@ -593,12 +618,11 @@ static void generateAndroidBpGenSection(
         << "tools: [\"" << hidl_gen << "\"],\n";
 
     out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)"
-        << " -L" << language
-        << " -r"
-        << coordinator->getPackageRootOption(packageFQName)
-        << " -r"
-        << coordinator->getPackageRootOption(gIBasePackageFqName)
-        << " " << packageFQName.string() << "\",\n";
+        << " -L" << language << " ";
+
+    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages);
+
+    out << packageFQName.string() << "\",\n";
 
     out << "srcs: [\n";
     out.indent();
@@ -631,6 +655,7 @@ static void generateAndroidBpVtsGenSection(
         const std::string &genName,
         const char *language,
         const std::vector<FQName> &packageInterfaces,
+        const std::set<FQName> &importedPackages,
         const std::function<void(Formatter&, const FQName)> outputFn) {
     out << "genrule {\n";
     out.indent();
@@ -647,12 +672,11 @@ static void generateAndroidBpVtsGenSection(
     }
 
     out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)"
-        << " -L" << language
-        << " -r"
-        << coordinator->getPackageRootOption(packageFQName)
-        << " -r"
-        << coordinator->getPackageRootOption(gIBasePackageFqName)
-        << " " << packageFQName.string()
+        << " -L" << language << " ";
+
+    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages);
+
+    out << packageFQName.string()
         << " && $(location vtsc) -m" << vtsc_mode << " -t"  << vtsc_type
         << " -b$(genDir) " << package_dir_path
         << " $(genDir)/" << package_dir_path
@@ -708,6 +732,7 @@ static status_t generateAndroidBpForVtsPackage(
             genSourceName,
             "vts",
             packageInterfaces,
+            importedPackages,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 if (fqName.name() == "types") {
                     out << "\"" << pathPrefix << "types.vts.cpp\",\n";
@@ -728,6 +753,7 @@ static status_t generateAndroidBpForVtsPackage(
             genHeaderName,
             "vts",
             packageInterfaces,
+            importedPackages,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 if (fqName.name() == "types") {
                     out << "\"" << pathPrefix << "types.vts.h\",\n";
@@ -933,6 +959,7 @@ static status_t generateAndroidBpForPackage(
             genSourceName,
             "c++",
             packageInterfaces,
+            importedPackages,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 if (fqName.name() == "types") {
                     out << "\"" << pathPrefix << "types.cpp\",\n";
@@ -950,6 +977,7 @@ static status_t generateAndroidBpForPackage(
             genHeaderName,
             "c++",
             packageInterfaces,
+            importedPackages,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 out << "\"" << pathPrefix << fqName.name() << ".h\",\n";
                 if (fqName.name() != "types") {
