@@ -1010,6 +1010,7 @@ static status_t generateAndroidBpForPackage(
         && packageFQName.string() != "android.hardware.boot@1.0"
         && packageFQName.string() != "android.hardware.input@1.0"
         && packageFQName.string() != "android.hardware.power@1.0"
+        && packageFQName.string() != "android.hardware.radio@1.0"
         && packageFQName.string() != "android.hardware.tv.cec@1.0"
         && packageFQName.string() != "android.hardware.tv.input@1.0"
         && packageFQName.string() != "android.hardware.memtrack@1.0"
