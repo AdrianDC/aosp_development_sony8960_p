@@ -16,19 +16,17 @@
 
 package tests.vendor@1.0;
 
-interface IVendor {
+import android.hardware.tests.baz@1.0;
+
+interface IVendor extends IBaz {
 
     struct StructTest {
-        handle a;
         vec<uint8_t> b;
-        fmq_sync<uint8_t> c;
         string d;
         uint8_t[4][4] e;
     };
 
-    fun1(handle a) generates(handle b);
     fun2(vec<uint8_t> a) generates(vec<uint8_t> b);
-    fun3(fmq_sync<uint8_t> a) generates(fmq_sync<uint8_t> b);
     fun4(string a) generates(string b);
     fun5(uint8_t[4][4] a) generates(uint8_t[4][4] b);
 
