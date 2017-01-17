@@ -147,6 +147,11 @@ private:
             NamedType *type,
             std::string *errorMsg);
 
+    // Helper functions for lookupType.
+    Type *lookupTypeLocally(const FQName &fqName);
+    status_t lookupAutofilledType(const FQName &fqName, Type **returnedType);
+    Type *lookupTypeFromImports(const FQName &fqName);
+
     // Find a type matching fqName (which may be partial) and if found
     // return the associated type and fill in the full "matchingName".
     // Only types defined in this very AST are considered.
