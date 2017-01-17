@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <android-base/logging.h>
+#include <hidl-util/StringHelper.h>
 #include <iterator>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -167,7 +168,7 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
     // there are multiple hits.
     auto it = mPackageRoots.begin();
     for (; it != mPackageRoots.end(); it++) {
-        if (fqName.package().find(*it) != std::string::npos) {
+        if (StringHelper::StartsWith(fqName.package(), *it)) {
             break;
         }
     }

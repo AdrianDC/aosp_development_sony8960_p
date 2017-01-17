@@ -5,6 +5,200 @@ LOCAL_PATH := $(call my-dir)
 ################################################################################
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := tests.vendor@1.0-java
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+
+intermediates := $(local-generated-sources-dir)
+
+HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
+
+LOCAL_JAVA_LIBRARIES := \
+    android.hardware.tests.baz@1.0-java \
+    android.hidl.base@1.0-java \
+
+
+#
+# Build types.hal (Bar)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/Bar.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.Bar
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build types.hal (Foo)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/Foo.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.Foo
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build types.hal (FooToo)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/FooToo.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.FooToo
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build IVendor.hal
+#
+GEN := $(intermediates)/tests/vendor/V1_0/IVendor.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IVendor.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::IVendor
+
+$(GEN): $(LOCAL_PATH)/IVendor.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+include $(BUILD_JAVA_LIBRARY)
+
+
+################################################################################
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := tests.vendor@1.0-java-static
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+
+intermediates := $(local-generated-sources-dir)
+
+HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
+
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    android.hardware.tests.baz@1.0-java-static \
+    android.hidl.base@1.0-java-static \
+
+
+#
+# Build types.hal (Bar)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/Bar.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.Bar
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build types.hal (Foo)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/Foo.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.Foo
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build types.hal (FooToo)
+#
+GEN := $(intermediates)/tests/vendor/V1_0/FooToo.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::types.FooToo
+
+$(GEN): $(LOCAL_PATH)/types.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+#
+# Build IVendor.hal
+#
+GEN := $(intermediates)/tests/vendor/V1_0/IVendor.java
+$(GEN): $(HIDL)
+$(GEN): PRIVATE_HIDL := $(HIDL)
+$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IVendor.hal
+$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
+$(GEN): PRIVATE_CUSTOM_TOOL = \
+        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
+        -Ljava \
+        -randroid.hardware:hardware/interfaces \
+        -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
+        tests.vendor@1.0::IVendor
+
+$(GEN): $(LOCAL_PATH)/IVendor.hal
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+include $(BUILD_STATIC_JAVA_LIBRARY)
+
+
+################################################################################
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := tests.vendor@1.0-java-constants
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 
@@ -22,8 +216,9 @@ $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava-constants \
-        -rtests:system/tools/hidl/test/ \
+        -randroid.hardware:hardware/interfaces \
         -randroid.hidl:system/libhidl/transport \
+        -rtests:system/tools/hidl/test/ \
         tests.vendor@1.0
 
 $(GEN):
