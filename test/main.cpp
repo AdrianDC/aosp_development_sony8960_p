@@ -18,6 +18,7 @@
 #include <android/hardware/tests/foo/1.0/BpHwSimple.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
+#include <android/hardware/tests/bar/1.0/IImportRules.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
@@ -229,6 +230,67 @@ struct Complicated : public IComplicated {
 
 private:
     int32_t mCookie;
+};
+
+// Ensure (statically) that the types in IImportRules resolves to the correct types by
+// overriding the methods with fully namespaced types as arguments.
+struct MyImportRules : public ::android::hardware::tests::bar::V1_0::IImportRules {
+    Return<void> rule0a(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer&) override {
+        return Void();
+    }
+
+    Return<void> rule0a1(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer&) override {
+        return Void();
+    }
+
+    Return<void> rule0b(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer&) override {
+        return Void();
+    }
+
+    Return<void> rule0c(const ::android::hardware::tests::foo::V1_0::Outer&) override {
+        return Void();
+    }
+
+    Return<void> rule0d(const ::android::hardware::tests::foo::V1_0::Outer&) override {
+        return Void();
+    }
+
+    Return<void> rule0e(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer::Inner&) override {
+        return Void();
+    }
+
+    Return<void> rule0f(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer::Inner&) override {
+        return Void();
+    }
+
+    Return<void> rule0g(const ::android::hardware::tests::foo::V1_0::Outer::Inner&) override {
+        return Void();
+    }
+
+    Return<void> rule0h(const ::android::hardware::tests::foo::V1_0::Outer::Inner&) override {
+        return Void();
+    }
+
+    Return<void> rule1a(const ::android::hardware::tests::bar::V1_0::Def&) override {
+        return Void();
+    }
+
+    Return<void> rule1b(const ::android::hardware::tests::foo::V1_0::Def&) override {
+        return Void();
+    }
+
+    Return<void> rule2a(const ::android::hardware::tests::foo::V1_0::Unrelated&) override {
+        return Void();
+    }
+
+    Return<void> rule2b(const sp<::android::hardware::tests::foo::V1_0::IFooCallback>&) override {
+        return Void();
+    }
 };
 
 struct ServiceNotification : public IServiceNotification {
