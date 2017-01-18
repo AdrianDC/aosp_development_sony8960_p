@@ -150,12 +150,16 @@ struct FQName {
     // -> android.hardware.foo@1.0::types
     FQName getTypesForPackage() const;
 
+    // android.hardware.foo@1.0::Abc.Type:VALUE
+    // -> android.hardware.foo@1.0
+    FQName getPackageAndVersion() const;
+
     // the following comments all assume that the FQName
     // is android.hardware.foo@1.0::IBar.Baz.Bam
 
     // returns highest type in the hidl namespace, i.e.
     // android.hardware.foo@1.0::IBar
-    const FQName getTopLevelType() const;
+    FQName getTopLevelType() const;
 
     // returns an unambiguous fully qualified name which can be
     // baked into a token, i.e.
@@ -205,8 +209,8 @@ private:
     void setVersion(const std::string &v);
 };
 
-static const FQName gIBaseFqName{"android.hidl.base@1.0::IBase"};
-static const FQName gIBasePackageFqName{gIBaseFqName.package(), gIBaseFqName.version(), ""};
+static const FQName gIBaseFqName = FQName{"android.hidl.base@1.0::IBase"};
+static const FQName gIBasePackageFqName = FQName{"android.hidl.base@1.0"};
 
 }  // namespace android
 
