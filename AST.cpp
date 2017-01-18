@@ -447,13 +447,11 @@ Type *AST::lookupTypeFromImports(const FQName &fqName) {
         // dependencies.  If not, then it must have been defined in types.hal.
         //
         // In the case of just specifying Folder, the resolved type is
-        // android.hardware.tests.foo@1.0::IFoo.Folder, and the same logic as
+        // android.hardware.tests.foo@1.0::Folder, and the same logic as
         // above applies.
 
         if (!resolvedType->isInterface()) {
-            FQName ifc(resolvedName.package(),
-                       resolvedName.version(),
-                       resolvedName.names().at(0));
+            FQName ifc = resolvedName.getTopLevelType();
             for (const auto &importedAST : mImportedASTs) {
                 FQName matchingName;
                 Type *match = importedAST->findDefinedType(ifc, &matchingName);
@@ -465,8 +463,7 @@ Type *AST::lookupTypeFromImports(const FQName &fqName) {
 
         if (!resolvedType->isInterface()) {
             // Non-interface types are declared in the associated types header.
-            FQName typesName(
-                    resolvedName.package(), resolvedName.version(), "types");
+            FQName typesName = resolvedName.getTypesForPackage();
 
             mImportedNames.insert(typesName);
         } else {
@@ -500,7 +497,7 @@ Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
 
 void AST::getImportedPackages(std::set<FQName> *importSet) const {
     for (const auto &fqName : mImportedNames) {
-        FQName packageName(fqName.package(), fqName.version(), "");
+        FQName packageName = fqName.getPackageAndVersion();
 
         if (packageName == mPackage) {
             // We only care about external imports, not our own package.

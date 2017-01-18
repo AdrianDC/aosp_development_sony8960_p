@@ -72,6 +72,11 @@ FQName::FQName(
       mName(name),
       mValueName(valueName) {
     setVersion(version);
+
+    // Check if this is actually a valid fqName
+    FQName other;
+    other.setTo(this->string());
+    CHECK(other.mValid && (*this) == other);
 }
 
 FQName::FQName(const FQName& other)
@@ -339,7 +344,11 @@ FQName FQName::getTypesForPackage() const {
     return FQName(package(), version(), "types");
 }
 
-const FQName FQName::getTopLevelType() const {
+FQName FQName::getPackageAndVersion() const {
+    return FQName(package(), version(), "");
+}
+
+FQName FQName::getTopLevelType() const {
     auto idx = mName.find('.');
 
     if (idx == std::string::npos) {
