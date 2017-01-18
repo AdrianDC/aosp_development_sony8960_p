@@ -66,7 +66,7 @@ static status_t generateSourcesForFile(
 
         limitToType = fqName.name().substr(strlen("types."));
 
-        FQName typesName(fqName.package(), fqName.version(), "types");
+        FQName typesName = fqName.getTypesForPackage();
         ast = coordinator->parse(typesName);
     } else {
         ast = coordinator->parse(fqName);
