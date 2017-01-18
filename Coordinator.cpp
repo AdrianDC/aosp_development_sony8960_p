@@ -62,7 +62,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
 
     if (fqName.name() != "types") {
         // Any interface file implicitly imports its package's types.hal.
-        FQName typesName(fqName.package(), fqName.version(), "types");
+        FQName typesName = fqName.getTypesForPackage();
         typesAST = parse(typesName, parsedASTs);
 
         // fall through.
