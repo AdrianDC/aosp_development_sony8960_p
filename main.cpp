@@ -16,10 +16,10 @@
 
 #include "AST.h"
 #include "Coordinator.h"
-#include "FQName.h"
 #include "Scope.h"
 
 #include <hidl-util/Formatter.h>
+#include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
 #include <android-base/logging.h>
 #include <set>

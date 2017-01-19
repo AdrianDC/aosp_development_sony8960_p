@@ -18,9 +18,10 @@
 
 #define NAMED_TYPE_H_
 
-#include "FQName.h"
 #include "Location.h"
 #include "Type.h"
+
+#include <hidl-util/FQName.h>
 
 #include <string>
 
