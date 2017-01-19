@@ -102,6 +102,7 @@ struct Type {
     virtual std::string getJavaSuffix() const;
 
     virtual std::string getVtsType() const;
+    virtual std::string getVtsValueName() const;
 
     enum ErrorMode {
         ErrorMode_Ignore,
@@ -263,6 +264,8 @@ struct TemplatedType : public Type {
     Type *getElementType() const;
     bool isTemplatedType() const override;
     virtual bool isCompatibleElementType(Type *elementType) const = 0;
+    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    status_t emitVtsAttributeType(Formatter &out) const override;
 protected:
     TemplatedType();
     Type *mElementType;

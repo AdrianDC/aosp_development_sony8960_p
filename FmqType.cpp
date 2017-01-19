@@ -149,5 +149,19 @@ bool FmqType::isCompatibleElementType(Type *elementType) const {
     return (!elementType->isInterface() && !elementType->needsEmbeddedReadWrite());
 }
 
+std::string FmqType::getVtsType() const {
+    if (mName == "MQDescriptorSync") {
+        return "TYPE_FMQ_SYNC";
+    } else if (mName == "MQDescriptorUnsync") {
+        return "TYPE_FMQ_UNSYNC";
+    } else {
+        LOG(ERROR) << "Invalid fmq type name.\n";
+    }
+    return "";
+}
+
+std::string FmqType::getVtsValueName() const {
+    return "fmq_value";
+}
 }  // namespace android
 
