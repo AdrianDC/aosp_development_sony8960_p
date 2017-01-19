@@ -22,7 +22,6 @@
 #include "CompoundType.h"
 #include "ConstantExpression.h"
 #include "EnumType.h"
-#include "FQName.h"
 #include "Interface.h"
 #include "Location.h"
 #include "Method.h"
@@ -32,6 +31,7 @@
 #include "hidl-gen_y.h"
 
 #include <android-base/logging.h>
+#include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
 #include <stdio.h>
 
