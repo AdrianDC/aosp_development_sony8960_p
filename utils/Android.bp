@@ -22,6 +22,7 @@ cc_library_shared {
     srcs: [
         "Formatter.cpp",
         "StringHelper.cpp",
+        "FQName.cpp"
     ],
     shared_libs: [
         "libbase",
