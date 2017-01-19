@@ -19,12 +19,12 @@
 #define AST_H_
 
 #include <android-base/macros.h>
+#include <hidl-util/FQName.h>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "FQName.h"
 #include "Type.h"
 
 namespace android {

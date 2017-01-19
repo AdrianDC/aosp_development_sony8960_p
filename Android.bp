@@ -35,7 +35,6 @@ cc_library_shared {
         "ConstantExpression.cpp",
         "DeathRecipientType.cpp",
         "EnumType.cpp",
-        "FQName.cpp",
         "HandleType.cpp",
         "Interface.cpp",
         "MemoryType.cpp",
