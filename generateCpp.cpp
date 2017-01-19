@@ -158,7 +158,7 @@ static void implementServiceManagerInteractions(Formatter &out,
         << "::android::sp<" << interfaceName << "> " << interfaceName << "::getService("
         << "const std::string &serviceName, bool getStub) ";
     out.block([&] {
-        out << "::android::sp<" << interfaceName << "> iface;\n"
+        out << "::android::sp<" << interfaceName << "> iface = nullptr;\n"
             << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
         out.indent(2, [&] {
             out << "= ::android::hardware::defaultServiceManager();\n";
@@ -166,7 +166,7 @@ static void implementServiceManagerInteractions(Formatter &out,
         out.sIf("sm != nullptr && !getStub", [&] {
             out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
             out.indent(2, [&] {
-                out << "sm->get(\"" << package << "::" << interfaceName << "\", serviceName.c_str());\n";
+                out << "sm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
             });
             out.sIf("ret.isOk()", [&] {
                 out << "iface = " << interfaceName << "::castFrom(ret);\n";
@@ -175,27 +175,27 @@ static void implementServiceManagerInteractions(Formatter &out,
                 }).endl();
             }).endl();
         }).endl();
-        out << "const int dlMode = RTLD_LAZY;\n";
-        out << "void *handle = nullptr;\n";
-        for (const auto &path : std::vector<std::string>({
-            "HAL_LIBRARY_PATH_ODM", "HAL_LIBRARY_PATH_VENDOR", "HAL_LIBRARY_PATH_SYSTEM"
-        })) {
-            out.sIf("handle == nullptr", [&] {
-                out << "handle = dlopen("
-                    << path << " \"" << package << "-impl.so\", dlMode);\n";
+
+        out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::getPassthroughServiceManager();\n";
+        });
+
+        out.sIf("pm != nullptr", [&] () {
+            out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
+            out.indent(2, [&] {
+                out << "pm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
+            });
+            out.sIf("ret.isOk()", [&] {
+                out << "::android::sp<" << gIBaseFqName.cppName()
+                    << "> baseInterface = ret;\n";
+                out.sIf("baseInterface != nullptr", [&]() {
+                    out << "iface = new " << fqName.getInterfacePassthroughName()
+                        << "(" << interfaceName << "::castFrom(baseInterface));\n";
+                });
             }).endl();
-        }
-        out.sIf("handle == nullptr", [&] {
-            out << "return iface;\n";
         }).endl();
-        out << "" << interfaceName << "* (*generator)(const char* name);\n"
-            << "*(void **)(&generator) = dlsym(handle, \"HIDL_FETCH_" << interfaceName << "\");\n";
-        out.sIf("generator", [&] {
-            out << "iface = (*generator)(serviceName.c_str());\n";
-            out.sIf("iface != nullptr", [&] {
-                out << "iface = new " << fqName.getInterfacePassthroughName() << "(iface);\n";
-            }).endl();
-        }).endl();
+
         out << "return iface;\n";
     }).endl().endl();
 
