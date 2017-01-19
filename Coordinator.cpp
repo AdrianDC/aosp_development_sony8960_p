@@ -164,18 +164,23 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
     // prefix "android.hardware" and the package root
     // "hardware/interfaces".
 
-    // TODO: This now returns on the first match.  Throw an error if
-    // there are multiple hits.
     auto it = mPackageRoots.begin();
+    auto ret = mPackageRoots.end();
     for (; it != mPackageRoots.end(); it++) {
-        if (StringHelper::StartsWith(fqName.package(), *it)) {
-            break;
+        if (!fqName.inPackage(*it)) {
+            continue;
         }
+
+        CHECK(ret == mPackageRoots.end())
+            << "Multiple package roots found for " << fqName.string()
+            << " (" << *it << " and " << *ret << ")";
+
+        ret = it;
     }
-    CHECK(it != mPackageRoots.end())
+    CHECK(ret != mPackageRoots.end())
         << "Unable to find package root for " << fqName.string();
 
-    return it;
+    return ret;
 }
 
 std::string Coordinator::getPackageRoot(const FQName &fqName) const {

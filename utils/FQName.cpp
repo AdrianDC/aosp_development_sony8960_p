@@ -479,5 +479,25 @@ bool FQName::endsWith(const FQName &other) const {
     return false;
 }
 
+bool FQName::inPackage(const std::string &package) const {
+    std::vector<std::string> components;
+    getPackageComponents(&components);
+
+    std::vector<std::string> inComponents;
+    StringHelper::SplitString(package, '.', &inComponents);
+
+    if (inComponents.size() > components.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < inComponents.size(); i++) {
+        if (inComponents[i] != components[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace android
 

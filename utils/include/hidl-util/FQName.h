@@ -187,6 +187,12 @@ struct FQName {
 
     bool endsWith(const FQName &other) const;
 
+    // If this is android.hardware@1.0::IFoo
+    // package = "and" -> false
+    // package = "android" -> true
+    // package = "android.hardware@1.0" -> false
+    bool inPackage(const std::string &package) const;
+
     void getPackageComponents(std::vector<std::string> *components) const;
 
     void getPackageAndVersionComponents(
