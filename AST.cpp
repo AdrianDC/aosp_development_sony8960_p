@@ -18,7 +18,6 @@
 
 #include "Coordinator.h"
 #include "EnumType.h"
-#include "FQName.h"
 #include "HandleType.h"
 #include "Interface.h"
 #include "Location.h"
@@ -27,6 +26,7 @@
 #include "TypeDef.h"
 
 #include <hidl-util/Formatter.h>
+#include <hidl-util/FQName.h>
 #include <android-base/logging.h>
 #include <iostream>
 #include <stdlib.h>
