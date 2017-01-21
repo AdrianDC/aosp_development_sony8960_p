@@ -29,8 +29,8 @@ genrule {
         "simple.h",
     ],
     out: [
-        "android/hardware/c2hal_test/1.0/BnSimple.h",
-        "android/hardware/c2hal_test/1.0/BpSimple.h",
+        "android/hardware/c2hal_test/1.0/BnHwSimple.h",
+        "android/hardware/c2hal_test/1.0/BpHwSimple.h",
         "android/hardware/c2hal_test/1.0/BsSimple.h",
         "android/hardware/c2hal_test/1.0/IHwSimple.h",
         "android/hardware/c2hal_test/1.0/ISimple.h",
