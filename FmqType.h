@@ -59,7 +59,10 @@ struct FmqType : public TemplatedType {
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
     bool isCompatibleElementType(Type *elementType) const override;
-private:
+
+    std::string getVtsType() const override;
+    std::string getVtsValueName() const override;
+ private:
     std::string mNamespace;
     std::string mName;
 

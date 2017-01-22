@@ -31,6 +31,14 @@ std::string RefType::typeName() const {
     return "ref" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
 }
 
+std::string RefType::getVtsType() const {
+    return "TYPE_REF";
+}
+
+std::string RefType::getVtsValueName() const {
+    return "ref_value";
+}
+
 bool RefType::isCompatibleElementType(Type *elementType) const {
     if (elementType->isScalar()) {
         return true;
@@ -231,30 +239,6 @@ bool RefType::needsEmbeddedReadWrite() const {
 
 bool RefType::resultNeedsDeref() const {
     return false;
-}
-
-status_t RefType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "type: TYPE_REF\n" << "ref_value: {\n";
-    out.indent();
-    status_t err = mElementType->emitVtsTypeDeclarations(out);
-    if (err != OK) {
-        return err;
-    }
-    out.unindent();
-    out << "}\n";
-    return OK;
-}
-
-status_t RefType::emitVtsAttributeType(Formatter &out) const {
-    out << "type: TYPE_REF\n" << "ref_value: {\n";
-    out.indent();
-    status_t status = mElementType->emitVtsAttributeType(out);
-    if (status != OK) {
-        return status;
-    }
-    out.unindent();
-    out << "}\n";
-    return OK;
 }
 
 bool RefType::isJavaCompatible() const {

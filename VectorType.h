@@ -41,6 +41,7 @@ struct VectorType : public TemplatedType {
     std::string getJavaType(bool forInitializer) const override;
 
     std::string getVtsType() const override;
+    std::string getVtsValueName() const override;
 
     void emitReaderWriter(
             Formatter &out,
@@ -118,9 +119,6 @@ struct VectorType : public TemplatedType {
     bool needsEmbeddedReadWrite() const override;
     bool needsResolveReferences() const override;
     bool resultNeedsDeref() const override;
-
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-    status_t emitVtsAttributeType(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
 
