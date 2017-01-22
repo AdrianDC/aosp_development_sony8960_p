@@ -32,6 +32,9 @@ struct RefType : public TemplatedType {
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 
+    std::string getVtsType() const override;
+    std::string getVtsValueName() const override;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -65,9 +68,6 @@ struct RefType : public TemplatedType {
     bool needsEmbeddedReadWrite() const override;
     bool needsResolveReferences() const override;
     bool resultNeedsDeref() const override;
-
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-    status_t emitVtsAttributeType(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
 

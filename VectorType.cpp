@@ -125,6 +125,10 @@ std::string VectorType::getVtsType() const {
     return "TYPE_VECTOR";
 }
 
+std::string VectorType::getVtsValueName() const {
+    return "vector_value";
+}
+
 void VectorType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -710,31 +714,6 @@ bool VectorType::needsResolveReferences() const {
 
 bool VectorType::resultNeedsDeref() const {
     return !isVectorOfBinders();
-}
-
-status_t VectorType::emitVtsTypeDeclarations(Formatter &out) const {
-    out << "type: " << getVtsType() << "\n";
-    out << "vector_value: {\n";
-    out.indent();
-    status_t err = mElementType->emitVtsTypeDeclarations(out);
-    if (err != OK) {
-        return err;
-    }
-    out.unindent();
-    out << "}\n";
-    return OK;
-}
-
-status_t VectorType::emitVtsAttributeType(Formatter &out) const {
-    out << "type: TYPE_VECTOR\n" << "vector_value: {\n";
-    out.indent();
-    status_t status = mElementType->emitVtsAttributeType(out);
-    if (status != OK) {
-        return status;
-    }
-    out.unindent();
-    out << "}\n";
-    return OK;
 }
 
 bool VectorType::isJavaCompatible() const {

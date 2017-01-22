@@ -153,6 +153,11 @@ std::string Type::getVtsType() const {
     return std::string();
 }
 
+std::string Type::getVtsValueName() const {
+    CHECK(!"Should not be here");
+    return std::string();
+}
+
 void Type::emitReaderWriter(
         Formatter &,
         const std::string &,
@@ -470,5 +475,30 @@ bool TemplatedType::isTemplatedType() const {
     return true;
 }
 
+status_t TemplatedType::emitVtsTypeDeclarations(Formatter &out) const {
+    out << "type: " << getVtsType() << "\n";
+    out << getVtsValueName() << ": {\n";
+    out.indent();
+    status_t err = mElementType->emitVtsTypeDeclarations(out);
+    if (err != OK) {
+        return err;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
+
+status_t TemplatedType::emitVtsAttributeType(Formatter &out) const {
+    out << "type: " << getVtsType() << "\n";
+    out << getVtsValueName() << ": {\n";
+    out.indent();
+    status_t status = mElementType->emitVtsAttributeType(out);
+    if (status != OK) {
+        return status;
+    }
+    out.unindent();
+    out << "}\n";
+    return OK;
+}
 }  // namespace android
 
