@@ -157,8 +157,6 @@ struct BitFieldType : public TemplatedType {
 
     std::string getVtsType() const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-
     status_t emitVtsAttributeType(Formatter &out) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
