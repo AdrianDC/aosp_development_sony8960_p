@@ -459,9 +459,9 @@ void ArrayType::emitJavaFieldReaderWriter(
 
 status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
+    out << "vector_size: " << mSizes[0]->value() << "\n";
     out << "vector_value: {\n";
     out.indent();
-    out << "vector_size: " << mSizes[0]->value() << "\n";
     // Simple array case.
     if (mSizes.size() == 1) {
         status_t err = mElementType->emitVtsTypeDeclarations(out);
@@ -471,9 +471,9 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     } else {  // Multi-dimension array case.
         for (size_t index = 1; index < mSizes.size(); index++) {
             out << "type: " << getVtsType() << "\n";
+            out << "vector_size: " << mSizes[index]->value() << "\n";
             out << "vector_value: {\n";
             out.indent();
-            out << "vector_size: " << mSizes[index]->value() << "\n";
             if (index == mSizes.size() - 1) {
                 status_t err = mElementType->emitVtsTypeDeclarations(out);
                 if (err != OK) {
