@@ -158,54 +158,41 @@ static void implementServiceManagerInteractions(Formatter &out,
         << "::android::sp<" << interfaceName << "> " << interfaceName << "::getService("
         << "const std::string &serviceName, bool getStub) ";
     out.block([&] {
-        out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
-        out << "::android::vintf::Transport transport = ::android::hardware::getTransportFromManifest(\""
-            << fqName.package() << "\");\n";
-
-        out.sIf("!getStub && "
-                "(transport == ::android::vintf::Transport::HWBINDER || "
-                // TODO(b/34625838): Don't load in passthrough mode
-                "transport == ::android::vintf::Transport::PASSTHROUGH || "
-                "transport == ::android::vintf::Transport::EMPTY)", [&] {
-            out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
+        out << "::android::sp<" << interfaceName << "> iface = nullptr;\n"
+            << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::defaultServiceManager();\n";
+        });
+        out.sIf("sm != nullptr && !getStub", [&] {
+            out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
             out.indent(2, [&] {
-                out << "= ::android::hardware::defaultServiceManager();\n";
+                out << "sm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
             });
-            out.sIf("sm != nullptr", [&] {
-                out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
-                out.indent(2, [&] {
-                    out << "sm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
-                });
-                out.sIf("ret.isOk()", [&] {
-                    out << "iface = " << interfaceName << "::castFrom(ret);\n";
-                    out.sIf("iface != nullptr", [&] {
-                        out << "return iface;\n";
-                    }).endl();
+            out.sIf("ret.isOk()", [&] {
+                out << "iface = " << interfaceName << "::castFrom(ret);\n";
+                out.sIf("iface != nullptr", [&] {
+                    out << "return iface;\n";
                 }).endl();
             }).endl();
         }).endl();
 
-        out.sIf("getStub || "
-                "transport == ::android::vintf::Transport::PASSTHROUGH || "
-                "transport == ::android::vintf::Transport::EMPTY", [&] {
-            out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
-            out.indent(2, [&] {
-                out << "= ::android::hardware::getPassthroughServiceManager();\n";
-            });
+        out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
+        out.indent(2, [&] {
+            out << "= ::android::hardware::getPassthroughServiceManager();\n";
+        });
 
-            out.sIf("pm != nullptr", [&] () {
-                out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
-                out.indent(2, [&] {
-                    out << "pm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
+        out.sIf("pm != nullptr", [&] () {
+            out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
+            out.indent(2, [&] {
+                out << "pm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
+            });
+            out.sIf("ret.isOk()", [&] {
+                out << "::android::sp<" << gIBaseFqName.cppName()
+                    << "> baseInterface = ret;\n";
+                out.sIf("baseInterface != nullptr", [&]() {
+                    out << "iface = new " << fqName.getInterfacePassthroughName()
+                        << "(" << interfaceName << "::castFrom(baseInterface));\n";
                 });
-                out.sIf("ret.isOk()", [&] {
-                    out << "::android::sp<" << gIBaseFqName.cppName()
-                        << "> baseInterface = ret;\n";
-                    out.sIf("baseInterface != nullptr", [&]() {
-                        out << "iface = new " << fqName.getInterfacePassthroughName()
-                            << "(" << interfaceName << "::castFrom(baseInterface));\n";
-                    });
-                }).endl();
             }).endl();
         }).endl();
 
