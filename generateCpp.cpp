@@ -172,6 +172,10 @@ static void implementServiceManagerInteractions(Formatter &out,
                 out << "= ::android::hardware::defaultServiceManager();\n";
             });
             out.sIf("sm != nullptr", [&] {
+                out.sIf("transport == ::android::vintf::Transport::HWBINDER", [&]() {
+                    out << "::android::hardware::details::waitForHwService("
+                        << interfaceName << "::descriptor" << ", serviceName);\n";
+                }).endl();
                 out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
                 out.indent(2, [&] {
                     out << "sm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
