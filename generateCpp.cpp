@@ -172,7 +172,9 @@ static void implementServiceManagerInteractions(Formatter &out,
                 out << "= ::android::hardware::defaultServiceManager();\n";
             });
             out.sIf("sm != nullptr", [&] {
-                out.sIf("transport == ::android::vintf::Transport::HWBINDER", [&]() {
+                // TODO(b/34274385) remove sysprop check
+                out.sIf("transport == ::android::vintf::Transport::HWBINDER &&"
+                         " ::android::hardware::details::blockingHalBinderizationEnabled()", [&]() {
                     out << "::android::hardware::details::waitForHwService("
                         << interfaceName << "::descriptor" << ", serviceName);\n";
                 }).endl();
@@ -191,6 +193,8 @@ static void implementServiceManagerInteractions(Formatter &out,
 
         out.sIf("getStub || "
                 "transport == ::android::vintf::Transport::PASSTHROUGH || "
+                "(transport == ::android::vintf::Transport::HWBINDER &&"
+                " !::android::hardware::details::blockingHalBinderizationEnabled()) ||"
                 "transport == ::android::vintf::Transport::EMPTY", [&] {
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
             out.indent(2, [&] {
@@ -947,6 +951,9 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
     if (isInterface) {
         // This is a no-op for IServiceManager itself.
         out << "#include <android/hidl/manager/1.0/IServiceManager.h>\n";
+
+        // TODO(b/34274385) remove this
+        out << "#include <hidl/LegacySupport.h>\n";
 
         generateCppPackageInclude(out, mPackage, iface->getProxyName());
         generateCppPackageInclude(out, mPackage, iface->getStubName());
