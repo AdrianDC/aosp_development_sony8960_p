@@ -793,7 +793,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "explicit "
         << klassName
         << "(const ::android::sp<" << ifaceName << "> &_hidl_impl,"
-        << " const std::string& prefix);"
+        << " const std::string& HidlInstrumentor_package,"
+        << " const std::string& HidlInstrumentor_interface);"
         << "\n\n";
     out << "::android::status_t onTransact(\n";
     out.indent();
@@ -1330,7 +1331,7 @@ status_t AST::generateProxySource(
         << ">(_hidl_impl),\n"
         << "  ::android::hardware::HidlInstrumentor(\""
         << mPackage.string()
-        << "::"
+        << "\", \""
         << fqName.getInterfaceName()
         << "\") {\n";
 
@@ -1368,7 +1369,7 @@ status_t AST::generateStubSource(
     }
 
     out << mPackage.string()
-        << "::"
+        << "\", \""
         << interfaceName
         << "\") { \n";
     out.indent();
@@ -1385,13 +1386,15 @@ status_t AST::generateStubSource(
         out << klassName
             << "::"
             << klassName
-            << "(const ::android::sp<" << interfaceName <<"> &_hidl_impl,"
-            << " const std::string &prefix)\n";
+            << "(const ::android::sp<" << interfaceName << "> &_hidl_impl,"
+            << " const std::string &HidlInstrumentor_package,"
+            << " const std::string &HidlInstrumentor_interface)\n";
 
         out.indent();
         out.indent();
 
-        out << ": ::android::hardware::HidlInstrumentor(prefix) { \n";
+        out << ": ::android::hardware::HidlInstrumentor("
+            << "HidlInstrumentor_package, HidlInstrumentor_interface) {\n";
         out.indent();
         out << "_hidl_mImpl = _hidl_impl;\n";
         out.unindent();
@@ -1852,7 +1855,9 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         << "(const ::android::sp<"
         << iface->fullName()
         << "> impl) : ::android::hardware::HidlInstrumentor(\""
-        << iface->fqName().string()
+        << mPackage.string()
+        << "\", \""
+        << iface->localName()
         << "\"), mImpl(impl) {";
     if (iface->hasOnewayMethods()) {
         out << "\n";
