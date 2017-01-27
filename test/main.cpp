@@ -901,7 +901,7 @@ TEST_F(HidlTest, WrapTest) {
     EXPECT_LT(systemTime() - now, 2000000) << "    for BpHwSimple(null)";
 
     now = systemTime();
-    new ::android::hardware::HidlInstrumentor("");
+    new ::android::hardware::HidlInstrumentor("", "");
     EXPECT_LT(systemTime() - now, 2000000) << "    for HidlInstrumentor";
 
     now = systemTime();
