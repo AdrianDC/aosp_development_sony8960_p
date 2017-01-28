@@ -100,10 +100,12 @@ struct AST {
 
     // Return the set of FQNames for those interfaces and types that are
     // actually referenced in the AST, not merely imported.
-
     const std::set<FQName>& getImportedNames() const {
         return mImportedNames;
     }
+
+    // Get transitive closure of imported interface/types.
+    void getAllImportedNames(std::set<FQName> *allImportSet) const;
 
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
@@ -277,8 +279,8 @@ private:
     // Helper function that generates vts type declaration from the current
     // AST and the transitive closure of imported ASTs.
     status_t emitVtsTypeDeclarationsHelper(
-                Formatter &out,
-                std::set<AST*> *allImportSet) const;
+            Formatter &out,
+            std::set<AST*> *allImportSet) const;
 
     DISALLOW_COPY_AND_ASSIGN(AST);
 };

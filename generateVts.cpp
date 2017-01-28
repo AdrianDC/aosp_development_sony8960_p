@@ -35,29 +35,30 @@ status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
 }
 
 status_t AST::emitVtsTypeDeclarationsHelper(
-        Formatter &out,
-        std::set<AST *> *allImportSet) const {
+        Formatter &out, std::set<AST *> *allImportSet) const {
     // First, generate vts type declaration for all imported AST.
-    for (const auto &ast : mImportedASTs) {
+    for (const auto &importedName : mImportedNames) {
+        AST *ast = mCoordinator->parse(importedName);
         // Already processed, skip.
         if (allImportSet->find(ast) != allImportSet->end()) {
             continue;
         }
         allImportSet->insert(ast);
-        std::string ifaceName;
-        // Skip the process of ast within the same package.
-        if (ast->package() != mPackage) {
-            status_t status = ast->emitVtsTypeDeclarationsHelper(out,
-                                                                 allImportSet);
-            if (status != OK) {
-                return status;
-            }
+        status_t status = ast->emitVtsTypeDeclarationsHelper(out,
+                                                             allImportSet);
+        if (status != OK) {
+            return status;
         }
     }
     // Next, generate vts type declaration for the current AST.
     std::string ifaceName;
-    // We only care about types.hal.
-    if (!AST::isInterface(&ifaceName)) {
+    if (AST::isInterface(&ifaceName)) {
+        const Interface *iface = mRootScope->getInterface();
+        status_t status = iface->emitVtsAttributeDeclaration(out);
+        if (status != OK) {
+            return status;
+        }
+    } else {
         for (const auto &type : mRootScope->getSubTypes()) {
             // Skip for TypeDef as it is just an alias of a defined type.
             if (type->isTypeDef()) {
@@ -114,10 +115,13 @@ status_t AST::generateVts(const std::string &outputPath) const {
 
     out << "package: \"" << mPackage.package() << "\"\n\n";
 
-    for (const auto &item : mImportedNames) {
+    // Generate import statement for all imported interface/types.
+    std::set<FQName> allImportedNames;
+    getAllImportedNames(&allImportedNames);
+    for (const auto &name : allImportedNames) {
         // ignore IBase.
-        if (item != gIBaseFqName) {
-            out << "import: \"" << item.string() << "\"\n";
+        if (name != gIBaseFqName) {
+            out << "import: \"" << name.string() << "\"\n";
         }
     }
 
@@ -135,14 +139,6 @@ status_t AST::generateVts(const std::string &outputPath) const {
         if (status != OK) {
             return status;
         }
-        for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-            const Interface *superInterface = *it;
-            status_t status = superInterface->emitVtsAttributeDeclaration(out);
-            if (status != OK) {
-                return status;
-            }
-        }
-
         // Generate all the method declarations.
         for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
             const Interface *superInterface = *it;
@@ -164,7 +160,3 @@ status_t AST::generateVts(const std::string &outputPath) const {
 }
 
 }  // namespace android
-
-
-
-
