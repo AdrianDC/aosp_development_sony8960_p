@@ -855,6 +855,7 @@ TEST_F(HidlTest, FooDoStuffAndReturnAStringTest) {
             ALOGI("CLIENT doStuffAndReturnAString returned '%s'.",
                   something.c_str());
             EXPECT_STREQ(something.c_str(), "Hello, world");
+            EXPECT_EQ(strlen("Hello, world"), something.size());
         }));
 }
 
