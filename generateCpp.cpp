@@ -164,6 +164,7 @@ static void implementServiceManagerInteractions(Formatter &out,
 
         out.sIf("!getStub && "
                 "(transport == ::android::vintf::Transport::HWBINDER || "
+                "transport == ::android::vintf::Transport::TOGGLED || "
                 // TODO(b/34625838): Don't load in passthrough mode
                 "transport == ::android::vintf::Transport::PASSTHROUGH || "
                 "transport == ::android::vintf::Transport::EMPTY)", [&] {
@@ -173,8 +174,9 @@ static void implementServiceManagerInteractions(Formatter &out,
             });
             out.sIf("sm != nullptr", [&] {
                 // TODO(b/34274385) remove sysprop check
-                out.sIf("transport == ::android::vintf::Transport::HWBINDER &&"
-                         " ::android::hardware::details::blockingHalBinderizationEnabled()", [&]() {
+                out.sIf("transport == ::android::vintf::Transport::HWBINDER ||"
+                         "(transport == ::android::vintf::Transport::TOGGLED &&"
+                         " ::android::hardware::details::blockingHalBinderizationEnabled())", [&]() {
                     out << "::android::hardware::details::waitForHwService("
                         << interfaceName << "::descriptor" << ", serviceName);\n";
                 }).endl();
@@ -193,7 +195,7 @@ static void implementServiceManagerInteractions(Formatter &out,
 
         out.sIf("getStub || "
                 "transport == ::android::vintf::Transport::PASSTHROUGH || "
-                "(transport == ::android::vintf::Transport::HWBINDER &&"
+                "(transport == ::android::vintf::Transport::TOGGLED &&"
                 " !::android::hardware::details::blockingHalBinderizationEnabled()) ||"
                 "transport == ::android::vintf::Transport::EMPTY", [&] {
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
