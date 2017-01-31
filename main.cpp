@@ -1044,6 +1044,7 @@ static status_t generateAndroidBpForPackage(
         && packageFQName.string() != "android.hardware.memtrack@1.0"
         && packageFQName.string() != "android.hardware.sensors@1.0"
         && packageFQName.string() != "android.hardware.soundtrigger@2.0"
+        && packageFQName.string() != "android.hardware.drm@1.0"
         && packageFQName.string()
             != "android.hardware.biometrics.fingerprint@2.1"
         && packageFQName.string()
