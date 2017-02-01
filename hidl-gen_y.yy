@@ -637,6 +637,11 @@ interface_declaration
           }
 
           Interface *iface = static_cast<Interface *>(ast->scope());
+          if (!iface->addAllReservedMethods()) {
+              std::cerr << "ERROR: unknown error in adding reserved methods at "
+                  << @5 << "\n";
+              YYERROR;
+          }
 
           ast->leaveScope();
 
