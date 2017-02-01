@@ -38,7 +38,8 @@ struct TypedVarVector;
 enum MethodImplType {
     IMPL_HEADER,
     IMPL_PROXY,
-    IMPL_STUB,
+    IMPL_STUB, // overrides the code in onTransact; IMPL_STUB_IMPL will be ignored
+    IMPL_STUB_IMPL, // use this->method() instead of mImpl->method()
     IMPL_PASSTHROUGH,
 };
 
