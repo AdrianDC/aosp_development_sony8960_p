@@ -45,6 +45,12 @@ void Method::fillImplementation(
     mSerial = serial;
     mCppImpl = cppImpl;
     mJavaImpl = javaImpl;
+
+    CHECK(mJavaImpl.find(IMPL_STUB_IMPL) == mJavaImpl.end())
+            << "FATAL: mJavaImpl should not use IMPL_STUB_IMPL; use IMPL_HEADER instead.";
+    CHECK(mCppImpl.find(IMPL_STUB_IMPL) == mCppImpl.end() ||
+          mCppImpl.find(IMPL_STUB) == mCppImpl.end())
+            << "FATAL: mCppImpl IMPL_STUB will override IMPL_STUB_IMPL.";
 }
 
 std::string Method::name() const {
