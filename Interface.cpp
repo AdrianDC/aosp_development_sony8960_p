@@ -59,30 +59,18 @@ Interface::Interface(const char *localName, const Location &location, Interface 
     : Scope(localName, location),
       mSuperType(super),
       mIsJavaCompatibleInProgress(false) {
-    mReservedMethods.push_back(createDescriptorChainMethod());
-    mReservedMethods.push_back(createGetDescriptorMethod());
-    mReservedMethods.push_back(createSyspropsChangedMethod());
-    mReservedMethods.push_back(createLinkToDeathMethod());
-    mReservedMethods.push_back(createUnlinkToDeathMethod());
-    mReservedMethods.push_back(createSetHALInstrumentationMethod());
 }
 
 std::string Interface::typeName() const {
     return "interface " + localName();
 }
 
-Method *Interface::createLinkToDeathMethod() const {
-    auto *results = new std::vector<TypedVar *> {
-        new TypedVar("success", new ScalarType(ScalarType::KIND_BOOL)) };
-    auto *args = new std::vector<TypedVar *> {
-        new TypedVar("recipient", new DeathRecipientType()),
-        new TypedVar("cookie", new ScalarType(ScalarType::KIND_UINT64)) };
+bool Interface::fillLinkToDeathMethod(Method *method) const {
+    if (method->name() != "linkToDeath") {
+        return false;
+    }
 
-    return new Method("linkToDeath",
-            args,
-            results,
-            false /*oneway */,
-            new std::vector<Annotation *>(),
+    method->fillImplementation(
             HIDL_LINK_TO_DEATH_TRANSACTION,
             {
                 {IMPL_HEADER,
@@ -118,19 +106,15 @@ Method *Interface::createLinkToDeathMethod() const {
                 {IMPL_STUB, nullptr}
             } /*javaImpl*/
     );
+    return true;
 }
 
-Method *Interface::createUnlinkToDeathMethod() const {
-    auto *results = new std::vector<TypedVar *> {
-        new TypedVar("success", new ScalarType(ScalarType::KIND_BOOL)) };
-    auto *args = new std::vector<TypedVar *> {
-        new TypedVar("recipient", new DeathRecipientType()) };
+bool Interface::fillUnlinkToDeathMethod(Method *method) const {
+    if (method->name() != "unlinkToDeath") {
+        return false;
+    }
 
-    return new Method("unlinkToDeath",
-            args,
-            results,
-            false /*oneway */,
-            new std::vector<Annotation *>(),
+    method->fillImplementation(
             HIDL_UNLINK_TO_DEATH_TRANSACTION,
             {
                 {IMPL_HEADER,
@@ -171,13 +155,14 @@ Method *Interface::createUnlinkToDeathMethod() const {
                 {IMPL_STUB, nullptr /* don't generate code */}
             } /*javaImpl*/
     );
+    return true;
 }
-Method *Interface::createSyspropsChangedMethod() const {
-    return new Method("notifySyspropsChanged",
-            new std::vector<TypedVar *>() /*args */,
-            new std::vector<TypedVar *>() /*results */,
-            true /*oneway */,
-            new std::vector<Annotation *>(),
+bool Interface::fillSyspropsChangedMethod(Method *method) const {
+    if (method->name() != "notifySyspropsChanged") {
+        return false;
+    }
+
+    method->fillImplementation(
             HIDL_SYSPROPS_CHANGED_TRANSACTION,
             { { IMPL_HEADER, [this](auto &out) {
                 out << "::android::report_sysprop_change();\n";
@@ -187,14 +172,15 @@ Method *Interface::createSyspropsChangedMethod() const {
                 out << "android.os.SystemProperties.reportSyspropChanged();";
             } } } /*javaImpl */
     );
+    return true;
 }
 
-Method *Interface::createSetHALInstrumentationMethod() const {
-    return new Method("setHALInstrumentation",
-            new std::vector<TypedVar *>() /*args */,
-            new std::vector<TypedVar *>() /*results */,
-            true /*oneway */,
-            new std::vector<Annotation *>(),
+bool Interface::fillSetHALInstrumentationMethod(Method *method) const {
+    if (method->name() != "setHALInstrumentation") {
+        return false;
+    }
+
+    method->fillImplementation(
             HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
             {
                 {IMPL_HEADER,
@@ -219,19 +205,15 @@ Method *Interface::createSetHALInstrumentationMethod() const {
                 // Not support for Java Impl for now.
             } } } /*javaImpl */
     );
+    return true;
 }
 
-Method *Interface::createDescriptorChainMethod() const {
-    VectorType *vecType = new VectorType();
-    vecType->setElementType(new StringType());
-    std::vector<TypedVar *> *results = new std::vector<TypedVar *>();
-    results->push_back(new TypedVar("descriptors", vecType));
+bool Interface::fillDescriptorChainMethod(Method *method) const {
+    if (method->name() != "interfaceChain") {
+        return false;
+    }
 
-    return new Method("interfaceChain",
-        new std::vector<TypedVar *>() /* args */,
-        results,
-        false /* oneway */,
-        new std::vector<Annotation *>(),
+    method->fillImplementation(
         HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
         { { IMPL_HEADER, [this](auto &out) {
             std::vector<const Interface *> chain = typeChain();
@@ -255,19 +237,17 @@ Method *Interface::createDescriptorChainMethod() const {
             }
             out << "));";
             out.unindent(); out.unindent();
-         } } } /* javaImpl */
+        } } } /* javaImpl */
     );
+    return true;
 }
 
-Method *Interface::createGetDescriptorMethod() const {
-    std::vector<TypedVar *> *results = new std::vector<TypedVar *>();
-    results->push_back(new TypedVar("descriptor", new StringType()));
+bool Interface::fillGetDescriptorMethod(Method *method) const {
+    if (method->name() != "interfaceDescriptor") {
+        return false;
+    }
 
-    return new Method("interfaceDescriptor",
-        new std::vector<TypedVar *>() /* args */,
-        results,
-        false /* oneway */,
-        new std::vector<Annotation *>(),
+    method->fillImplementation(
         HIDL_GET_DESCRIPTOR_TRANSACTION,
         { { IMPL_HEADER, [this](auto &out) {
             out << "_hidl_cb("
@@ -279,13 +259,21 @@ Method *Interface::createGetDescriptorMethod() const {
             out << "return "
                 << fullJavaName()
                 << ".kInterfaceName;\n";
-         } } } /* javaImpl */
+        } } } /* javaImpl */
     );
+    return true;
 }
+
+static std::map<std::string, Method *> gAllReservedMethods;
 
 bool Interface::addMethod(Method *method) {
     if (isIBase()) {
-        // ignore addMethod requests for IBase; they are all HIDL reserved methods.
+        if (!gAllReservedMethods.emplace(method->name(), method).second) {
+            LOG(ERROR) << "ERROR: hidl-gen encountered duplicated reserved method "
+                       << method->name();
+            return false;
+        }
+        // will add it in addAllReservedMethods
         return true;
     }
 
@@ -312,6 +300,35 @@ bool Interface::addMethod(Method *method) {
     return true;
 }
 
+bool Interface::addAllReservedMethods() {
+    // use a sorted map to insert them in serial ID order.
+    std::map<int32_t, Method *> reservedMethodsById;
+    for (const auto &pair : gAllReservedMethods) {
+        Method *method = pair.second->copySignature();
+        bool fillSuccess = fillDescriptorChainMethod(method)
+            || fillGetDescriptorMethod(method)
+            || fillSyspropsChangedMethod(method)
+            || fillLinkToDeathMethod(method)
+            || fillUnlinkToDeathMethod(method)
+            || fillSetHALInstrumentationMethod(method);
+        if (!fillSuccess) {
+            LOG(ERROR) << "ERROR: hidl-gen does not recognize a reserved method "
+                       << method->name();
+            return false;
+        }
+        if (!reservedMethodsById.emplace(method->getSerialId(), method).second) {
+            LOG(ERROR) << "ERROR: hidl-gen uses duplicated serial id for "
+                       << method->name() << " and "
+                       << reservedMethodsById[method->getSerialId()]->name()
+                       << ", serialId = " << method->getSerialId();
+            return false;
+        }
+    }
+    for (const auto &pair : reservedMethodsById) {
+        this->mReservedMethods.push_back(pair.second);
+    }
+    return true;
+}
 
 const Interface *Interface::superType() const {
     return mSuperType;
