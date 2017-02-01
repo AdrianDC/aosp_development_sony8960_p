@@ -30,6 +30,7 @@ struct Interface : public Scope {
     Interface(const char *localName, const Location &location, Interface *super);
 
     bool addMethod(Method *method);
+    bool addAllReservedMethods();
 
     bool isElidableType() const override;
     bool isInterface() const override;
@@ -113,12 +114,13 @@ private:
     std::vector<Method *> mUserMethods;
     std::vector<Method *> mReservedMethods;
     mutable bool mIsJavaCompatibleInProgress;
-    Method *createDescriptorChainMethod() const;
-    Method *createGetDescriptorMethod() const;
-    Method *createSyspropsChangedMethod() const;
-    Method *createLinkToDeathMethod() const;
-    Method *createUnlinkToDeathMethod() const;
-    Method *createSetHALInstrumentationMethod() const;
+    bool fillDescriptorChainMethod(Method *method) const;
+    bool fillGetDescriptorMethod(Method *method) const;
+    bool fillSyspropsChangedMethod(Method *method) const;
+    bool fillLinkToDeathMethod(Method *method) const;
+    bool fillUnlinkToDeathMethod(Method *method) const;
+    bool fillSetHALInstrumentationMethod(Method *method) const;
+    bool fillGetReferenceInfoMethod(Method *method) const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };

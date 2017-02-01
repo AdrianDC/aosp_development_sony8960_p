@@ -38,7 +38,8 @@ struct TypedVarVector;
 enum MethodImplType {
     IMPL_HEADER,
     IMPL_PROXY,
-    IMPL_STUB,
+    IMPL_STUB, // overrides the code in onTransact; IMPL_STUB_IMPL will be ignored
+    IMPL_STUB_IMPL, // use this->method() instead of mImpl->method()
     IMPL_PASSTHROUGH,
 };
 
@@ -50,14 +51,6 @@ struct Method {
            std::vector<TypedVar *> *results,
            bool oneway,
            std::vector<Annotation *> *annotations);
-    Method(const char *name,
-           std::vector<TypedVar *> *args,
-           std::vector<TypedVar *> *results,
-           bool oneway,
-           std::vector<Annotation *> *annotations,
-           size_t serial,
-           MethodImpl cppImpl,
-           MethodImpl javaImpl);
 
     std::string name() const;
     const std::vector<TypedVar *> &args() const;
@@ -70,8 +63,19 @@ struct Method {
     bool isHidlReserved() const { return mIsHidlReserved; }
     const std::vector<Annotation *> &annotations() const;
 
+    // Make a copy with the same name, args, results, oneway, annotations.
+    // Implementations, serial are not copied.
+    Method *copySignature() const;
+
     void setSerialId(size_t serial);
     size_t getSerialId() const;
+
+    // Fill implementation for HIDL reserved methods. mIsHidlReserved will be
+    // set to true.
+    void fillImplementation(
+            size_t serial,
+            MethodImpl cppImpl,
+            MethodImpl javaImpl);
 
     void generateCppSignature(Formatter &out,
                               const std::string &className = "",

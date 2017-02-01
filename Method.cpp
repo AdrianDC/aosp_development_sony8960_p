@@ -37,23 +37,21 @@ Method::Method(const char *name,
       mAnnotations(annotations) {
 }
 
-// HIDL reserved methods.
-Method::Method(const char *name,
-       std::vector<TypedVar *> *args,
-       std::vector<TypedVar *> *results,
-       bool oneway,
-       std::vector<Annotation *> *annotations,
-       size_t serial,
-       MethodImpl cppImpl,
-       MethodImpl javaImpl)
-    : Method(name, args, results, oneway, annotations) {
-
+void Method::fillImplementation(
+        size_t serial,
+        MethodImpl cppImpl,
+        MethodImpl javaImpl) {
     mIsHidlReserved = true;
     mSerial = serial;
     mCppImpl = cppImpl;
     mJavaImpl = javaImpl;
-}
 
+    CHECK(mJavaImpl.find(IMPL_STUB_IMPL) == mJavaImpl.end())
+            << "FATAL: mJavaImpl should not use IMPL_STUB_IMPL; use IMPL_HEADER instead.";
+    CHECK(mCppImpl.find(IMPL_STUB_IMPL) == mCppImpl.end() ||
+          mCppImpl.find(IMPL_STUB) == mCppImpl.end())
+            << "FATAL: mCppImpl IMPL_STUB will override IMPL_STUB_IMPL.";
+}
 
 std::string Method::name() const {
     return mName;
@@ -99,6 +97,10 @@ bool Method::overridesCppImpl(MethodImplType type) const {
 bool Method::overridesJavaImpl(MethodImplType type) const {
     CHECK(mIsHidlReserved);
     return mJavaImpl.find(type) != mJavaImpl.end();
+}
+
+Method *Method::copySignature() const {
+    return new Method(mName.c_str(), mArgs, mResults, mOneway, mAnnotations);
 }
 
 void Method::setSerialId(size_t serial) {
