@@ -120,7 +120,7 @@ private:
     bool fillLinkToDeathMethod(Method *method) const;
     bool fillUnlinkToDeathMethod(Method *method) const;
     bool fillSetHALInstrumentationMethod(Method *method) const;
-    bool fillGetReferenceInfoMethod(Method *method) const;
+    bool fillGetDebugInfoMethod(Method *method) const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
