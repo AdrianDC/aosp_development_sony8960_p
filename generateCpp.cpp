@@ -813,6 +813,31 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out.unindent();
     out << "private:\n";
     out.indent();
+
+    status_t err = generateMethods(out, [&](const Method *method, const Interface *iface) {
+        if (!method->isHidlReserved() || !method->overridesCppImpl(IMPL_STUB_IMPL)) {
+            return OK;
+        }
+        const bool returnsValue = !method->results().empty();
+        const TypedVar *elidedReturn = method->canElideCallback();
+
+        if (elidedReturn == nullptr && returnsValue) {
+            out << "using " << method->name() << "_cb = "
+                << iface->fqName().cppName()
+                << "::" << method->name() << "_cb;\n";
+        }
+        method->generateCppSignature(out);
+        out << " ";
+        out.block([&] {
+            method->cppImpl(IMPL_STUB_IMPL, out);
+            out << "\n";
+        }).endl();
+        return OK;
+    });
+    if (err != OK) {
+        return err;
+    }
+
     out << "::android::sp<" << ifaceName << "> _hidl_mImpl;\n";
     out.unindent();
     out << "};\n\n";
@@ -1536,13 +1561,16 @@ status_t AST::generateStubSourceForMethod(
 
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
+    const std::string callee =
+            (method->isHidlReserved() && method->overridesCppImpl(IMPL_STUB_IMPL))
+            ? "this" : "_hidl_mImpl";
 
     if (elidedReturn != nullptr) {
         out << elidedReturn->type().getCppResultType()
             << " _hidl_out_"
             << elidedReturn->name()
             << " = "
-            << "_hidl_mImpl->" << method->name()
+            << callee << "->" << method->name()
             << "(";
 
         bool first = true;
@@ -1595,7 +1623,7 @@ status_t AST::generateStubSourceForMethod(
             out << "bool _hidl_callbackCalled = false;\n\n";
         }
 
-        out << "_hidl_mImpl->" << method->name() << "(";
+        out << callee << "->" << method->name() << "(";
 
         bool first = true;
         for (const auto &arg : method->args()) {
