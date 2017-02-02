@@ -265,8 +265,8 @@ bool Interface::fillGetDescriptorMethod(Method *method) const {
     return true;
 }
 
-bool Interface::fillGetReferenceInfoMethod(Method *method) const {
-    if (method->name() != "getReferenceInfo") {
+bool Interface::fillGetDebugInfoMethod(Method *method) const {
+    if (method->name() != "getDebugInfo") {
         return false;
     }
 
@@ -275,17 +275,14 @@ bool Interface::fillGetReferenceInfoMethod(Method *method) const {
         {
             {IMPL_HEADER,
                 [this](auto &out) {
-                    // getReferenceInfo returns N/A for local objects.
-                    out << "_hidl_cb({ -1 });\n"
+                    // getDebugInfo returns N/A for local objects.
+                    out << "_hidl_cb({ -1 /* pid */, 0 /* ptr */ });\n"
                         << "return ::android::hardware::Void();";
                 }
             },
             {IMPL_STUB_IMPL,
                 [this](auto &out) {
-                    // TODO(b/34777099): need a kernel debug function to get the
-                    // true strong count.
-                    // uses BHwBinder->getStrongCount()
-                    out << "_hidl_cb({ this->getStrongCount() });\n"
+                    out << "_hidl_cb({ getpid(), reinterpret_cast<uint64_t>(this) });\n"
                         << "return ::android::hardware::Void();";
                 }
             }
@@ -294,7 +291,9 @@ bool Interface::fillGetReferenceInfoMethod(Method *method) const {
             const Type &refInfo = method->results().front()->type();
             out << refInfo.getJavaType(false /* forInitializer */) << " info = new "
                 << refInfo.getJavaType(true /* forInitializer */) << "();\n"
-                << "info.refCount = -1;\n"
+                // TODO(b/34777099): PID for java.
+                << "info.pid = -1;\n"
+                << "info.ptr = 0;\n"
                 << "return info;";
         } } } /* javaImpl */
     );
@@ -349,7 +348,7 @@ bool Interface::addAllReservedMethods() {
             || fillLinkToDeathMethod(method)
             || fillUnlinkToDeathMethod(method)
             || fillSetHALInstrumentationMethod(method)
-            || fillGetReferenceInfoMethod(method);
+            || fillGetDebugInfoMethod(method);
         if (!fillSuccess) {
             LOG(ERROR) << "ERROR: hidl-gen does not recognize a reserved method "
                        << method->name();

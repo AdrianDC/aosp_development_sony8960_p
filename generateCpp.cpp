@@ -827,11 +827,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
                 << "::" << method->name() << "_cb;\n";
         }
         method->generateCppSignature(out);
-        out << " ";
-        out.block([&] {
-            method->cppImpl(IMPL_STUB_IMPL, out);
-            out << "\n";
-        }).endl();
+        out << ";\n";
         return OK;
     });
     if (err != OK) {
@@ -1431,6 +1427,17 @@ status_t AST::generateStubSource(
         out << "}\n\n";
     }
 
+    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
+        if (!method->isHidlReserved() || !method->overridesCppImpl(IMPL_STUB_IMPL)) {
+            return OK;
+        }
+        method->generateCppSignature(out, iface->getStubName());
+        out << " ";
+        out.block([&] {
+            method->cppImpl(IMPL_STUB_IMPL, out);
+        }).endl();
+        return OK;
+    });
 
     out << "::android::status_t " << klassName << "::onTransact(\n";
 
