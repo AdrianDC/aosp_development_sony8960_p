@@ -1001,30 +1001,9 @@ static status_t generateAndroidBpForPackage(
 
     out << "}\n";
 
-    // For VTS driver
-    // TODO(yim): b/31930023 remove below check when all HAL's driver
-    // and profiler are auto-generated.
-    if (packageFQName.string() != "android.hardware.nfc@1.0"
-        && packageFQName.string() != "android.hardware.vibrator@1.0"
-        && packageFQName.string() != "android.hardware.light@2.0"
-        && packageFQName.string() != "android.hardware.thermal@1.0"
-        && packageFQName.string() != "android.hardware.vr@1.0"
-        && packageFQName.string() != "android.hardware.vehicle@2.0"
-        && packageFQName.string() != "android.hardware.boot@1.0"
-        && packageFQName.string() != "android.hardware.input@1.0"
-        && packageFQName.string() != "android.hardware.power@1.0"
-        && packageFQName.string() != "android.hardware.radio@1.0"
-        && packageFQName.string() != "android.hardware.tv.cec@1.0"
-        && packageFQName.string() != "android.hardware.tv.input@1.0"
-        && packageFQName.string() != "android.hardware.memtrack@1.0"
-        && packageFQName.string() != "android.hardware.gatekeeper@1.0"
-        && packageFQName.string() != "android.hardware.sensors@1.0"
-        && packageFQName.string() != "android.hardware.soundtrigger@2.0"
-        && packageFQName.string() != "android.hardware.drm@1.0"
-        && packageFQName.string()
-            != "android.hardware.biometrics.fingerprint@2.1"
-        && packageFQName.string()
-            != "android.hardware.graphics.allocator@2.0") {
+    // Skip generate build rule of driver/profiler for test hals.
+    if (StringHelper::StartsWith(packageFQName.string(),
+                                 "android.hardware.test")) {
         fprintf(stderr,
                 "WARNING: %s does not yet have auto-generated VTS driver & profiler.\n",
                 packageFQName.string().c_str());
