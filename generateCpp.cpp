@@ -159,8 +159,8 @@ static void implementServiceManagerInteractions(Formatter &out,
         << "const std::string &serviceName, bool getStub) ";
     out.block([&] {
         out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
-        out << "::android::vintf::Transport transport = ::android::hardware::getTransportFromManifest(\""
-            << fqName.package() << "\");\n";
+        out << "::android::vintf::Transport transport = ::android::hardware::getTransport("
+            << interfaceName << "::descriptor);\n";
 
         out.sIf("!getStub && "
                 "(transport == ::android::vintf::Transport::HWBINDER || "
