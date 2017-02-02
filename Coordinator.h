@@ -87,6 +87,11 @@ struct Coordinator {
             const FQName &package,
             std::vector<FQName> *packageInterfaces) const;
 
+    // Enforce a set of restrictions on a set of packages. These include:
+    //    - minor version upgrades
+    // "packages" contains names like "android.hardware.nfc@1.1".
+    status_t enforceRestrictionsOnPackage(const FQName &fqName);
+
     static bool MakeParentHierarchy(const std::string &path);
 
 private:
@@ -98,10 +103,18 @@ private:
     // "hardware/interfaces".
     std::vector<std::string> mPackageRootPaths;
     std::vector<std::string> mPackageRoots;
+
+    // cache to parse().
     std::map<FQName, AST *> mCache;
+
+    // cache to enforceRestrictionsOnPackage().
+    std::set<FQName> mPackagesEnforced;
 
     std::vector<std::string>::const_iterator findPackageRoot(
             const FQName &fqName) const;
+
+    // Rules of enforceRestrictionsOnPackage are listed below.
+    status_t enforceMinorVersionUprevs(const FQName &fqName);
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
 };
