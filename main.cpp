@@ -851,39 +851,14 @@ static status_t generateAndroidBpForVtsProfilerPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator) {
-    std::vector<std::vector<FQName>> interfacesForProfiler;
-    bool hasTypesInterface = false;
-    FQName typesInterface;
-    // Split interfaces except for the types interface.
-    for (const auto &fqName : packageInterfaces) {
-        if (fqName.name() == "types") {
-            hasTypesInterface = true;
-            typesInterface = fqName;
-        } else {
-            std::vector<FQName> interfaces;
-            interfaces.push_back(fqName);
-            interfacesForProfiler.push_back(interfaces);
-        }
-    }
-    // Generate profiler library for each interface.
-    for (auto interfaces : interfacesForProfiler) {
-        if (hasTypesInterface) {
-            interfaces.push_back(typesInterface);
-        }
-        const std::string targetLibraryName = makeLibraryName(packageFQName);
-        const std::string libraryName = targetLibraryName + "-"
-            + interfaces[0].name() + "-vts.profiler";
-        status_t status = generateAndroidBpForVtsPackage(out, importedPackages,
-                                                         interfaces,
-                                                         packageFQName,
-                                                         libraryName,
-                                                         "PROFILER", hidl_gen,
-                                                         coordinator);
-        if (status != OK) {
-            return status;
-        }
-    }
-    return OK;
+    const std::string targetLibraryName = makeLibraryName(packageFQName);
+    const std::string libraryName = targetLibraryName + "-vts.profiler";
+    return generateAndroidBpForVtsPackage(out, importedPackages,
+                                          packageInterfaces,
+                                          packageFQName,
+                                          libraryName,
+                                          "PROFILER", hidl_gen,
+                                          coordinator);
 }
 
 static status_t generateAndroidBpForPackage(

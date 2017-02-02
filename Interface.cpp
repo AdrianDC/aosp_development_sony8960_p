@@ -732,11 +732,8 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
 status_t Interface::emitVtsAttributeType(Formatter &out) const {
     out << "type: " << getVtsType() << "\n"
         << "predefined_type: \""
-        << localName()
-        << "\"\n"
-        << "is_callback: "
-        << (StringHelper::EndsWith(localName(), "Callback") ? "true" : "false")
-        << "\n";
+        << fullName()
+        << "\"\n";
     return OK;
 }
 
