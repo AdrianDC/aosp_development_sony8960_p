@@ -438,8 +438,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         } else {
             declareServiceManagerInteractions(out, iface->localName());
         }
-
-        out << "private: static int hidlStaticBlock;\n";
     }
 
     if (isInterface) {
@@ -1011,10 +1009,8 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             << "::descriptor(\""
             << iface->fqName().string()
             << "\");\n\n";
-
-        out << "int "
-            << iface->localName()
-            << "::hidlStaticBlock = []() -> int {\n";
+        out << "__attribute__((constructor))";
+        out << "static void static_constructor() {\n";
         out.indent([&] {
             out << "::android::hardware::gBnConstructorMap["
                 << iface->localName()
@@ -1046,9 +1042,19 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                 });
                 out << "};\n";
             });
-            out << "return 1;\n";
         });
-        out << "}();\n\n";
+        out << "};\n\n";
+        out << "__attribute__((destructor))";
+        out << "static void static_destructor() {\n";
+        out.indent([&] {
+            out << "::android::hardware::gBnConstructorMap.erase("
+                << iface->localName()
+                << "::descriptor);\n";
+            out << "::android::hardware::gBsConstructorMap.erase("
+                << iface->localName()
+                << "::descriptor);\n";
+        });
+        out << "};\n\n";
 
         err = generateInterfaceSource(out);
     }
