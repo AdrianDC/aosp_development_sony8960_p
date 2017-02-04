@@ -16,9 +16,9 @@ subdirs = [
     "test",
 ]
 
-
 cc_binary_host {
     name: "c2hal",
+    cflags: hidl_flags,
     srcs: [
         "AST.cpp",
         "c2hal_l.ll",
@@ -43,10 +43,5 @@ cc_binary_host {
         "libhidl-gen-utils",
     ],
 
-    static_libs: ["libutils"],
-
-    cflags: [
-        "-O0",
-        "-g",
-    ],
+    static_libs: ["libutils"]
 }

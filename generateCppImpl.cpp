@@ -234,6 +234,10 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
         return generateStubImplMethod(out, baseName, method);
     });
 
+    if (err != OK) {
+        return err;
+    }
+
     out << ifaceName
         << "* ";
     generateFetchSymbol(out, ifaceName);
