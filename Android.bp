@@ -18,16 +18,20 @@ subdirs = [
     "utils",
 ]
 
+hidl_flags = [
+    "-O0",
+    "-g",
+    "-Wall",
+    "-Werror",
+]
+
 //
 // libhidl-gen
 //
 cc_library_shared {
     name: "libhidl-gen",
     host_supported: true,
-    cflags: [
-        "-O0",
-        "-g",
-    ],
+    cflags: hidl_flags,
     srcs: [
         "Annotation.cpp",
         "ArrayType.cpp",
@@ -63,10 +67,7 @@ cc_library_shared {
 
 cc_library_host_shared {
     name: "libhidl-gen-ast",
-    cflags: [
-        "-O0",
-        "-g",
-    ],
+    cflags: hidl_flags,
     srcs: [
         "Coordinator.cpp",
         "generateCpp.cpp",
@@ -77,7 +78,6 @@ cc_library_host_shared {
         "hidl-gen_l.ll",
         "AST.cpp",
     ],
-
     shared_libs: [
         "libbase",
         "liblog",
@@ -91,18 +91,13 @@ cc_library_host_shared {
 //
 cc_binary_host {
     name: "hidl-gen",
+    cflags: hidl_flags,
     srcs: ["main.cpp"],
-
     shared_libs: [
         "libbase",
         "liblog",
         "libhidl-gen",
         "libhidl-gen-ast",
         "libhidl-gen-utils",
-    ],
-
-    cflags: [
-        "-O0",
-        "-g",
     ],
 }

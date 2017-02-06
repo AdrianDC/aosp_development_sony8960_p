@@ -15,10 +15,7 @@
 cc_library_shared {
     name: "libhidl-gen-utils",
     host_supported: true,
-    cflags: [
-        "-O0",
-        "-g",
-    ],
+    cflags: hidl_flags,
     srcs: [
         "Formatter.cpp",
         "StringHelper.cpp",
