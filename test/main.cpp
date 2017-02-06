@@ -463,7 +463,6 @@ public:
         // clean up by killing server processes.
         ALOGI("Environment tear-down beginning...");
         ALOGI("Killing servers...");
-        size_t i = 0;
         for (const auto &pair : mPids) {
             ::killServer(pair.second, pair.first.c_str());
         }
@@ -490,7 +489,6 @@ public:
     virtual void SetUp() {
         ALOGI("Environment setup beginning...");
 
-        size_t i = 0;
         addServer<IMemoryTest>("memory");
         addServer<IChild>("child");
         addServer<IParent>("parent");
