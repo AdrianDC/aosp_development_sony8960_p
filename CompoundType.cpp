@@ -553,8 +553,6 @@ status_t CompoundType::emitJavaTypeDeclarations(
     Scope::emitJavaTypeDeclarations(out, false /* atTopLevel */);
 
     for (const auto &field : *mFields) {
-        const bool isScope = field->type().isScope();  // really isStruct...
-
         out << "public ";
 
         field->type().emitJavaFieldInitializer(out, field->name());

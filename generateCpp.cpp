@@ -359,7 +359,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
     if (isInterface) {
         const Interface *iface = mRootScope->getInterface();
-        const Interface *superType = iface->superType();
 
         out << "virtual bool isRemote() const ";
         if (!isIBase()) {
@@ -1444,6 +1443,9 @@ status_t AST::generateStubSource(
         }).endl();
         return OK;
     });
+    if (err != OK) {
+        return err;
+    }
 
     out << "::android::status_t " << klassName << "::onTransact(\n";
 
