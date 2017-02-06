@@ -71,6 +71,8 @@ int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
 
 %option yylineno
 %option noyywrap
+%option nounput
+%option noinput
 %option reentrant
 %option bison-bridge
 %option bison-locations
