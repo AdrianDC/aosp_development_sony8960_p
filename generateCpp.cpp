@@ -1011,11 +1011,11 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
         out << "__attribute__((constructor))";
         out << "static void static_constructor() {\n";
         out.indent([&] {
-            out << "::android::hardware::gBnConstructorMap["
+            out << "::android::hardware::gBnConstructorMap.set("
                 << iface->localName()
-                << "::descriptor]\n";
+                << "::descriptor,\n";
             out.indent(2, [&] {
-                out << "= [](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
+                out << "[](void *iIntf) -> ::android::sp<::android::hardware::IBinder> {\n";
                 out.indent([&] {
                     out << "return new "
                         << iface->getStubName()
@@ -1023,13 +1023,13 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                         << iface->localName()
                         << " *>(iIntf));\n";
                 });
-                out << "};\n";
+                out << "});\n";
             });
-            out << "::android::hardware::gBsConstructorMap["
+            out << "::android::hardware::gBsConstructorMap.set("
                 << iface->localName()
-                << "::descriptor]\n";
+                << "::descriptor,\n";
             out.indent(2, [&] {
-                out << "= [](void *iIntf) -> ::android::sp<"
+                out << "[](void *iIntf) -> ::android::sp<"
                     << gIBaseFqName.cppName()
                     << "> {\n";
                 out.indent([&] {
@@ -1039,7 +1039,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                         << iface->localName()
                         << " *>(iIntf));\n";
                 });
-                out << "};\n";
+                out << "});\n";
             });
         });
         out << "};\n\n";
