@@ -678,6 +678,10 @@ TEST_F(HidlTest, BazSomeOtherBaseMethodTest) {
             baz->someOtherBaseMethod(
                 foo,
                 [&](const auto &result) {
+                    // Strings should have the same size as they did before
+                    // marshaling. b/35038064
+                    EXPECT_EQ(result.y.s.size(), foo.y.s.size());
+
                     EXPECT_EQ(
                         to_string(result),
                         "Foo(x = 1, "
