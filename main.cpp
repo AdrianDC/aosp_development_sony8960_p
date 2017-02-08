@@ -644,223 +644,6 @@ static void generateAndroidBpGenSection(
     out << "}\n\n";
 }
 
-static void generateAndroidBpVtsGenSection(
-        Formatter &out,
-        const FQName &packageFQName,
-        const char *hidl_gen,
-        const char *vtsc,
-        const std::string &vtsc_mode,
-        const std::string &vtsc_type,
-        Coordinator *coordinator,
-        const std::string &genName,
-        const char *language,
-        const std::vector<FQName> &packageInterfaces,
-        const std::set<FQName> &importedPackages,
-        const std::function<void(Formatter&, const FQName)> outputFn) {
-    out << "genrule {\n";
-    out.indent();
-    out << "name: \"" << genName << "\",\n"
-        << "tools: [\"" << hidl_gen << "\", \"" << vtsc << "\"],\n";
-
-    std::string package_dir_path = packageFQName.string().substr(
-            0, packageFQName.string().find("@"));
-    replace(package_dir_path.begin(), package_dir_path.end(), '.', '/');
-    package_dir_path += "/" + packageFQName.string().substr(
-            packageFQName.string().find("@") + 1);
-    if (package_dir_path.c_str()[package_dir_path.length() - 1] != '/') {
-        package_dir_path += "/";
-    }
-
-    out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)"
-        << " -L" << language << " ";
-
-    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages);
-
-    out << packageFQName.string()
-        << " && $(location vtsc) -m" << vtsc_mode << " -t"  << vtsc_type
-        << " -b$(genDir) " << package_dir_path
-        << " $(genDir)/" << package_dir_path
-        << "\",\n";
-
-    out << "srcs: [\n";
-    out.indent();
-    for (const auto &fqName : packageInterfaces) {
-        out << "\"" << fqName.name() << ".hal\",\n";
-    }
-    out.unindent();
-    out << "],\n";
-
-    out << "out: [\n";
-    out.indent();
-    for (const auto &fqName : packageInterfaces) {
-        outputFn(out, fqName);
-    }
-    out.unindent();
-    out << "],\n";
-
-    out.unindent();
-    out << "}\n\n";
-}
-
-static status_t generateAndroidBpForVtsPackage(
-        Formatter& out,
-        const std::set<FQName>& importedPackages,
-        std::vector<FQName>& packageInterfaces,
-        const FQName &packageFQName,
-        const std::string &libraryName,
-        const std::string &vtsCompileMode,
-        const char *hidl_gen,
-        Coordinator *coordinator) {
-    const std::string genSourceName = libraryName + "_genc++";
-    const std::string genHeaderName = libraryName + "_genc++_headers";
-    const std::string pathPrefix =
-        coordinator->convertPackageRootToPath(packageFQName) +
-        coordinator->getPackagePath(packageFQName, true /* relative */);
-    const char *vtsc = "vtsc";
-
-    out << "\n";
-
-    // Rule to generate the C++ source files
-    generateAndroidBpVtsGenSection(
-            out,
-            packageFQName,
-            hidl_gen,
-            vtsc,
-            vtsCompileMode,
-            "SOURCE",
-            coordinator,
-            genSourceName,
-            "vts",
-            packageInterfaces,
-            importedPackages,
-            [&pathPrefix](Formatter &out, const FQName &fqName) {
-                if (fqName.name() == "types") {
-                    out << "\"" << pathPrefix << "types.vts.cpp\",\n";
-                } else {
-                    out << "\"" << pathPrefix << fqName.name().substr(1) << ".vts.cpp\",\n";
-                }
-            });
-
-    // Rule to generate the C++ header files
-    generateAndroidBpVtsGenSection(
-            out,
-            packageFQName,
-            hidl_gen,
-            vtsc,
-            vtsCompileMode,
-            "HEADER",
-            coordinator,
-            genHeaderName,
-            "vts",
-            packageInterfaces,
-            importedPackages,
-            [&pathPrefix](Formatter &out, const FQName &fqName) {
-                if (fqName.name() == "types") {
-                    out << "\"" << pathPrefix << "types.vts.h\",\n";
-                } else {
-                    out << "\"" << pathPrefix << fqName.name().substr(1) << ".vts.h\",\n";
-                }
-            });
-
-    // C++ library definition
-    out << "cc_library_shared {\n";
-    out.indent();
-    out << "name: \"" << libraryName << "\",\n"
-        << "generated_sources: [\"" << genSourceName << "\"],\n"
-        << "generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "export_generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "shared_libs: [\n";
-
-    out.indent();
-    if (vtsCompileMode =="DRIVER") {
-        out << "\"libhidlbase\",\n"
-            << "\"libhidltransport\",\n"
-            << "\"libhwbinder\",\n"
-            << "\"liblog\",\n"
-            << "\"libutils\",\n"
-            << "\"libcutils\",\n"
-            << "\"libvts_common\",\n"
-            << "\"libvts_datatype\",\n"
-            << "\"libvts_measurement\",\n"
-            << "\"libvts_multidevice_proto\",\n"
-            << "\"libcamera_metadata\",\n"
-            << "\"libprotobuf-cpp-full\",\n";
-    } else if (vtsCompileMode == "PROFILER") {
-        out << "\"libbase\",\n"
-            << "\"libhidlbase\",\n"
-            << "\"libhidltransport\",\n"
-            << "\"libvts_profiling\",\n"
-            << "\"libvts_multidevice_proto\",\n"
-            << "\"libprotobuf-cpp-full\",\n";
-    } else {
-        fprintf(stderr,
-                "ERROR: Unknow vts compile mode: %s. Aborting.\n",
-                vtsCompileMode.c_str());
-        return UNKNOWN_ERROR;
-    }
-    for (const auto &importedPackage : importedPackages) {
-        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
-    }
-    out << "\"" << makeLibraryName(packageFQName) << "\",\n";
-    out.unindent();
-
-    out << "],\n";
-
-    if (vtsCompileMode == "DRIVER") {
-        out << "export_shared_lib_headers: [\n";
-        out.indent();
-        out << "\"libhidlbase\",\n"
-            << "\"libhidltransport\",\n"
-            << "\"libhwbinder\",\n"
-            << "\"libutils\",\n";
-        for (const auto &importedPackage : importedPackages) {
-            out << "\"" << makeLibraryName(importedPackage) << "\",\n";
-        }
-        out.unindent();
-        out << "],\n";
-    }
-    out.unindent();
-    out << "}\n";
-
-    return OK;
-}
-
-static status_t generateAndroidBpForVtsDriverPackage(
-        Formatter& out,
-        const std::set<FQName>& importedPackages,
-        std::vector<FQName>& packageInterfaces,
-        const FQName &packageFQName,
-        const char *hidl_gen,
-        Coordinator *coordinator) {
-    const std::string targetLibraryName = makeLibraryName(packageFQName);
-    const std::string libraryName = targetLibraryName.substr(
-        0, targetLibraryName.find_last_of("@")) + ".vts.driver" +
-        targetLibraryName.substr(targetLibraryName.find_last_of("@"));
-    return generateAndroidBpForVtsPackage(out, importedPackages,
-                                          packageInterfaces,
-                                          packageFQName,
-                                          libraryName,
-                                          "DRIVER", hidl_gen,
-                                          coordinator);
-}
-
-static status_t generateAndroidBpForVtsProfilerPackage(
-        Formatter& out,
-        const std::set<FQName>& importedPackages,
-        std::vector<FQName>& packageInterfaces,
-        const FQName &packageFQName,
-        const char *hidl_gen,
-        Coordinator *coordinator) {
-    const std::string targetLibraryName = makeLibraryName(packageFQName);
-    const std::string libraryName = targetLibraryName + "-vts.profiler";
-    return generateAndroidBpForVtsPackage(out, importedPackages,
-                                          packageInterfaces,
-                                          packageFQName,
-                                          libraryName,
-                                          "PROFILER", hidl_gen,
-                                          coordinator);
-}
-
 static status_t generateAndroidBpForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -915,6 +698,7 @@ static status_t generateAndroidBpForPackage(
     }
 
     const std::string libraryName = makeLibraryName(packageFQName);
+    const std::string halFilegroupName = libraryName + "_hal";
     const std::string genSourceName = libraryName + "_genc++";
     const std::string genHeaderName = libraryName + "_genc++_headers";
     const std::string pathPrefix =
@@ -924,6 +708,20 @@ static status_t generateAndroidBpForPackage(
     Formatter out(file);
 
     out << "// This file is autogenerated by hidl-gen. Do not edit manually.\n\n";
+
+    // Rule to generate .hal filegroup
+    out << "filegroup {\n";
+    out.indent();
+    out << "name: \"" << halFilegroupName << "\",\n";
+    out << "srcs: [\n";
+    out.indent();
+    for (const auto &fqName : packageInterfaces) {
+      out << "\"" << fqName.name() << ".hal\",\n";
+    }
+    out.unindent();
+    out << "],\n";
+    out.unindent();
+    out << "}\n\n";
 
     // Rule to generate the C++ source files
     generateAndroidBpGenSection(
@@ -1001,34 +799,6 @@ static status_t generateAndroidBpForPackage(
 
     out << "}\n";
 
-    // Skip generate build rule of driver/profiler for test hals.
-    if (StringHelper::StartsWith(packageFQName.string(),
-                                 "android.hardware.test")) {
-        fprintf(stderr,
-                "WARNING: %s does not yet have auto-generated VTS driver & profiler.\n",
-                packageFQName.string().c_str());
-        return OK;
-    }
-    // Generate Driver package.
-    status_t status = generateAndroidBpForVtsDriverPackage(out,
-                                                           importedPackages,
-                                                           packageInterfaces,
-                                                           packageFQName,
-                                                           hidl_gen,
-                                                           coordinator);
-    if (status != OK) {
-        return status;
-    }
-    // Generate Profiler packages.
-    status = generateAndroidBpForVtsProfilerPackage(out,
-                                                    importedPackages,
-                                                    packageInterfaces,
-                                                    packageFQName,
-                                                    hidl_gen,
-                                                    coordinator);
-    if (status != OK) {
-        return status;
-    }
     return OK;
 }
 
