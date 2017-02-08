@@ -582,7 +582,7 @@ status_t AST::generateJava(
 
         out << ");\n";
 
-        if (!needsCallback) {
+        if (!needsCallback && !method->isOneway()) {
             out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             if (returnsValue) {
