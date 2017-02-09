@@ -53,6 +53,7 @@ enum {
     HIDL_UNLINK_TO_DEATH_TRANSACTION,
     HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
     HIDL_GET_REF_INFO_TRANSACTION,
+    HIDL_DEBUG_TRANSACTION,
     LAST_HIDL_TRANSACTION   = 0x00ffffff,
 };
 
@@ -301,6 +302,30 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
     return true;
 }
 
+bool Interface::fillDebugMethod(Method *method) const {
+    if (method->name() != "debug") {
+        return false;
+    }
+
+    method->fillImplementation(
+        HIDL_DEBUG_TRANSACTION,
+        {
+            {IMPL_HEADER,
+                [this](auto &out) {
+                    out << "(void)fd;\n"
+                        << "(void)options;\n"
+                        << "return ::android::hardware::Void();";
+                }
+            },
+        }, /* cppImpl */
+        {
+            /* unused, as the debug method is hidden from Java */
+        } /* javaImpl */
+    );
+
+    return true;
+}
+
 static std::map<std::string, Method *> gAllReservedMethods;
 
 bool Interface::addMethod(Method *method) {
@@ -348,7 +373,9 @@ bool Interface::addAllReservedMethods() {
             || fillLinkToDeathMethod(method)
             || fillUnlinkToDeathMethod(method)
             || fillSetHALInstrumentationMethod(method)
-            || fillGetDebugInfoMethod(method);
+            || fillGetDebugInfoMethod(method)
+            || fillDebugMethod(method);
+
         if (!fillSuccess) {
             LOG(ERROR) << "ERROR: hidl-gen does not recognize a reserved method "
                        << method->name();
