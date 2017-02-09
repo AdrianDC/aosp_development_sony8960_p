@@ -236,6 +236,10 @@ status_t AST::generateJava(
     }
 
     for (const auto &method : iface->methods()) {
+        if (method->isHiddenFromJava()) {
+            continue;
+        }
+
         const bool returnsValue = !method->results().empty();
         const bool needsCallback = method->results().size() > 1;
 
@@ -302,6 +306,11 @@ status_t AST::generateJava(
     const Interface *prevInterface = nullptr;
     for (const auto &tuple : iface->allMethodsFromRoot()) {
         const Method *method = tuple.method();
+
+        if (method->isHiddenFromJava()) {
+            continue;
+        }
+
         const Interface *superInterface = tuple.interface();
         if (prevInterface != superInterface) {
             out << "// Methods from "
@@ -436,6 +445,10 @@ status_t AST::generateJava(
     out << "}\n\n";
 
     for (Method *method : iface->hidlReservedMethods()) {
+        if (method->isHiddenFromJava()) {
+            continue;
+        }
+
         // b/32383557 this is a hack. We need to change this if we have more reserved methods.
         CHECK_LE(method->results().size(), 1u);
         std::string resultType = method->results().size() == 0 ? "void" :
@@ -492,6 +505,7 @@ status_t AST::generateJava(
 
     for (const auto &tuple : iface->allMethodsFromRoot()) {
         const Method *method = tuple.method();
+
         const Interface *superInterface = tuple.interface();
         const bool returnsValue = !method->results().empty();
         const bool needsCallback = method->results().size() > 1;
@@ -503,6 +517,7 @@ status_t AST::generateJava(
             << " */:\n{\n";
 
         out.indent();
+
         if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_STUB)) {
             method->javaImpl(IMPL_STUB, out);
             out.unindent();
@@ -514,6 +529,19 @@ status_t AST::generateJava(
         out << "_hidl_request.enforceInterface("
             << superInterface->fullJavaName()
             << ".kInterfaceName);\n\n";
+
+        if (method->isHiddenFromJava()) {
+            // This is a method hidden from the Java side of things, it must not
+            // return any value and will simply signal success.
+            CHECK(!returnsValue);
+
+            out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
+            out << "_hidl_reply.send();\n";
+            out << "break;\n";
+            out.unindent();
+            out << "}\n\n";
+            continue;
+        }
 
         for (const auto &arg : method->args()) {
             emitJavaReaderWriter(
