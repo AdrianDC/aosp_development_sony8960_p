@@ -513,7 +513,8 @@ static status_t generateMakefileForPackage(
             << "-java"
             << staticSuffix
             << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
-            << "intermediates := $(local-generated-sources-dir)\n\n"
+            << "intermediates := $(call local-generated-sources-dir, COMMON)"
+            << "\n\n"
             << "HIDL := $(HOST_OUT_EXECUTABLES)/"
             << hidl_gen
             << "$(HOST_EXECUTABLE_SUFFIX)";
@@ -559,7 +560,8 @@ static status_t generateMakefileForPackage(
             << libraryName
             << "-java-constants"
             << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
-            << "intermediates := $(local-generated-sources-dir)\n\n"
+            << "intermediates := $(call local-generated-sources-dir, COMMON)"
+            << "\n\n"
             << "HIDL := $(HOST_OUT_EXECUTABLES)/"
             << hidl_gen
             << "$(HOST_EXECUTABLE_SUFFIX)";
