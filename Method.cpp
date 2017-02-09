@@ -89,6 +89,10 @@ void Method::javaImpl(MethodImplType type, Formatter &out) const {
     }
 }
 
+bool Method::isHiddenFromJava() const {
+    return isHidlReserved() && name() == "debug";
+}
+
 bool Method::overridesCppImpl(MethodImplType type) const {
     CHECK(mIsHidlReserved);
     return mCppImpl.find(type) != mCppImpl.end();
@@ -204,6 +208,10 @@ void Method::dumpAnnotations(Formatter &out) const {
 }
 
 bool Method::isJavaCompatible() const {
+    if (isHiddenFromJava()) {
+        return true;
+    }
+
     for (const auto &arg : *mArgs) {
         if (!arg->isJavaCompatible()) {
             return false;

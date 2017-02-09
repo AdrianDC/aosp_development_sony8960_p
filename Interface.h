@@ -121,6 +121,7 @@ private:
     bool fillUnlinkToDeathMethod(Method *method) const;
     bool fillSetHALInstrumentationMethod(Method *method) const;
     bool fillGetDebugInfoMethod(Method *method) const;
+    bool fillDebugMethod(Method *method) const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
