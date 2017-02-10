@@ -165,8 +165,6 @@ static void implementServiceManagerInteractions(Formatter &out,
         out.sIf("!getStub && "
                 "(transport == ::android::vintf::Transport::HWBINDER || "
                 "transport == ::android::vintf::Transport::TOGGLED || "
-                // TODO(b/34625838): Don't load in passthrough mode
-                "transport == ::android::vintf::Transport::PASSTHROUGH || "
                 "transport == ::android::vintf::Transport::EMPTY)", [&] {
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
             out.indent(2, [&] {
