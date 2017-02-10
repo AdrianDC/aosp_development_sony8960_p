@@ -53,6 +53,8 @@ struct FQName {
     std::string version() const;
     // Return version in the form "V1_0" if it is present, otherwise empty string.
     std::string sanitizedVersion() const;
+    // Return true only if version is present.
+    bool hasVersion() const;
 
     // The next two methods return the name part of the FQName, that is, the
     // part after the version field.  For example:
@@ -199,20 +201,27 @@ struct FQName {
             std::vector<std::string> *components,
             bool cpp_compatible) const;
 
-    std::string getPackageMajorVersion() const;
+    // return major and minor version if they exist, else abort program.
+    // Existence of version can be checked via hasVersion().
+    size_t getPackageMajorVersion() const;
+    size_t getPackageMinorVersion() const;
 
-    std::string getPackageMinorVersion() const;
+    // minor-- if result doesn't underflow, else abort.
+    FQName downRev() const;
 
 private:
     bool mValid;
     bool mIsIdentifier;
     std::string mPackage;
-    std::string mMajor;
-    std::string mMinor;
+    // mMajor == 0 means empty.
+    size_t mMajor = 0;
+    size_t mMinor = 0;
     std::string mName;
     std::string mValueName;
 
     void setVersion(const std::string &v);
+    void clearVersion();
+    void parseVersion(const std::string &majorStr, const std::string &minorStr);
 };
 
 static const FQName gIBaseFqName = FQName{"android.hidl.base@1.0::IBase"};
