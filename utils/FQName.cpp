@@ -19,7 +19,6 @@
 #include "StringHelper.h"
 
 #include <android-base/logging.h>
-#include <android-base/parseint.h>
 #include <iostream>
 #include <regex>
 #include <sstream>
@@ -115,8 +114,9 @@ bool FQName::isValidValueName() const {
 }
 
 bool FQName::setTo(const std::string &s) {
-    clearVersion();
     mPackage.clear();
+    mMajor.clear();
+    mMinor.clear();
     mName.clear();
 
     mValid = true;
@@ -126,18 +126,21 @@ bool FQName::setTo(const std::string &s) {
         CHECK_EQ(match.size(), 5u);
 
         mPackage = match.str(1);
-        parseVersion(match.str(2), match.str(3));
+        mMajor = match.str(2);
+        mMinor = match.str(3);
         mName = match.str(4);
     } else if (std::regex_match(s, match, kRE2)) {
         CHECK_EQ(match.size(), 4u);
 
-        parseVersion(match.str(1), match.str(2));
+        mMajor = match.str(1);
+        mMinor = match.str(2);
         mName = match.str(3);
     } else if (std::regex_match(s, match, kRE3)) {
         CHECK_EQ(match.size(), 4u);
 
         mPackage = match.str(1);
-        parseVersion(match.str(2), match.str(3));
+        mMajor = match.str(2);
+        mMinor = match.str(3);
     } else if (std::regex_match(s, match, kRE4)) {
         mName = match.str(0);
     } else if (std::regex_match(s, match, kRE5)) {
@@ -147,13 +150,15 @@ bool FQName::setTo(const std::string &s) {
         CHECK_EQ(match.size(), 6u);
 
         mPackage = match.str(1);
-        parseVersion(match.str(2), match.str(3));
+        mMajor = match.str(2);
+        mMinor = match.str(3);
         mName = match.str(4);
         mValueName = match.str(5);
     } else if (std::regex_match(s, match, kRE7)) {
         CHECK_EQ(match.size(), 5u);
 
-        parseVersion(match.str(1), match.str(2));
+        mMajor = match.str(1);
+        mMinor = match.str(2);
         mName = match.str(3);
         mValueName = match.str(4);
     } else if (std::regex_match(s, match, kRE8)) {
@@ -179,17 +184,19 @@ std::string FQName::package() const {
 }
 
 std::string FQName::version() const {
-    if (!hasVersion()) {
+    CHECK(mMajor.empty() == mMinor.empty());
+    if (mMajor.empty() && mMinor.empty()) {
         return "";
     }
-    return std::to_string(mMajor) + "." + std::to_string(mMinor);
+    return mMajor + "." + mMinor;
 }
 
 std::string FQName::sanitizedVersion() const {
-    if (!hasVersion()) {
+    CHECK(mMajor.empty() == mMinor.empty());
+    if (mMajor.empty() && mMinor.empty()) {
         return "";
     }
-    return "V" + std::to_string(mMajor) + "_" + std::to_string(mMinor);
+    return "V" + mMajor + "_" + mMinor;
 }
 
 std::string FQName::atVersion() const {
@@ -199,29 +206,17 @@ std::string FQName::atVersion() const {
 
 void FQName::setVersion(const std::string &v) {
     if (v.empty()) {
-        clearVersion();
+        mMajor.clear();
+        mMinor.clear();
         return;
     }
     std::smatch match;
     if (std::regex_match(v, match, kREVer)) {
         CHECK_EQ(match.size(), 3u);
 
-        parseVersion(match.str(1), match.str(2));
+        mMajor = match.str(1);
+        mMinor = match.str(2);
     } else {
-        mValid = false;
-    }
-}
-
-void FQName::clearVersion() {
-    mMajor = mMinor = 0;
-}
-
-void FQName::parseVersion(const std::string &majorStr, const std::string &minorStr) {
-    bool versionParseSuccess =
-        ::android::base::ParseUint(majorStr, &mMajor) &&
-        ::android::base::ParseUint(minorStr, &mMinor);
-    if (!versionParseSuccess) {
-        LOG(ERROR) << "numbers in " << majorStr << "." << minorStr << " are out of range.";
         mValid = false;
     }
 }
@@ -431,33 +426,20 @@ void FQName::getPackageAndVersionComponents(
         bool cpp_compatible) const {
     getPackageComponents(components);
 
-    if (!hasVersion()) {
-        LOG(WARNING) << "FQName: getPackageAndVersionComponents expects version.";
-        return;
-    }
-
     if (!cpp_compatible) {
-        components->push_back(std::to_string(getPackageMajorVersion()) +
-                "." + std::to_string(getPackageMinorVersion()));
+        components->push_back(getPackageMajorVersion() +
+                "." + getPackageMinorVersion());
         return;
     }
 
     components->push_back(sanitizedVersion());
 }
 
-bool FQName::hasVersion() const {
-    return mMajor > 0;
-}
-
-size_t FQName::getPackageMajorVersion() const {
-    CHECK(hasVersion()) << "FQName: No version exists at getPackageMajorVersion(). "
-                        << "Did you check hasVersion()?";
+std::string FQName::getPackageMajorVersion() const {
     return mMajor;
 }
 
-size_t FQName::getPackageMinorVersion() const {
-    CHECK(hasVersion()) << "FQName: No version exists at getPackageMinorVersion(). "
-                        << "Did you check hasVersion()?";
+std::string FQName::getPackageMinorVersion() const {
     return mMinor;
 }
 
