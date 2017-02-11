@@ -206,9 +206,6 @@ struct FQName {
     size_t getPackageMajorVersion() const;
     size_t getPackageMinorVersion() const;
 
-    // minor-- if result doesn't underflow, else abort.
-    FQName downRev() const;
-
 private:
     bool mValid;
     bool mIsIdentifier;
