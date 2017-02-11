@@ -517,12 +517,5 @@ bool FQName::inPackage(const std::string &package) const {
     return true;
 }
 
-FQName FQName::downRev() const {
-    FQName ret(*this);
-    CHECK(ret.mMinor > 0);
-    ret.mMinor--;
-    return ret;
-}
-
 }  // namespace android
 
