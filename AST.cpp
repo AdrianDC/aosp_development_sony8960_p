@@ -553,8 +553,4 @@ bool AST::isIBase() const {
     return iface != nullptr && iface->isIBase();
 }
 
-const Interface *AST::getInterface() const {
-    return mRootScope->getInterface();
-}
-
 }  // namespace android;
