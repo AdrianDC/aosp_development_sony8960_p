@@ -30,51 +30,30 @@
 namespace android {
 
 status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
-    std::set<AST *> allImportedASTs;
-    return emitVtsTypeDeclarationsHelper(out, &allImportedASTs);
-}
-
-status_t AST::emitVtsTypeDeclarationsHelper(
-        Formatter &out, std::set<AST *> *allImportSet) const {
-    // First, generate vts type declaration for all imported AST.
-    for (const auto &importedName : mImportedNames) {
-        AST *ast = mCoordinator->parse(importedName);
-        // Already processed, skip.
-        if (allImportSet->find(ast) != allImportSet->end()) {
-            continue;
-        }
-        allImportSet->insert(ast);
-        status_t status = ast->emitVtsTypeDeclarationsHelper(out,
-                                                             allImportSet);
-        if (status != OK) {
-            return status;
-        }
+  std::string ifaceName;
+  if (AST::isInterface(&ifaceName)) {
+    const Interface *iface = mRootScope->getInterface();
+    status_t status = iface->emitVtsAttributeDeclaration(out);
+    if (status != OK) {
+      return status;
     }
-    // Next, generate vts type declaration for the current AST.
-    std::string ifaceName;
-    if (AST::isInterface(&ifaceName)) {
-        const Interface *iface = mRootScope->getInterface();
-        status_t status = iface->emitVtsAttributeDeclaration(out);
-        if (status != OK) {
-            return status;
-        }
-    } else {
-        for (const auto &type : mRootScope->getSubTypes()) {
-            // Skip for TypeDef as it is just an alias of a defined type.
-            if (type->isTypeDef()) {
-                continue;
-            }
-            out << "attribute: {\n";
-            out.indent();
-            status_t status = type->emitVtsTypeDeclarations(out);
-            if (status != OK) {
-                return status;
-            }
-            out.unindent();
-            out << "}\n\n";
-        }
+  } else {
+    for (const auto &type : mRootScope->getSubTypes()) {
+      // Skip for TypeDef as it is just an alias of a defined type.
+      if (type->isTypeDef()) {
+        continue;
+      }
+      out << "attribute: {\n";
+      out.indent();
+      status_t status = type->emitVtsTypeDeclarations(out);
+      if (status != OK) {
+        return status;
+      }
+      out.unindent();
+      out << "}\n\n";
     }
-    return OK;
+  }
+  return OK;
 }
 
 status_t AST::generateVts(const std::string &outputPath) const {
