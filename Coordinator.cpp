@@ -16,16 +16,28 @@
 
 #include "Coordinator.h"
 
-#include "AST.h"
-
-#include <algorithm>
-#include <android-base/logging.h>
-#include <hidl-util/StringHelper.h>
-#include <iterator>
 #include <dirent.h>
 #include <sys/stat.h>
 
+#include <algorithm>
+#include <iterator>
+
+#include <android-base/logging.h>
+#include <hidl-util/StringHelper.h>
+
+#include "AST.h"
+#include "Interface.h"
+
 extern android::status_t parseFile(android::AST *ast);
+
+static bool existdir(const char *name) {
+    DIR *dir = opendir(name);
+    if (dir == NULL) {
+        return false;
+    }
+    closedir(dir);
+    return true;
+}
 
 namespace android {
 
@@ -148,6 +160,14 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     if (parsedASTs != nullptr) { parsedASTs->insert(ast); }
 
     mCache[fqName] = ast;
+
+    // For each .hal file that hidl-gen parses, the whole package will be checked.
+    err = enforceRestrictionsOnPackage(fqName);
+    if (err != OK) {
+        delete ast;
+        ast = nullptr;
+        return nullptr;
+    }
 
     return ast;
 }
@@ -334,6 +354,120 @@ std::string Coordinator::convertPackageRootToPath(const FQName &fqName) const {
     std::replace(packageRoot.begin(), packageRoot.end(), '.', '/');
 
     return packageRoot; // now converted to a path
+}
+
+
+status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) {
+    // need fqName to be something like android.hardware.foo@1.0.
+    // name and valueName is ignored.
+    if (fqName.package().empty() || fqName.version().empty()) {
+        LOG(ERROR) << "Cannot enforce restrictions on package " << fqName.string()
+                   << ": package or version is missing.";
+        return BAD_VALUE;
+    }
+    FQName package = fqName.getPackageAndVersion();
+    // look up cache.
+    if (mPackagesEnforced.find(package) != mPackagesEnforced.end()) {
+        return OK;
+    }
+
+    // enforce all rules.
+    status_t err = enforceMinorVersionUprevs(package);
+    if (err != OK) {
+        return err;
+    }
+
+    // cache it so that it won't need to be enforced again.
+    mPackagesEnforced.insert(package);
+    return OK;
+}
+
+status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
+    if(!currentPackage.hasVersion()) {
+        LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
+                   << ": missing version.";
+        return UNKNOWN_ERROR;
+    }
+
+    if (currentPackage.getPackageMinorVersion() == 0) {
+        return OK; // ignore for @x.0
+    }
+
+    bool hasPrevPackage = false;
+    FQName prevPacakge = currentPackage;
+    while (prevPacakge.getPackageMinorVersion() > 0) {
+        prevPacakge = prevPacakge.downRev();
+        if (existdir(getPackagePath(prevPacakge).c_str())) {
+            hasPrevPackage = true;
+            break;
+        }
+    }
+    if (!hasPrevPackage) {
+        // no @x.z, where z < y, exist.
+        return OK;
+    }
+
+    if (prevPacakge != currentPackage.downRev()) {
+        LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
+                   << ": Found package " << prevPacakge.string() << " but missing "
+                   << currentPackage.downRev().string() << "; you cannot skip a minor version.";
+        return UNKNOWN_ERROR;
+    }
+
+    status_t err;
+    std::vector<FQName> packageInterfaces;
+    err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
+    if (err != OK) {
+        return err;
+    }
+
+    for (const FQName &currentFQName : packageInterfaces) {
+        if (currentFQName.name() == "types") {
+            continue; // ignore types.hal
+        }
+        // Assume that currentFQName == android.hardware.foo@2.2::IFoo.
+        // Then prevFQName == android.hardware.foo@2.1::IFoo.
+        const Interface *iface = nullptr;
+        AST *currentAST = parse(currentFQName);
+        if (currentAST != nullptr) {
+            iface = currentAST->getInterface();
+        }
+        if (iface == nullptr) {
+            LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
+                         << " because it could not be found or parsed. "
+                         << currentAST;
+            continue;
+        }
+
+        // android.hardware.foo@2.2::IFoo exists. Now make sure
+        // @2.2::IFoo extends @2.1::IFoo. If any interface IFoo in @2.2
+        // ensures this, @2.2 passes the enforcement.
+        FQName prevFQName(prevPacakge.package(), prevPacakge.version(),
+                currentFQName.name());
+        if (iface->superType() == nullptr) {
+            // @2.2::IFoo doesn't extend anything. (This is probably IBase.)
+            continue;
+        }
+        if (iface->superType()->fqName() != prevFQName) {
+            // @2.2::IFoo doesn't extend @2.1::IFoo.
+            if (iface->superType()->fqName().package() == currentPackage.package()) {
+                LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
+                           << ": " << iface->fqName().string() << " extends "
+                           << iface->superType()->fqName().string() << ", which is not allowed.";
+                return UNKNOWN_ERROR;
+            }
+            // @2.2::IFoo extends something from a package with a different package name.
+            // Check the next interface.
+            continue;
+        }
+
+        LOG(VERBOSE) << "enforceMinorVersionUprevs: " << currentFQName.string() << " passes.";
+        return OK;
+    }
+
+    // No interface extends the interface with the same name in @x.(y-1).
+    LOG(ERROR) << currentPackage.string() << " doesn't pass minor version uprev requirement.";
+    return UNKNOWN_ERROR;
 }
 
 // static
