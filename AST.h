@@ -116,6 +116,8 @@ struct AST {
 
     bool isIBase() const;
 
+    const Interface *getInterface() const;
+
 private:
     Coordinator *mCoordinator;
     std::string mPath;
