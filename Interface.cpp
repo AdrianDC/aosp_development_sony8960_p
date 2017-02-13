@@ -741,10 +741,10 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
                     }
                 }
             } else {
-                std::cerr << "Invalid annotation '"
+                std::cerr << "Unrecognized annotation '"
                           << name << "' for method: " << method->name()
-                          << ". Should be one of: entry, exit, callflow. \n";
-                return UNKNOWN_ERROR;
+                          << ". A VTS annotation should be one of: "
+                          << "entry, exit, callflow. \n";
             }
             out.unindent();
             out << "}\n";
