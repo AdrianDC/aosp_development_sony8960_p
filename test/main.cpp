@@ -582,6 +582,10 @@ TEST_F(HidlTest, ToStringTest) {
     // statement can be written here.
 }
 
+TEST_F(HidlTest, PingTest) {
+    EXPECT_OK(manager->ping());
+}
+
 TEST_F(HidlTest, ServiceListTest) {
     static const std::set<std::string> binderizedSet = {
         "android.hardware.tests.pointer@1.0::IPointer/pointer",

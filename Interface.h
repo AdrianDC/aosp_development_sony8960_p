@@ -114,6 +114,7 @@ private:
     std::vector<Method *> mUserMethods;
     std::vector<Method *> mReservedMethods;
     mutable bool mIsJavaCompatibleInProgress;
+    bool fillPingMethod(Method *method) const;
     bool fillDescriptorChainMethod(Method *method) const;
     bool fillGetDescriptorMethod(Method *method) const;
     bool fillSyspropsChangedMethod(Method *method) const;
