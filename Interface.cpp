@@ -31,6 +31,9 @@
 
 namespace android {
 
+#define B_PACK_CHARS(c1, c2, c3, c4) \
+         ((((c1)<<24)) | (((c2)<<16)) | (((c3)<<8)) | (c4))
+
 /* It is very important that these values NEVER change. These values
  * must remain unchanged over the lifetime of android. This is
  * because the framework on a device will be updated independently of
@@ -43,19 +46,19 @@ enum {
     // These values are defined in hardware::IBinder.
     /////////////////// User defined transactions
     FIRST_CALL_TRANSACTION  = 0x00000001,
-    LAST_CALL_TRANSACTION   = 0x00efffff,
+    LAST_CALL_TRANSACTION   = 0x0effffff,
     /////////////////// HIDL reserved
-    FIRST_HIDL_TRANSACTION  = 0x00f00000,
-    HIDL_PING_TRANSACTION = FIRST_HIDL_TRANSACTION,
-    HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
-    HIDL_GET_DESCRIPTOR_TRANSACTION,
-    HIDL_SYSPROPS_CHANGED_TRANSACTION,
-    HIDL_LINK_TO_DEATH_TRANSACTION,
-    HIDL_UNLINK_TO_DEATH_TRANSACTION,
-    HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
-    HIDL_GET_REF_INFO_TRANSACTION,
-    HIDL_DEBUG_TRANSACTION,
-    LAST_HIDL_TRANSACTION   = 0x00ffffff,
+    FIRST_HIDL_TRANSACTION  = 0x0f000000,
+    HIDL_PING_TRANSACTION                     = B_PACK_CHARS(0x0f, 'P', 'N', 'G'),
+    HIDL_DESCRIPTOR_CHAIN_TRANSACTION         = B_PACK_CHARS(0x0f, 'C', 'H', 'N'),
+    HIDL_GET_DESCRIPTOR_TRANSACTION           = B_PACK_CHARS(0x0f, 'D', 'S', 'C'),
+    HIDL_SYSPROPS_CHANGED_TRANSACTION         = B_PACK_CHARS(0x0f, 'S', 'Y', 'S'),
+    HIDL_LINK_TO_DEATH_TRANSACTION            = B_PACK_CHARS(0x0f, 'L', 'T', 'D'),
+    HIDL_UNLINK_TO_DEATH_TRANSACTION          = B_PACK_CHARS(0x0f, 'U', 'T', 'D'),
+    HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION  = B_PACK_CHARS(0x0f, 'I', 'N', 'T'),
+    HIDL_GET_REF_INFO_TRANSACTION             = B_PACK_CHARS(0x0f, 'R', 'E', 'F'),
+    HIDL_DEBUG_TRANSACTION                    = B_PACK_CHARS(0x0f, 'D', 'B', 'G'),
+    LAST_HIDL_TRANSACTION   = 0x0fffffff,
 };
 
 Interface::Interface(const char *localName, const Location &location, Interface *super)
