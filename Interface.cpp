@@ -46,7 +46,8 @@ enum {
     LAST_CALL_TRANSACTION   = 0x00efffff,
     /////////////////// HIDL reserved
     FIRST_HIDL_TRANSACTION  = 0x00f00000,
-    HIDL_DESCRIPTOR_CHAIN_TRANSACTION = FIRST_HIDL_TRANSACTION,
+    HIDL_PING_TRANSACTION = FIRST_HIDL_TRANSACTION,
+    HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
     HIDL_GET_DESCRIPTOR_TRANSACTION,
     HIDL_SYSPROPS_CHANGED_TRANSACTION,
     HIDL_LINK_TO_DEATH_TRANSACTION,
@@ -65,6 +66,38 @@ Interface::Interface(const char *localName, const Location &location, Interface 
 
 std::string Interface::typeName() const {
     return "interface " + localName();
+}
+
+bool Interface::fillPingMethod(Method *method) const {
+    if (method->name() != "ping") {
+        return false;
+    }
+
+    method->fillImplementation(
+        HIDL_PING_TRANSACTION,
+        {
+            {IMPL_HEADER,
+                [](auto &out) {
+                    out << "return ::android::hardware::Void();\n";
+                }
+            },
+            {IMPL_STUB_IMPL,
+                [](auto &out) {
+                    out << "return ::android::hardware::Void();\n";
+                }
+            }
+        }, /*cppImpl*/
+        {
+            {IMPL_HEADER,
+                [this](auto &out) {
+                    out << "return;\n";
+                }
+            },
+            {IMPL_STUB, nullptr /* don't generate code */}
+        } /*javaImpl*/
+    );
+
+    return true;
 }
 
 bool Interface::fillLinkToDeathMethod(Method *method) const {
@@ -367,7 +400,8 @@ bool Interface::addAllReservedMethods() {
     std::map<int32_t, Method *> reservedMethodsById;
     for (const auto &pair : gAllReservedMethods) {
         Method *method = pair.second->copySignature();
-        bool fillSuccess = fillDescriptorChainMethod(method)
+        bool fillSuccess = fillPingMethod(method)
+            || fillDescriptorChainMethod(method)
             || fillGetDescriptorMethod(method)
             || fillSyspropsChangedMethod(method)
             || fillLinkToDeathMethod(method)
