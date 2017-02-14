@@ -775,7 +775,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         << klassName;
     if (iface->isIBase()) {
         out << " : public ::android::hardware::BHwBinder";
-        out << ", public ::android::hardware::HidlInstrumentor {\n";
+        out << ", public ::android::hardware::details::HidlInstrumentor {\n";
     } else {
         out << " : public "
             << gIBaseFqName.getInterfaceStubFqName().cppName()
@@ -886,7 +886,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << proxyName
         << " : public ::android::hardware::BpInterface<"
         << iface->localName()
-        << ">, public ::android::hardware::HidlInstrumentor {\n";
+        << ">, public ::android::hardware::details::HidlInstrumentor {\n";
 
     out.indent();
 
@@ -1355,7 +1355,7 @@ status_t AST::generateProxySource(
         << "<"
         << fqName.getInterfaceName()
         << ">(_hidl_impl),\n"
-        << "  ::android::hardware::HidlInstrumentor(\""
+        << "  ::android::hardware::details::HidlInstrumentor(\""
         << mPackage.string()
         << "\", \""
         << fqName.getInterfaceName()
@@ -1387,7 +1387,7 @@ status_t AST::generateStubSource(
     out.indent();
 
     if (iface->isIBase()) {
-        out << ": ::android::hardware::HidlInstrumentor(\"";
+        out << ": ::android::hardware::details::HidlInstrumentor(\"";
     } else {
         out << ": "
             << gIBaseFqName.getInterfaceStubFqName().cppName()
@@ -1419,7 +1419,7 @@ status_t AST::generateStubSource(
         out.indent();
         out.indent();
 
-        out << ": ::android::hardware::HidlInstrumentor("
+        out << ": ::android::hardware::details::HidlInstrumentor("
             << "HidlInstrumentor_package, HidlInstrumentor_interface) {\n";
         out.indent();
         out << "_hidl_mImpl = _hidl_impl;\n";
@@ -1806,7 +1806,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << "struct "
         << klassName
         << " : " << ifaceName
-        << ", ::android::hardware::HidlInstrumentor {\n";
+        << ", ::android::hardware::details::HidlInstrumentor {\n";
 
     out.indent();
     out << "explicit "
@@ -1897,7 +1897,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         << klassName
         << "(const ::android::sp<"
         << iface->fullName()
-        << "> impl) : ::android::hardware::HidlInstrumentor(\""
+        << "> impl) : ::android::hardware::details::HidlInstrumentor(\""
         << mPackage.string()
         << "\", \""
         << iface->localName()
