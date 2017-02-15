@@ -879,7 +879,7 @@ TEST_F(HidlTest, WrapTest) {
     using ::android::hardware::tests::foo::V1_0::BnHwSimple;
     using ::android::hardware::tests::foo::V1_0::BsSimple;
     using ::android::hardware::tests::foo::V1_0::BpHwSimple;
-    using ::android::hardware::details::HidlInstrumentor;
+    using ::android::hardware::HidlInstrumentor;
     nsecs_t now;
     int i = 0;
 
@@ -904,7 +904,7 @@ TEST_F(HidlTest, WrapTest) {
     EXPECT_LT(systemTime() - now, 2000000) << "    for BpHwSimple(null)";
 
     now = systemTime();
-    new ::android::hardware::details::HidlInstrumentor("", "");
+    new ::android::hardware::HidlInstrumentor("", "");
     EXPECT_LT(systemTime() - now, 2000000) << "    for HidlInstrumentor";
 
     now = systemTime();
