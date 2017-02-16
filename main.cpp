@@ -854,6 +854,7 @@ static status_t generateAndroidBpImplForPackage(
     out.indent([&] {
         out << "name: \"" << libraryName << "\",\n"
             << "relative_install_path: \"hw\",\n"
+            << "proprietary: true,\n"
             << "srcs: [\n";
         out.indent([&] {
             for (const auto &fqName : packageInterfaces) {
