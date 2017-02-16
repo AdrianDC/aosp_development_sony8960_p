@@ -159,11 +159,14 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
 
     if (parsedASTs != nullptr) { parsedASTs->insert(ast); }
 
+    // put it into the cache now, so that enforceRestrictionsOnPackage can
+    // parse fqName.
     mCache[fqName] = ast;
 
     // For each .hal file that hidl-gen parses, the whole package will be checked.
     err = enforceRestrictionsOnPackage(fqName);
     if (err != OK) {
+        mCache[fqName] = nullptr;
         delete ast;
         ast = nullptr;
         return nullptr;
@@ -421,6 +424,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
         return err;
     }
 
+    bool extendedInterface = false;
     for (const FQName &currentFQName : packageInterfaces) {
         if (currentFQName.name() == "types") {
             continue; // ignore types.hal
@@ -433,9 +437,15 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
             iface = currentAST->getInterface();
         }
         if (iface == nullptr) {
-            LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
-                         << " because it could not be found or parsed. "
-                         << currentAST;
+            if (currentAST == nullptr) {
+                LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
+                             << " because it could not be found or parsed"
+                             << " or " << currentPackage.string()
+                             << " doesn't pass all requirements.";
+            } else {
+                LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
+                             << " because the file might contain more than one interface.";
+            }
             continue;
         }
 
@@ -450,7 +460,8 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
         }
         if (iface->superType()->fqName() != prevFQName) {
             // @2.2::IFoo doesn't extend @2.1::IFoo.
-            if (iface->superType()->fqName().package() == currentPackage.package()) {
+            if (iface->superType()->fqName().getPackageAndVersion() ==
+                    prevPacakge.getPackageAndVersion()) {
                 LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
                            << ": " << iface->fqName().string() << " extends "
                            << iface->superType()->fqName().string() << ", which is not allowed.";
@@ -461,13 +472,20 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
             continue;
         }
 
+        // @2.2::IFoo passes. Check next interface.
+        extendedInterface = true;
         LOG(VERBOSE) << "enforceMinorVersionUprevs: " << currentFQName.string() << " passes.";
-        return OK;
     }
 
-    // No interface extends the interface with the same name in @x.(y-1).
-    LOG(ERROR) << currentPackage.string() << " doesn't pass minor version uprev requirement.";
-    return UNKNOWN_ERROR;
+    if (!extendedInterface) {
+        // No interface extends the interface with the same name in @x.(y-1).
+        LOG(ERROR) << currentPackage.string() << " doesn't pass minor version uprev requirement. "
+                   << "Requires at least one interface to extend an interface with the same name "
+                   << "from " << prevPacakge.string() << ".";
+        return UNKNOWN_ERROR;
+    }
+
+    return OK;
 }
 
 // static
