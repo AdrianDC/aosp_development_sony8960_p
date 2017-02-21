@@ -820,9 +820,6 @@ void CompoundType::emitStructReaderWriter(
                     + ")");
     }
 
-    out.unindent();
-    out << "_hidl_error:\n";
-    out.indent();
     out << "return _hidl_err;\n";
 
     out.unindent();
@@ -899,9 +896,6 @@ void CompoundType::emitResolveReferenceDef(
                 + error);
     }
 
-    out.unindent();
-    out << "_hidl_error:\n";
-    out.indent();
     out << "return _hidl_err;\n";
 
     out.unindent();
