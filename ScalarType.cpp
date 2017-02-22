@@ -218,6 +218,40 @@ void ScalarType::emitHexDump(
     out << streamName << " += toHexString(" << name << ");\n";
 }
 
+void ScalarType::emitConvertToJavaHexString(
+        Formatter &out,
+        const std::string &name) const {
+    switch(mKind) {
+        case KIND_BOOL: {
+            out << "((" << name << ") ? \"0x1\" : \"0x0\")";
+            break;
+        }
+        case KIND_INT8:     // fallthrough
+        case KIND_UINT8:    // fallthrough
+        case KIND_INT16:    // fallthrough
+        case KIND_UINT16: {
+            // Because Byte and Short doesn't have toHexString, we have to use Integer.toHexString.
+            out << "Integer.toHexString(" << getJavaWrapperType() << ".toUnsignedInt(("
+                << getJavaType(false /* forInitializer */) << ")(" << name << ")))";
+            break;
+        }
+        case KIND_INT32:    // fallthrough
+        case KIND_UINT32:   // fallthrough
+        case KIND_INT64:    // fallthrough
+        case KIND_UINT64: {
+            out << getJavaWrapperType() << ".toHexString(" << name << ")";
+            break;
+        }
+        case KIND_FLOAT:    // fallthrough
+        case KIND_DOUBLE:   // fallthrough
+        default: {
+            // no hex for floating point numbers.
+            out << name;
+            break;
+        }
+    }
+}
+
 void ScalarType::emitJavaFieldReaderWriter(
         Formatter &out,
         size_t /* depth */,

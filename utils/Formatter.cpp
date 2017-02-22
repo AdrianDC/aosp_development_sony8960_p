@@ -86,6 +86,16 @@ Formatter &Formatter::sElse(std::function<void(void)> block) {
     return this->block(block);
 }
 
+Formatter &Formatter::sTry(std::function<void(void)> block) {
+    (*this) << "try ";
+    return this->block(block);
+}
+
+Formatter &Formatter::sCatch(const std::string &exception, std::function<void(void)> block) {
+    (*this) << " catch (" << exception << ") ";
+    return this->block(block);
+}
+
 Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
     size_t start = 0;

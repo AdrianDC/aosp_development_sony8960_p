@@ -85,6 +85,10 @@ struct ScalarType : public Type {
             const std::string &streamName,
             const std::string &name) const;
 
+    void emitConvertToJavaHexString(
+            Formatter &out,
+            const std::string &name) const;
+
     void emitJavaFieldReaderWriter(
             Formatter &out,
             size_t depth,

@@ -158,6 +158,11 @@ struct Type {
             const std::string &streamName,
             const std::string &name) const;
 
+    virtual void emitJavaDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const;
+
     virtual bool useParentInEmitResolveReferencesEmbedded() const;
 
     virtual bool useNameInEmitReaderWriterEmbedded(bool isReader) const;
