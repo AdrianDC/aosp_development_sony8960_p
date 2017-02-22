@@ -124,7 +124,7 @@ using ::android::ONEWAY_TOLERANCE_NS;
 using std::to_string;
 
 template <typename T>
-static inline ::testing::AssertionResult isOk(::android::hardware::Return<T> ret) {
+static inline ::testing::AssertionResult isOk(const ::android::hardware::Return<T> &ret) {
     return ret.isOk()
         ? (::testing::AssertionSuccess() << ret.description())
         : (::testing::AssertionFailure() << ret.description());
