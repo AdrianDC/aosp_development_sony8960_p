@@ -648,7 +648,7 @@ struct HidlTest : public ::testing::Test {
 };
 
 template <typename T>
-static void EXPECT_OK(::android::hardware::Return<T> ret) {
+static void EXPECT_OK(const ::android::hardware::Return<T> &ret) {
     EXPECT_TRUE(ret.isOk());
 }
 
