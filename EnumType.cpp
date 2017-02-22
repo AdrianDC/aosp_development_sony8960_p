@@ -682,6 +682,10 @@ bool BitFieldType::isElidableType() const {
     return resolveToScalarType()->isElidableType();
 }
 
+bool BitFieldType::canCheckEquality() const {
+    return resolveToScalarType()->canCheckEquality();
+}
+
 status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
     out << "scalar_type: \""
