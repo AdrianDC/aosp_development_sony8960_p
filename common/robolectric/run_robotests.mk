@@ -109,6 +109,8 @@ my_robolectric_jars := \
     $(my_robolectric_path)/xpp3_min-1.1.4c.jar \
     $(my_robolectric_path)/xstream-1.4.8.jar
 
+my_collect_target := $(LOCAL_MODULE)-coverage
+my_report_target := $(LOCAL_MODULE)-jacoco
 # Whether or not to ignore the result of running the robotests.
 # LOCAL_ROBOTEST_FAILURE_FATAL will take precedence over ROBOTEST_FAILURE_FATAL,
 # if present.
@@ -140,25 +142,13 @@ else
     my_test_filter_command := grep -E "$(ROBOTEST_FILTER)"
 endif
 
-# Setting the DEBUG_ROBOLECTRIC environment variable will print additional logging from
-# Robolectric and also make it wait for a debugger to be connected.
-# For Android Studio / IntelliJ the debugger can be connected via the "remote" configuration:
-#     https://www.jetbrains.com/help/idea/2016.2/run-debug-configuration-remote.html
-# From command line the debugger can be connected via
-#     jdb -attach localhost:5005
-ifdef DEBUG_ROBOLECTRIC
-    # The arguments to the JVM needed to debug the tests.
-    # - server: wait for connection rather than connecting to a debugger
-    # - transport: how to accept debugger connections (sockets)
-    # - address: the port on which to accept debugger connections
-    # - timeout: how long (in ms) to wait for a debugger to connect
-    # - suspend: do not start running any code until the debugger connects
-    my_java_args := \
-        -Drobolectric.logging.enabled=true \
-        -Xdebug -agentlib:jdwp=server=y,transport=dt_socket,address=5005,suspend=y
-
-    # Remove the timeout so Robolectric doesn't get killed while debugging
-    my_timeout := 0
+# The directory containing the sources.
+ifeq ($(strip $(LOCAL_INSTRUMENT_SOURCE_DIRS)),)
+    # If not specified, defaults to the src and java directories in the parent
+    # directory.
+    my_instrument_source_dirs := $(dir $(LOCAL_PATH))/src $(dir $(LOCAL_PATH))/java
+else
+    my_instrument_source_dirs := $(LOCAL_INSTRUMENT_SOURCE_DIRS)
 endif
 
 ##########################
@@ -207,23 +197,91 @@ my_jars := $(my_robolectric_jars) \
     prebuilts/sdk/$(LOCAL_SDK_VERSION)/android.jar \
     $(my_srcs_jars)
 
+
+
 # Run tests.
 my_target := $(LOCAL_BUILT_MODULE)
-include $(my_robolectric_script_path)/robotest-internal.mk
 
-# Clear temporary variables.
+# Setting the DEBUG_ROBOLECTRIC environment variable will print additional logging from
+# Robolectric and also make it wait for a debugger to be connected.
+# For Android Studio / IntelliJ the debugger can be connected via the "remote" configuration:
+#     https://www.jetbrains.com/help/idea/2016.2/run-debug-configuration-remote.html
+# From command line the debugger can be connected via
+#     jdb -attach localhost:5005
+ifdef DEBUG_ROBOLECTRIC
+    # The arguments to the JVM needed to debug the tests.
+    # - server: wait for connection rather than connecting to a debugger
+    # - transport: how to accept debugger connections (sockets)
+    # - address: the port on which to accept debugger connections
+    # - timeout: how long (in ms) to wait for a debugger to connect
+    # - suspend: do not start running any code until the debugger connects
+    my_java_args := \
+        -Drobolectric.logging.enabled=true \
+        -Xdebug -agentlib:jdwp=server=y,transport=dt_socket,address=5005,suspend=y
+
+    # Remove the timeout so Robolectric doesn't get killed while debugging
+    my_timeout := 0
+endif
+
+include $(my_robolectric_script_path)/robotest-internal.mk
+# clean local variables
+my_java_args :=
+my_target :=
+
+# Target for running robolectric tests using jacoco
+my_target := $(my_collect_target)
+my_jacoco_dir := \
+    prebuilts/misc/common/jacoco
+
+my_coverage_dir := $(dir $(LOCAL_BUILT_MODULE))/coverage/
+my_coverage_file := $(my_coverage_dir)/jacoco.exec
+
+# List of packages to exclude jacoco from running
+my_jacoco_excludes := \
+    org.robolectric.*:org.mockito.*:org.junit.*:org.objectweb.*:com.thoughtworks.xstream.*
+# The Jacoco agent JAR.
+my_jacoco_agent_jar := \
+    $(my_jacoco_dir)/lib/jacocoagent.jar
+my_coverage_java_args := \
+    -javaagent:$(my_jacoco_agent_jar)=destfile=$(my_coverage_file),excludes=$(my_jacoco_excludes)
+my_java_args := $(my_coverage_java_args)
+include $(my_robolectric_script_path)/robotest-internal.mk
+# Clear temporary variables
+my_coverage_java_args :=
 my_failure_fatal :=
-my_jars :=
+my_jacoco_agent_jar :=
+my_jacoco_dir :=
+my_jacoco_excludes :=
 my_java_args :=
 my_robolectric_jars :=
 my_robolectric_path :=
+my_target :=
+my_test_filter_command :=
+my_tests :=
+
+# Target for generating code coverage reports using jacoco.exec
+my_target := $(my_report_target)
+# The JAR file containing the report generation tool.
+my_coverage_report_class := \
+    com.google.android.jacoco.reporter.ReportGenerator
+my_coverage_report_jar := \
+    $(call intermediates-dir-for, \
+        JAVA_LIBRARIES, jvm-jacoco-reporter,host)/javalib.jar
+my_coverage_srcs_jars := $(my_srcs_jars)
+my_coverage_report_dist_file := $(my_report_target)-html.zip
+
+## jacoco code coverage reports
+include $(my_robolectric_script_path)/report-internal.mk
+# Clear temporary variables
+my_coverage_dir :=
+my_coverage_file :=
+my_coverage_report_class :=
+my_coverage_report_dist_file :=
+my_coverage_report_jar :=
+my_coverage_srcs_jars :=
 my_robolectric_script_path :=
 my_srcs_jars :=
 my_target :=
-my_target_message :=
-my_test_filter_command :=
-my_tests :=
-my_timeout :=
 
 # Clear local variables specific to this build.
 LOCAL_ROBOTEST_FAILURE_FATAL :=
