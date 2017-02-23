@@ -1281,9 +1281,8 @@ TEST_F(HidlTest, FooHaveAVectorOfGenericInterfacesTest) {
                 [&](const auto &out) {
                     EXPECT_EQ(in.size(), out.size());
 
-                    EXPECT_OK(out[0]->interfaceChain([](const auto &names) {
-                        ASSERT_GT(names.size(), 0u);
-                        ASSERT_STREQ(names[0].c_str(), ISimple::descriptor);
+                    EXPECT_OK(out[0]->interfaceDescriptor([](const auto &name) {
+                        ASSERT_STREQ(name.c_str(), ISimple::descriptor);
                     }));
                     for (size_t i = 0; i < in.size(); ++i) {
                         sp<ISimple> inSimple = ISimple::castFrom(in[i]);
@@ -1419,11 +1418,11 @@ TEST_F(HidlTest, FooHaveAnInterfaceTest) {
     sp<ISimple> out = ret;
     ASSERT_NE(out.get(), nullptr);
     EXPECT_EQ(out->getCookie(), 42);
-    EXPECT_OK(out->customVecInt([&](const auto &) { }));
-    EXPECT_OK(out->customVecStr([&](const auto &) { }));
-    EXPECT_OK(out->interfaceChain([&](const auto &) { }));
-    EXPECT_OK(out->mystr([&](const auto &) { }));
-    EXPECT_OK(out->myhandle([&](const auto &) { }));
+    EXPECT_OK(out->customVecInt([](const auto &) { }));
+    EXPECT_OK(out->customVecStr([](const auto &) { }));
+    EXPECT_OK(out->ping());
+    EXPECT_OK(out->mystr([](const auto &) { }));
+    EXPECT_OK(out->myhandle([](const auto &) { }));
 }
 
 TEST_F(HidlTest, InheritRemoteGrandparentTest) {
