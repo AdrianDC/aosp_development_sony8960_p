@@ -669,17 +669,13 @@ status_t Interface::emitTypeDefinitions(
         << " o) ";
 
     out.block([&] {
-        out << "std::string os;\nbool ok = false;\n";
-        // TODO b/34136228 use interfaceDescriptor instead
-        out << "auto ret = o->interfaceChain([&os, &ok] (const auto &chain) ";
+        out << "std::string os;\n";
+        out << "auto ret = o->interfaceDescriptor([&os] (const auto &name) ";
         out.block([&] {
-            out.sIf("chain.size() >= 1", [&] {
-                out << "os += chain[0].c_str();\n"
-                    << "ok = true;\n";
-            }).endl();
+            out << "os += name.c_str();\n";
         });
         out << ");\n";
-        out.sIf("!ret.isOk() || !ok", [&] {
+        out.sIf("!ret.isOk()", [&] {
             out << "os += \"[class or subclass of \";\n"
                 << "os += " << fullName() << "::descriptor;\n"
                 << "os += \"]\";\n";
