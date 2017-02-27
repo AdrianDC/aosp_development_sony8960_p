@@ -267,6 +267,7 @@ status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
     emitBitFieldBitwiseAssignmentOperator(out, "|");
     emitBitFieldBitwiseAssignmentOperator(out, "&");
 
+    // toString for bitfields, equivalent to dumpBitfield in Java
     out << "template<typename>\n"
         << "std::string toString("
         << resolveToScalarType()->getCppArgumentType()
@@ -276,14 +277,10 @@ status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
         << resolveToScalarType()->getCppArgumentType()
         << " o);\n\n";
 
-    out << "inline std::string toString("
+    // toString for enum itself
+    out << "std::string toString("
         << getCppArgumentType()
-        << " o) ";
-
-    out.block([&] {
-        out << "return toString<" << getCppStackType() << ">("
-            << "static_cast<" << resolveToScalarType()->getCppStackType() << ">(o));\n";
-    }).endl().endl();
+        << " o);\n\n";
 
     return OK;
 }
@@ -295,24 +292,51 @@ status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* pref
 
     out << "template<>\n"
         << "std::string toString<" << getCppStackType() << ">("
-        << resolveToScalarType()->getCppArgumentType()
+        << scalarType->getCppArgumentType()
         << " o) ";
     out.block([&] {
         // include toHexString for scalar types
         out << "using ::android::hardware::details::toHexString;\n"
-            << "std::string os;\n";
-        out << "bool first = true;\n";
+            << "std::string os;\n"
+            << getBitfieldType()->getCppStackType() << " flipped = 0;\n"
+            << "bool first = true;\n";
         for (EnumValue *value : values()) {
-            out.sIf("o & " + fullName() + "::" + value->name(), [&] {
-                out << "os += (first ? \"\" : \" | \"); "
+            std::string valueName = fullName() + "::" + value->name();
+            out.sIf("(o & " + valueName + ")" +
+                    " == static_cast<" + scalarType->getCppStackType() +
+                    ">(" + valueName + ")", [&] {
+                out << "os += (first ? \"\" : \" | \");\n"
+                    << "os += \"" << value->name() << "\";\n"
                     << "first = false;\n"
-                    << "os += \"" << value->name() << "\";\n";
+                    << "flipped |= " << valueName << ";\n";
             }).endl();
         }
+        // put remaining bits
+        out.sIf("o != flipped", [&] {
+            out << "os += (first ? \"\" : \" | \");\n";
+            scalarType->emitHexDump(out, "os", "o & (~flipped)");
+        });
         out << "os += \" (\";\n";
         scalarType->emitHexDump(out, "os", "o");
         out << "os += \")\";\n";
 
+        out << "return os;\n";
+    }).endl().endl();
+
+    out << "std::string toString("
+        << getCppArgumentType()
+        << " o) ";
+
+    out.block([&] {
+        out << "using ::android::hardware::details::toHexString;\n";
+        for (EnumValue *value : values()) {
+            out.sIf("o == " + fullName() + "::" + value->name(), [&] {
+                out << "return \"" << value->name() << "\";\n";
+            }).endl();
+        }
+        out << "std::string os;\n";
+        scalarType->emitHexDump(out, "os",
+            "static_cast<" + scalarType->getCppStackType() + ">(o)");
         out << "return os;\n";
     }).endl().endl();
 
