@@ -619,6 +619,23 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     ////////////////////////////////////////////////////////////////////////////
 
+    out << "@Override\npublic final String toString() ";
+    out.block([&] {
+        out << "java.lang.StringBuilder builder = new java.lang.StringBuilder();\n"
+            << "builder.append(\"{\");\n";
+        for (const auto &field : *mFields) {
+            out << "builder.append(\"";
+            if (field != *(mFields->begin())) {
+                out << ", ";
+            }
+            out << "." << field->name() << " = \");\n";
+            field->type().emitJavaDump(out, "builder", "this." + field->name());
+        }
+        out << "builder.append(\"}\");\nreturn builder.toString();\n";
+    }).endl().endl();
+
+    ////////////////////////////////////////////////////////////////////////////
+
     out << "public final void readFromParcel(android.os.HwParcel parcel) {\n";
     out.indent();
     out << "android.os.HwBlob blob = parcel.readBuffer();\n";

@@ -214,6 +214,13 @@ void Type::emitDumpWithMethod(
         << ");\n";
 }
 
+void Type::emitJavaDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    out << streamName << ".append(" << name << ");\n";
+}
+
 bool Type::useParentInEmitResolveReferencesEmbedded() const {
     return needsResolveReferences();
 }

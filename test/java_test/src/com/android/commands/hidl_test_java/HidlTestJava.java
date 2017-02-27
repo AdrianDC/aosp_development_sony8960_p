@@ -25,6 +25,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public final class HidlTestJava {
     private static final String TAG = "HidlTestJava";
@@ -367,6 +368,7 @@ public final class HidlTestJava {
             return;
         }
 
+        System.err.printf("Expected '%s', got '%s'\n", s, result);
         Log.e(TAG, "Expected '" + s + "', got '" + result + "'");
         throw new RuntimeException();
     }
@@ -758,6 +760,36 @@ public final class HidlTestJava {
         ArrayList<NestedStruct> structs = proxy.getNestedStructs();
         ExpectTrue(structs.size() == 5);
         ExpectTrue(structs.get(1).matrices.size() == 6);
+
+        {
+            IBaz.Everything e = new IBaz.Everything();
+            Expect(e.toString(),
+                "{.number = 0, .anotherNumber = 0, .s = , " +
+                ".vs = [], .multidimArray = [[null, null], [null, null]], " +
+                ".sArray = [null, null, null], .anotherStruct = {.first = , .last = }, .bf = }");
+            e.s = "string!";
+            e.number = 127;
+            e.anotherNumber = 100;
+            e.vs.addAll(Arrays.asList("One", "Two", "Three"));
+            for (int i = 0; i < e.multidimArray.length; i++)
+                for (int j = 0; j < e.multidimArray[i].length; j++)
+                    e.multidimArray[i][j] = Integer.toString(i) + Integer.toString(j);
+            e.bf = IBaz.BitField.VALL;
+            e.anotherStruct.first = "James";
+            e.anotherStruct.last = "Bond";
+            Expect(e.toString(),
+                "{.number = 127, .anotherNumber = 100, .s = string!, " +
+                ".vs = [One, Two, Three], .multidimArray = [[00, 01], [10, 11]], " +
+                ".sArray = [null, null, null], .anotherStruct = {.first = James, .last = Bond}, " +
+                ".bf = V0 | V1 | V2 | V3 | VALL}");
+            Expect(IBaz.BitField.toString(IBaz.BitField.VALL), "VALL");
+            Expect(IBaz.BitField.toString((byte)(IBaz.BitField.V0 | IBaz.BitField.V2)), "0x5");
+            Expect(IBaz.BitField.dumpBitfield(IBaz.BitField.VALL), "V0 | V1 | V2 | V3 | VALL");
+            Expect(IBaz.BitField.dumpBitfield((byte)(IBaz.BitField.V1 | IBaz.BitField.V3 | 0xF0)),
+                "V1 | V3 | 0xf0");
+
+            Expect(proxy.toString(), IBaz.kInterfaceName + "@Proxy");
+        }
 
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process

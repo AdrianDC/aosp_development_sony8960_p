@@ -79,6 +79,15 @@ struct Formatter {
     Formatter &sElseIf(const std::string &cond, std::function<void(void)> block);
     Formatter &sElse(std::function<void(void)> block);
 
+    // out.sTry([&] {
+    //     out << "throw RemoteException();\n"
+    // }).sCatch("RemoteException ex", [&] {
+    //     out << "ex.printStackTrace();\n"
+    // }).endl();
+    // note that there will be a space before the "catch"-s.
+    Formatter &sTry(std::function<void(void)> block);
+    Formatter &sCatch(const std::string &exception, std::function<void(void)> block);
+
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
 
