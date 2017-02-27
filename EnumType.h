@@ -144,6 +144,8 @@ struct BitFieldType : public TemplatedType {
 
     bool isElidableType() const override;
 
+    bool canCheckEquality() const override;
+
     const ScalarType *resolveToScalarType() const override;
 
     std::string getCppType(StorageMode mode,
