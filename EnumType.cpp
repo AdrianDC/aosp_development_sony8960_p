@@ -32,6 +32,8 @@ EnumType::EnumType(
     : Scope(localName, location),
       mValues(),
       mStorageType(storageType) {
+    mBitfieldType = new BitFieldType();
+    mBitfieldType->setElementType(this);
 }
 
 const Type *EnumType::storageType() const {
@@ -99,6 +101,10 @@ std::string EnumType::getJavaWrapperType() const {
 
 std::string EnumType::getVtsType() const {
     return "TYPE_ENUM";
+}
+
+BitFieldType *EnumType::getBitfieldType() const {
+    return mBitfieldType;
 }
 
 LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
@@ -343,11 +349,13 @@ status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* pref
     return OK;
 }
 
-status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
+status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
-    out << "public final class "
+    out << "public "
+        << (atTopLevel ? "" : "static ")
+        << "final class "
         << localName()
         << " {\n";
 
@@ -384,6 +392,42 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool) const {
             out << "\n";
         }
     }
+
+    out << "public static final String toString("
+        << typeName << " o) ";
+    out.block([&] {
+        for (EnumValue *value : values()) {
+            out.sIf("o == " + value->name(), [&] {
+                out << "return \"" << value->name() << "\";\n";
+            }).endl();
+        }
+        out << "return \"0x\" + ";
+        scalarType->emitConvertToJavaHexString(out, "o");
+        out << ";\n";
+    }).endl();
+
+    auto bitfieldType = getBitfieldType()->getJavaType(false /* forInitializer */);
+    auto bitfieldWrapperType = getBitfieldType()->getJavaWrapperType();
+    out << "\n"
+        << "public static final String dumpBitfield("
+        << bitfieldType << " o) ";
+    out.block([&] {
+        out << "java.util.ArrayList<String> list = new java.util.ArrayList<>();\n";
+        out << bitfieldType << " flipped = 0;\n";
+        for (EnumValue *value : values()) {
+            out.sIf("(o & " + value->name() + ") == " + value->name(), [&] {
+                out << "list.add(\"" << value->name() << "\");\n";
+                out << "flipped |= " << value->name() << ";\n";
+            }).endl();
+        }
+        // put remaining bits
+        out.sIf("o != flipped", [&] {
+            out << "list.add(\"0x\" + ";
+            scalarType->emitConvertToJavaHexString(out, "o & (~flipped)");
+            out << ");\n";
+        }).endl();
+        out << "return String.join(\" | \", list);\n";
+    }).endl().endl();
 
     out.unindent();
     out << "};\n\n";
@@ -433,6 +477,14 @@ status_t EnumType::emitVtsAttributeType(Formatter &out) const {
     out << "type: " << getVtsType() << "\n";
     out << "predefined_type: \"" << fullName() << "\"\n";
     return OK;
+}
+
+void EnumType::emitJavaDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    out << streamName << ".append(" << fqName().javaName() << ".toString("
+        << name << "));\n";
 }
 
 void EnumType::getTypeChain(std::vector<const EnumType *> *out) const {
@@ -741,6 +793,11 @@ void BitFieldType::emitReaderWriter(
             true /* needsCast */);
 }
 
+EnumType *BitFieldType::getEnumType() const {
+    CHECK(mElementType->isEnum());
+    return static_cast<EnumType *>(mElementType);
+}
+
 // a bitfield maps to the underlying scalar type in C++, so operator<< is
 // already defined. We can still emit useful information if the bitfield is
 // in a struct / union by overriding emitDump as below.
@@ -748,11 +805,17 @@ void BitFieldType::emitDump(
         Formatter &out,
         const std::string &streamName,
         const std::string &name) const {
-    CHECK(mElementType->isEnum());
-    const EnumType *enumType = static_cast<EnumType *>(mElementType);
-    out << streamName << " += "<< enumType->fqName().cppNamespace()
-        << "::toString<" << enumType->getCppStackType()
+    out << streamName << " += "<< getEnumType()->fqName().cppNamespace()
+        << "::toString<" << getEnumType()->getCppStackType()
         << ">(" << name << ");\n";
+}
+
+void BitFieldType::emitJavaDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    out << streamName << ".append(" << getEnumType()->fqName().javaName() << ".dumpBitfield("
+        << name << "));\n";
 }
 
 void BitFieldType::emitJavaFieldReaderWriter(

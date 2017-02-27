@@ -95,6 +95,11 @@ struct ArrayType : public Type {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
+    void emitJavaDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const override;
+
     bool needsEmbeddedReadWrite() const override;
     bool needsResolveReferences() const override;
     bool resultNeedsDeref() const override;
