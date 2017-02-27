@@ -318,6 +318,17 @@ void ArrayType::emitResolveReferencesEmbedded(
     out << "}\n\n";
 }
 
+void ArrayType::emitJavaDump(
+        Formatter &out,
+        const std::string &streamName,
+        const std::string &name) const {
+    out << streamName << ".append(java.util.Arrays."
+        << (countDimensions() > 1 ? "deepToString" : "toString")
+        << "("
+        << name << "));\n";
+}
+
+
 bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
 }
