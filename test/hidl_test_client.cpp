@@ -691,6 +691,23 @@ TEST_F(HidlTest, TestSharedMemory) {
     for (size_t i = 0; i < mem_copy.size(); i++) {
         EXPECT_EQ(kValue, data[i]);
     }
+
+    hidl_memory mem_move(std::move(mem_copy));
+    ASSERT_EQ(nullptr, mem_copy.handle());
+    ASSERT_EQ(0UL, mem_copy.size());
+    ASSERT_EQ("", mem_copy.name());
+
+    memory.clear();
+    memory = mapMemory(mem_move);
+
+    EXPECT_NE(memory, nullptr);
+
+    data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+    EXPECT_NE(data, nullptr);
+
+    for (size_t i = 0; i < mem_move.size(); i++) {
+        EXPECT_EQ(kValue, data[i]);
+    }
 }
 
 TEST_F(HidlTest, NullSharedMemory) {
