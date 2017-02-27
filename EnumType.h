@@ -26,6 +26,7 @@
 namespace android {
 
 struct EnumValue;
+struct BitFieldType;
 
 struct EnumType : public Scope {
     EnumType(const char *localName,
@@ -56,6 +57,9 @@ struct EnumType : public Scope {
 
     std::string getVtsType() const override;
 
+    // Return the type that corresponds to bitfield<T>.
+    BitFieldType *getBitfieldType() const;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -83,6 +87,11 @@ struct EnumType : public Scope {
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsAttributeType(Formatter &out) const override;
 
+    void emitJavaDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const override;
+
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
     void appendToExportedTypesVector(
@@ -106,6 +115,7 @@ private:
 
     std::vector<EnumValue *> mValues;
     Type *mStorageType;
+    BitFieldType *mBitfieldType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };
@@ -144,6 +154,8 @@ struct BitFieldType : public TemplatedType {
 
     bool isElidableType() const override;
 
+    bool canCheckEquality() const override;
+
     const ScalarType *resolveToScalarType() const override;
 
     std::string getCppType(StorageMode mode,
@@ -156,6 +168,8 @@ struct BitFieldType : public TemplatedType {
     std::string getJavaWrapperType() const override;
 
     std::string getVtsType() const override;
+
+    EnumType *getEnumType() const;
 
     status_t emitVtsAttributeType(Formatter &out) const override;
 
@@ -170,6 +184,11 @@ struct BitFieldType : public TemplatedType {
         ErrorMode mode) const override;
 
     void emitDump(
+            Formatter &out,
+            const std::string &streamName,
+            const std::string &name) const override;
+
+    void emitJavaDump(
             Formatter &out,
             const std::string &streamName,
             const std::string &name) const override;

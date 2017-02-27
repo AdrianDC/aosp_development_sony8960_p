@@ -565,8 +565,19 @@ status_t CompoundType::emitJavaTypeDeclarations(
     ////////////////////////////////////////////////////////////////////////////
 
     if (canCheckEquality()) {
-        out << "public final boolean equals(" << localName() << " other) ";
+        out << "@Override\npublic final boolean equals(Object otherObject) ";
         out.block([&] {
+            out.sIf("this == otherObject", [&] {
+                out << "return true;\n";
+            }).endl();
+            out.sIf("otherObject == null", [&] {
+                out << "return false;\n";
+            }).endl();
+            // Class is final, so we only need to check instanceof, not getClass
+            out.sIf("!(otherObject instanceof " + fullJavaName() + ")", [&] {
+                out << "return false;\n";
+            }).endl();
+            out << fullJavaName() << " other = (" << fullJavaName() << ")otherObject;\n";
             for (const auto &field : *mFields) {
                 std::string condition = field->type().isScalar()
                     ? "this." + field->name() + " != other." + field->name()
@@ -579,30 +590,49 @@ status_t CompoundType::emitJavaTypeDeclarations(
             out << "return true;\n";
         }).endl().endl();
 
-        out << "public final int hashCode() ";
+        out << "@Override\npublic final int hashCode() ";
         out.block([&] {
-            out << "return java.util.Objects.hash(";
-            bool first = true;
-            for (const auto &field : *mFields) {
-                if (!first) {
-                    out << ", ";
-                }
-                first = false;
-                if (field->type().isArray()) {
-                    const ArrayType &type = static_cast<const ArrayType &>(field->type());
-                    if (type.countDimensions() == 1 &&
-                        type.getElementType()->resolveToScalarType() != nullptr) {
-                        out << "java.util.Arrays.hashCode(this." << field->name() << ")";
-                    } else {
-                        out << "java.util.Arrays.deepHashCode(this." << field->name() << ")";
+            out << "return java.util.Objects.hash(\n";
+            out.indent(2, [&] {
+                bool first = true;
+                for (const auto &field : *mFields) {
+                    if (!first) {
+                        out << ", \n";
                     }
-                } else {
-                    out << "this." << field->name();
+                    first = false;
+                    if (field->type().isArray()) {
+                        const ArrayType &type = static_cast<const ArrayType &>(field->type());
+                        if (type.countDimensions() == 1 &&
+                            type.getElementType()->resolveToScalarType() != nullptr) {
+                            out << "java.util.Arrays.hashCode(this." << field->name() << ")";
+                        } else {
+                            out << "java.util.Arrays.deepHashCode(this." << field->name() << ")";
+                        }
+                    } else {
+                        out << "this." << field->name();
+                    }
                 }
-            }
+            });
             out << ");\n";
         }).endl().endl();
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    out << "@Override\npublic final String toString() ";
+    out.block([&] {
+        out << "java.lang.StringBuilder builder = new java.lang.StringBuilder();\n"
+            << "builder.append(\"{\");\n";
+        for (const auto &field : *mFields) {
+            out << "builder.append(\"";
+            if (field != *(mFields->begin())) {
+                out << ", ";
+            }
+            out << "." << field->name() << " = \");\n";
+            field->type().emitJavaDump(out, "builder", "this." + field->name());
+        }
+        out << "builder.append(\"}\");\nreturn builder.toString();\n";
+    }).endl().endl();
 
     ////////////////////////////////////////////////////////////////////////////
 

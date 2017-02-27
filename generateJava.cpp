@@ -303,6 +303,18 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
+
+    out << "@Override\npublic String toString() ";
+    out.block([&] {
+        out.sTry([&] {
+            out << "return this.interfaceDescriptor() + \"@Proxy\";\n";
+        }).sCatch("RemoteException ex", [&] {
+            out << "/* ignored; handled below. */\n";
+        }).endl();
+        out << "return \"[class or subclass of \" + "
+            << ifaceName << ".kInterfaceName + \"]@Proxy\";\n";
+    }).endl().endl();
+
     const Interface *prevInterface = nullptr;
     for (const auto &tuple : iface->allMethodsFromRoot()) {
         const Method *method = tuple.method();
@@ -487,6 +499,11 @@ status_t AST::generateJava(
 
     out.unindent();
     out << "}\n\n";
+
+    out << "@Override\npublic String toString() ";
+    out.block([&] {
+        out << "return this.interfaceDescriptor() + \"@Stub\";\n";
+    }).endl().endl();
 
     out << "@Override\n"
         << "public void onTransact("
