@@ -582,6 +582,22 @@ TEST_F(HidlTest, ToStringTest) {
     // statement can be written here.
 }
 
+TEST_F(HidlTest, EnumToStringTest) {
+    using namespace std::string_literals;
+    using ::android::hardware::tests::foo::V1_0::toString;
+    // toString for enum
+    EXPECT_EQ(toString(IFoo::BitField::V0), "V0"s);
+    EXPECT_EQ(toString(static_cast<IFoo::BitField>(0)), "0"s)
+            << "Invalid enum isn't stringified correctly.";
+    EXPECT_EQ(toString(static_cast<IFoo::BitField>(IFoo::BitField::V0 | IFoo::BitField::V2)), "0x5"s)
+            << "Invalid enum isn't stringified correctly.";
+    // dump bitfields
+    EXPECT_EQ(toString<IFoo::BitField>(0 | IFoo::BitField::V0), "V0 (0x1)"s);
+    EXPECT_EQ(toString<IFoo::BitField>(0 | IFoo::BitField::V0 | IFoo::BitField::V2), "V0 | V2 (0x5)"s);
+    EXPECT_EQ(toString<IFoo::BitField>(0xF), "V0 | V1 | V2 | V3 | VALL (0xf)"s);
+    EXPECT_EQ(toString<IFoo::BitField>(0xFF), "V0 | V1 | V2 | V3 | VALL | 0xf0 (0xff)"s);
+}
+
 TEST_F(HidlTest, PingTest) {
     EXPECT_OK(manager->ping());
 }
