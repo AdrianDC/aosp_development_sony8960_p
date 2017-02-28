@@ -1,26 +1,29 @@
+#
+# Copyright (C) 2017 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 LOCAL_PATH:= $(call my-dir)
-
-ENABLE_HIDL_GEN_TEST := false
-
-ifeq ($(ENABLE_HIDL_GEN_TEST),true)
-# build for hidl_gen_test which verify hidl_gen generates expected output codes.
 include $(CLEAR_VARS)
-LOCAL_MODULE := hidl_gen_test
-LOCAL_MODULE_CLASS := FAKE
-LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE := hidl_test
+LOCAL_MODULE_CLASS := NATIVE_TESTS
+LOCAL_SRC_FILES := hidl_test
+LOCAL_REQUIRED_MODULES :=                       \
+    hidl_test_client                            \
+    hidl_test_servers                           \
+    hidl_test_client_32                         \
+    hidl_test_servers_32
 
-include $(BUILD_SYSTEM)/base_rules.mk
-
-the_py_script := $(LOCAL_PATH)/test_output.py
-$(LOCAL_BUILT_MODULE): PRIVATE_PY_SCRIPT := $(the_py_script)
-$(LOCAL_BUILT_MODULE): PRIVATE_OUT_DIR := $(LOCAL_PATH)/test_out
-$(LOCAL_BUILT_MODULE): PRIVATE_CANONICAL_DIR := $(LOCAL_PATH)/data
-$(LOCAL_BUILT_MODULE): PRIVATE_HIDL_EXEC := $(HOST_OUT_EXECUTABLES)/hidl-gen
-$(LOCAL_BUILT_MODULE): PRIVATE_PACKAGE_ROOT := android.hardware:$(TOP)/hardware/interfaces
-$(LOCAL_BUILT_MODULE): $(the_py_script) $(HOST_OUT_EXECUTABLES)/hidl-gen
-	@echo "host Test: $(PRIVATE_MODULE)"
-	$(hide) python $(PRIVATE_PY_SCRIPT) $(PRIVATE_HIDL_EXEC) $(PRIVATE_CANONICAL_DIR) $(PRIVATE_OUT_DIR) $(PRIVATE_PACKAGE_ROOT)
-	$(hide) touch $@
-endif
+include $(BUILD_PREBUILT)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
