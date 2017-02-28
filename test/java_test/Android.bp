@@ -7,6 +7,7 @@ cc_binary {
         "libhidlbase",
         "libhidltransport",
         "libhwbinder",
+        "liblog",
         "libutils",
         "android.hardware.tests.baz@1.0",
         "android.hardware.tests.expression@1.0",
@@ -14,6 +15,9 @@ cc_binary {
     ],
 
     static_libs: ["libgtest"],
+    required: [
+        "android.hardware.tests.baz@1.0-impl",
+    ],
 
     compile_multilib: "both",
     multilib: {
