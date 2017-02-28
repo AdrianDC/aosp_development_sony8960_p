@@ -869,7 +869,6 @@ static status_t generateAndroidBpImplForPackage(
         out.indent([&] {
             out << "\"libhidlbase\",\n"
                 << "\"libhidltransport\",\n"
-                << "\"libhwbinder\",\n"
                 << "\"libutils\",\n"
                 << "\"" << makeLibraryName(packageFQName) << "\",\n";
 
