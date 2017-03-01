@@ -160,7 +160,7 @@ static void implementServiceManagerInteractions(Formatter &out,
     out.block([&] {
         out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
         out << "::android::vintf::Transport transport = ::android::hardware::getTransport("
-            << interfaceName << "::descriptor);\n";
+            << interfaceName << "::descriptor, serviceName);\n";
 
         out.sIf("!getStub && "
                 "(transport == ::android::vintf::Transport::HWBINDER || "
