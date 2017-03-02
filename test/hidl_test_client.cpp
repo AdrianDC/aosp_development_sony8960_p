@@ -493,11 +493,11 @@ TEST_F(HidlTest, ServiceListTest) {
         "android.hardware.tests.pointer@1.0::IGraph/graph",
         "android.hardware.tests.inheritance@1.0::IGrandparent/child",
         "android.hardware.tests.foo@1.0::IFoo/foo",
-        "android.hidl.manager@1.0::IServiceManager/manager",
+        "android.hidl.manager@1.0::IServiceManager/default",
     };
 
     static const std::set<std::string> passthroughSet = {
-        "android.hidl.manager@1.0::IServiceManager/manager"
+        "android.hidl.manager@1.0::IServiceManager/default"
     };
 
     std::set<std::string> activeSet;
