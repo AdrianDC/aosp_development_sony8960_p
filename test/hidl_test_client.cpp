@@ -339,7 +339,7 @@ public:
     HidlEnvironment(TestMode mode) : mode(mode) {};
 
     void getServices() {
-        manager = IServiceManager::getService("manager");
+        manager = IServiceManager::getService();
 
         // alternatively:
         // manager = defaultServiceManager()
@@ -347,7 +347,7 @@ public:
         ASSERT_NE(manager, nullptr);
         ASSERT_TRUE(manager->isRemote()); // manager is always remote
 
-        tokenManager = ITokenManager::getService("manager");
+        tokenManager = ITokenManager::getService();
         ASSERT_NE(tokenManager, nullptr);
         ASSERT_TRUE(tokenManager->isRemote()); // tokenManager is always remote
 
