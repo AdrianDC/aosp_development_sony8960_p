@@ -307,19 +307,30 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
         return false;
     }
 
+    static const std::string sArch =
+            "#if defined(__LP64__)\n"
+            "::android::hidl::base::V1_0::DebugInfo::Architecture::IS_64BIT\n"
+            "#else\n"
+            "::android::hidl::base::V1_0::DebugInfo::Architecture::IS_32BIT\n"
+            "#endif\n";
+
     method->fillImplementation(
         HIDL_GET_REF_INFO_TRANSACTION,
         {
             {IMPL_HEADER,
                 [this](auto &out) {
                     // getDebugInfo returns N/A for local objects.
-                    out << "_hidl_cb({ -1 /* pid */, 0 /* ptr */ });\n"
+                    out << "_hidl_cb({ -1 /* pid */, 0 /* ptr */, \n"
+                        << sArch
+                        << "});\n"
                         << "return ::android::hardware::Void();";
                 }
             },
             {IMPL_STUB_IMPL,
                 [this](auto &out) {
-                    out << "_hidl_cb({ getpid(), reinterpret_cast<uint64_t>(this) });\n"
+                    out << "_hidl_cb({ getpid(), reinterpret_cast<uint64_t>(this), \n"
+                        << sArch
+                        << "});\n"
                         << "return ::android::hardware::Void();";
                 }
             }
@@ -331,6 +342,7 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
                 // TODO(b/34777099): PID for java.
                 << "info.pid = -1;\n"
                 << "info.ptr = 0;\n"
+                << "info.arch = android.hidl.base.V1_0.DebugInfo.Architecture.UNKNOWN;"
                 << "return info;";
         } } } /* javaImpl */
     );
