@@ -24,5 +24,7 @@ ERROR: Failed to lookup type 'bad' at system/tools/hidl/test/errors/syntax/1.0/I
 ERROR: missing ; at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:96.21-20
 ERROR: missing ; at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:97.20-19
 ERROR: missing ; at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:100.6-5
-ERROR: missing ; at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:102.2-1
+ERROR: duplicated argument or result name bar at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:103.32-51
+ERROR: duplicated argument or result name baz at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:104.49-56
+ERROR: missing ; at system/tools/hidl/test/errors/syntax/1.0/IEx1.hal:106.2-1
 ERROR: Could not parse tests.errors.syntax@1.0::IEx1. Aborting.
