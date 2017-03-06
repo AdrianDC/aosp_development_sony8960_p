@@ -230,20 +230,9 @@ static void implementServiceManagerInteractions(Formatter &out,
         out.sIf("sm == nullptr", [&] {
             out << "return ::android::INVALID_OPERATION;\n";
         }).endl();
-        out << "bool success = false;\n"
-            << "::android::hardware::Return<void> ret =\n";
-        out.indent(2, [&] {
-            out << "this->interfaceChain("
-                << "[&success, &sm, &serviceName, this](const auto &chain) ";
-            out.block([&] {
-                out << "::android::hardware::Return<bool> addRet = "
-                    << "sm->add(chain, serviceName.c_str(), this);\n";
-                out << "success = addRet.isOk() && addRet;\n";
-            });
-            out << ");\n";
-            out << "success = success && ret.isOk();\n";
-        });
-        out << "return success ? ::android::OK : ::android::UNKNOWN_ERROR;\n";
+        out << "::android::hardware::Return<bool> ret = "
+            << "sm->add(serviceName.c_str(), this);\n"
+            << "return ret.isOk() && ret ? ::android::OK : ::android::UNKNOWN_ERROR;\n";
     }).endl().endl();
 
     out << "bool " << interfaceName << "::registerForNotifications(\n";

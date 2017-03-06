@@ -495,7 +495,7 @@ status_t AST::generateJava(
     out << "public void registerAsService(String serviceName) throws RemoteException {\n";
     out.indent();
 
-    out << "registerService(interfaceChain(), serviceName);\n";
+    out << "registerService(serviceName);\n";
 
     out.unindent();
     out << "}\n\n";
