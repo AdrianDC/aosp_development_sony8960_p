@@ -55,8 +55,6 @@
 #include <hidl/Status.h>
 #include <hidlmemory/mapping.h>
 
-#include <hwbinder/IPCThreadState.h>
-
 #include <utils/Condition.h>
 #include <utils/Timers.h>
 
@@ -93,11 +91,8 @@ using ::android::hardware::tests::inheritance::V1_0::IChild;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::tests::memory::V1_0::IMemoryTest;
-using ::android::hardware::IPCThreadState;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
-using ::android::hardware::configureRpcThreadpool;
-using ::android::hardware::joinRpcThreadpool;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_death_recipient;
 using ::android::hardware::hidl_memory;
