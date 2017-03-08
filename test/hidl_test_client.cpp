@@ -194,6 +194,27 @@ private:
     int32_t mCookie;
 };
 
+struct SimpleParent : public IParent {
+    Return<void> doGrandparent() override {
+        return Void();
+    }
+    Return<void> doParent() override {
+        return Void();
+    }
+};
+
+struct SimpleChild : public IChild {
+    Return<void> doGrandparent() override {
+        return Void();
+    }
+    Return <void> doParent() override {
+        return Void();
+    }
+    Return <void> doChild() override {
+        return Void();
+    }
+};
+
 struct Complicated : public IComplicated {
     Complicated(int32_t cookie)
         : mCookie(cookie) {
@@ -569,10 +590,10 @@ TEST_F(HidlTest, ServiceNotificationTest) {
         ServiceNotification *notification = new ServiceNotification();
 
         std::string instanceName = "test-instance";
-        EXPECT_TRUE(ISimple::registerForNotifications(instanceName, notification));
+        EXPECT_TRUE(IParent::registerForNotifications(instanceName, notification));
 
-        Simple* instance = new Simple(1);
-        EXPECT_EQ(::android::OK, instance->registerAsService(instanceName));
+        EXPECT_EQ(::android::OK, (new SimpleChild())->registerAsService(instanceName));
+        EXPECT_EQ(::android::OK, (new SimpleParent())->registerAsService(instanceName));
 
         std::unique_lock<std::mutex> lock(notification->mutex);
 
@@ -580,15 +601,16 @@ TEST_F(HidlTest, ServiceNotificationTest) {
                 lock,
                 std::chrono::milliseconds(2),
                 [&notification]() {
-                   return notification->getRegistrations().size() >= 1;
+                   return notification->getRegistrations().size() >= 2;
                 });
 
         std::vector<std::string> registrations = notification->getRegistrations();
 
-        EXPECT_EQ(registrations.size(), 1u);
+        EXPECT_EQ(registrations.size(), 2u);
 
         EXPECT_EQ(to_string(registrations.data(), registrations.size()),
-                  std::string("['") + Simple::descriptor + "/" + instanceName + "']");
+                  std::string("['") + IParent::descriptor + "/" + instanceName +
+                             "', '" + IParent::descriptor + "/" + instanceName + "']");
     }
 }
 
