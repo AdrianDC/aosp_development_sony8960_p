@@ -328,9 +328,15 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
             },
             {IMPL_STUB_IMPL,
                 [this](auto &out) {
-                    out << "_hidl_cb({ getpid(), reinterpret_cast<uint64_t>(this), \n"
-                        << sArch
-                        << "});\n"
+                    out << "_hidl_cb(";
+                    out.block([&] {
+                        out << "::android::hardware::details::debuggable()"
+                            << "? getpid() : -1 /* pid */,\n"
+                            << "::android::hardware::details::debuggable()"
+                            << "? reinterpret_cast<uint64_t>(this) : 0 /* ptr */,\n"
+                            << sArch << "\n";
+                    });
+                    out << ");\n"
                         << "return ::android::hardware::Void();";
                 }
             }
