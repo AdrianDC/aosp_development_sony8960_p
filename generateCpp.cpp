@@ -536,7 +536,7 @@ static void wrapPassthroughArg(Formatter &out,
         out << wrappedName
             << " = "
             << iface.fqName().cppName()
-            << "::castFrom(::android::hardware::wrapPassthrough("
+            << "::castFrom(::android::hardware::details::wrapPassthrough("
             << name << "));\n";
         out.sIf(wrappedName + " == nullptr", [&] {
             // Fatal error. Happens when the BsFoo class is not found in the binary
