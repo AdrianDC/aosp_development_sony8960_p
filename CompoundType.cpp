@@ -81,7 +81,6 @@ bool CompoundType::canCheckEquality() const {
     return true;
 }
 
-
 std::string CompoundType::getCppType(
         StorageMode mode,
         bool specifyNamespaces) const {
@@ -421,29 +420,17 @@ status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
 
     out << "std::string toString("
         << getCppArgumentType()
-        << ");\n";
+        << ");\n\n";
 
-    if (!canCheckEquality()) {
-        return OK;
+    if (canCheckEquality()) {
+        out << "bool operator==("
+            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
+
+        out << "bool operator!=("
+            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
+    } else {
+        out << "// operator== and operator!= are not generated for " << localName() << "\n\n";
     }
-
-    out << "inline bool operator==("
-        << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
-        << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
-    out.block([&] {
-        for (const auto &field : *mFields) {
-            out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
-                out << "return false;\n";
-            }).endl();
-        }
-        out << "return true;\n";
-    }).endl().endl();
-
-    out << "inline bool operator!=("
-        << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
-    out.block([&] {
-        out << "return !(lhs == rhs);\n";
-    }).endl().endl();
 
     return OK;
 }
@@ -533,6 +520,28 @@ status_t CompoundType::emitTypeDefinitions(
         out << "os += \"}\"; return os;\n";
     }).endl().endl();
 
+    if (canCheckEquality()) {
+        out << "bool operator==("
+            << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
+            << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
+        out.block([&] {
+            for (const auto &field : *mFields) {
+                out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
+                    out << "return false;\n";
+                }).endl();
+            }
+            out << "return true;\n";
+        }).endl().endl();
+
+        out << "bool operator!=("
+            << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
+        out.block([&] {
+            out << "return !(lhs == rhs);\n";
+        }).endl().endl();
+    } else {
+        out << "// operator== and operator!= are not generated for " << localName() << "\n";
+    }
+
     return OK;
 }
 
@@ -615,6 +624,8 @@ status_t CompoundType::emitJavaTypeDeclarations(
             });
             out << ");\n";
         }).endl().endl();
+    } else {
+        out << "// equals() is not generated for " << localName() << "\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////
