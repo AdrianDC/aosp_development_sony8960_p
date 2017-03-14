@@ -1855,7 +1855,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
         if (iface == superType) {
             out << "return parent;\n";
         } else {
-            out << "return ::android::hardware::castInterface<";
+            out << "return ::android::hardware::details::castInterface<";
             out << iface->localName() << ", "
                 << superType->fqName().cppName() << ", "
                 << iface->getProxyName() << ", "
