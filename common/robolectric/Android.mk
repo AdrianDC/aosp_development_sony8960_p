@@ -78,3 +78,26 @@ LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
+##########################
+include $(CLEAR_VARS)
+
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    asm-5.0.1 \
+    asm-commons-5.0.1 \
+    asm-tree-5.0.1
+
+LOCAL_MODULE := robo-asm-all
+
+include $(BUILD_STATIC_JAVA_LIBRARY)
+
+
+############################
+# Defining the target names for the static prebuilt .JARs.
+include $(CLEAR_VARS)
+
+LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+    asm-5.0.1:lib/asm-5.0.1.jar \
+    asm-commons-5.0.1:lib/asm-commons-5.0.1.jar \
+    asm-tree-5.0.1:lib/asm-tree-5.0.1.jar
+
+include $(BUILD_MULTI_PREBUILT)
