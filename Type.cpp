@@ -198,7 +198,7 @@ void Type::emitDump(
         Formatter &out,
         const std::string &streamName,
         const std::string &name) const {
-    emitDumpWithMethod(out, streamName, "::android::hardware::details::toString", name);
+    emitDumpWithMethod(out, streamName, "::android::hardware::toString", name);
 }
 
 void Type::emitDumpWithMethod(
