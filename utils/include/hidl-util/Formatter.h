@@ -79,6 +79,11 @@ struct Formatter {
     Formatter &sElseIf(const std::string &cond, std::function<void(void)> block);
     Formatter &sElse(std::function<void(void)> block);
 
+    // out.sFor("int i = 0; i < 10; i++", [&] {
+    //     out << "printf(\"%d\", i);\n";
+    // }).endl();
+    Formatter &sFor(const std::string &stmts, std::function<void(void)> block);
+
     // out.sTry([&] {
     //     out << "throw RemoteException();\n"
     // }).sCatch("RemoteException ex", [&] {
@@ -90,6 +95,11 @@ struct Formatter {
     Formatter &sTry(std::function<void(void)> block);
     Formatter &sCatch(const std::string &exception, std::function<void(void)> block);
     Formatter &sFinally(std::function<void(void)> block);
+
+    // out.sWhile("z < 10", [&] {
+    //     out << "z++;\n";
+    // }).endl();
+    Formatter &sWhile(const std::string &cond, std::function<void(void)> block);
 
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
