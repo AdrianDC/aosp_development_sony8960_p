@@ -504,7 +504,7 @@ status_t CompoundType::emitTypeDefinitions(
 
     out.block([&] {
         // include toString for scalar types
-        out << "using ::android::hardware::details::toString;\n"
+        out << "using ::android::hardware::toString;\n"
             << "std::string os;\n";
         out << "os += \"{\";\n";
 
