@@ -546,7 +546,7 @@ TEST_F(HidlTest, ServiceListTest) {
     }));
 }
 
-// passthrough TODO(b/32747392)
+// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceListByInterfaceTest) {
     if (mode == BINDERIZED) {
         EXPECT_OK(manager->listByInterface(IParent::descriptor,
@@ -570,7 +570,7 @@ TEST_F(HidlTest, ServiceListByInterfaceTest) {
     }
 }
 
-// passthrough TODO(b/32747392)
+// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceParentTest) {
     if (mode == BINDERIZED) {
         sp<IParent> parent = IParent::getService("child");
@@ -579,7 +579,7 @@ TEST_F(HidlTest, ServiceParentTest) {
     }
 }
 
-// passthrough TODO(b/32747392)
+// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceNotificationTest) {
     if (mode == BINDERIZED) {
         ServiceNotification *notification = new ServiceNotification();
@@ -609,7 +609,7 @@ TEST_F(HidlTest, ServiceNotificationTest) {
     }
 }
 
-// passthrough TODO(b/32747392)
+// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceAllNotificationTest) {
     if (mode == BINDERIZED) {
         ServiceNotification *notification = new ServiceNotification();
