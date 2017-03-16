@@ -692,9 +692,12 @@ TEST_F(HidlTest, TestSharedMemory) {
 
         mem_copy = mem;
         memoryTest->fillMemory(mem, kValue);
+
+        memory->read();
         for (size_t i = 0; i < mem.size(); i++) {
             EXPECT_EQ(kValue, data[i]);
         }
+        memory->commit();
     }));
 
     // Test the memory persists after the call
@@ -705,9 +708,11 @@ TEST_F(HidlTest, TestSharedMemory) {
     uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
     EXPECT_NE(data, nullptr);
 
+    memory->read();
     for (size_t i = 0; i < mem_copy.size(); i++) {
         EXPECT_EQ(kValue, data[i]);
     }
+    memory->commit();
 
     hidl_memory mem_move(std::move(mem_copy));
     ASSERT_EQ(nullptr, mem_copy.handle());
@@ -722,9 +727,11 @@ TEST_F(HidlTest, TestSharedMemory) {
     data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
     EXPECT_NE(data, nullptr);
 
+    memory->read();
     for (size_t i = 0; i < mem_move.size(); i++) {
         EXPECT_EQ(kValue, data[i]);
     }
+    memory->commit();
 }
 
 TEST_F(HidlTest, NullSharedMemory) {
