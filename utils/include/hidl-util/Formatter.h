@@ -83,10 +83,13 @@ struct Formatter {
     //     out << "throw RemoteException();\n"
     // }).sCatch("RemoteException ex", [&] {
     //     out << "ex.printStackTrace();\n"
+    // }).sFinally([&] {
+    //     // cleanup
     // }).endl();
     // note that there will be a space before the "catch"-s.
     Formatter &sTry(std::function<void(void)> block);
     Formatter &sCatch(const std::string &exception, std::function<void(void)> block);
+    Formatter &sFinally(std::function<void(void)> block);
 
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
