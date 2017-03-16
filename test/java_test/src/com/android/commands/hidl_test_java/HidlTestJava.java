@@ -791,6 +791,25 @@ public final class HidlTestJava {
             Expect(proxy.toString(), IBaz.kInterfaceName + "@Proxy");
         }
 
+        {
+            // Ensure that native parcel is cleared even if the corresponding
+            // Java object isn't GC'd.
+            ArrayList<Integer> data4K = new ArrayList<>(1024);
+            for (int i = 0; i < 1024; i++) {
+                data4K.add(i);
+            }
+
+            for (int i = 0; i < 1024; i++) {
+                // If they are not properly cleaned up, these calls will put 4MB of data in
+                // kernel binder buffer, and will fail.
+                try {
+                    proxy.mapThisVector(data4K);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException("Failed at call #" + Integer.toString(i), ex);
+                }
+            }
+        }
+
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process
         HidlDeathRecipient recipient1 = new HidlDeathRecipient();
