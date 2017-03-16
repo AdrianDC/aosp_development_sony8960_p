@@ -380,60 +380,65 @@ status_t AST::generateJava(
                     false /* addPrefixToName */);
         }
 
-        out << "\nandroid.os.HwParcel _hidl_reply = new android.os.HwParcel();\n"
-            << "mRemote.transact("
-            << method->getSerialId()
-            << " /* "
-            << method->name()
-            << " */, _hidl_request, _hidl_reply, ";
+        out << "\nandroid.os.HwParcel _hidl_reply = new android.os.HwParcel();\n";
 
-        if (method->isOneway()) {
-            out << "android.os.IHwBinder.FLAG_ONEWAY";
-        } else {
-            out << "0 /* flags */";
-        }
+        out.sTry([&] {
+            out << "mRemote.transact("
+                << method->getSerialId()
+                << " /* "
+                << method->name()
+                << " */, _hidl_request, _hidl_reply, ";
 
-        out << ");\n";
-
-        if (!method->isOneway()) {
-            out << "_hidl_reply.verifySuccess();\n";
-        } else {
-            CHECK(!returnsValue);
-        }
-
-        out << "_hidl_request.releaseTemporaryStorage();\n";
-
-        if (returnsValue) {
-            out << "\n";
-
-            for (const auto &arg : method->results()) {
-                emitJavaReaderWriter(
-                        out,
-                        "_hidl_reply",
-                        arg,
-                        true /* isReader */,
-                        true /* addPrefixToName */);
+            if (method->isOneway()) {
+                out << "android.os.IHwBinder.FLAG_ONEWAY";
+            } else {
+                out << "0 /* flags */";
             }
 
-            if (needsCallback) {
-                out << "cb.onValues(";
+            out << ");\n";
 
-                bool firstField = true;
+            if (!method->isOneway()) {
+                out << "_hidl_reply.verifySuccess();\n";
+            } else {
+                CHECK(!returnsValue);
+            }
+
+            out << "_hidl_request.releaseTemporaryStorage();\n";
+
+            if (returnsValue) {
+                out << "\n";
+
                 for (const auto &arg : method->results()) {
-                    if (!firstField) {
-                        out << ", ";
-                    }
-
-                    out << "_hidl_out_" << arg->name();
-                    firstField = false;
+                    emitJavaReaderWriter(
+                            out,
+                            "_hidl_reply",
+                            arg,
+                            true /* isReader */,
+                            true /* addPrefixToName */);
                 }
 
-                out << ");\n";
-            } else {
-                const std::string returnName = method->results()[0]->name();
-                out << "return _hidl_out_" << returnName << ";\n";
+                if (needsCallback) {
+                    out << "cb.onValues(";
+
+                    bool firstField = true;
+                    for (const auto &arg : method->results()) {
+                        if (!firstField) {
+                            out << ", ";
+                        }
+
+                        out << "_hidl_out_" << arg->name();
+                        firstField = false;
+                    }
+
+                    out << ");\n";
+                } else {
+                    const std::string returnName = method->results()[0]->name();
+                    out << "return _hidl_out_" << returnName << ";\n";
+                }
             }
-        }
+        }).sFinally([&] {
+            out << "_hidl_reply.release();\n";
+        }).endl();
 
         out.unindent();
         out << "}\n\n";
