@@ -96,6 +96,11 @@ Formatter &Formatter::sCatch(const std::string &exception, std::function<void(vo
     return this->block(block);
 }
 
+Formatter &Formatter::sFinally(std::function<void(void)> block) {
+    (*this) << " finally ";
+    return this->block(block);
+}
+
 Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
     size_t start = 0;
