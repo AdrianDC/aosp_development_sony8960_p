@@ -187,19 +187,16 @@ static void implementServiceManagerInteractions(Formatter &out,
         //     }
         // }
 
-        out.sFor("bool tried = false; "
-                 "!getStub && (vintfHwbinder || (vintfEmpty && !tried)); "
-                 "tried = true", [&] {
-
-            // Because this is a for loop, a "continue" statement means
-            // setting tried, and hence "break" for vintfEmpty and
-            // "retry" for vintfHwBinder
+        out << "bool tried = false;\n";
+        out.sWhile("!getStub && (vintfHwbinder || (vintfEmpty && !tried))", [&] {
 
             out.sIf("tried", [&] {
                 // sleep only after the first trial.
                 out << "ALOGI(\"getService: retrying in 1s...\");\n"
                     << "sleep(1);\n";
             }).endl();
+
+            out << "tried = true;\n";
 
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
             out.indent(2, [&] {
