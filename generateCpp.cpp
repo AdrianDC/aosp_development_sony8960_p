@@ -156,98 +156,46 @@ static void implementServiceManagerInteractions(Formatter &out,
 
     out << "// static\n"
         << "::android::sp<" << interfaceName << "> " << interfaceName << "::getService("
-        << "const std::string &serviceName, const bool getStub) ";
+        << "const std::string &serviceName, bool getStub) ";
     out.block([&] {
         out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
         out << "::android::vintf::Transport transport = ::android::hardware::getTransport("
             << interfaceName << "::descriptor, serviceName);\n";
 
-        // TODO(b/34274385) remove sysprop check
-        out << "const bool vintfHwbinder = (transport == ::android::vintf::Transport::HWBINDER) ||\n"
-            << "                           (transport == ::android::vintf::Transport::TOGGLED &&\n"
-            << "                            ::android::hardware::details::blockingHalBinderizationEnabled());\n"
-            << "const bool vintfPassthru = (transport == ::android::vintf::Transport::PASSTHROUGH) ||\n"
-            << "                           (transport == ::android::vintf::Transport::TOGGLED &&\n"
-            << "                            !::android::hardware::details::blockingHalBinderizationEnabled());\n"
-            << "const bool vintfEmpty    = (transport == ::android::vintf::Transport::EMPTY);\n\n";
-
-        // if (getStub) {
-        //     getPassthroughServiceManager()->get only once.
-        // } else {
-        //     if (vintfHwbinder) {
-        //         while (no alive service) {
-        //             waitForHwService
-        //             defaultServiceManager()->get
-        //         }
-        //     } else if (vintfEmpty) {
-        //         defaultServiceManager()->get only once.
-        //         getPassthroughServiceManager()->get only once.
-        //     } else if (vintfPassthru) {
-        //         getPassthroughServiceManager()->get only once.
-        //     }
-        // }
-
-        out.sFor("bool tried = false; "
-                 "!getStub && (vintfHwbinder || (vintfEmpty && !tried)); "
-                 "tried = true", [&] {
-
-            // Because this is a for loop, a "continue" statement means
-            // setting tried, and hence "break" for vintfEmpty and
-            // "retry" for vintfHwBinder
-
-            out.sIf("tried", [&] {
-                // sleep only after the first trial.
-                out << "ALOGI(\"getService: retrying in 1s...\");\n"
-                    << "sleep(1);\n";
-            }).endl();
-
+        out.sIf("!getStub && "
+                "(transport == ::android::vintf::Transport::HWBINDER || "
+                "transport == ::android::vintf::Transport::TOGGLED || "
+                "transport == ::android::vintf::Transport::EMPTY)", [&] {
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
             out.indent(2, [&] {
                 out << "= ::android::hardware::defaultServiceManager();\n";
             });
-            out.sIf("sm == nullptr", [&] {
-                // hwbinder is not available on this device, so future tries
-                // would also be null. I can only "break" here and
-                // (vintfEmpty) try passthrough or (vintfHwbinder) return nullptr.
-                out << "ALOGE(\"getService: defaultServiceManager() is null\");\n"
-                    << "break;\n";
+            out.sIf("sm != nullptr", [&] {
+                // TODO(b/34274385) remove sysprop check
+                out.sIf("transport == ::android::vintf::Transport::HWBINDER ||"
+                         "(transport == ::android::vintf::Transport::TOGGLED &&"
+                         " ::android::hardware::details::blockingHalBinderizationEnabled())", [&]() {
+                    out << "::android::hardware::details::waitForHwService("
+                        << interfaceName << "::descriptor" << ", serviceName);\n";
+                }).endl();
+                out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
+                out.indent(2, [&] {
+                    out << "sm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
+                });
+                out.sIf("ret.isOk()", [&] {
+                    out << "iface = " << interfaceName << "::castFrom(ret);\n";
+                    out.sIf("iface != nullptr", [&] {
+                        out << "return iface;\n";
+                    }).endl();
+                }).endl();
             }).endl();
-
-            out.sIf("vintfHwbinder", [&] {
-                out << "::android::hardware::details::waitForHwService("
-                    << interfaceName << "::descriptor" << ", serviceName);\n";
-            }).endl();
-
-            out << "::android::hardware::Return<::android::sp<"
-                << gIBaseFqName.cppName() << ">> ret = \n";
-            out.indent(2, [&] {
-                out << "sm->get(" << interfaceName << "::descriptor, serviceName);\n";
-            });
-
-            out.sIf("!ret.isOk()", [&] {
-                // hwservicemanager fails
-                out << "ALOGE(\"getService: defaultServiceManager()->get returns %s\", "
-                    << "ret.description().c_str());\n"
-                    << "continue;\n";
-            }).endl();
-
-            out << "iface = " << interfaceName << "::castFrom(ret);\n";
-            out.sIf("iface == nullptr", [&] {
-                // 1. race condition. hwservicemanager drops the service
-                //    from waitForHwService to here
-                // 2. service is dead (castFrom cannot call interfaceChain)
-                // 3. returned service isn't of correct type; this is a bug
-                //    to hwservicemanager or to the service itself (interfaceChain
-                //    is not consistent)
-                // In all cases, try again.
-                out << "ALOGW(\"getService: found null interface\");\n"
-                    << "continue;\n";
-            }).endl();
-
-            out << "return iface;\n";
         }).endl();
 
-        out.sIf("getStub || vintfPassthru || vintfEmpty", [&] {
+        out.sIf("getStub || "
+                "transport == ::android::vintf::Transport::PASSTHROUGH || "
+                "(transport == ::android::vintf::Transport::TOGGLED &&"
+                " !::android::hardware::details::blockingHalBinderizationEnabled()) ||"
+                "transport == ::android::vintf::Transport::EMPTY", [&] {
             out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
             out.indent(2, [&] {
                 out << "= ::android::hardware::getPassthroughServiceManager();\n";
@@ -264,7 +212,7 @@ static void implementServiceManagerInteractions(Formatter &out,
                     out.sIf("baseInterface != nullptr", [&]() {
                         out << "iface = new " << fqName.getInterfacePassthroughName()
                             << "(" << interfaceName << "::castFrom(baseInterface));\n";
-                    }).endl();
+                    });
                 }).endl();
             }).endl();
         }).endl();
