@@ -395,14 +395,10 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
                 if (!isIBase()) {
                     out << " override";
                 }
-                out << " {\n";
-                out.indent();
-                method->cppImpl(IMPL_HEADER, out);
-                out.unindent();
-                out << "\n}\n";
             } else {
-                out << " = 0;\n";
+                out << " = 0";
             }
+            out << ";\n";
         }
 
         out << "// cast static functions\n";
@@ -1842,6 +1838,27 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
 
     // generate castFrom functions
     std::string childTypeResult = iface->getCppResultType();
+
+    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
+        bool reserved = method->isHidlReserved();
+
+        if (!reserved) {
+            out << "// no default implementation for: ";
+        }
+        method->generateCppSignature(out, iface->localName());
+        if (reserved) {
+            out.block([&]() {
+                method->cppImpl(IMPL_HEADER, out);
+            }).endl();
+        }
+
+        out << "\n";
+
+        return OK;
+    });
+    if (err != OK) {
+        return err;
+    }
 
     for (const Interface *superType : iface->typeChain()) {
         out << "// static \n"
