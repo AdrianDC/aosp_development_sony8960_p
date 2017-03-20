@@ -665,7 +665,7 @@ static status_t generateAndroidBpForPackage(
         return err;
     }
 
-    std::set<FQName> importedPackages;
+    std::set<FQName> importedPackagesHierarchy;
     AST *typesAST = nullptr;
 
     for (const auto &fqName : packageInterfaces) {
@@ -683,7 +683,7 @@ static status_t generateAndroidBpForPackage(
             typesAST = ast;
         }
 
-        ast->getImportedPackages(&importedPackages);
+        ast->getImportedPackagesHierarchy(&importedPackagesHierarchy);
     }
 
     std::string path =
@@ -734,7 +734,7 @@ static status_t generateAndroidBpForPackage(
             genSourceName,
             "c++",
             packageInterfaces,
-            importedPackages,
+            importedPackagesHierarchy,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 if (fqName.name() == "types") {
                     out << "\"" << pathPrefix << "types.cpp\",\n";
@@ -753,7 +753,7 @@ static status_t generateAndroidBpForPackage(
             genHeaderName,
             "c++",
             packageInterfaces,
-            importedPackages,
+            importedPackagesHierarchy,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
                 out << "\"" << pathPrefix << fqName.name() << ".h\",\n";
                 if (fqName.name() != "types") {
@@ -780,7 +780,7 @@ static status_t generateAndroidBpForPackage(
         << "\"liblog\",\n"
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
-    for (const auto &importedPackage : importedPackages) {
+    for (const auto &importedPackage : importedPackagesHierarchy) {
         out << "\"" << makeLibraryName(importedPackage) << "\",\n";
     }
     out.unindent();
@@ -793,7 +793,7 @@ static status_t generateAndroidBpForPackage(
         << "\"libhidltransport\",\n"
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n";
-    for (const auto &importedPackage : importedPackages) {
+    for (const auto &importedPackage : importedPackagesHierarchy) {
         out << "\"" << makeLibraryName(importedPackage) << "\",\n";
     }
     out.unindent();
