@@ -1814,7 +1814,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     out << "const ::android::sp<" << ifaceName << "> mImpl;\n";
 
     if (supportOneway) {
-        out << "::android::hardware::TaskRunner mOnewayQueue;\n";
+        out << "::android::hardware::details::TaskRunner mOnewayQueue;\n";
 
         out << "\n";
 
