@@ -1911,7 +1911,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
     if (iface->hasOnewayMethods()) {
         out << "\n";
         out.indent([&] {
-            out << "mOnewayQueue.setLimit(3000 /* similar limit to binderized */);\n";
+            out << "mOnewayQueue.start(3000 /* similar limit to binderized */);\n";
         });
     }
     out << "}\n\n";
