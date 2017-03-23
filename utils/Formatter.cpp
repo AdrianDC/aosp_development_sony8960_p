@@ -86,6 +86,11 @@ Formatter &Formatter::sElse(std::function<void(void)> block) {
     return this->block(block);
 }
 
+Formatter &Formatter::sFor(const std::string &stmts, std::function<void(void)> block) {
+    (*this) << "for (" << stmts << ") ";
+    return this->block(block);
+}
+
 Formatter &Formatter::sTry(std::function<void(void)> block) {
     (*this) << "try ";
     return this->block(block);
@@ -98,6 +103,11 @@ Formatter &Formatter::sCatch(const std::string &exception, std::function<void(vo
 
 Formatter &Formatter::sFinally(std::function<void(void)> block) {
     (*this) << " finally ";
+    return this->block(block);
+}
+
+Formatter &Formatter::sWhile(const std::string &cond, std::function<void(void)> block) {
+    (*this) << "while (" << cond << ") ";
     return this->block(block);
 }
 
