@@ -240,7 +240,7 @@ static void implementServiceManagerInteractions(Formatter &out,
                 //    to hwservicemanager or to the service itself (interfaceChain
                 //    is not consistent)
                 // In all cases, try again.
-                out << "ALOGW(\"getService: found null interface\");\n"
+                out << "ALOGW(\"getService: found null hwbinder interface\");\n"
                     << "continue;\n";
             }).endl();
 
