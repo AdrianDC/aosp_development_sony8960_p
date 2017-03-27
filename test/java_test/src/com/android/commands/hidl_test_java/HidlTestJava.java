@@ -22,6 +22,7 @@ import android.hardware.tests.baz.V1_0.IBaz.NestedStruct;
 import android.hardware.tests.baz.V1_0.IBazCallback;
 import android.os.HwBinder;
 import android.os.RemoteException;
+import android.os.HidlSupport;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -94,6 +95,10 @@ public final class HidlTestJava {
         }
 
         throw new RuntimeException();
+    }
+
+    private void ExpectFalse(boolean x) {
+        ExpectTrue(!x);
     }
 
     private void Expect(String result, String s) {
@@ -174,7 +179,60 @@ public final class HidlTestJava {
         return "positively huge!";
     }
 
+    private void ExpectDeepEq(Object l, Object r) {
+        ExpectTrue(HidlSupport.deepEquals(l, r));
+        ExpectTrue(HidlSupport.deepHashCode(l) == HidlSupport.deepHashCode(r));
+    }
+
+    private void ExpectDeepNe(Object l, Object r) {
+        ExpectTrue(!HidlSupport.deepEquals(l, r));
+    }
+
     private void client() throws RemoteException {
+
+        ExpectDeepEq(null, null);
+        ExpectDeepNe(null, new String());
+        ExpectDeepNe(new String(), null);
+        ExpectDeepEq(new String(), new String());
+        ExpectDeepEq("hey", "hey");
+
+        ExpectDeepEq(new int[]{1,2}, new int[]{1,2});
+        ExpectDeepNe(new int[]{1,2}, new int[]{1,3});
+        ExpectDeepNe(new int[]{1,2}, new int[]{1,2,3});
+        ExpectDeepEq(new int[][]{{1,2},{3,4}}, new int[][]{{1,2},{3,4}});
+        ExpectDeepNe(new int[][]{{1,2},{3,4}}, new int[][]{{1,2},{3,5}});
+        ExpectDeepNe(new int[][]{{1,2},{3,4}}, new int[][]{{1,2,3},{4,5,6}});
+        ExpectDeepNe(new int[][]{{1,2},{3,4}}, new int[][]{{1,2},{3,4,5}});
+
+        ExpectDeepEq(new Integer[]{1,2}, new Integer[]{1,2});
+        ExpectDeepNe(new Integer[]{1,2}, new Integer[]{1,3});
+        ExpectDeepNe(new Integer[]{1,2}, new Integer[]{1,2,3});
+        ExpectDeepEq(new Integer[][]{{1,2},{3,4}}, new Integer[][]{{1,2},{3,4}});
+        ExpectDeepNe(new Integer[][]{{1,2},{3,4}}, new Integer[][]{{1,2},{3,5}});
+        ExpectDeepNe(new Integer[][]{{1,2},{3,4}}, new Integer[][]{{1,2,3},{4,5,6}});
+        ExpectDeepNe(new Integer[][]{{1,2},{3,4}}, new Integer[][]{{1,2},{3,4,5}});
+
+        ExpectDeepEq(new ArrayList(Arrays.asList(1, 2)),
+                     new ArrayList(Arrays.asList(1, 2)));
+        ExpectDeepNe(new ArrayList(Arrays.asList(1, 2)),
+                     new ArrayList(Arrays.asList(1, 2, 3)));
+
+        ExpectDeepEq(new ArrayList(Arrays.asList(new int[]{1,2}, new int[]{3,4})),
+                     new ArrayList(Arrays.asList(new int[]{1,2}, new int[]{3,4})));
+        ExpectDeepNe(new ArrayList(Arrays.asList(new int[]{1,2}, new int[]{3,4})),
+                     new ArrayList(Arrays.asList(new int[]{1,2}, new int[]{3,5})));
+
+        ExpectDeepEq(new ArrayList(Arrays.asList(new Integer[]{1,2}, new Integer[]{3,4})),
+                     new ArrayList(Arrays.asList(new Integer[]{1,2}, new Integer[]{3,4})));
+        ExpectDeepNe(new ArrayList(Arrays.asList(new Integer[]{1,2}, new Integer[]{3,4})),
+                     new ArrayList(Arrays.asList(new Integer[]{1,2}, new Integer[]{3,5})));
+
+        ExpectDeepEq(new ArrayList[]{new ArrayList(Arrays.asList(1,2)),
+                                     new ArrayList(Arrays.asList(3,4))},
+                     new ArrayList[]{new ArrayList(Arrays.asList(1,2)),
+                                     new ArrayList(Arrays.asList(3,4))});
+
+
         {
             // Test access through base interface binder.
             IBase baseProxy = IBase.getService("baz");
@@ -312,13 +370,7 @@ public final class HidlTestJava {
             }
 
             IBase.VectorOfArray out = proxy.someMethodWithVectorOfArray(in);
-            /*
-             * TODO(b/36454147) Switch to .equals once the bug is fixed.
-             */
-            ExpectTrue(expectedOut.addresses.size() == out.addresses.size());
-            for  (int i = 0; i < n; ++i) {
-                ExpectTrue(java.util.Objects.deepEquals(out.addresses.get(i), expectedOut.addresses.get(i)));
-            }
+            ExpectTrue(out.equals(expectedOut));
         }
 
         {
