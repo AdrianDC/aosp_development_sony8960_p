@@ -15,6 +15,13 @@
 #
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
+LOCAL_MODULE := hidl_test_helper
+LOCAL_MODULE_CLASS := NATIVE_TESTS
+LOCAL_SRC_FILES := hidl_test_helper
+
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := hidl_test
 LOCAL_MODULE_CLASS := NATIVE_TESTS
 LOCAL_SRC_FILES := hidl_test
@@ -22,7 +29,8 @@ LOCAL_REQUIRED_MODULES :=                       \
     hidl_test_client                            \
     hidl_test_servers                           \
     hidl_test_client_32                         \
-    hidl_test_servers_32
+    hidl_test_servers_32                        \
+    hidl_test_helper
 
 include $(BUILD_PREBUILT)
 
