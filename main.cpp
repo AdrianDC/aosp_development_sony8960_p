@@ -761,6 +761,8 @@ static status_t generateAndroidBpForPackage(
                     out << "\"" << pathPrefix << fqName.getInterfaceStubName() << ".h\",\n";
                     out << "\"" << pathPrefix << fqName.getInterfaceProxyName() << ".h\",\n";
                     out << "\"" << pathPrefix << fqName.getInterfacePassthroughName() << ".h\",\n";
+                } else {
+                    out << "\"" << pathPrefix << "hwtypes.h\",\n";
                 }
             });
 
