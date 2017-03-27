@@ -79,7 +79,7 @@ bool Interface::fillPingMethod(Method *method) const {
     method->fillImplementation(
         HIDL_PING_TRANSACTION,
         {
-            {IMPL_HEADER,
+            {IMPL_INTERFACE,
                 [](auto &out) {
                     out << "return ::android::hardware::Void();\n";
                 }
@@ -91,7 +91,7 @@ bool Interface::fillPingMethod(Method *method) const {
             }
         }, /*cppImpl*/
         {
-            {IMPL_HEADER,
+            {IMPL_INTERFACE,
                 [this](auto &out) {
                     out << "return;\n";
                 }
@@ -111,7 +111,7 @@ bool Interface::fillLinkToDeathMethod(Method *method) const {
     method->fillImplementation(
             HIDL_LINK_TO_DEATH_TRANSACTION,
             {
-                {IMPL_HEADER,
+                {IMPL_INTERFACE,
                     [](auto &out) {
                         out << "(void)cookie;\n"
                             << "return (recipient != nullptr);\n";
@@ -131,7 +131,7 @@ bool Interface::fillLinkToDeathMethod(Method *method) const {
                 {IMPL_STUB, nullptr}
             }, /*cppImpl*/
             {
-                {IMPL_HEADER,
+                {IMPL_INTERFACE,
                     [this](auto &out) {
                         out << "return true;";
                     }
@@ -155,7 +155,7 @@ bool Interface::fillUnlinkToDeathMethod(Method *method) const {
     method->fillImplementation(
             HIDL_UNLINK_TO_DEATH_TRANSACTION,
             {
-                {IMPL_HEADER,
+                {IMPL_INTERFACE,
                     [](auto &out) {
                         out << "return (recipient != nullptr);\n";
                     }
@@ -180,7 +180,7 @@ bool Interface::fillUnlinkToDeathMethod(Method *method) const {
                 {IMPL_STUB, nullptr /* don't generate code */}
             }, /*cppImpl*/
             {
-                {IMPL_HEADER,
+                {IMPL_INTERFACE,
                     [this](auto &out) {
                         out << "return true;\n";
                     }
@@ -202,11 +202,11 @@ bool Interface::fillSyspropsChangedMethod(Method *method) const {
 
     method->fillImplementation(
             HIDL_SYSPROPS_CHANGED_TRANSACTION,
-            { { IMPL_HEADER, [this](auto &out) {
+            { { IMPL_INTERFACE, [this](auto &out) {
                 out << "::android::report_sysprop_change();\n";
                 out << "return ::android::hardware::Void();";
             } } }, /*cppImpl */
-            { { IMPL_HEADER, [](auto &out) { /* javaImpl */
+            { { IMPL_INTERFACE, [](auto &out) { /* javaImpl */
                 out << "android.os.SystemProperties.reportSyspropChanged();";
             } } } /*javaImpl */
     );
@@ -221,7 +221,7 @@ bool Interface::fillSetHALInstrumentationMethod(Method *method) const {
     method->fillImplementation(
             HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION,
             {
-                {IMPL_HEADER,
+                {IMPL_INTERFACE,
                     [this](auto &out) {
                         // do nothing for base class.
                         out << "return ::android::hardware::Void();\n";
@@ -239,7 +239,7 @@ bool Interface::fillSetHALInstrumentationMethod(Method *method) const {
                     }
                 },
             }, /*cppImpl */
-            { { IMPL_HEADER, [](auto & /*out*/) { /* javaImpl */
+            { { IMPL_INTERFACE, [](auto & /*out*/) { /* javaImpl */
                 // Not support for Java Impl for now.
             } } } /*javaImpl */
     );
@@ -253,7 +253,7 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
 
     method->fillImplementation(
         HIDL_DESCRIPTOR_CHAIN_TRANSACTION,
-        { { IMPL_HEADER, [this](auto &out) {
+        { { IMPL_INTERFACE, [this](auto &out) {
             std::vector<const Interface *> chain = typeChain();
             out << "_hidl_cb(";
             out.block([&] {
@@ -264,7 +264,7 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
             out << ");\n";
             out << "return ::android::hardware::Void();";
         } } }, /* cppImpl */
-        { { IMPL_HEADER, [this](auto &out) {
+        { { IMPL_INTERFACE, [this](auto &out) {
             std::vector<const Interface *> chain = typeChain();
             out << "return new java.util.ArrayList<String>(java.util.Arrays.asList(\n";
             out.indent(); out.indent();
@@ -287,13 +287,13 @@ bool Interface::fillGetDescriptorMethod(Method *method) const {
 
     method->fillImplementation(
         HIDL_GET_DESCRIPTOR_TRANSACTION,
-        { { IMPL_HEADER, [this](auto &out) {
+        { { IMPL_INTERFACE, [this](auto &out) {
             out << "_hidl_cb("
                 << fullName()
                 << "::descriptor);\n"
                 << "return ::android::hardware::Void();";
         } } }, /* cppImpl */
-        { { IMPL_HEADER, [this](auto &out) {
+        { { IMPL_INTERFACE, [this](auto &out) {
             out << "return "
                 << fullJavaName()
                 << ".kInterfaceName;\n";
@@ -317,7 +317,7 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
     method->fillImplementation(
         HIDL_GET_REF_INFO_TRANSACTION,
         {
-            {IMPL_HEADER,
+            {IMPL_INTERFACE,
                 [this](auto &out) {
                     // getDebugInfo returns N/A for local objects.
                     out << "_hidl_cb({ -1 /* pid */, 0 /* ptr */, \n"
@@ -341,7 +341,7 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
                 }
             }
         }, /* cppImpl */
-        { { IMPL_HEADER, [this, method](auto &out) {
+        { { IMPL_INTERFACE, [this, method](auto &out) {
             const Type &refInfo = method->results().front()->type();
             out << refInfo.getJavaType(false /* forInitializer */) << " info = new "
                 << refInfo.getJavaType(true /* forInitializer */) << "();\n"
@@ -364,7 +364,7 @@ bool Interface::fillDebugMethod(Method *method) const {
     method->fillImplementation(
         HIDL_DEBUG_TRANSACTION,
         {
-            {IMPL_HEADER,
+            {IMPL_INTERFACE,
                 [this](auto &out) {
                     out << "(void)fd;\n"
                         << "(void)options;\n"
