@@ -582,15 +582,15 @@ status_t CompoundType::emitJavaTypeDeclarations(
             out.sIf("otherObject == null", [&] {
                 out << "return false;\n";
             }).endl();
-            // Class is final, so we only need to check instanceof, not getClass
-            out.sIf("!(otherObject instanceof " + fullJavaName() + ")", [&] {
+            // Though class is final, we use getClass instead of instanceof to be explicit.
+            out.sIf("otherObject.getClass() != " + fullJavaName() + ".class", [&] {
                 out << "return false;\n";
             }).endl();
             out << fullJavaName() << " other = (" << fullJavaName() << ")otherObject;\n";
             for (const auto &field : *mFields) {
-                std::string condition = field->type().isScalar()
+                std::string condition = (field->type().isScalar() || field->type().isEnum())
                     ? "this." + field->name() + " != other." + field->name()
-                    : ("!java.util.Objects.deepEquals(this." + field->name()
+                    : ("!android.os.HidlSupport.deepEquals(this." + field->name()
                             + ", other." + field->name() + ")");
                 out.sIf(condition, [&] {
                     out << "return false;\n";
@@ -609,17 +609,7 @@ status_t CompoundType::emitJavaTypeDeclarations(
                         out << ", \n";
                     }
                     first = false;
-                    if (field->type().isArray()) {
-                        const ArrayType &type = static_cast<const ArrayType &>(field->type());
-                        if (type.countDimensions() == 1 &&
-                            type.getElementType()->resolveToScalarType() != nullptr) {
-                            out << "java.util.Arrays.hashCode(this." << field->name() << ")";
-                        } else {
-                            out << "java.util.Arrays.deepHashCode(this." << field->name() << ")";
-                        }
-                    } else {
-                        out << "this." << field->name();
-                    }
+                    out << "android.os.HidlSupport.deepHashCode(this." << field->name() << ")";
                 }
             });
             out << ");\n";
