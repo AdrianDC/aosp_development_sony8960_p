@@ -139,8 +139,6 @@ status_t AST::generateJava(
 
     out << "package " << mPackage.javaPackage() << ";\n\n";
 
-    out << "import android.os.RemoteException;\n\n";
-
     out.setNamespace(mPackage.javaPackage() + ".");
 
     const Interface *superType = iface->superType();
@@ -199,7 +197,7 @@ status_t AST::generateJava(
 
     out << "public static "
         << ifaceName
-        << " getService(String serviceName) throws RemoteException {\n";
+        << " getService(String serviceName) throws android.os.RemoteException {\n";
 
     out.indent();
 
@@ -215,7 +213,7 @@ status_t AST::generateJava(
 
     out << "public static "
         << ifaceName
-        << " getService() throws RemoteException {\n";
+        << " getService() throws android.os.RemoteException {\n";
 
     out.indent();
 
@@ -280,7 +278,7 @@ status_t AST::generateJava(
 
         out << ")\n";
         out.indent();
-        out << "throws RemoteException;\n";
+        out << "throws android.os.RemoteException;\n";
         out.unindent();
     }
 
@@ -308,7 +306,7 @@ status_t AST::generateJava(
     out.block([&] {
         out.sTry([&] {
             out << "return this.interfaceDescriptor() + \"@Proxy\";\n";
-        }).sCatch("RemoteException ex", [&] {
+        }).sCatch("android.os.RemoteException ex", [&] {
             out << "/* ignored; handled below. */\n";
         }).endl();
         out << "return \"[class or subclass of \" + "
@@ -357,7 +355,7 @@ status_t AST::generateJava(
         out << ")\n";
         out.indent();
         out.indent();
-        out << "throws RemoteException {\n";
+        out << "throws android.os.RemoteException {\n";
         out.unindent();
 
         if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_PROXY)) {
@@ -497,7 +495,7 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "public void registerAsService(String serviceName) throws RemoteException {\n";
+    out << "public void registerAsService(String serviceName) throws android.os.RemoteException {\n";
     out.indent();
 
     out << "registerService(serviceName);\n";
@@ -518,7 +516,7 @@ status_t AST::generateJava(
         << "int _hidl_flags)\n";
     out.indent();
     out.indent();
-    out << "throws RemoteException {\n";
+    out << "throws android.os.RemoteException {\n";
     out.unindent();
 
     out << "switch (_hidl_code) {\n";
