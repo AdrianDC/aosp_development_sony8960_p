@@ -1900,7 +1900,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
         method->generateCppSignature(out, iface->localName());
         if (reserved) {
             out.block([&]() {
-                method->cppImpl(IMPL_HEADER, out);
+                method->cppImpl(IMPL_INTERFACE, out);
             }).endl();
         }
 

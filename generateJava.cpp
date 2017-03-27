@@ -479,7 +479,7 @@ status_t AST::generateJava(
             << ") {\n";
 
         out.indent();
-        method->javaImpl(IMPL_HEADER, out);
+        method->javaImpl(IMPL_INTERFACE, out);
         out.unindent();
         out << "\n}\n\n";
     }
