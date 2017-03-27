@@ -47,7 +47,7 @@ void Method::fillImplementation(
     mJavaImpl = javaImpl;
 
     CHECK(mJavaImpl.find(IMPL_STUB_IMPL) == mJavaImpl.end())
-            << "FATAL: mJavaImpl should not use IMPL_STUB_IMPL; use IMPL_HEADER instead.";
+            << "FATAL: mJavaImpl should not use IMPL_STUB_IMPL; use IMPL_INTERFACE instead.";
     CHECK(mCppImpl.find(IMPL_STUB_IMPL) == mCppImpl.end() ||
           mCppImpl.find(IMPL_STUB) == mCppImpl.end())
             << "FATAL: mCppImpl IMPL_STUB will override IMPL_STUB_IMPL.";
