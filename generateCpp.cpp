@@ -225,10 +225,10 @@ static void implementServiceManagerInteractions(Formatter &out,
             });
 
             out.sIf("!ret.isOk()", [&] {
-                // hwservicemanager fails
+                // hwservicemanager fails, may be security issue
                 out << "ALOGE(\"getService: defaultServiceManager()->get returns %s\", "
                     << "ret.description().c_str());\n"
-                    << "continue;\n";
+                    << "break;\n";
             }).endl();
 
             out << "iface = " << interfaceName << "::castFrom(ret);\n";
