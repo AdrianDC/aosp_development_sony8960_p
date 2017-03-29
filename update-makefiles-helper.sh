@@ -81,6 +81,7 @@ function do_makefiles_update() {
 
   for p in $packages; do
     echo "Updating $p";
+    hidl-gen -Lmakefile $root_arguments $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
     hidl-gen -Landroidbp $root_arguments $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
