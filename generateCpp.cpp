@@ -241,7 +241,7 @@ static void implementServiceManagerInteractions(Formatter &out,
                 //    is not consistent)
                 // In all cases, try again.
                 out << "ALOGW(\"getService: found null hwbinder interface\");\n"
-                    << "continue;\n";
+                    << "break;\n";
             }).endl();
 
             out << "return iface;\n";
