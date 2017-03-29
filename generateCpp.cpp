@@ -235,16 +235,33 @@ static void implementGetService(Formatter &out,
                     << "break;\n";
             }).endl();
 
-            out << "iface = " << interfaceName << "::castFrom(ret);\n";
-            out.sIf("iface == nullptr", [&] {
-                // 1. race condition. hwservicemanager drops the service
-                //    from waitForHwService to here
-                // 2. service is dead (castFrom cannot call interfaceChain)
-                // 3. returned service isn't of correct type; this is a bug
-                //    to hwservicemanager or to the service itself (interfaceChain
-                //    is not consistent)
-                // In all cases, try again.
+            out << "::android::sp<" << gIBaseFqName.cppName() << "> base = ret;\n";
+            out.sIf("base == nullptr", [&] {
+                // race condition. hwservicemanager drops the service
+                // from waitForHwService to here
                 out << "ALOGW(\"getService: found null hwbinder interface\");\n"
+                    << "break;\n";
+            }).endl();
+            out << "::android::hardware::Return<::android::sp<" << interfaceName
+                << ">> castRet = " << interfaceName << "::castFrom(base, true /* emitError */);\n";
+            out.sIf("!castRet.isOk()", [&] {
+                out.sIf("castRet.isDeadObject()", [&] {
+                    // service is dead (castFrom cannot call interfaceChain)
+                    out << "ALOGW(\"getService: found dead hwbinder service\");\n"
+                        << "break;\n";
+                }).sElse([&] {
+                    out << "ALOGW(\"getService: cannot call into hwbinder service: %s"
+                        << "; No permission? Check for selinux denials.\", "
+                        << "castRet.description().c_str());\n"
+                        << "break;\n";
+                }).endl();
+            }).endl();
+            out << "iface = castRet;\n";
+            out.sIf("iface == nullptr", [&] {
+                // returned service isn't of correct type; this is a bug
+                // to hwservicemanager or to the service itself (interfaceChain
+                // is not consistent).
+                out << "ALOGW(\"getService: received incompatible service; bug in hwservicemanager?\");\n"
                     << "break;\n";
             }).endl();
 
@@ -468,12 +485,12 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         std::string childTypeResult = iface->getCppResultType();
 
         for (const Interface *superType : iface->typeChain()) {
-            out << "static "
+            out << "static ::android::hardware::Return<"
                 << childTypeResult
-                << " castFrom("
+                << "> castFrom("
                 << superType->getCppArgumentType()
                 << " parent"
-                << ");\n";
+                << ", bool emitError = false);\n";
         }
 
         out << "\nstatic const char* descriptor;\n\n";
@@ -1878,13 +1895,15 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
     }
 
     for (const Interface *superType : iface->typeChain()) {
-        out << "// static \n"
+        out << "// static \n::android::hardware::Return<"
             << childTypeResult
-            << " "
+            << "> "
             << iface->localName()
             << "::castFrom("
             << superType->getCppArgumentType()
-            << " parent) {\n";
+            << " parent, bool "
+            << (iface == superType ? "/* emitError */" : "emitError")
+            << ") {\n";
         out.indent();
         if (iface == superType) {
             out << "return parent;\n";
@@ -1899,7 +1918,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out.indent();
             out << "parent, \""
                 << iface->fqName().string()
-                << "\");\n";
+                << "\", emitError);\n";
             out.unindent();
             out.unindent();
         }
