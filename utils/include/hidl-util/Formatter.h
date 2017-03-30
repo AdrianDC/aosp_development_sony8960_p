@@ -101,6 +101,13 @@ struct Formatter {
     // }).endl();
     Formatter &sWhile(const std::string &cond, std::function<void(void)> block);
 
+    // out.join(v.begin(), v.end(), ",", [&](const auto &e) {
+    //     out << toString(e);
+    // });
+    template<typename I>
+    Formatter &join(I begin, I end, const std::string &separator,
+            std::function<void(const typename std::iterator_traits<I>::value_type &)> func);
+
     Formatter &operator<<(const std::string &out);
     Formatter &operator<<(size_t n);
 
@@ -127,6 +134,18 @@ private:
 
     DISALLOW_COPY_AND_ASSIGN(Formatter);
 };
+
+template<typename I>
+Formatter &Formatter::join(I begin, I end, const std::string &separator,
+        std::function<void(const typename std::iterator_traits<I>::value_type &)> func) {
+    for (I iter = begin; iter != end; ++iter) {
+        if (iter != begin) {
+            (*this) << separator;
+        }
+        func(*iter);
+    }
+    return (*this);
+}
 
 }  // namespace android
 
