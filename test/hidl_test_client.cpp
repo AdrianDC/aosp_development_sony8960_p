@@ -351,8 +351,9 @@ public:
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
     TestMode mode;
-
-    HidlEnvironment(TestMode mode) : mode(mode) {};
+    bool enableDelayMeasurementTests;
+    HidlEnvironment(TestMode mode, bool enableDelayMeasurementTests) :
+        mode(mode), enableDelayMeasurementTests(enableDelayMeasurementTests) {};
 
     void getServices() {
         manager = IServiceManager::getService();
@@ -813,6 +814,10 @@ TEST_F(HidlTest, FooMapThisVectorTest) {
 }
 
 TEST_F(HidlTest, WrapTest) {
+    if (!gHidlEnvironment->enableDelayMeasurementTests) {
+        return;
+    }
+
     using ::android::hardware::tests::foo::V1_0::BnHwSimple;
     using ::android::hardware::tests::foo::V1_0::BsSimple;
     using ::android::hardware::tests::foo::V1_0::BpHwSimple;
@@ -850,9 +855,10 @@ TEST_F(HidlTest, WrapTest) {
 }
 
 TEST_F(HidlTest, FooCallMeTest) {
-
+    if (!gHidlEnvironment->enableDelayMeasurementTests) {
+        return;
+    }
     sp<IFooCallback> fooCb = new FooCallback();
-
     ALOGI("CLIENT call callMe.");
     // callMe is oneway, should return instantly.
     nsecs_t now;
@@ -1745,7 +1751,7 @@ TEST_F(HidlTest, PointerReportErrorsTest) {
 }
 #endif
 
-int forkAndRunTests(TestMode mode) {
+int forkAndRunTests(TestMode mode, bool enableDelayMeasurementTests) {
     pid_t child;
     int status;
 
@@ -1756,7 +1762,8 @@ int forkAndRunTests(TestMode mode) {
 
     if ((child = fork()) == 0) {
         gHidlEnvironment = static_cast<HidlEnvironment *>(
-                ::testing::AddGlobalTestEnvironment(new HidlEnvironment(mode)));
+                ::testing::AddGlobalTestEnvironment(new HidlEnvironment(
+                        mode, enableDelayMeasurementTests)));
         int testStatus = RUN_ALL_TESTS();
         if(testStatus == 0) {
             exit(0);
@@ -1791,22 +1798,24 @@ void handleStatus(int status, const char *mode) {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-b] [-p] [GTEST_OPTIONS]\n",
+            "usage: %s [-b] [-p] [-d] [GTEST_OPTIONS]\n",
             me);
 
     fprintf(stderr, "         -b binderized mode only\n");
     fprintf(stderr, "         -p passthrough mode only\n");
     fprintf(stderr, "            (if -b and -p are both missing or both present, "
                                  "both modes are tested.)\n");
+    fprintf(stderr, "         -d Enable delay measurement tests\n");
 }
 
 int main(int argc, char **argv) {
     const char *me = argv[0];
     bool b = false;
     bool p = false;
+    bool d = false;
     struct option longopts[] = {{0,0,0,0}};
     int res;
-    while ((res = getopt_long(argc, argv, "hbp", longopts, NULL)) >= 0) {
+    while ((res = getopt_long(argc, argv, "hbpd", longopts, NULL)) >= 0) {
         switch (res) {
             case 'h': {
                 usage(me);
@@ -1819,6 +1828,10 @@ int main(int argc, char **argv) {
 
             case 'p': {
                 p = true;
+            } break;
+
+            case 'd': {
+                d = true;
             } break;
 
             case '?':
@@ -1834,8 +1847,8 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     // put test in child process because RUN_ALL_TESTS
     // should not be run twice.
-    int pStatus = p ? forkAndRunTests(PASSTHROUGH) : 0;
-    int bStatus = b ? forkAndRunTests(BINDERIZED)  : 0;
+    int pStatus = p ? forkAndRunTests(PASSTHROUGH, d) : 0;
+    int bStatus = b ? forkAndRunTests(BINDERIZED, d)  : 0;
 
     fprintf(stdout, "\n=========================================================\n\n"
                     "    Summary:\n\n");
