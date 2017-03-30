@@ -139,8 +139,8 @@ void Method::generateCppSignature(Formatter &out,
     }
 
     out << name()
-        << "("
-        << GetArgSignature(args(), specifyNamespaces);
+        << "(";
+    emitCppArgSignature(out, specifyNamespaces);
 
     if (returnsValue && elidedReturn == nullptr) {
         if (!args().empty()) {
@@ -153,43 +153,35 @@ void Method::generateCppSignature(Formatter &out,
     out << ")";
 }
 
-// static
-std::string Method::GetArgSignature(const std::vector<TypedVar *> &args,
-                                    bool specifyNamespaces) {
-    bool first = true;
-    std::string out;
-    for (const auto &arg : args) {
-        if (!first) {
-            out += ", ";
-        }
-
-        out += arg->type().getCppArgumentType(specifyNamespaces);
-        out += " ";
-        out += arg->name();
-
-        first = false;
-    }
-
-    return out;
+static void emitCppArgResultSignature(Formatter &out,
+                         const std::vector<TypedVar *> &args,
+                         bool specifyNamespaces) {
+    out.join(args.begin(), args.end(), ", ", [&](auto arg) {
+        out << arg->type().getCppArgumentType(specifyNamespaces);
+        out << " ";
+        out << arg->name();
+    });
 }
 
-// static
-std::string Method::GetJavaArgSignature(const std::vector<TypedVar *> &args) {
-    bool first = true;
-    std::string out;
-    for (const auto &arg : args) {
-        if (!first) {
-            out += ", ";
-        }
+static void emitJavaArgResultSignature(Formatter &out, const std::vector<TypedVar *> &args) {
+    out.join(args.begin(), args.end(), ", ", [&](auto arg) {
+        out << arg->type().getJavaType();
+        out << " ";
+        out << arg->name();
+    });
+}
 
-        out += arg->type().getJavaType();
-        out += " ";
-        out += arg->name();
-
-        first = false;
-    }
-
-    return out;
+void Method::emitCppArgSignature(Formatter &out, bool specifyNamespaces) const {
+    emitCppArgResultSignature(out, args(), specifyNamespaces);
+}
+void Method::emitCppResultSignature(Formatter &out, bool specifyNamespaces) const {
+    emitCppArgResultSignature(out, results(), specifyNamespaces);
+}
+void Method::emitJavaArgSignature(Formatter &out) const {
+    emitJavaArgResultSignature(out, args());
+}
+void Method::emitJavaResultSignature(Formatter &out) const {
+    emitJavaArgResultSignature(out, results());
 }
 
 void Method::dumpAnnotations(Formatter &out) const {

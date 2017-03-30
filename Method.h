@@ -82,9 +82,10 @@ struct Method {
                               const std::string &className = "",
                               bool specifyNamespaces = true) const;
 
-    static std::string GetArgSignature(const std::vector<TypedVar *> &args,
-                                       bool specifyNamespaces);
-    static std::string GetJavaArgSignature(const std::vector<TypedVar *> &args);
+    void emitCppArgSignature(Formatter &out, bool specifyNamespaces) const;
+    void emitCppResultSignature(Formatter &out, bool specifyNamespaces) const;
+    void emitJavaArgSignature(Formatter &out) const;
+    void emitJavaResultSignature(Formatter &out) const;
 
     const TypedVar* canElideCallback() const;
 

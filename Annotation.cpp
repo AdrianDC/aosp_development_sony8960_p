@@ -18,6 +18,7 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <hidl-util/StringHelper.h>
 #include <vector>
 
 namespace android {
@@ -120,16 +121,7 @@ void Annotation::dump(Formatter &out) const {
             out << "{";
         }
 
-        bool first = true;
-        for (const auto &value : *values) {
-            if (!first) {
-                out << ", ";
-            }
-
-            out << value;
-
-            first = false;
-        }
+        out << StringHelper::JoinStrings(*values, ", ");
 
         if (values->size() > 1) {
             out << "}";
