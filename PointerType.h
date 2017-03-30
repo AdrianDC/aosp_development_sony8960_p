@@ -49,8 +49,7 @@ struct PointerType : public Type {
     bool resultNeedsDeref() const override;
 
     bool isJavaCompatible() const override;
-
-    void getAlignmentAndSize(size_t *align, size_t *size) const override;
+    bool containsPointer() const override;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 };

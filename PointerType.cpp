@@ -66,8 +66,8 @@ bool PointerType::isJavaCompatible() const {
     return false;
 }
 
-void PointerType::getAlignmentAndSize(size_t *align, size_t *size) const {
-    *align = *size = 0; // this object should only be used in passthrough mode
+bool PointerType::containsPointer() const {
+    return true;
 }
 
 status_t PointerType::emitVtsTypeDeclarations(Formatter &out) const {
