@@ -450,8 +450,13 @@ bool Type::isJavaCompatible() const {
     return true;
 }
 
-void Type::getAlignmentAndSize(size_t *, size_t *) const {
-    CHECK(!"Should not be here");
+void Type::getAlignmentAndSize(
+        size_t * /* align */, size_t * /* size */) const {
+    CHECK(!"Should not be here.");
+}
+
+bool Type::containsPointer() const {
+    return false;
 }
 
 void Type::appendToExportedTypesVector(

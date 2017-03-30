@@ -65,6 +65,7 @@ struct Scope : public NamedType {
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
+    bool containsPointer() const override;
 
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const override;

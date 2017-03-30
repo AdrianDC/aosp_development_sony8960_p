@@ -504,6 +504,10 @@ bool ArrayType::isJavaCompatible() const {
     return mElementType->isJavaCompatible();
 }
 
+bool ArrayType::containsPointer() const {
+    return mElementType->containsPointer();
+}
+
 void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {
     mElementType->getAlignmentAndSize(align, size);
 
