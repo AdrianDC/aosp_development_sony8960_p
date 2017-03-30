@@ -498,6 +498,14 @@ TEST_F(HidlTest, PingTest) {
     EXPECT_OK(manager->ping());
 }
 
+TEST_F(HidlTest, TryGetServiceTest) {
+    sp<IServiceManager> dne = IServiceManager::tryGetService("boss");
+    ASSERT_EQ(dne, nullptr);
+
+    sp<IServiceManager> manager = IServiceManager::tryGetService();
+    ASSERT_NE(manager, nullptr);
+}
+
 TEST_F(HidlTest, ServiceListTest) {
     static const std::set<std::string> binderizedSet = {
         "android.hardware.tests.pointer@1.0::IPointer/pointer",
