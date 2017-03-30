@@ -125,20 +125,28 @@ void AST::enterLeaveNamespace(Formatter &out, bool enter) const {
     }
 }
 
-static void declareServiceManagerInteractions(Formatter &out, const std::string &interfaceName) {
-    out << "static ::android::sp<" << interfaceName << "> getService("
+static void declareGetService(Formatter &out, const std::string &interfaceName, bool isTry) {
+    const std::string functionName = isTry ? "tryGetService" : "getService";
+
+    out << "static ::android::sp<" << interfaceName << "> " << functionName << "("
         << "const std::string &serviceName=\"default\", bool getStub=false);\n";
-    out << "static ::android::sp<" << interfaceName << "> getService("
+    out << "static ::android::sp<" << interfaceName << "> " << functionName << "("
         << "const char serviceName[], bool getStub=false)"
         << "  { std::string str(serviceName ? serviceName : \"\");"
-        << "      return getService(str, getStub); }\n";
-    out << "static ::android::sp<" << interfaceName << "> getService("
+        << "      return " << functionName << "(str, getStub); }\n";
+    out << "static ::android::sp<" << interfaceName << "> " << functionName << "("
         << "const ::android::hardware::hidl_string& serviceName, bool getStub=false)"
         // without c_str the std::string constructor is ambiguous
         << "  { std::string str(serviceName.c_str());"
-        << "      return getService(str, getStub); }\n";
-    out << "static ::android::sp<" << interfaceName << "> getService("
-        << "bool getStub) { return getService(\"default\", getStub); }\n";
+        << "      return " << functionName << "(str, getStub); }\n";
+    out << "static ::android::sp<" << interfaceName << "> " << functionName << "("
+        << "bool getStub) { return " << functionName << "(\"default\", getStub); }\n";
+}
+
+static void declareServiceManagerInteractions(Formatter &out, const std::string &interfaceName) {
+    declareGetService(out, interfaceName, true /* isTry */);
+    declareGetService(out, interfaceName, false /* isTry */);
+
     out << "::android::status_t registerAsService(const std::string &serviceName=\"default\");\n";
     out << "static bool registerForNotifications(\n";
     out.indent(2, [&] {
@@ -149,13 +157,15 @@ static void declareServiceManagerInteractions(Formatter &out, const std::string 
 
 }
 
-static void implementServiceManagerInteractions(Formatter &out,
-        const FQName &fqName, const std::string &package) {
+static void implementGetService(Formatter &out,
+        const FQName &fqName,
+        bool isTry) {
 
     const std::string interfaceName = fqName.getInterfaceName();
+    const std::string functionName = isTry ? "tryGetService" : "getService";
 
     out << "// static\n"
-        << "::android::sp<" << interfaceName << "> " << interfaceName << "::getService("
+        << "::android::sp<" << interfaceName << "> " << interfaceName << "::" << functionName << "("
         << "const std::string &serviceName, const bool getStub) ";
     out.block([&] {
         out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
@@ -210,10 +220,12 @@ static void implementServiceManagerInteractions(Formatter &out,
                     << "break;\n";
             }).endl();
 
-            out.sIf("vintfHwbinder", [&] {
-                out << "::android::hardware::details::waitForHwService("
-                    << interfaceName << "::descriptor" << ", serviceName);\n";
-            }).endl();
+            if (!isTry) {
+                out.sIf("vintfHwbinder", [&] {
+                    out << "::android::hardware::details::waitForHwService("
+                        << interfaceName << "::descriptor" << ", serviceName);\n";
+                }).endl();
+            }
 
             out << "::android::hardware::Return<::android::sp<"
                 << gIBaseFqName.cppName() << ">> ret = \n";
@@ -268,6 +280,15 @@ static void implementServiceManagerInteractions(Formatter &out,
 
         out << "return iface;\n";
     }).endl().endl();
+}
+
+static void implementServiceManagerInteractions(Formatter &out,
+        const FQName &fqName, const std::string &package) {
+
+    const std::string interfaceName = fqName.getInterfaceName();
+
+    implementGetService(out, fqName, true /* isTry */);
+    implementGetService(out, fqName, false /* isTry */);
 
     out << "::android::status_t " << interfaceName << "::registerAsService("
         << "const std::string &serviceName) ";
