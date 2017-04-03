@@ -117,6 +117,7 @@ private:
     bool fillPingMethod(Method *method) const;
     bool fillDescriptorChainMethod(Method *method) const;
     bool fillGetDescriptorMethod(Method *method) const;
+    bool fillHashChainMethod(Method *method) const;
     bool fillSyspropsChangedMethod(Method *method) const;
     bool fillLinkToDeathMethod(Method *method) const;
     bool fillUnlinkToDeathMethod(Method *method) const;

@@ -20,6 +20,7 @@
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/bar/1.0/IImportRules.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
+#include <android/hardware/tests/hash/1.0/IHash.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
@@ -84,6 +85,7 @@ using ::android::hardware::tests::foo::V1_0::implementation::FooCallback;
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::bar::V1_0::IComplicated;
 using ::android::hardware::tests::baz::V1_0::IBaz;
+using ::android::hardware::tests::hash::V1_0::IHash;
 using ::android::hardware::tests::inheritance::V1_0::IFetcher;
 using ::android::hardware::tests::inheritance::V1_0::IGrandparent;
 using ::android::hardware::tests::inheritance::V1_0::IParent;
@@ -504,6 +506,21 @@ TEST_F(HidlTest, TryGetServiceTest) {
 
     sp<IServiceManager> manager = IServiceManager::tryGetService();
     ASSERT_NE(manager, nullptr);
+}
+
+TEST_F(HidlTest, HashTest) {
+    uint8_t ihash[32] = {74,38,204,105,102,117,11,15,207,7,238,198,29,35,30,62,100,
+            216,131,182,3,61,162,241,215,211,6,20,251,143,125,161};
+    auto service = IHash::getService(mode == PASSTHROUGH /* getStub */);
+    EXPECT_OK(service->getHashChain([&] (const auto &chain) {
+        EXPECT_EQ(chain[0].size(), 32u);
+        EXPECT_ARRAYEQ(ihash, chain[0], 32);
+        EXPECT_OK(manager->getHashChain([&] (const auto &managerChain) {
+            EXPECT_EQ(chain[chain.size() - 1].size(), managerChain[managerChain.size() - 1].size());
+            EXPECT_ARRAYEQ(chain[chain.size() - 1], managerChain[managerChain.size() - 1],
+                    chain[chain.size() - 1].size()) << "Hash for IBase doesn't match!";
+        }));
+    }));
 }
 
 TEST_F(HidlTest, ServiceListTest) {

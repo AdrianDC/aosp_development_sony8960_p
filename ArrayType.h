@@ -44,6 +44,8 @@ struct ArrayType : public Type {
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 
+    std::string getInternalDataCppType() const;
+
     void addNamedTypesToSet(std::set<const FQName> &set) const override;
 
     std::string getJavaType(bool forInitializer) const override;
