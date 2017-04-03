@@ -70,6 +70,7 @@ struct RefType : public TemplatedType {
     bool resultNeedsDeref() const override;
 
     bool isJavaCompatible() const override;
+    bool containsPointer() const override;
 
  private:
     DISALLOW_COPY_AND_ASSIGN(RefType);

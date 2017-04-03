@@ -180,6 +180,16 @@ bool Scope::isJavaCompatible() const {
     return true;
 }
 
+bool Scope::containsPointer() const {
+    for (const auto &type : mTypes) {
+        if (type->containsPointer()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Scope::appendToExportedTypesVector(
         std::vector<const Type *> *exportedTypes) const {
     forEachType([&](Type *type) {

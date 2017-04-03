@@ -736,6 +736,10 @@ bool VectorType::isJavaCompatible() const {
     return true;
 }
 
+bool VectorType::containsPointer() const {
+    return mElementType->containsPointer();
+}
+
 void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_vec<T>
     *size = 16;
