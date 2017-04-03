@@ -56,6 +56,8 @@ struct FmqType : public TemplatedType {
 
     bool isJavaCompatible() const override;
 
+    void getAlignmentAndSize(size_t *align, size_t *size) const override;
+
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
     bool isCompatibleElementType(Type *elementType) const override;

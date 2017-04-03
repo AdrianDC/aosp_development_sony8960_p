@@ -245,5 +245,9 @@ bool RefType::isJavaCompatible() const {
     return false;
 }
 
+bool RefType::containsPointer() const {
+    return true;
+}
+
 }  // namespace android
 
