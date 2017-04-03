@@ -432,10 +432,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             if (elidedReturn == nullptr && returnsValue) {
                 out << "using "
                     << method->name()
-                    << "_cb = std::function<void("
-                    << Method::GetArgSignature(method->results(),
-                                               true /* specify namespaces */)
-                    << ")>;\n";
+                    << "_cb = std::function<void(";
+                method->emitCppResultSignature(out, true /* specify namespaces */);
+                out << ")>;\n";
             }
 
             method->dumpAnnotations(out);
@@ -448,9 +447,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             }
 
             out << method->name()
-                << "("
-                << Method::GetArgSignature(method->args(),
-                                           true /* specify namespaces */);
+                << "(";
+            method->emitCppArgSignature(out, true /* specify namespaces */);
 
             if (returnsValue && elidedReturn == nullptr) {
                 if (!method->args().empty()) {
@@ -671,30 +669,18 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         << method->name()
         << "(";
 
-    bool first = true;
-    for (const auto &arg : method->args()) {
-        if (!first) {
-            out << ", ";
-        }
-        first = false;
+    out.join(method->args().begin(), method->args().end(), ", ", [&](const auto &arg) {
         out << (arg->type().isInterface() ? "_hidl_wrapped_" : "") << arg->name();
-    }
+    });
     if (returnsValue && elidedReturn == nullptr) {
         if (!method->args().empty()) {
             out << ", ";
         }
         out << "[&](";
-        first = true;
-        for (const auto &arg : method->results()) {
-            if (!first) {
-                out << ", ";
-            }
-
+        out.join(method->results().begin(), method->results().end(), ", ", [&](const auto &arg) {
             out << "const auto &_hidl_out_"
                 << arg->name();
-
-            first = false;
-        }
+        });
 
         out << ") {\n";
         out.indent();
@@ -718,15 +704,10 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         }
 
         out << "_hidl_cb(";
-        first = true;
-        for (const auto &arg : method->results()) {
-            if (!first) {
-                out << ", ";
-            }
-            first = false;
+        out.join(method->results().begin(), method->results().end(), ", ", [&](const auto &arg) {
             out << (arg->type().isInterface() ? "_hidl_out_wrapped_" : "_hidl_out_")
                 << arg->name();
-        }
+        });
         out << ");\n";
         out.unindent();
         out << "});\n\n";
@@ -1342,19 +1323,12 @@ status_t AST::generateProxyMethodSource(Formatter &out,
         if (returnsValue && elidedReturn == nullptr) {
             out << "_hidl_cb(";
 
-            bool first = true;
-            for (const auto &arg : method->results()) {
-                if (!first) {
-                    out << ", ";
-                }
-
+            out.join(method->results().begin(), method->results().end(), ", ", [&] (const auto &arg) {
                 if (arg->type().resultNeedsDeref()) {
                     out << "*";
                 }
                 out << "_hidl_out_" << arg->name();
-
-                first = false;
-            }
+            });
 
             out << ");\n\n";
         }
@@ -1641,20 +1615,12 @@ status_t AST::generateStubSourceForMethod(
             << callee << "->" << method->name()
             << "(";
 
-        bool first = true;
-        for (const auto &arg : method->args()) {
-            if (!first) {
-                out << ", ";
-            }
-
+        out.join(method->args().begin(), method->args().end(), ", ", [&] (const auto &arg) {
             if (arg->type().resultNeedsDeref()) {
                 out << "*";
             }
-
             out << arg->name();
-
-            first = false;
-        }
+        });
 
         out << ");\n\n";
         out << "::android::hardware::writeToParcel(::android::hardware::Status::ok(), "
@@ -1693,38 +1659,24 @@ status_t AST::generateStubSourceForMethod(
 
         out << callee << "->" << method->name() << "(";
 
-        bool first = true;
-        for (const auto &arg : method->args()) {
-            if (!first) {
-                out << ", ";
-            }
-
+        out.join(method->args().begin(), method->args().end(), ", ", [&] (const auto &arg) {
             if (arg->type().resultNeedsDeref()) {
                 out << "*";
             }
 
             out << arg->name();
-
-            first = false;
-        }
+        });
 
         if (returnsValue) {
-            if (!first) {
+            if (!method->args().empty()) {
                 out << ", ";
             }
 
             out << "[&](";
 
-            first = true;
-            for (const auto &arg : method->results()) {
-                if (!first) {
-                    out << ", ";
-                }
-
+            out.join(method->results().begin(), method->results().end(), ", ", [&](const auto &arg) {
                 out << "const auto &_hidl_out_" << arg->name();
-
-                first = false;
-            }
+            });
 
             out << ") {\n";
             out.indent();
