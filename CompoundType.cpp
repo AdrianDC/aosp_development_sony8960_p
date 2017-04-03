@@ -605,14 +605,9 @@ status_t CompoundType::emitJavaTypeDeclarations(
         out.block([&] {
             out << "return java.util.Objects.hash(\n";
             out.indent(2, [&] {
-                bool first = true;
-                for (const auto &field : *mFields) {
-                    if (!first) {
-                        out << ", \n";
-                    }
-                    first = false;
+                out.join(mFields->begin(), mFields->end(), ", \n", [&] (const auto &field) {
                     out << "android.os.HidlSupport.deepHashCode(this." << field->name() << ")";
-                }
+                });
             });
             out << ");\n";
         }).endl().endl();
