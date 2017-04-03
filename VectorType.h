@@ -121,6 +121,7 @@ struct VectorType : public TemplatedType {
     bool resultNeedsDeref() const override;
 
     bool isJavaCompatible() const override;
+    bool containsPointer() const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 

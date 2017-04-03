@@ -160,7 +160,8 @@ bool HandleType::isJavaCompatible() const {
 }
 
 void HandleType::getAlignmentAndSize(size_t *align, size_t *size) const {
-    *align = *size = 8;
+    *align = 8;  // hidl_handle
+    *size = 16;
 }
 
 status_t HandleType::emitVtsTypeDeclarations(Formatter &out) const {

@@ -128,6 +128,7 @@ struct CompoundType : public Scope {
     status_t emitVtsAttributeType(Formatter &out) const override;
 
     bool isJavaCompatible() const override;
+    bool containsPointer() const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const;
 
