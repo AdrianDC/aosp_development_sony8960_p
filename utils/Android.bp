@@ -17,9 +17,9 @@ cc_library_shared {
     host_supported: true,
     cflags: hidl_flags,
     srcs: [
+        "FQName.cpp",
         "Formatter.cpp",
         "StringHelper.cpp",
-        "FQName.cpp"
     ],
     shared_libs: [
         "libbase",

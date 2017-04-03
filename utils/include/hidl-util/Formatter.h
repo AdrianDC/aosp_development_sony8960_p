@@ -109,7 +109,22 @@ struct Formatter {
             std::function<void(const typename std::iterator_traits<I>::value_type &)> func);
 
     Formatter &operator<<(const std::string &out);
-    Formatter &operator<<(size_t n);
+
+    Formatter &operator<<(char c);
+    Formatter &operator<<(signed char c);
+    Formatter &operator<<(unsigned char c);
+
+    Formatter &operator<<(short c);
+    Formatter &operator<<(unsigned short c);
+    Formatter &operator<<(int c);
+    Formatter &operator<<(unsigned int c);
+    Formatter &operator<<(long c);
+    Formatter &operator<<(unsigned long c);
+    Formatter &operator<<(long long c);
+    Formatter &operator<<(unsigned long long c);
+    Formatter &operator<<(float c);
+    Formatter &operator<<(double c);
+    Formatter &operator<<(long double c);
 
     // Any substrings matching "space" will be stripped out of the output.
     void setNamespace(const std::string &space);
