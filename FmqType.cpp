@@ -137,6 +137,12 @@ bool FmqType::isJavaCompatible() const {
     return false;
 }
 
+void FmqType::getAlignmentAndSize(
+        size_t *align, size_t *size) const {
+    *align = 8;  // MQDescriptor<>
+    *size = 32;
+}
+
 bool FmqType::needsEmbeddedReadWrite() const {
     return true;
 }
