@@ -56,6 +56,7 @@ struct ConstantExpression {
 
     static ConstantExpression Zero(ScalarType::Kind kind);
     static ConstantExpression One(ScalarType::Kind kind);
+    static ConstantExpression ValueOf(ScalarType::Kind kind, uint64_t value);
 
     /* Evaluated result in a string form. */
     std::string value() const;

@@ -152,19 +152,32 @@ bool handleLogical(bool lval, const char *op, bool rval) {
 ConstantExpression::ConstantExpression() {
 }
 
+// static
 ConstantExpression ConstantExpression::Zero(ScalarType::Kind kind) {
-    ConstantExpression ce("0");
-    CHECK(isSupported(kind));
-    ce.mValueKind = kind;
-    return ce;
-}
-ConstantExpression ConstantExpression::One(ScalarType::Kind kind) {
-    ConstantExpression ce("1");
-    CHECK(isSupported(kind));
-    ce.mValueKind = kind;
+    ConstantExpression ce = ValueOf(kind, 0);
+    ce.mExpr = "0";
     return ce;
 }
 
+// static
+ConstantExpression ConstantExpression::One(ScalarType::Kind kind) {
+    ConstantExpression ce = ValueOf(kind, 1);
+    ce.mExpr = "1";
+    return ce;
+}
+
+// static
+ConstantExpression ConstantExpression::ValueOf(ScalarType::Kind kind, uint64_t value) {
+    ConstantExpression ce;
+    CHECK(isSupported(kind));
+
+    ce.mExpr = "";
+    ce.mType = kConstExprLiteral;
+    ce.mValueKind = kind;
+    ce.mValue = value;
+    ce.mTrivialDescription = true;
+    return ce;
+}
 ConstantExpression::ConstantExpression(const ConstantExpression& other) {
     *this = other;
 }
