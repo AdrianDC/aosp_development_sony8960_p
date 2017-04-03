@@ -148,9 +148,35 @@ Formatter &Formatter::operator<<(const std::string &out) {
     return *this;
 }
 
-Formatter &Formatter::operator<<(size_t n) {
-    return (*this) << std::to_string(n);
-}
+#define FORMATTER_INPUT_INTEGER(__type__)               \
+    Formatter &Formatter::operator<<(__type__ n) {      \
+        return (*this) << std::to_string(n);            \
+    }                                                   \
+
+FORMATTER_INPUT_INTEGER(short);
+FORMATTER_INPUT_INTEGER(unsigned short);
+FORMATTER_INPUT_INTEGER(int);
+FORMATTER_INPUT_INTEGER(unsigned int);
+FORMATTER_INPUT_INTEGER(long);
+FORMATTER_INPUT_INTEGER(unsigned long);
+FORMATTER_INPUT_INTEGER(long long);
+FORMATTER_INPUT_INTEGER(unsigned long long);
+FORMATTER_INPUT_INTEGER(float);
+FORMATTER_INPUT_INTEGER(double);
+FORMATTER_INPUT_INTEGER(long double);
+
+#undef FORMATTER_INPUT_INTEGER
+
+#define FORMATTER_INPUT_CHAR(__type__)                  \
+    Formatter &Formatter::operator<<(__type__ c) {      \
+        return (*this) << std::string(1, (char)c);    \
+    }                                                   \
+
+FORMATTER_INPUT_CHAR(char);
+FORMATTER_INPUT_CHAR(signed char);
+FORMATTER_INPUT_CHAR(unsigned char);
+
+#undef FORMATTER_INPUT_CHAR
 
 void Formatter::setNamespace(const std::string &space) {
     mSpace = space;
