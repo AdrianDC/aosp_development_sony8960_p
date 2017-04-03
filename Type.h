@@ -215,7 +215,7 @@ struct Type {
 
     // Returns true iff this type is supported through the Java backend.
     virtual bool isJavaCompatible() const;
-
+    virtual bool containsPointer() const;
     virtual void getAlignmentAndSize(size_t *align, size_t *size) const;
 
     void setAnnotations(std::vector<Annotation *> *annotations);

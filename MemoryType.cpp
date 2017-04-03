@@ -141,7 +141,8 @@ bool MemoryType::isJavaCompatible() const {
 }
 
 void MemoryType::getAlignmentAndSize(size_t *align, size_t *size) const {
-    *align = *size = 8;
+    *align = 8;  // hidl_memory
+    *size = 40;
 }
 
 status_t MemoryType::emitVtsTypeDeclarations(Formatter &out) const {
