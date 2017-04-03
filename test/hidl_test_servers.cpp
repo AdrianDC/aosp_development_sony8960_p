@@ -23,6 +23,7 @@
 #include <android/hardware/tests/foo/1.0/BpHwSimple.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
+#include <android/hardware/tests/hash/1.0/IHash.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
 #include <android/hardware/tests/inheritance/1.0/IChild.h>
@@ -43,6 +44,7 @@
 
 using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::baz::V1_0::IBaz;
+using ::android::hardware::tests::hash::V1_0::IHash;
 using ::android::hardware::tests::inheritance::V1_0::IFetcher;
 using ::android::hardware::tests::inheritance::V1_0::IParent;
 using ::android::hardware::tests::inheritance::V1_0::IChild;
@@ -108,6 +110,7 @@ int main(int /* argc */, char* /* argv */ []) {
     forkServer<IParent>("parent");
     forkServer<IFetcher>("fetcher");
     forkServer<IBar>("foo");
+    forkServer<IHash>("default");
     forkServer<IBaz>("dyingBaz");
     forkServer<IGraph>("graph");
     forkServer<IPointer>("pointer");
