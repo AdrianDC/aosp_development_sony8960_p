@@ -172,13 +172,8 @@ static void implementGetService(Formatter &out,
         out << "::android::vintf::Transport transport = ::android::hardware::getTransport("
             << interfaceName << "::descriptor, serviceName);\n";
 
-        // TODO(b/34274385) remove sysprop check
-        out << "const bool vintfHwbinder = (transport == ::android::vintf::Transport::HWBINDER) ||\n"
-            << "                           (transport == ::android::vintf::Transport::TOGGLED &&\n"
-            << "                            ::android::hardware::details::blockingHalBinderizationEnabled());\n"
-            << "const bool vintfPassthru = (transport == ::android::vintf::Transport::PASSTHROUGH) ||\n"
-            << "                           (transport == ::android::vintf::Transport::TOGGLED &&\n"
-            << "                            !::android::hardware::details::blockingHalBinderizationEnabled());\n"
+        out << "const bool vintfHwbinder = (transport == ::android::vintf::Transport::HWBINDER);\n"
+            << "const bool vintfPassthru = (transport == ::android::vintf::Transport::PASSTHROUGH);\n"
             << "const bool vintfEmpty    = (transport == ::android::vintf::Transport::EMPTY);\n\n";
 
         // if (getStub) {
