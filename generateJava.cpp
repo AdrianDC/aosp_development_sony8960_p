@@ -160,7 +160,7 @@ status_t AST::generateJava(
         << ifaceName
         << "\";\n\n";
 
-    out << "public static "
+    out << "/* package private */ static "
         << ifaceName
         << " asInterface(android.os.IHwBinder binder) {\n";
 
@@ -188,7 +188,37 @@ status_t AST::generateJava(
     out.unindent();
     out << "}\n\n";
 
-    out << "return new " << ifaceName << ".Proxy(binder);\n";
+    out << ifaceName << " proxy = new " << ifaceName << ".Proxy(binder);\n\n";
+    out << "try {\n";
+    out.indent();
+    out << "for (String descriptor : proxy.interfaceChain()) {\n";
+    out.indent();
+    out << "if (descriptor.equals(kInterfaceName)) {\n";
+    out.indent();
+    out << "return proxy;\n";
+    out.unindent();
+    out << "}\n";
+    out.unindent();
+    out << "}\n";
+    out.unindent();
+    out << "} catch (android.os.RemoteException e) {\n";
+    out.indent();
+    out.unindent();
+    out << "}\n\n";
+
+    out << "return null;\n";
+
+    out.unindent();
+    out << "}\n\n";
+
+    out << "public static "
+        << ifaceName
+        << " castFrom(android.os.IHwInterface iface) {\n";
+    out.indent();
+
+    out << "return (iface == null) ? null : "
+        << ifaceName
+        << ".asInterface(iface.asBinder());\n";
 
     out.unindent();
     out << "}\n\n";
