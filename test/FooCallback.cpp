@@ -2,9 +2,9 @@
 #define LOG_TAG "hidl_test"
 
 #include "FooCallback.h"
-#include <android/log.h>
 #include <hidl-test/FooHelper.h>
 #include <inttypes.h>
+#include <log/log.h>
 #include <utils/Timers.h>
 
 namespace android {
