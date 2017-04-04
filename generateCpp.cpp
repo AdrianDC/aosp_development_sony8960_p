@@ -245,7 +245,8 @@ static void implementGetService(Formatter &out,
                 // race condition. hwservicemanager drops the service
                 // from waitForHwService to here
                 out << "ALOGW(\"getService: found null hwbinder interface\");\n"
-                    << "break;\n";
+                    << (isTry ? "break" : "continue")
+                    << ";\n";
             }).endl();
             out << "::android::hardware::Return<::android::sp<" << interfaceName
                 << ">> castRet = " << interfaceName << "::castFrom(base, true /* emitError */);\n";
@@ -253,7 +254,8 @@ static void implementGetService(Formatter &out,
                 out.sIf("castRet.isDeadObject()", [&] {
                     // service is dead (castFrom cannot call interfaceChain)
                     out << "ALOGW(\"getService: found dead hwbinder service\");\n"
-                        << "break;\n";
+                        << (isTry ? "break" : "continue")
+                        << ";\n";
                 }).sElse([&] {
                     out << "ALOGW(\"getService: cannot call into hwbinder service: %s"
                         << "; No permission? Check for selinux denials.\", "
