@@ -248,9 +248,9 @@ status_t AST::generateJava(
 
             out.indent();
 
-            out << "public void onValues("
-                << Method::GetJavaArgSignature(method->results())
-                << ");\n";
+            out << "public void onValues(";
+            method->emitJavaResultSignature(out);
+            out << ");\n";
 
             out.unindent();
             out << "}\n\n";
@@ -264,8 +264,8 @@ status_t AST::generateJava(
 
         out << " "
             << method->name()
-            << "("
-            << Method::GetJavaArgSignature(method->args());
+            << "(";
+        method->emitJavaArgSignature(out);
 
         if (needsCallback) {
             if (!method->args().empty()) {
@@ -340,8 +340,8 @@ status_t AST::generateJava(
 
         out << " "
             << method->name()
-            << "("
-            << Method::GetJavaArgSignature(method->args());
+            << "(";
+        method->emitJavaArgSignature(out);
 
         if (needsCallback) {
             if (!method->args().empty()) {
@@ -472,9 +472,9 @@ status_t AST::generateJava(
             << resultType
             << " "
             << method->name()
-            << "("
-            << Method::GetJavaArgSignature(method->args())
-            << ") {\n";
+            << "(";
+        method->emitJavaArgSignature(out);
+        out << ") {\n";
 
         out.indent();
         method->javaImpl(IMPL_INTERFACE, out);
@@ -604,9 +604,9 @@ status_t AST::generateJava(
             out.indent();
 
             out << "@Override\n"
-                << "public void onValues("
-                << Method::GetJavaArgSignature(method->results())
-                << ") {\n";
+                << "public void onValues(";
+            method->emitJavaResultSignature(out);
+            out << ") {\n";
 
             out.indent();
             out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";

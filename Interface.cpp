@@ -17,17 +17,24 @@
 #include "Interface.h"
 
 #include "Annotation.h"
+#include "ArrayType.h"
+#include "ConstantExpression.h"
 #include "DeathRecipientType.h"
 #include "Method.h"
 #include "ScalarType.h"
 #include "StringType.h"
 #include "VectorType.h"
 
+#include <unistd.h>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
-#include <iostream>
-#include <sstream>
+#include <openssl/sha.h>
 
 namespace android {
 
@@ -58,6 +65,7 @@ enum {
     HIDL_SET_HAL_INSTRUMENTATION_TRANSACTION  = B_PACK_CHARS(0x0f, 'I', 'N', 'T'),
     HIDL_GET_REF_INFO_TRANSACTION             = B_PACK_CHARS(0x0f, 'R', 'E', 'F'),
     HIDL_DEBUG_TRANSACTION                    = B_PACK_CHARS(0x0f, 'D', 'B', 'G'),
+    HIDL_HASH_CHAIN_TRANSACTION               = B_PACK_CHARS(0x0f, 'H', 'S', 'H'),
     LAST_HIDL_TRANSACTION   = 0x0fffffff,
 };
 
@@ -280,6 +288,75 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
     return true;
 }
 
+static void sha256File(const std::string &path, uint8_t *outDigest) {
+    std::ifstream stream(path);
+    std::stringstream fileStream;
+    fileStream << stream.rdbuf();
+    std::string fileContent = fileStream.str();
+    SHA256(reinterpret_cast<const uint8_t *>(fileContent.c_str()),
+            fileContent.size(), outDigest);
+}
+
+static void emitDigestChain(
+        Formatter &out,
+        const std::string &prefix,
+        const std::vector<const Interface *> &chain,
+        std::function<std::string(const ConstantExpression &)> byteToString) {
+    out.join(chain.begin(), chain.end(), ",\n", [&] (const auto &iface) {
+        const std::string &filename = iface->location().begin().filename();
+        uint8_t digest[SHA256_DIGEST_LENGTH];
+        sha256File(filename, digest);
+        out << prefix;
+        out << "{";
+        out.join(digest, digest + SHA256_DIGEST_LENGTH, ",", [&](const auto &e) {
+            // Use ConstantExpression::cppValue / javaValue
+            // because Java used signed byte for uint8_t.
+            out << byteToString(ConstantExpression::ValueOf(ScalarType::Kind::KIND_UINT8, e));
+        });
+        out << "} /* ";
+        out.join(digest, digest + SHA256_DIGEST_LENGTH, "", [&](const auto &e) {
+            static const char hexes[] = "0123456789abcdef";
+            out << hexes[e >> 4] << hexes[e & 0xF];
+        });
+        out << " */";
+    });
+}
+
+bool Interface::fillHashChainMethod(Method *method) const {
+    if (method->name() != "getHashChain") {
+        return false;
+    }
+    const VectorType *chainType = static_cast<const VectorType *>(&method->results()[0]->type());
+    const ArrayType *digestType = static_cast<const ArrayType *>(chainType->getElementType());
+
+    method->fillImplementation(
+        HIDL_HASH_CHAIN_TRANSACTION,
+        { { IMPL_INTERFACE, [this, digestType](auto &out) {
+            std::vector<const Interface *> chain = typeChain();
+            out << "_hidl_cb(";
+            out.block([&] {
+                emitDigestChain(out, "(" + digestType->getInternalDataCppType() + ")",
+                    chain, [](const auto &e){return e.cppValue();});
+            });
+            out << ");\n";
+            out << "return ::android::hardware::Void();\n";
+        } } }, /* cppImpl */
+        { { IMPL_INTERFACE, [this, digestType, chainType](auto &out) {
+            std::vector<const Interface *> chain = typeChain();
+            out << "return new "
+                << chainType->getJavaType(false /* forInitializer */)
+                << "(java.util.Arrays.asList(\n";
+            out.indent(2, [&] {
+                // No need for dimensions when elements are explicitly provided.
+                emitDigestChain(out, "new " + digestType->getJavaType(false /* forInitializer */),
+                    chain, [](const auto &e){return e.javaValue();});
+            });
+            out << "));\n";
+        } } } /* javaImpl */
+    );
+    return true;
+}
+
 bool Interface::fillGetDescriptorMethod(Method *method) const {
     if (method->name() != "interfaceDescriptor") {
         return false;
@@ -424,6 +501,7 @@ bool Interface::addAllReservedMethods() {
         bool fillSuccess = fillPingMethod(method)
             || fillDescriptorChainMethod(method)
             || fillGetDescriptorMethod(method)
+            || fillHashChainMethod(method)
             || fillSyspropsChangedMethod(method)
             || fillLinkToDeathMethod(method)
             || fillUnlinkToDeathMethod(method)
