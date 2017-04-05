@@ -184,14 +184,12 @@ my_tests := \
         | $(my_test_filter_command)))
 # The source jars containing the tests.
 my_srcs_jars := \
-    $(foreach lib,$(LOCAL_JAVA_LIBRARIES), \
-        $(call intermediates-dir-for,JAVA_LIBRARIES,$(lib),,COMMON)/javalib.jar) \
     $(foreach lib, \
-        $(LOCAL_STATIC_JAVA_LIBRARIES), \
-        $(call intermediates-dir-for,JAVA_LIBRARIES,$(lib),,COMMON)/classes.jar) \
+        $(LOCAL_JAVA_LIBRARIES) $(LOCAL_STATIC_JAVA_LIBRARIES), \
+        $(call intermediates-dir-for,JAVA_LIBRARIES,$(lib),,COMMON)/classes-pre-proguard.jar) \
     $(foreach lib, \
         $(LOCAL_TEST_PACKAGE), \
-        $(call intermediates-dir-for,APPS,$(lib),,COMMON)/classes.jar)
+        $(call intermediates-dir-for,APPS,$(lib),,COMMON)/classes-pre-proguard.jar)
 # The jars needed to run the tests.
 my_jars := $(my_robolectric_jars) \
     prebuilts/sdk/$(LOCAL_SDK_VERSION)/android.jar \
