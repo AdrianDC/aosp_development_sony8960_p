@@ -18,6 +18,7 @@ package com.android.commands.hidl_test_java;
 
 import android.hardware.tests.baz.V1_0.IBase;
 import android.hardware.tests.baz.V1_0.IBaz;
+import android.hardware.tests.baz.V1_0.IQuux;
 import android.hardware.tests.baz.V1_0.IBaz.NestedStruct;
 import android.hardware.tests.baz.V1_0.IBazCallback;
 import android.os.HwBinder;
@@ -237,6 +238,14 @@ public final class HidlTestJava {
             // Test access through base interface binder.
             IBase baseProxy = IBase.getService("baz");
             baseProxy.someBaseMethod();
+
+            IBaz bazProxy = IBaz.castFrom(baseProxy);
+            ExpectTrue(bazProxy != null);
+
+            // IQuux is completely unrelated to IBase/IBaz, so the following
+            // should fail, i.e. return null.
+            IQuux quuxProxy = IQuux.castFrom(baseProxy);
+            ExpectTrue(quuxProxy == null);
         }
 
         IBaz proxy = IBaz.getService("baz");
