@@ -672,29 +672,28 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
 }
 
 TEST_F(HidlTest, TestToken) {
-    Return<uint64_t> ret = tokenManager->createToken(manager);
+    Return<void> ret = tokenManager->createToken(manager, [&] (const hidl_vec<uint8_t> &token) {
+        Return<sp<IBase>> retService = tokenManager->get(token);
+        EXPECT_OK(retService);
+        if (retService.isOk()) {
+            sp<IBase> service = retService;
+            EXPECT_NE(nullptr, service.get());
+            sp<IServiceManager> retManager = IServiceManager::castFrom(service);
+
+            // TODO(b/33818800): should have only one Bp per process
+            // EXPECT_EQ(manager, retManager);
+
+            EXPECT_NE(nullptr, retManager.get());
+        }
+
+        Return<bool> unregisterRet = tokenManager->unregister(token);
+
+        EXPECT_OK(unregisterRet);
+        if (unregisterRet.isOk()) {
+            EXPECT_TRUE(unregisterRet);
+        }
+    });
     EXPECT_OK(ret);
-    uint64_t token = ret;
-
-    Return<sp<IBase>> retService = tokenManager->get(token);
-    EXPECT_OK(retService);
-    if (retService.isOk()) {
-        sp<IBase> service = retService;
-        EXPECT_NE(nullptr, service.get());
-        sp<IServiceManager> retManager = IServiceManager::castFrom(service);
-
-        // TODO(b/33818800): should have only one Bp per process
-        // EXPECT_EQ(manager, retManager);
-
-        EXPECT_NE(nullptr, retManager.get());
-    }
-
-    Return<bool> unregisterRet = tokenManager->unregister(token);
-
-    EXPECT_OK(unregisterRet);
-    if (unregisterRet.isOk()) {
-        EXPECT_TRUE(ret);
-    }
 }
 
 TEST_F(HidlTest, TestSharedMemory) {
