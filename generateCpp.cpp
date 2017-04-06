@@ -19,6 +19,7 @@
 #include "Coordinator.h"
 #include "EnumType.h"
 #include "Interface.h"
+#include "HidlTypeAssertion.h"
 #include "Method.h"
 #include "ScalarType.h"
 #include "Scope.h"
@@ -1149,6 +1150,9 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
             implementServiceManagerInteractions(out, iface->fqName(), package);
         }
     }
+
+    HidlTypeAssertion::EmitAll(out);
+    out << "\n";
 
     enterLeaveNamespace(out, false /* enter */);
 
