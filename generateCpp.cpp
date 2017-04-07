@@ -168,13 +168,42 @@ static void implementGetService(Formatter &out,
         << "::android::sp<" << interfaceName << "> " << interfaceName << "::" << functionName << "("
         << "const std::string &serviceName, const bool getStub) ";
     out.block([&] {
-        out << "::android::sp<" << interfaceName << "> iface = nullptr;\n";
-        out << "::android::vintf::Transport transport = ::android::hardware::getTransport("
-            << interfaceName << "::descriptor, serviceName);\n";
+        out << "using ::android::hardware::defaultServiceManager;\n";
+        out << "using ::android::hardware::details::waitForHwService;\n";
+        out << "using ::android::hardware::getPassthroughServiceManager;\n";
+        out << "using ::android::hardware::Return;\n";
+        out << "using ::android::sp;\n";
+        out << "using Transport = ::android::hidl::manager::V1_0::IServiceManager::Transport;\n\n";
 
-        out << "const bool vintfHwbinder = (transport == ::android::vintf::Transport::HWBINDER);\n"
-            << "const bool vintfPassthru = (transport == ::android::vintf::Transport::PASSTHROUGH);\n"
-            << "const bool vintfEmpty    = (transport == ::android::vintf::Transport::EMPTY);\n\n";
+        out << "sp<" << interfaceName << "> iface = nullptr;\n";
+
+        out.endl();
+
+        out << "const sp<::android::hidl::manager::V1_0::IServiceManager> sm"
+            << " = defaultServiceManager();\n";
+
+        out.sIf("sm == nullptr", [&] {
+            // hwbinder is not available on this device, so future tries
+            // would also be null. I can only return nullptr.
+            out << "ALOGE(\"getService: defaultServiceManager() is null\");\n"
+                << "return nullptr;\n";
+        }).endl().endl();
+
+        out << "Return<Transport> transportRet = sm->getTransport("
+            << interfaceName << "::descriptor, serviceName);\n\n";
+
+        out.sIf("!transportRet.isOk()", [&] {
+            out << "ALOGE(\"getService: defaultServiceManager()->getTransport returns %s\", "
+                << "transportRet.description().c_str());\n";
+            out << "return nullptr;\n";
+        });
+
+        out.endl();
+
+        out << "Transport transport = transportRet;\n";
+        out << "const bool vintfHwbinder = (transport == Transport::HWBINDER);\n"
+            << "const bool vintfPassthru = (transport == Transport::PASSTHROUGH);\n"
+            << "const bool vintfEmpty    = (transport == Transport::EMPTY);\n\n";
 
         // if (getStub) {
         //     getPassthroughServiceManager()->get only once.
@@ -203,27 +232,15 @@ static void implementGetService(Formatter &out,
 
             out << "tried = true;\n";
 
-            out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
-            out.indent(2, [&] {
-                out << "= ::android::hardware::defaultServiceManager();\n";
-            });
-            out.sIf("sm == nullptr", [&] {
-                // hwbinder is not available on this device, so future tries
-                // would also be null. I can only "break" here and
-                // (vintfEmpty) try passthrough or (vintfHwbinder) return nullptr.
-                out << "ALOGE(\"getService: defaultServiceManager() is null\");\n"
-                    << "break;\n";
-            }).endl();
 
             if (!isTry) {
                 out.sIf("vintfHwbinder", [&] {
-                    out << "::android::hardware::details::waitForHwService("
-                        << interfaceName << "::descriptor" << ", serviceName);\n";
+                    out << "waitForHwService("
+                        << interfaceName << "::descriptor, serviceName);\n";
                 }).endl();
             }
 
-            out << "::android::hardware::Return<::android::sp<"
-                << gIBaseFqName.cppName() << ">> ret = \n";
+            out << "Return<sp<" << gIBaseFqName.cppName() << ">> ret = \n";
             out.indent(2, [&] {
                 out << "sm->get(" << interfaceName << "::descriptor, serviceName);\n";
             });
@@ -235,7 +252,7 @@ static void implementGetService(Formatter &out,
                     << "break;\n";
             }).endl();
 
-            out << "::android::sp<" << gIBaseFqName.cppName() << "> base = ret;\n";
+            out << "sp<" << gIBaseFqName.cppName() << "> base = ret;\n";
             out.sIf("base == nullptr", [&] {
                 // race condition. hwservicemanager drops the service
                 // from waitForHwService to here
@@ -243,7 +260,7 @@ static void implementGetService(Formatter &out,
                     << (isTry ? "break" : "continue")
                     << ";\n";
             }).endl();
-            out << "::android::hardware::Return<::android::sp<" << interfaceName
+            out << "Return<sp<" << interfaceName
                 << ">> castRet = " << interfaceName << "::castFrom(base, true /* emitError */);\n";
             out.sIf("!castRet.isOk()", [&] {
                 out.sIf("castRet.isDeadObject()", [&] {
@@ -271,18 +288,16 @@ static void implementGetService(Formatter &out,
         }).endl();
 
         out.sIf("getStub || vintfPassthru || vintfEmpty", [&] {
-            out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> pm\n";
-            out.indent(2, [&] {
-                out << "= ::android::hardware::getPassthroughServiceManager();\n";
-            });
+            out << "const sp<::android::hidl::manager::V1_0::IServiceManager> pm"
+                << " = getPassthroughServiceManager();\n";
 
             out.sIf("pm != nullptr", [&] () {
-                out << "::android::hardware::Return<::android::sp<" << gIBaseFqName.cppName() << ">> ret = \n";
+                out << "Return<sp<" << gIBaseFqName.cppName() << ">> ret = \n";
                 out.indent(2, [&] {
                     out << "pm->get(" << interfaceName << "::descriptor" << ", serviceName);\n";
                 });
                 out.sIf("ret.isOk()", [&] {
-                    out << "::android::sp<" << gIBaseFqName.cppName()
+                    out << "sp<" << gIBaseFqName.cppName()
                         << "> baseInterface = ret;\n";
                     out.sIf("baseInterface != nullptr", [&]() {
                         out << "iface = new " << fqName.getInterfacePassthroughName()
