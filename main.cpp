@@ -773,6 +773,7 @@ static status_t generateAndroidBpForPackage(
         << "generated_sources: [\"" << genSourceName << "\"],\n"
         << "generated_headers: [\"" << genHeaderName << "\"],\n"
         << "export_generated_headers: [\"" << genHeaderName << "\"],\n"
+        << "vendor_available: true,\n"
         << "shared_libs: [\n";
 
     out.indent();
