@@ -16,7 +16,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := tradefed-prebuilt
+LOCAL_MODULE := tradefed-prebuilt-deprecated
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := tradefed-prebuilt.jar
 LOCAL_IS_HOST_MODULE := true
