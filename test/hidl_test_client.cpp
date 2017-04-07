@@ -481,6 +481,17 @@ TEST_F(HidlTest, ToStringTest) {
     // statement can be written here.
 }
 
+TEST_F(HidlTest, PassthroughLookupTest) {
+    // IFoo is special because it returns an interface no matter
+    //   what instance name is requested. In general, this is BAD!
+    EXPECT_NE(nullptr, IFoo::getService("", true /* getStub */).get());
+    EXPECT_NE(nullptr, IFoo::getService("a", true /* getStub */).get());
+    EXPECT_NE(nullptr, IFoo::getService("asdf", true /* getStub */).get());
+    EXPECT_NE(nullptr, IFoo::getService("::::::::", true /* getStub */).get());
+    EXPECT_NE(nullptr, IFoo::getService("/////", true /* getStub */).get());
+    EXPECT_NE(nullptr, IFoo::getService("\n", true /* getStub */).get());
+}
+
 TEST_F(HidlTest, EnumToStringTest) {
     using namespace std::string_literals;
     using ::android::hardware::tests::foo::V1_0::toString;
