@@ -322,6 +322,10 @@ static void implementServiceManagerInteractions(Formatter &out,
     out << "::android::status_t " << interfaceName << "::registerAsService("
         << "const std::string &serviceName) ";
     out.block([&] {
+        out << "::android::hardware::details::onRegistration(\""
+            << fqName.getPackageAndVersion().string() << "\", \""
+            << interfaceName
+            << "\", serviceName);\n\n";
         out << "const ::android::sp<::android::hidl::manager::V1_0::IServiceManager> sm\n";
         out.indent(2, [&] {
             out << "= ::android::hardware::defaultServiceManager();\n";
