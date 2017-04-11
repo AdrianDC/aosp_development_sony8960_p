@@ -16,6 +16,8 @@
 
 #include "HandleType.h"
 
+#include "HidlTypeAssertion.h"
+
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -159,9 +161,10 @@ bool HandleType::isJavaCompatible() const {
     return false;
 }
 
+static HidlTypeAssertion assertion("hidl_handle", 16 /* size */);
 void HandleType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_handle
-    *size = 16;
+    *size = assertion.size();
 }
 
 status_t HandleType::emitVtsTypeDeclarations(Formatter &out) const {

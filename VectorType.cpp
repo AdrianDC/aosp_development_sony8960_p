@@ -18,6 +18,7 @@
 
 #include "ArrayType.h"
 #include "CompoundType.h"
+#include "HidlTypeAssertion.h"
 
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
@@ -740,9 +741,11 @@ bool VectorType::containsPointer() const {
     return mElementType->containsPointer();
 }
 
+// All hidl_vec<T> have the same size.
+static HidlTypeAssertion assertion("hidl_vec<char>", 16 /* size */);
 void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_vec<T>
-    *size = 16;
+    *size = assertion.size();
 }
 
 }  // namespace android
