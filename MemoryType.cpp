@@ -16,6 +16,8 @@
 
 #include "MemoryType.h"
 
+#include "HidlTypeAssertion.h"
+
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -140,9 +142,10 @@ bool MemoryType::isJavaCompatible() const {
     return false;
 }
 
+static HidlTypeAssertion assertion("hidl_memory", 40 /* size */);
 void MemoryType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_memory
-    *size = 40;
+    *size = assertion.size();
 }
 
 status_t MemoryType::emitVtsTypeDeclarations(Formatter &out) const {

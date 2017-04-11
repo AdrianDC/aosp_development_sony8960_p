@@ -16,6 +16,8 @@
 
 #include "FmqType.h"
 
+#include "HidlTypeAssertion.h"
+
 #include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
 
@@ -137,10 +139,14 @@ bool FmqType::isJavaCompatible() const {
     return false;
 }
 
+// All MQDescriptor<T, flavor> have the same size.
+static HidlTypeAssertion assertion(
+        "MQDescriptor<char, ::android::hardware::kSynchronizedReadWrite>", 32);
+
 void FmqType::getAlignmentAndSize(
         size_t *align, size_t *size) const {
     *align = 8;  // MQDescriptor<>
-    *size = 32;
+    *size = assertion.size();
 }
 
 bool FmqType::needsEmbeddedReadWrite() const {
