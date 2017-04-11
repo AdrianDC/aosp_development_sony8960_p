@@ -44,7 +44,9 @@ struct Coordinator {
     // file if it exists.
     // If "parsedASTs" is non-NULL, successfully parsed ASTs are inserted
     // into the set.
-    AST *parse(const FQName &fqName, std::set<AST *> *parsedASTs = nullptr);
+    // If !enforce, enforceRestrictionsOnPackage won't be run.
+    AST *parse(const FQName &fqName, std::set<AST *> *parsedASTs = nullptr,
+            bool enforce = true);
 
     // Given package-root paths of ["hardware/interfaces",
     // "vendor/<something>/interfaces"], package roots of
