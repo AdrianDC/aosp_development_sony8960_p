@@ -53,7 +53,7 @@ Coordinator::~Coordinator() {
     // empty
 }
 
-AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
+AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool enforce) {
     CHECK(fqName.isFullyQualified());
 
     auto it = mCache.find(fqName);
@@ -75,7 +75,8 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     if (fqName.name() != "types") {
         // Any interface file implicitly imports its package's types.hal.
         FQName typesName = fqName.getTypesForPackage();
-        typesAST = parse(typesName, parsedASTs);
+        // Do not enforce on imports.
+        typesAST = parse(typesName, parsedASTs, false /* enforce */);
 
         // fall through.
     }
@@ -163,13 +164,15 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs) {
     // parse fqName.
     mCache[fqName] = ast;
 
-    // For each .hal file that hidl-gen parses, the whole package will be checked.
-    err = enforceRestrictionsOnPackage(fqName);
-    if (err != OK) {
-        mCache[fqName] = nullptr;
-        delete ast;
-        ast = nullptr;
-        return nullptr;
+    if (enforce) {
+        // For each .hal file that hidl-gen parses, the whole package will be checked.
+        err = enforceRestrictionsOnPackage(fqName);
+        if (err != OK) {
+            mCache[fqName] = nullptr;
+            delete ast;
+            ast = nullptr;
+            return nullptr;
+        }
     }
 
     return ast;
