@@ -16,6 +16,8 @@
 
 #include "StringType.h"
 
+#include "HidlTypeAssertion.h"
+
 #include <hidl-util/Formatter.h>
 
 namespace android {
@@ -208,9 +210,10 @@ status_t StringType::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+static HidlTypeAssertion assertion("hidl_string", 16 /* size */);
 void StringType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = 8;  // hidl_string
-    *size = 16;
+    *size = assertion.size();
 }
 
 }  // namespace android
