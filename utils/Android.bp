@@ -28,4 +28,5 @@ cc_library_shared {
 
     local_include_dirs: ["include/hidl-util"],
     export_include_dirs: ["include"],
+    compile_multilib: "both",
 }
