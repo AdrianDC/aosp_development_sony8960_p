@@ -134,7 +134,9 @@ void CompoundType::emitReaderWriter(
         out << "_hidl_err = "
             << parcelObjDeref
             << "readBuffer("
-            << "&"
+            << "sizeof(*"
+            << name
+            << "), &"
             << parentName
             << ", "
             << " reinterpret_cast<const void **>("
@@ -443,7 +445,7 @@ status_t CompoundType::emitGlobalHwDeclarations(Formatter &out) const  {
 
         out.indent(2);
 
-        out << fullName() << " *obj,\n"
+        out << "const " << fullName() << " &obj,\n"
             << "const ::android::hardware::Parcel &parcel,\n"
             << "size_t parentHandle,\n"
             << "size_t parentOffset);\n\n";
@@ -632,16 +634,23 @@ status_t CompoundType::emitJavaTypeDeclarations(
         out << "builder.append(\"}\");\nreturn builder.toString();\n";
     }).endl().endl();
 
+    size_t structAlign, structSize;
+    getAlignmentAndSize(&structAlign, &structSize);
+
     ////////////////////////////////////////////////////////////////////////////
 
     out << "public final void readFromParcel(android.os.HwParcel parcel) {\n";
     out.indent();
-    out << "android.os.HwBlob blob = parcel.readBuffer();\n";
+    out << "android.os.HwBlob blob = parcel.readBuffer(";
+    out << structSize << "/* size */);\n";
     out << "readEmbeddedFromParcel(parcel, blob, 0 /* parentOffset */);\n";
     out.unindent();
     out << "}\n\n";
 
     ////////////////////////////////////////////////////////////////////////////
+
+    size_t vecAlign, vecSize;
+    VectorType::getAlignmentAndSizeStatic(&vecAlign, &vecSize);
 
     out << "public static final java.util.ArrayList<"
         << localName()
@@ -652,7 +661,8 @@ status_t CompoundType::emitJavaTypeDeclarations(
         << localName()
         << "> _hidl_vec = new java.util.ArrayList();\n";
 
-    out << "android.os.HwBlob _hidl_blob = parcel.readBuffer();\n\n";
+    out << "android.os.HwBlob _hidl_blob = parcel.readBuffer(";
+    out << vecSize << " /* sizeof hidl_vec<T> */);\n\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
             out,
@@ -703,9 +713,6 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     ////////////////////////////////////////////////////////////////////////////
 
-    size_t structAlign, structSize;
-    getAlignmentAndSize(&structAlign, &structSize);
-
     out << "public final void writeToParcel(android.os.HwParcel parcel) {\n";
     out.indent();
 
@@ -728,7 +735,8 @@ status_t CompoundType::emitJavaTypeDeclarations(
         << "> _hidl_vec) {\n";
     out.unindent();
 
-    out << "android.os.HwBlob _hidl_blob = new android.os.HwBlob(24 /* sizeof(hidl_vec<T>) */);\n";
+    out << "android.os.HwBlob _hidl_blob = new android.os.HwBlob("
+        << vecSize << " /* sizeof(hidl_vec<T>) */);\n";
 
     VectorType::EmitJavaFieldReaderWriterForElementType(
             out,
@@ -808,7 +816,7 @@ void CompoundType::emitStructReaderWriter(
     std::string error = useName ? "" : "\n#error\n";
 
     if (isReader) {
-        out << space << localName() << " *" << name << ",\n";
+        out << "const " << space << localName() << " &" << name << ",\n";
         out << "const ::android::hardware::Parcel &parcel,\n";
     } else {
         out << "const " << space << localName() << " &" << name << ",\n";
@@ -833,7 +841,7 @@ void CompoundType::emitStructReaderWriter(
         field->type().emitReaderWriterEmbedded(
                 out,
                 0 /* depth */,
-                name + (isReader ? "->" : ".") + field->name() + error,
+                name + "." + field->name() + error,
                 field->name() /* sanitizedName */,
                 false /* nameIsPointer */,
                 "parcel",

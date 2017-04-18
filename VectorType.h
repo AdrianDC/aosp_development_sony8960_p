@@ -124,7 +124,7 @@ struct VectorType : public TemplatedType {
     bool containsPointer() const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
-
+    static void getAlignmentAndSizeStatic(size_t *align, size_t *size);
  private:
     // Helper method for emitResolveReferences[Embedded].
     // Pass empty childName and childOffsetText if the original
