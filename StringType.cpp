@@ -82,7 +82,10 @@ void StringType::emitReaderWriter(
     if (isReader) {
         out << "_hidl_err = "
             << parcelObjDeref
-            << "readBuffer(&"
+            << "readBuffer("
+            << "sizeof(*"
+            << name
+            << "), &"
             << parentName
             << ", "
             << " reinterpret_cast<const void **>("
@@ -161,6 +164,13 @@ void StringType::emitJavaFieldReaderWriter(
         const std::string &offset,
         bool isReader) const {
     if (isReader) {
+        out << fieldName
+            << " = "
+            << blobName
+            << ".getString("
+            << offset
+            << ");\n";
+
         out << "\n"
             << parcelName
             << ".readEmbeddedBuffer(\n";
@@ -170,7 +180,8 @@ void StringType::emitJavaFieldReaderWriter(
 
         // hidl_string's embedded buffer is never null(able), because it defaults to a
         // buffer containing an empty string.
-        out << blobName
+        out << fieldName << ".length() + 1,\n"
+            << blobName
             << ".handle(),\n"
             << offset
             << " + 0 /* offsetof(hidl_string, mBuffer) */,"
@@ -178,13 +189,6 @@ void StringType::emitJavaFieldReaderWriter(
 
         out.unindent();
         out.unindent();
-
-        out << fieldName
-            << " = "
-            << blobName
-            << ".getString("
-            << offset
-            << ");\n";
 
         return;
     }
