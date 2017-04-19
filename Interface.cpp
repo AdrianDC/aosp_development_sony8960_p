@@ -20,7 +20,6 @@
 #include "ArrayType.h"
 #include "ConstantExpression.h"
 #include "DeathRecipientType.h"
-#include "Hash.h"
 #include "Method.h"
 #include "ScalarType.h"
 #include "StringType.h"
@@ -32,6 +31,7 @@
 #include <sstream>
 
 #include <android-base/logging.h>
+#include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
 

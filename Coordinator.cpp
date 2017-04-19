@@ -23,10 +23,10 @@
 #include <iterator>
 
 #include <android-base/logging.h>
+#include <hidl-hash/Hash.h>
 #include <hidl-util/StringHelper.h>
 
 #include "AST.h"
-#include "Hash.h"
 #include "Interface.h"
 
 extern android::status_t parseFile(android::AST *ast);
@@ -515,9 +515,9 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) {
             continue;
         }
 
-        std::string packageRootPath = getPackageRootPath(currentFQName);
+        std::string hashPath = getPackageRootPath(currentFQName) + "/current.txt";
         std::string error;
-        std::vector<std::string> frozen = Hash::lookupHash(packageRootPath, currentFQName.string(), &error);
+        std::vector<std::string> frozen = Hash::lookupHash(hashPath, currentFQName.string(), &error);
 
         if (error.size() > 0) {
             LOG(ERROR) << error;
