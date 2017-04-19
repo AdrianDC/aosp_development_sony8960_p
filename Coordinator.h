@@ -92,6 +92,7 @@ struct Coordinator {
     // Enforce a set of restrictions on a set of packages. These include:
     //    - minor version upgrades
     // "packages" contains names like "android.hardware.nfc@1.1".
+    //    - hashing restrictions
     status_t enforceRestrictionsOnPackage(const FQName &fqName);
 
     static bool MakeParentHierarchy(const std::string &path);
@@ -117,6 +118,7 @@ private:
 
     // Rules of enforceRestrictionsOnPackage are listed below.
     status_t enforceMinorVersionUprevs(const FQName &fqName);
+    status_t enforceHashes(const FQName &fqName);
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
 };
