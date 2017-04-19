@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef HASH_H_
-
-#define HASH_H_
+#ifndef HIDL_GEN_HASH_HASH_H_
+#define HIDL_GEN_HASH_HASH_H_
 
 #include <string>
 #include <vector>
@@ -24,9 +23,12 @@
 namespace android {
 
 struct Hash {
+    // path to .hal file
     static const Hash &getHash(const std::string &path);
 
-    // returns matching hashes of interfaceName in $path/current.txt
+    // returns matching hashes of interfaceName in path
+    // path is something like hardware/interfaces/current.txt
+    // interfaceName is something like android.hardware.foo@1.0::IFoo
     static std::vector<std::string> lookupHash(const std::string &path,
                                                const std::string &interfaceName,
                                                std::string *err);
@@ -45,5 +47,5 @@ private:
 
 }  // namespace android
 
-#endif  // HASH_H_
+#endif  // HIDL_GEN_HASH_HASH_H_
 
