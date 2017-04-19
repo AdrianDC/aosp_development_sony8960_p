@@ -16,9 +16,9 @@
 
 #include "AST.h"
 #include "Coordinator.h"
-#include "Hash.h"
 #include "Scope.h"
 
+#include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>

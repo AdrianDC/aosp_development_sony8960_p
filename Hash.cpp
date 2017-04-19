@@ -74,9 +74,8 @@ const std::string &Hash::getPath() const {
     return mPath;
 }
 
-#define TOKEN "([^\\s*]+)"
-#define HASH TOKEN
-#define FQNAME TOKEN
+#define HASH "([0-9a-f]+)"
+#define FQNAME "([^\\s]+)"
 #define SPACES " +"
 #define MAYBE_SPACES " *"
 #define OPTIONAL_COMMENT "(?:#.*)?"
@@ -158,7 +157,7 @@ std::vector<std::string> Hash::lookupHash(const std::string &path,
                                           const std::string &interfaceName,
                                           std::string *err) {
     *err = "";
-    const HashFile *file = HashFile::parse(path + "/current.txt", err);
+    const HashFile *file = HashFile::parse(path, err);
 
     if (file == nullptr || err->size() > 0) {
         return {};
