@@ -26,6 +26,11 @@ namespace android {
 struct Hash {
     static const Hash &getHash(const std::string &path);
 
+    // returns matching hashes of interfaceName in $path/current.txt
+    static std::vector<std::string> lookupHash(const std::string &path,
+                                               const std::string &interfaceName,
+                                               std::string *err);
+
     std::string hexString() const;
 
     const std::vector<uint8_t> &raw() const;
