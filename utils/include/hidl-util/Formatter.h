@@ -105,7 +105,7 @@ struct Formatter {
     //     out << toString(e);
     // });
     template<typename I>
-    Formatter &join(I begin, I end, const std::string &separator,
+    Formatter &join(const I begin, const I end, const std::string &separator,
             std::function<void(const typename std::iterator_traits<I>::value_type &)> func);
 
     Formatter &operator<<(const std::string &out);
@@ -151,7 +151,7 @@ private:
 };
 
 template<typename I>
-Formatter &Formatter::join(I begin, I end, const std::string &separator,
+Formatter &Formatter::join(const I begin, const I end, const std::string &separator,
         std::function<void(const typename std::iterator_traits<I>::value_type &)> func) {
     for (I iter = begin; iter != end; ++iter) {
         if (iter != begin) {
