@@ -19,8 +19,10 @@
 #include <fstream>
 #include <iomanip>
 #include <map>
+#include <regex>
 #include <sstream>
 
+#include <android-base/logging.h>
 #include <openssl/sha.h>
 
 namespace android {
@@ -70,6 +72,99 @@ const std::vector<uint8_t> &Hash::raw() const {
 
 const std::string &Hash::getPath() const {
     return mPath;
+}
+
+#define TOKEN "([^\\s*]+)"
+#define HASH TOKEN
+#define FQNAME TOKEN
+#define SPACES " +"
+#define MAYBE_SPACES " *"
+#define OPTIONAL_COMMENT "(?:#.*)?"
+static const std::regex kHashLine(
+    "(?:"
+        MAYBE_SPACES HASH SPACES FQNAME MAYBE_SPACES
+    ")?"
+    OPTIONAL_COMMENT);
+
+struct HashFile {
+    static const HashFile *parse(const std::string &path, std::string *err) {
+        static std::map<std::string, HashFile*> hashfiles;
+        auto it = hashfiles.find(path);
+
+        if (it == hashfiles.end()) {
+            it = hashfiles.insert(it, {path, readHashFile(path, err)});
+        }
+
+        return it->second;
+    }
+
+    std::vector<std::string> lookup(const std::string &fqName) const {
+        auto it = hashes.find(fqName);
+
+        if (it == hashes.end()) {
+            return {};
+        }
+
+        return it->second;
+    }
+
+private:
+    static HashFile *readHashFile(const std::string &path, std::string *err) {
+        std::ifstream stream(path);
+        if (!stream) {
+            return nullptr;
+        }
+
+        HashFile *file = new HashFile();
+        file->path = path;
+
+        std::string line;
+        while(std::getline(stream, line)) {
+            std::smatch match;
+            bool valid = std::regex_match(line, match, kHashLine);
+
+            if (!valid) {
+                *err = "Error reading line from " + path + ": " + line;
+                delete file;
+                return nullptr;
+            }
+
+            CHECK_EQ(match.size(), 3u);
+
+            std::string hash = match.str(1);
+            std::string fqName = match.str(2);
+
+            if (hash.size() == 0 && fqName.size() == 0) {
+                continue;
+            }
+
+            if (hash.size() == 0 || fqName.size() == 0) {
+                *err = "Hash or fqName empty on " + path + ": " + line;
+                delete file;
+                return nullptr;
+            }
+
+            file->hashes[fqName].push_back(hash);
+        }
+        return file;
+    }
+
+    std::string path;
+    std::map<std::string,std::vector<std::string>> hashes;
+};
+
+//static
+std::vector<std::string> Hash::lookupHash(const std::string &path,
+                                          const std::string &interfaceName,
+                                          std::string *err) {
+    *err = "";
+    const HashFile *file = HashFile::parse(path + "/current.txt", err);
+
+    if (file == nullptr || err->size() > 0) {
+        return {};
+    }
+
+    return file->lookup(interfaceName);
 }
 
 }  // android
