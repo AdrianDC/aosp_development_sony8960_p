@@ -21,7 +21,6 @@ function run_test() {
 
     echo "Running $1-bit client with $2-bit servers"
     $SERVER_PATH &
-    sleep 1
     SERVER_PID=$!
     $CLIENT_PATH
     if [ $? -ne 0 ]; then
