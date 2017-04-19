@@ -63,7 +63,7 @@ typedef struct {
     /*
      * If non NULL it will be caused by SurfaceFlinger on dumpsys
      */
-    void (*dump)(struct simple_t* dev, char *buff, int buff_len);
+    void (*doDump)(int foo, char *buff, int buff_len);
 
 } simple_location_t;
 
