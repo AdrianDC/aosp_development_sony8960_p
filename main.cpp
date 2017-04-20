@@ -18,6 +18,7 @@
 #include "Coordinator.h"
 #include "Scope.h"
 
+#include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
@@ -1048,6 +1049,43 @@ static status_t generateExportHeaderForPackage(
     return OK;
 }
 
+static status_t generateHashOutput(const FQName &fqName,
+        const char* /*hidl_gen*/,
+        Coordinator *coordinator,
+        const std::string & /*outputDir*/) {
+
+    status_t err;
+    std::vector<FQName> packageInterfaces;
+
+    if (fqName.isFullyQualified()) {
+        packageInterfaces = {fqName};
+    } else {
+        err = coordinator->appendPackageInterfacesToVector(
+                fqName, &packageInterfaces);
+        if (err != OK) {
+            return err;
+        }
+    }
+
+    for (const auto &currentFqName : packageInterfaces) {
+        AST *ast = coordinator->parse(currentFqName);
+
+        if (ast == NULL) {
+            fprintf(stderr,
+                    "ERROR: Could not parse %s. Aborting.\n",
+                    currentFqName.string().c_str());
+
+            return UNKNOWN_ERROR;
+        }
+
+        printf("%s %s\n",
+                Hash::getHash(ast->getFilename()).hexString().c_str(),
+                currentFqName.string().c_str());
+    }
+
+    return OK;
+}
+
 static std::vector<OutputHandler> formats = {
     {"c++",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
@@ -1186,7 +1224,13 @@ static std::vector<OutputHandler> formats = {
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForMakefile,
      generateAndroidBpImplForPackage,
-    }
+    },
+
+    {"hash",
+     OutputHandler::NOT_NEEDED /* mOutputMode */,
+     validateForSource,
+     generateHashOutput,
+    },
 };
 
 static void usage(const char *me) {
@@ -1328,6 +1372,8 @@ int main(int argc, char **argv) {
             outputFormat->validate(fqName, outputFormat->mKey);
 
         if (valid == OutputHandler::FAILED) {
+            fprintf(stderr,
+                    "ERROR: output handler failed.\n");
             exit(1);
         }
 

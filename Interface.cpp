@@ -27,14 +27,13 @@
 
 #include <unistd.h>
 
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
 #include <android-base/logging.h>
+#include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
-#include <openssl/sha.h>
 
 namespace android {
 
@@ -288,36 +287,22 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
     return true;
 }
 
-static void sha256File(const std::string &path, uint8_t *outDigest) {
-    std::ifstream stream(path);
-    std::stringstream fileStream;
-    fileStream << stream.rdbuf();
-    std::string fileContent = fileStream.str();
-    SHA256(reinterpret_cast<const uint8_t *>(fileContent.c_str()),
-            fileContent.size(), outDigest);
-}
-
 static void emitDigestChain(
         Formatter &out,
         const std::string &prefix,
         const std::vector<const Interface *> &chain,
         std::function<std::string(const ConstantExpression &)> byteToString) {
     out.join(chain.begin(), chain.end(), ",\n", [&] (const auto &iface) {
-        const std::string &filename = iface->location().begin().filename();
-        uint8_t digest[SHA256_DIGEST_LENGTH];
-        sha256File(filename, digest);
+        const Hash &hash = Hash::getHash(iface->location().begin().filename());
         out << prefix;
         out << "{";
-        out.join(digest, digest + SHA256_DIGEST_LENGTH, ",", [&](const auto &e) {
+        out.join(hash.raw().begin(), hash.raw().end(), ",", [&](const auto &e) {
             // Use ConstantExpression::cppValue / javaValue
             // because Java used signed byte for uint8_t.
             out << byteToString(ConstantExpression::ValueOf(ScalarType::Kind::KIND_UINT8, e));
         });
         out << "} /* ";
-        out.join(digest, digest + SHA256_DIGEST_LENGTH, "", [&](const auto &e) {
-            static const char hexes[] = "0123456789abcdef";
-            out << hexes[e >> 4] << hexes[e & 0xF];
-        });
+        out << hash.hexString();
         out << " */";
     });
 }
