@@ -44,6 +44,7 @@ struct OutputHandler {
         PASS_PACKAGE,
         PASS_FULL
     };
+    const std::string& name() { return mKey; }
     ValRes (*validate)(const FQName &, const std::string &language);
     status_t (*generate)(const FQName &fqName,
                          const char *hidl_gen,
@@ -1242,7 +1243,7 @@ static void usage(const char *me) {
 
     fprintf(stderr, "         -L <language> (one of");
     for (auto &e : formats) {
-        fprintf(stderr, " %s", e.mKey.c_str());
+        fprintf(stderr, " %s", e.name().c_str());
     }
     fprintf(stderr, ")\n");
 
@@ -1283,14 +1284,24 @@ int main(int argc, char **argv) {
 
             case 'L':
             {
-                CHECK(outputFormat == nullptr) << "Only one -L option allowed.";
+                if (outputFormat != nullptr) {
+                    fprintf(stderr,
+                            "ERROR: only one -L option allowed. \"%s\" already specified.\n",
+                            outputFormat->name().c_str());
+                    exit(1);
+                }
                 for (auto &e : formats) {
-                    if (e.mKey == optarg) {
+                    if (e.name() == optarg) {
                         outputFormat = &e;
                         break;
                     }
                 }
-                CHECK(outputFormat != nullptr) << "Output format not recognized.";
+                if (outputFormat == nullptr) {
+                    fprintf(stderr,
+                            "ERROR: unrecognized -L option: \"%s\".\n",
+                            optarg);
+                    exit(1);
+                }
                 break;
             }
 
@@ -1306,7 +1317,8 @@ int main(int argc, char **argv) {
     }
 
     if (outputFormat == nullptr) {
-        usage(me);
+        fprintf(stderr,
+            "ERROR: no -L option provided.\n");
         exit(1);
     }
 
@@ -1369,7 +1381,7 @@ int main(int argc, char **argv) {
         }
 
         OutputHandler::ValRes valid =
-            outputFormat->validate(fqName, outputFormat->mKey);
+            outputFormat->validate(fqName, outputFormat->name());
 
         if (valid == OutputHandler::FAILED) {
             fprintf(stderr,
