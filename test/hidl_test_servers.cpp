@@ -16,6 +16,8 @@
 
 #define LOG_TAG "hidl_test_servers"
 
+#include "hidl_test.h"
+
 #include <android-base/logging.h>
 
 #include <android/hardware/tests/foo/1.0/BnHwSimple.h>
@@ -105,15 +107,9 @@ void signal_handler(int signal) {
 }
 
 int main(int /* argc */, char* /* argv */ []) {
-    forkServer<IMemoryTest>("memory");
-    forkServer<IChild>("child");
-    forkServer<IParent>("parent");
-    forkServer<IFetcher>("fetcher");
-    forkServer<IBar>("foo");
-    forkServer<IHash>("default");
+    EACH_SERVER(forkServer);
+
     forkServer<IBaz>("dyingBaz");
-    forkServer<IGraph>("graph");
-    forkServer<IPointer>("pointer");
 
     signal(SIGTERM, signal_handler);
     // Parent process should not exit before the forked child processes.

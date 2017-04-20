@@ -1,6 +1,7 @@
 #define LOG_TAG "hidl_test_client"
 
 #include "FooCallback.h"
+#include "hidl_test.h"
 
 #include <android-base/logging.h>
 
@@ -54,6 +55,7 @@
 #include <hidl-test/PointerHelper.h>
 
 #include <hidl/Status.h>
+#include <hidl/ServiceManagement.h>
 #include <hidlmemory/mapping.h>
 
 #include <utils/Condition.h>
@@ -1342,14 +1344,14 @@ TEST_F(HidlTest, DeathRecipientTest) {
     }
 
     std::unique_lock<std::mutex> lock(recipient->mutex);
-    recipient->condition.wait_for(lock, std::chrono::milliseconds(1000), [&recipient]() {
+    recipient->condition.wait_for(lock, std::chrono::milliseconds(100), [&recipient]() {
             return recipient->fired;
     });
     EXPECT_TRUE(recipient->fired);
     EXPECT_EQ(recipient->cookie, 0x1481u);
     EXPECT_EQ(recipient->who, dyingBaz);
     std::unique_lock<std::mutex> lock2(recipient2->mutex);
-    recipient2->condition.wait_for(lock2, std::chrono::milliseconds(1000), [&recipient2]() {
+    recipient2->condition.wait_for(lock2, std::chrono::milliseconds(100), [&recipient2]() {
             return recipient2->fired;
     });
     EXPECT_FALSE(recipient2->fired);
@@ -1786,6 +1788,11 @@ TEST_F(HidlTest, PointerReportErrorsTest) {
 }
 #endif
 
+template <class T>
+static void waitForServer(const std::string &serviceName) {
+    ::android::hardware::details::waitForHwService(T::descriptor, serviceName);
+}
+
 int forkAndRunTests(TestMode mode, bool enableDelayMeasurementTests) {
     pid_t child;
     int status;
@@ -1892,6 +1899,7 @@ int main(int argc, char **argv) {
         handleStatus(pStatus, "PASSTHROUGH");
     }
     if (b) {
+        EACH_SERVER(waitForServer);
         ALOGI("BINDERIZED Test result = %d", bStatus);
         handleStatus(bStatus, "BINDERIZED ");
     }
