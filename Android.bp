@@ -28,8 +28,9 @@ hidl_flags = [
 //
 // libhidl-gen-hash
 //
-cc_library_host_shared {
+cc_library_shared {
     name: "libhidl-gen-hash",
+    host_supported: true,
     cflags: hidl_flags,
     srcs: ["Hash.cpp"],
     local_include_dirs: ["include_hash/hidl-hash"],
