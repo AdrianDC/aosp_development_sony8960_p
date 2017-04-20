@@ -156,7 +156,10 @@ void VectorType::emitReaderWriter(
     if (isReader) {
         out << "_hidl_err = "
             << parcelObjDeref
-            << "readBuffer(&"
+            << "readBuffer("
+            << "sizeof(*"
+            << name
+            << "), &"
             << parentName
             << ", "
             << " reinterpret_cast<const void **>("
@@ -485,6 +488,8 @@ void VectorType::emitJavaReaderWriter(
     }
 
     if (mElementType->isArray()) {
+        size_t align, size;
+        getAlignmentAndSize(&align, &size);
         if (isReader) {
             out << " new "
                 << getJavaType(false /* forInitializer */)
@@ -498,10 +503,10 @@ void VectorType::emitJavaReaderWriter(
 
         if (isReader) {
             out << parcelObj
-                << ".readBuffer();\n";
+                << ".readBuffer("
+                << size
+                << " /* size */);\n";
         } else {
-            size_t align, size;
-            getAlignmentAndSize(&align, &size);
 
             out << "new android.os.HwBlob("
                 << size
@@ -578,9 +583,18 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         const std::string &fieldName,
         const std::string &offset,
         bool isReader) {
+    size_t elementAlign, elementSize;
+    elementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
     if (isReader) {
         out << "{\n";
         out.indent();
+
+        out << "int _hidl_vec_size = "
+            << blobName
+            << ".getInt32("
+            << offset
+            << " + 8 /* offsetof(hidl_vec<T>, mSize) */);\n";
 
         out << "android.os.HwBlob childBlob = "
             << parcelName
@@ -589,7 +603,9 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out.indent();
         out.indent();
 
-        out << blobName
+        out << "_hidl_vec_size * "
+            << elementSize << ","
+            << blobName
             << ".handle(),\n"
             << offset
             << " + 0 /* offsetof(hidl_vec<T>, mBuffer) */,"
@@ -599,12 +615,6 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out.unindent();
 
         out << fieldName << ".clear();\n";
-        out << "int _hidl_vec_size = "
-            << blobName
-            << ".getInt32("
-            << offset
-            << " + 8 /* offsetof(hidl_vec<T>, mSize) */);\n";
-
         std::string iteratorName = "_hidl_index_" + std::to_string(depth);
 
         out << "for (int "
@@ -619,9 +629,6 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         out.indent();
 
         elementType->emitJavaFieldInitializer(out, "_hidl_vec_element");
-
-        size_t elementAlign, elementSize;
-        elementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
         elementType->emitJavaFieldReaderWriter(
                 out,
@@ -661,9 +668,6 @@ void VectorType::EmitJavaFieldReaderWriterForElementType(
         << ".putBool("
         << offset
         << " + 12 /* offsetof(hidl_vec<T>, mOwnsBuffer) */, false);\n";
-
-    size_t elementAlign, elementSize;
-    elementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
     // XXX make HwBlob constructor take a long instead of an int?
     out << "android.os.HwBlob childBlob = new android.os.HwBlob((int)(_hidl_vec_size * "
@@ -743,9 +747,15 @@ bool VectorType::containsPointer() const {
 
 // All hidl_vec<T> have the same size.
 static HidlTypeAssertion assertion("hidl_vec<char>", 16 /* size */);
-void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
+
+// static
+void VectorType::getAlignmentAndSizeStatic(size_t *align, size_t *size) {
     *align = 8;  // hidl_vec<T>
     *size = assertion.size();
+}
+
+void VectorType::getAlignmentAndSize(size_t *align, size_t *size) const {
+    VectorType::getAlignmentAndSizeStatic(align, size);
 }
 
 }  // namespace android
