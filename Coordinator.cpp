@@ -23,6 +23,7 @@
 #include <iterator>
 
 #include <android-base/logging.h>
+#include <hidl-hash/Hash.h>
 #include <hidl-util/StringHelper.h>
 
 #include "AST.h"
@@ -378,7 +379,14 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) {
     }
 
     // enforce all rules.
-    status_t err = enforceMinorVersionUprevs(package);
+    status_t err;
+
+    err = enforceMinorVersionUprevs(package);
+    if (err != OK) {
+        return err;
+    }
+
+    err = enforceHashes(package);
     if (err != OK) {
         return err;
     }
@@ -489,6 +497,51 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
     }
 
     return OK;
+}
+
+status_t Coordinator::enforceHashes(const FQName &currentPackage) {
+    status_t err = OK;
+    std::vector<FQName> packageInterfaces;
+    err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
+    if (err != OK) {
+        return err;
+    }
+
+    for (const FQName &currentFQName : packageInterfaces) {
+        AST *ast = parse(currentFQName);
+
+        if (ast == nullptr) {
+            err = UNKNOWN_ERROR;
+            continue;
+        }
+
+        std::string hashPath = getPackageRootPath(currentFQName) + "/current.txt";
+        std::string error;
+        std::vector<std::string> frozen = Hash::lookupHash(hashPath, currentFQName.string(), &error);
+
+        if (error.size() > 0) {
+            LOG(ERROR) << error;
+            err = UNKNOWN_ERROR;
+            continue;
+        }
+
+        // hash not define, interface not frozen
+        if (frozen.size() == 0) {
+            continue;
+        }
+
+        std::string currentHash = Hash::getHash(ast->getFilename()).hexString();
+
+        if(std::find(frozen.begin(), frozen.end(), currentHash) == frozen.end()) {
+            LOG(ERROR) << currentFQName.string() << " has hash " << currentHash
+                       << " which does not match hash on record. This interface has "
+                       << "been frozen. Do not change it!";
+            err = UNKNOWN_ERROR;
+            continue;
+        }
+    }
+
+    return err;
 }
 
 // static
