@@ -82,6 +82,9 @@ static status_t generateSourcesForFile(
         return UNKNOWN_ERROR;
     }
 
+    if (lang == "check") {
+        return OK; // only parsing, not generating
+    }
     if (lang == "c++") {
         return ast->generateCpp(outputDir);
     }
@@ -1088,6 +1091,28 @@ static status_t generateHashOutput(const FQName &fqName,
 }
 
 static std::vector<OutputHandler> formats = {
+    {"check",
+     OutputHandler::NOT_NEEDED /* mOutputMode */,
+     validateForSource,
+     [](const FQName &fqName,
+        const char *hidl_gen, Coordinator *coordinator,
+        const std::string &outputDir) -> status_t {
+            if (fqName.isFullyQualified()) {
+                        return generateSourcesForFile(fqName,
+                                                      hidl_gen,
+                                                      coordinator,
+                                                      outputDir,
+                                                      "check");
+            } else {
+                        return generateSourcesForPackage(fqName,
+                                                         hidl_gen,
+                                                         coordinator,
+                                                         outputDir,
+                                                         "check");
+            }
+        }
+    },
+
     {"c++",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
