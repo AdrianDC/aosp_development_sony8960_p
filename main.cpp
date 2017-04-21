@@ -1298,7 +1298,10 @@ int main(int argc, char **argv) {
             {
                 std::string val(optarg);
                 auto index = val.find_first_of(':');
-                CHECK(index != std::string::npos);
+                if (index == std::string::npos) {
+                    fprintf(stderr, "ERROR: -r option must contain ':': %s\n", val.c_str());
+                    exit(1);
+                }
 
                 auto package = val.substr(0, index);
                 auto path = val.substr(index + 1);
