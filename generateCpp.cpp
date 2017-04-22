@@ -634,7 +634,9 @@ static void wrapPassthroughArg(Formatter &out,
         out << wrappedName
             << " = "
             << iface.fqName().cppName()
-            << "::castFrom(::android::hardware::details::wrapPassthrough("
+            << "::castFrom(::android::hardware::details::wrapPassthrough<"
+            << iface.fqName().cppName()
+            << ">("
             << name << "));\n";
         out.sIf(wrappedName + " == nullptr", [&] {
             // Fatal error. Happens when the BsFoo class is not found in the binary
@@ -1087,7 +1089,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                 out.indent([&] {
                     out << "return new "
                         << iface->getStubName()
-                        << "(reinterpret_cast<"
+                        << "(static_cast<"
                         << iface->localName()
                         << " *>(iIntf));\n";
                 });
@@ -1103,7 +1105,7 @@ status_t AST::generateAllSource(const std::string &outputPath) const {
                 out.indent([&] {
                     out << "return new "
                         << iface->getPassthroughName()
-                        << "(reinterpret_cast<"
+                        << "(static_cast<"
                         << iface->localName()
                         << " *>(iIntf));\n";
                 });
