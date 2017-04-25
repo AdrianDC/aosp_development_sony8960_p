@@ -13,8 +13,7 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
     srcs: [
-        "types.hal",
-        "IVendor.hal",
+        ":tests.vendor@1.0_hal",
     ],
     out: [
         "tests/vendor/1.0/types.cpp",
@@ -27,11 +26,11 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
     srcs: [
-        "types.hal",
-        "IVendor.hal",
+        ":tests.vendor@1.0_hal",
     ],
     out: [
         "tests/vendor/1.0/types.h",
+        "tests/vendor/1.0/hwtypes.h",
         "tests/vendor/1.0/IVendor.h",
         "tests/vendor/1.0/IHwVendor.h",
         "tests/vendor/1.0/BnHwVendor.h",
@@ -45,6 +44,7 @@ cc_library_shared {
     generated_sources: ["tests.vendor@1.0_genc++"],
     generated_headers: ["tests.vendor@1.0_genc++_headers"],
     export_generated_headers: ["tests.vendor@1.0_genc++_headers"],
+    vendor: true,
     shared_libs: [
         "libhidlbase",
         "libhidltransport",
@@ -53,6 +53,7 @@ cc_library_shared {
         "libutils",
         "libcutils",
         "android.hardware.tests.baz@1.0",
+        "android.hidl.base@1.0",
     ],
     export_shared_lib_headers: [
         "libhidlbase",
@@ -60,5 +61,6 @@ cc_library_shared {
         "libhwbinder",
         "libutils",
         "android.hardware.tests.baz@1.0",
+        "android.hidl.base@1.0",
     ],
 }
