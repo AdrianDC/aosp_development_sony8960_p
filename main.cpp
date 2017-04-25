@@ -785,9 +785,20 @@ static status_t generateAndroidBpForPackage(
     out << "name: \"" << libraryName << "\",\n"
         << "generated_sources: [\"" << genSourceName << "\"],\n"
         << "generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "export_generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "vendor_available: true,\n"
-        << "shared_libs: [\n";
+        << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
+
+    // TODO(b/35813011): make always vendor_available
+    // Explicitly mark libraries vendor until BOARD_VNDK_VERSION can
+    // be enabled.
+    if (packageFQName.inPackage("android.hidl") ||
+            packageFQName.inPackage("android.system") ||
+            packageFQName.inPackage("android.frameworks") ||
+            packageFQName.inPackage("android.hardware")) {
+        out << "vendor_available: true,\n";
+    } else {
+        out << "vendor: true,\n";
+    }
+    out << "shared_libs: [\n";
 
     out.indent();
     out << "\"libhidlbase\",\n"
