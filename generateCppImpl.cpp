@@ -185,7 +185,8 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     out << "};\n\n";
 
-    out << "extern \"C\" "
+    out << "// FIXME: most likely delete, this is only for passthrough implementations\n"
+        << "// extern \"C\" "
         << ifaceName
         << "* ";
     generateFetchSymbol(out, ifaceName);
@@ -238,6 +239,7 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
         return err;
     }
 
+    out.setLinePrefix("//");
     out << ifaceName
         << "* ";
     generateFetchSymbol(out, ifaceName);
@@ -246,6 +248,7 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
     out << "return new " << baseName << "();\n";
     out.unindent();
     out << "}\n\n";
+    out.unsetLinePrefix();
 
     out << "}  // namespace implementation\n";
     enterLeaveNamespace(out, false /* leave */);
