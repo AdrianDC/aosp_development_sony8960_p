@@ -180,7 +180,7 @@ void StringType::emitJavaFieldReaderWriter(
 
         // hidl_string's embedded buffer is never null(able), because it defaults to a
         // buffer containing an empty string.
-        out << fieldName << ".length() + 1,\n"
+        out << fieldName << ".getBytes().length + 1,\n"
             << blobName
             << ".handle(),\n"
             << offset

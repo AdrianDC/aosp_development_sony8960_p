@@ -107,7 +107,8 @@ TEST_F(HidlTest, BazSomeOtherBaseMethodTest) {
     IBase::Foo foo;
     foo.x = 1;
     foo.y.z = 2.5;
-    foo.y.s = "Hello, world";
+    // A valid UTF-8 string
+    foo.y.s = "Hello, world, \x46\x6F\x6F\x20\xC2\xA9\x20\x62\x61\x72\x20\xF0\x9D\x8C\x86\x20\x54\x72\x65\x62\x6C\x65\x20\xE2\x98\x83\x20\x72\x6F\x63\x6B\x73";
 
     foo.aaa.resize(5);
     for (size_t i = 0; i < foo.aaa.size(); ++i) {
