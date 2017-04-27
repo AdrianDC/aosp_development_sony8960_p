@@ -148,7 +148,8 @@ static void declareServiceManagerInteractions(Formatter &out, const std::string 
     declareGetService(out, interfaceName, true /* isTry */);
     declareGetService(out, interfaceName, false /* isTry */);
 
-    out << "::android::status_t registerAsService(const std::string &serviceName=\"default\");\n";
+    out << "__attribute__ ((warn_unused_result))"
+        << "::android::status_t registerAsService(const std::string &serviceName=\"default\");\n";
     out << "static bool registerForNotifications(\n";
     out.indent(2, [&] {
         out << "const std::string &serviceName,\n"
