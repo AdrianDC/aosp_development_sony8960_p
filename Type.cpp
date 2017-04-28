@@ -343,8 +343,8 @@ void Type::emitReaderWriterEmbeddedForTypeName(
     if (isReader) {
         out << "const_cast<"
             << typeName
-            << " *>("
-            << namePointer
+            << " &>("
+            << nameDerefed
             << "),\n";
     } else {
         out << nameDerefed
