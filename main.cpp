@@ -1288,6 +1288,11 @@ static void usage(const char *me) {
             "(e.g., android.hardware:hardware/interfaces)\n");
 }
 
+// hidl is intentionally leaky. Turn off LeakSanitizer by default.
+extern "C" const char *__asan_default_options() {
+    return "detect_leaks=0";
+}
+
 int main(int argc, char **argv) {
     std::string outputPath;
     std::vector<std::string> packageRootPaths;
