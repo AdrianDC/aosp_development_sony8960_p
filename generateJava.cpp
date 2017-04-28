@@ -303,7 +303,7 @@ status_t AST::generateJava(
             }
 
             out << method->name()
-                << "Callback cb";
+                << "Callback _hidl_cb";
         }
 
         out << ")\n";
@@ -379,7 +379,7 @@ status_t AST::generateJava(
             }
 
             out << method->name()
-                << "Callback cb";
+                << "Callback _hidl_cb";
         }
 
         out << ")\n";
@@ -446,7 +446,7 @@ status_t AST::generateJava(
                 }
 
                 if (needsCallback) {
-                    out << "cb.onValues(";
+                    out << "_hidl_cb.onValues(";
 
                     bool firstField = true;
                     for (const auto &arg : method->results()) {
