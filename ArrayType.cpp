@@ -153,10 +153,18 @@ void ArrayType::emitReaderWriter(
     const std::string parcelObjDeref =
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
+    size_t numArrayElements = 1;
+    for (auto size : mSizes) {
+        numArrayElements *= size->castSizeT();
+    }
     if (isReader) {
         out << "_hidl_err = "
             << parcelObjDeref
-            << "readBuffer(&"
+            << "readBuffer("
+            << numArrayElements
+            << " * sizeof("
+            << baseType
+            << "), &"
             << parentName
             << ", "
             << " reinterpret_cast<const void **>("
@@ -165,10 +173,6 @@ void ArrayType::emitReaderWriter(
 
         handleError(out, mode);
     } else {
-        size_t numArrayElements = 1;
-        for (auto size : mSizes) {
-            numArrayElements *= size->castSizeT();
-        }
 
         out << "_hidl_err = "
             << parcelObjDeref
@@ -356,6 +360,9 @@ void ArrayType::emitJavaReaderWriter(
         const std::string &parcelObj,
         const std::string &argName,
         bool isReader) const {
+    size_t align, size;
+    getAlignmentAndSize(&align, &size);
+
     if (isReader) {
         out << "new "
             << getJavaType(true /* forInitializer */)
@@ -369,11 +376,10 @@ void ArrayType::emitJavaReaderWriter(
 
     if (isReader) {
         out << parcelObj
-            << ".readBuffer();\n";
+            << ".readBuffer("
+            << size
+            << " /* size */);\n";
     } else {
-        size_t align, size;
-        getAlignmentAndSize(&align, &size);
-
         out << "new android.os.HwBlob("
             << size
             << " /* size */);\n";
