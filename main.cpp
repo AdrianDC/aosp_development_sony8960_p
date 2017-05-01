@@ -658,6 +658,11 @@ static void generateAndroidBpGenSection(
     out << "}\n\n";
 }
 
+bool isHidlTransportPackage(const FQName &package) {
+    return package == gIBasePackageFqName ||
+           package == gIManagerPackageFqName;
+}
+
 static status_t generateAndroidBpForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -808,6 +813,10 @@ static status_t generateAndroidBpForPackage(
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
     for (const auto &importedPackage : importedPackagesHierarchy) {
+        if (isHidlTransportPackage(importedPackage)) {
+            continue;
+        }
+
         out << "\"" << makeLibraryName(importedPackage) << "\",\n";
     }
     out.unindent();
@@ -821,6 +830,10 @@ static status_t generateAndroidBpForPackage(
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n";
     for (const auto &importedPackage : importedPackagesHierarchy) {
+        if (isHidlTransportPackage(importedPackage)) {
+            continue;
+        }
+
         out << "\"" << makeLibraryName(importedPackage) << "\",\n";
     }
     out.unindent();
