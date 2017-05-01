@@ -226,6 +226,8 @@ private:
 
 static const FQName gIBaseFqName = FQName{"android.hidl.base@1.0::IBase"};
 static const FQName gIBasePackageFqName = FQName{"android.hidl.base@1.0"};
+static const FQName gIManagerFqName = FQName{"android.hidl.manager@1.0::IServiceManager"};
+static const FQName gIManagerPackageFqName = FQName{"android.hidl.manager@1.0"};
 
 }  // namespace android
 
