@@ -1836,6 +1836,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
     getPackageAndVersionComponents(
             &packageComponents, false /* cpp_compatible */);
 
+    out << "#include <android-base/macros.h>\n";
     out << "#include <cutils/trace.h>\n";
     out << "#include <future>\n";
 
