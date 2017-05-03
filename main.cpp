@@ -784,63 +784,67 @@ static status_t generateAndroidBpForPackage(
                 }
             });
 
-    // C++ library definition
-    out << "cc_library_shared {\n";
-    out.indent();
-    out << "name: \"" << libraryName << "\",\n"
-        << "generated_sources: [\"" << genSourceName << "\"],\n"
-        << "generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
-
-    // TODO(b/35813011): make always vendor_available
-    // Explicitly mark libraries vendor until BOARD_VNDK_VERSION can
-    // be enabled.
-    if (packageFQName.inPackage("android.hidl") ||
-            packageFQName.inPackage("android.system") ||
-            packageFQName.inPackage("android.frameworks") ||
-            packageFQName.inPackage("android.hardware")) {
-        out << "vendor_available: true,\n";
+    if (isHidlTransportPackage(packageFQName)) {
+        out << "// " << packageFQName.string() << " is exported from libhidltransport\n";
     } else {
-        out << "vendor: true,\n";
-    }
-    out << "shared_libs: [\n";
+        // C++ library definition
+        out << "cc_library_shared {\n";
+        out.indent();
+        out << "name: \"" << libraryName << "\",\n"
+            << "generated_sources: [\"" << genSourceName << "\"],\n"
+            << "generated_headers: [\"" << genHeaderName << "\"],\n"
+            << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
 
-    out.indent();
-    out << "\"libhidlbase\",\n"
-        << "\"libhidltransport\",\n"
-        << "\"libhwbinder\",\n"
-        << "\"liblog\",\n"
-        << "\"libutils\",\n"
-        << "\"libcutils\",\n";
-    for (const auto &importedPackage : importedPackagesHierarchy) {
-        if (isHidlTransportPackage(importedPackage)) {
-            continue;
+        // TODO(b/35813011): make always vendor_available
+        // Explicitly mark libraries vendor until BOARD_VNDK_VERSION can
+        // be enabled.
+        if (packageFQName.inPackage("android.hidl") ||
+                packageFQName.inPackage("android.system") ||
+                packageFQName.inPackage("android.frameworks") ||
+                packageFQName.inPackage("android.hardware")) {
+            out << "vendor_available: true,\n";
+        } else {
+            out << "vendor: true,\n";
         }
+        out << "shared_libs: [\n";
 
-        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
-    }
-    out.unindent();
+        out.indent();
+        out << "\"libhidlbase\",\n"
+            << "\"libhidltransport\",\n"
+            << "\"libhwbinder\",\n"
+            << "\"liblog\",\n"
+            << "\"libutils\",\n"
+            << "\"libcutils\",\n";
+        for (const auto &importedPackage : importedPackagesHierarchy) {
+            if (isHidlTransportPackage(importedPackage)) {
+                continue;
+            }
 
-    out << "],\n";
-
-    out << "export_shared_lib_headers: [\n";
-    out.indent();
-    out << "\"libhidlbase\",\n"
-        << "\"libhidltransport\",\n"
-        << "\"libhwbinder\",\n"
-        << "\"libutils\",\n";
-    for (const auto &importedPackage : importedPackagesHierarchy) {
-        if (isHidlTransportPackage(importedPackage)) {
-            continue;
+            out << "\"" << makeLibraryName(importedPackage) << "\",\n";
         }
+        out.unindent();
 
-        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+        out << "],\n";
+
+        out << "export_shared_lib_headers: [\n";
+        out.indent();
+        out << "\"libhidlbase\",\n"
+            << "\"libhidltransport\",\n"
+            << "\"libhwbinder\",\n"
+            << "\"libutils\",\n";
+        for (const auto &importedPackage : importedPackagesHierarchy) {
+            if (isHidlTransportPackage(importedPackage)) {
+                continue;
+            }
+
+            out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+        }
+        out.unindent();
+        out << "],\n";
+        out.unindent();
+
+        out << "}\n";
     }
-    out.unindent();
-    out << "],\n";
-    out.unindent();
-
-    out << "}\n";
 
     return OK;
 }
