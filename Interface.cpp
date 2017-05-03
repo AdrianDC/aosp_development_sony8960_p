@@ -49,7 +49,6 @@ namespace android {
  * work.
  */
 enum {
-    // These values are defined in hardware::IBinder.
     /////////////////// User defined transactions
     FIRST_CALL_TRANSACTION  = 0x00000001,
     LAST_CALL_TRANSACTION   = 0x0effffff,
