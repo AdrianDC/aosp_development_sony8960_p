@@ -1468,6 +1468,10 @@ status_t AST::generateStubSource(
         << "\") { \n";
     out.indent();
     out << "_hidl_mImpl = _hidl_impl;\n";
+    out << "auto prio = ::android::hardware::details::gServicePrioMap.get("
+        << "_hidl_impl, {SCHED_NORMAL, 0});\n";
+    out << "mSchedPolicy = prio.sched_policy;\n";
+    out << "mSchedPriority = prio.prio;\n";
     out.unindent();
 
     out.unindent();
