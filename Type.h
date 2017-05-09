@@ -65,6 +65,7 @@ struct Type {
         StorageMode_Result,
     };
 
+    // specifyNamespaces: whether to specify namespaces for built-in types
     virtual std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const;
@@ -73,18 +74,6 @@ struct Type {
             const std::string &name,
             StorageMode mode,
             bool specifyNamespaces) const;
-
-    /* gets all hidl-defined types used when this item is
-     * printed using getCppType or getJavaType. Examples:
-     *
-     * vec<vec<vec<IFoo>>>: IFoo is added to the set
-     * (the hypothetical type pair)
-     * pair<IFoo, IBar>: IFoo and IBar are added to the set
-     * int32_t: nothing is added to the set
-     * string: nothing is added to the set
-     * IFoo: IFoo is added to the set
-     */
-    virtual void addNamedTypesToSet(std::set<const FQName> &set) const = 0;
 
     std::string getCppStackType(bool specifyNamespaces = true) const;
 

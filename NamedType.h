@@ -34,8 +34,6 @@ struct NamedType : public Type {
 
     void setFullName(const FQName &fullName);
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     const FQName &fqName() const;
 
     std::string localName() const;

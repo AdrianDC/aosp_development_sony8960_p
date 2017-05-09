@@ -83,8 +83,8 @@ bool EnumType::canCheckEquality() const {
 }
 
 std::string EnumType::getCppType(StorageMode,
-                                 bool specifyNamespaces) const {
-    return specifyNamespaces ? fullName() : partialCppName();
+                                 bool /* specifyNamespaces */) const {
+    return fullName();
 }
 
 std::string EnumType::getJavaType(bool forInitializer) const {
@@ -720,9 +720,6 @@ bool BitFieldType::isBitField() const {
 
 std::string BitFieldType::typeName() const {
     return "mask" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
-}
-
-void BitFieldType::addNamedTypesToSet(std::set<const FQName> &) const {
 }
 
 bool BitFieldType::isCompatibleElementType(Type *elementType) const {

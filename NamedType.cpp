@@ -30,10 +30,6 @@ void NamedType::setFullName(const FQName &fullName) {
     mFullName = fullName;
 }
 
-void NamedType::addNamedTypesToSet(std::set<const FQName> &set) const {
-    set.insert(mFullName);
-}
-
 const FQName &NamedType::fqName() const {
     return mFullName;
 }

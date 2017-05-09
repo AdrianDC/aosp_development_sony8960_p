@@ -116,38 +116,6 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     enterLeaveNamespace(out, true /* enter */);
     out << "namespace implementation {\n\n";
 
-    // this is namespace aware code and doesn't require post-processing
-    out.setNamespace("");
-
-    std::vector<const Interface *> chain = iface->typeChain();
-
-    std::set<const FQName> usedTypes{};
-
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-        const Interface *superInterface = *it;
-        superInterface->addNamedTypesToSet(usedTypes);
-    }
-
-    for (const auto &tuple : iface->allMethodsFromRoot()) {
-        const Method *method = tuple.method();
-        for(const auto & arg : method->args()) {
-            arg->type().addNamedTypesToSet(usedTypes);
-        }
-        for(const auto & results : method->results()) {
-            results->type().addNamedTypesToSet(usedTypes);
-        }
-    }
-
-    std::set<const FQName> topLevelTypes{};
-
-    for (const auto &name : usedTypes) {
-        topLevelTypes.insert(name.getTopLevelType());
-    }
-
-    for (const FQName &name : topLevelTypes) {
-        out << "using " << name.cppName() << ";\n";
-    }
-
     out << "using ::android::hardware::hidl_array;\n";
     out << "using ::android::hardware::hidl_memory;\n";
     out << "using ::android::hardware::hidl_string;\n";
@@ -227,9 +195,6 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
 
     enterLeaveNamespace(out, true /* enter */);
     out << "namespace implementation {\n\n";
-
-    // this is namespace aware code and doesn't require post-processing
-    out.setNamespace("");
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
         return generateStubImplMethod(out, baseName, method);

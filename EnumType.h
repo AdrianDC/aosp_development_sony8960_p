@@ -148,8 +148,6 @@ struct BitFieldType : public TemplatedType {
 
     bool isBitField() const override;
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     bool isCompatibleElementType(Type *elementType) const override;
 
     bool isElidableType() const override;
