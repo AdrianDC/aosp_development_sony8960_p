@@ -34,6 +34,16 @@
 namespace android {
 
 status_t AST::generateCpp(const std::string &outputPath) const {
+    status_t err = generateCppHeaders(outputPath);
+
+    if (err == OK) {
+        err = generateCppSources(outputPath);
+    }
+
+    return err;
+}
+
+status_t AST::generateCppHeaders(const std::string &outputPath) const {
     status_t err = generateInterfaceHeader(outputPath);
 
     if (err == OK) {
@@ -46,10 +56,6 @@ status_t AST::generateCpp(const std::string &outputPath) const {
 
     if (err == OK) {
         err = generateProxyHeader(outputPath);
-    }
-
-    if (err == OK) {
-        err = generateAllSource(outputPath);
     }
 
     if (err == OK) {
@@ -997,7 +1003,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateAllSource(const std::string &outputPath) const {
+status_t AST::generateCppSources(const std::string &outputPath) const {
 
     std::string path = outputPath;
     path.append(mCoordinator->convertPackageRootToPath(mPackage));
