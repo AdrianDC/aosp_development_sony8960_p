@@ -544,7 +544,6 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) {
     return err;
 }
 
-// static
 bool Coordinator::MakeParentHierarchy(const std::string &path) {
     static const mode_t kMode = 0755;
 

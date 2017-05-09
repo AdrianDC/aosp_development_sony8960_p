@@ -91,7 +91,6 @@ std::string AST::makeHeaderGuard(const std::string &baseName,
     return guard;
 }
 
-// static
 void AST::generateCppPackageInclude(
         Formatter &out,
         const FQName &package,
@@ -1171,7 +1170,6 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
     return err;
 }
 
-// static
 void AST::generateCheckNonNull(Formatter &out, const std::string &nonNull) {
     out.sIf(nonNull + " == nullptr", [&] {
         out << "return ::android::hardware::Status::fromExceptionCode(\n";
