@@ -88,6 +88,12 @@ static status_t generateSourcesForFile(
     if (lang == "c++") {
         return ast->generateCpp(outputDir);
     }
+    if (lang == "c++-headers") {
+        return ast->generateCppHeaders(outputDir);
+    }
+    if (lang == "c++-sources") {
+        return ast->generateCppSources(outputDir);
+    }
     if (lang == "c++-impl") {
         return ast->generateCppImpl(outputDir);
     }
@@ -750,7 +756,7 @@ static status_t generateAndroidBpForPackage(
             coordinator,
             halFilegroupName,
             genSourceName,
-            "c++",
+            "c++-sources",
             packageInterfaces,
             importedPackagesHierarchy,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
@@ -769,7 +775,7 @@ static status_t generateAndroidBpForPackage(
             coordinator,
             halFilegroupName,
             genHeaderName,
-            "c++",
+            "c++-headers",
             packageInterfaces,
             importedPackagesHierarchy,
             [&pathPrefix](Formatter &out, const FQName &fqName) {
@@ -1165,6 +1171,18 @@ static std::vector<OutputHandler> formats = {
                                                          "c++");
             }
         }
+    },
+
+    {"c++-headers",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-headers")
+    },
+
+    {"c++-sources",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-sources")
     },
 
     {"export-header",

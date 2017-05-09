@@ -78,6 +78,8 @@ struct AST {
     void addImportedAST(AST *ast);
 
     status_t generateCpp(const std::string &outputPath) const;
+    status_t generateCppHeaders(const std::string &outputPath) const;
+    status_t generateCppSources(const std::string &outputPath) const;
     status_t generateCppImpl(const std::string &outputPath) const;
 
     status_t generateJava(
@@ -181,7 +183,6 @@ private:
     status_t generateHwBinderHeader(const std::string &outputPath) const;
     status_t generateStubHeader(const std::string &outputPath) const;
     status_t generateProxyHeader(const std::string &outputPath) const;
-    status_t generateAllSource(const std::string &outputPath) const;
     status_t generatePassthroughHeader(const std::string &outputPath) const;
 
     status_t generateTypeSource(
