@@ -917,6 +917,10 @@ static status_t generateAndroidBpImplForPackage(
                 << "\"" << makeLibraryName(packageFQName) << "\",\n";
 
             for (const auto &importedPackage : importedPackages) {
+                if (isHidlTransportPackage(importedPackage)) {
+                    continue;
+                }
+
                 out << "\"" << makeLibraryName(importedPackage) << "\",\n";
             }
         });
