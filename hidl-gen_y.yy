@@ -50,9 +50,12 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
 
 bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
     static const std::vector<std::string> reserved({
-        // Injected names to interfaces by auto-generated code
+        // Injected names to C++ interfaces by auto-generated code
         "isRemote", "descriptor", "hidlStaticBlock", "onTransact",
-        "castFrom", "Proxy", "Stub",
+        "castFrom", "Proxy", "Stub", "getService",
+
+        // Injected names to Java interfaces by auto-generated code
+        "asInterface", "castFrom", "getService", "toString",
 
         // Inherited methods from IBase is detected in addMethod. Not added here
         // because we need hidl-gen to compile IBase.
@@ -61,6 +64,17 @@ bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
         "onAsBinder", "asBinder", "queryLocalInterface", "getInterfaceDescriptor", "isBinderAlive",
         "pingBinder", "dump", "transact", "checkSubclass", "attachObject", "findObject",
         "detachObject", "localBinder", "remoteBinder", "mImpl",
+
+        // Inherited names from HidlInstrumentor
+        "InstrumentationEvent", "configureInstrumentation", "registerInstrumentationCallbacks",
+        "isInstrumentationLib", "mInstrumentationCal1lbacks", "mEnableInstrumentation",
+        "mInstrumentationLibPackage", "mInterfaceName",
+
+        // Collide with names in BsFoo
+        "mImpl", "addOnewayTask", "mOnewayQueue",
+
+        // Inherited names from Java IHwInterface
+        "asBinder",
     });
     std::string idstr(identifier);
     if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {
@@ -116,13 +130,6 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
     });
     static const std::vector<std::string> cppCollide({
         "size_t", "offsetof",
-        "DECLARE_SERVICE_MANAGER_INTERACTIONS", "IMPLEMENT_HWBINDER_META_INTERFACE",
-        "IMPLEMENT_SERVICE_MANAGER_INTERACTIONS"
-    });
-    static const std::vector<std::string> hidlReserved({
-        // Part of HidlSupport
-        "hidl_string", "hidl_vec", "hidl_array", "hidl_version", "toBinder", "castInterface",
-        "make_hidl_version"
     });
 
     // errors
@@ -152,16 +159,32 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
             "and is therefore not a valid identifier";
         return false;
     }
+    if (StringHelper::StartsWith(idstr, "hidl_")) {
+        *errorMsg = idstr + " starts with hidl_ "
+            "and is therefore not a valid identifier";
+        return false;
+    }
     if (StringHelper::EndsWith(idstr, "_cb")) {
         *errorMsg = idstr + " ends with _cb "
             "and is therefore not a valid identifier";
         return false;
     }
 
-    // warnings
-    if (std::find(hidlReserved.begin(), hidlReserved.end(), idstr) != hidlReserved.end()) {
-        *errorMsg = idstr + " is a name reserved by HIDL and should be avoided";
+    return true;
+}
+
+// Return true if identifier is an acceptable name for an UDT.
+bool isValidTypeName(const char *identifier, std::string *errorMsg) {
+    if (!isValidIdentifier(identifier, errorMsg)) {
+        return false;
     }
+
+    std::string idstr(identifier);
+    if (idstr == "toString") {
+        *errorMsg = idstr + " is not a valid type name";
+        return false;
+    }
+
     return true;
 }
 
@@ -227,7 +250,7 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
 %type<str> package
 %type<fqName> fqname
 %type<type> fqtype
-%type<str> valid_identifier
+%type<str> valid_identifier valid_type_name
 
 %type<type> type enum_storage_type
 %type<type> array_type_base
@@ -289,8 +312,17 @@ valid_identifier
             std::cerr << "ERROR: " << errorMsg << " at " << @1 << "\n";
             YYERROR;
         }
-        if (!errorMsg.empty()) {
-            std::cerr << "WARNING: " << errorMsg << " at " << @1 << "\n";
+        $$ = $1;
+      }
+    ;
+
+valid_type_name
+    : IDENTIFIER
+      {
+        std::string errorMsg;
+        if (!isValidTypeName($1, &errorMsg)) {
+            std::cerr << "ERROR: " << errorMsg << " at " << @1 << "\n";
+            YYERROR;
         }
         $$ = $1;
       }
@@ -435,7 +467,7 @@ fqname
               YYERROR;
           }
       }
-    | valid_identifier
+    | valid_type_name
       {
           $$ = new FQName($1);
           if(!$$->isValid()) {
@@ -485,7 +517,7 @@ import_stmt
               ast->addSyntaxError();
           }
       }
-    | IMPORT valid_identifier require_semicolon
+    | IMPORT valid_type_name require_semicolon
       {
           if (!ast->addImport($2)) {
               std::cerr << "ERROR: Unable to import '" << $2 << "' at " << @2
@@ -585,7 +617,7 @@ type_declaration_body
     ;
 
 interface_declaration
-    : INTERFACE valid_identifier opt_extends
+    : INTERFACE valid_type_name opt_extends
       {
           Type *parent = $3;
 
@@ -650,7 +682,7 @@ interface_declaration
     ;
 
 typedef_declaration
-    : TYPEDEF type valid_identifier
+    : TYPEDEF type valid_type_name
       {
           std::string errorMsg;
           if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg)) {
@@ -783,7 +815,7 @@ struct_or_union_keyword
     ;
 
 named_struct_or_union_declaration
-    : struct_or_union_keyword valid_identifier
+    : struct_or_union_keyword valid_type_name
       {
           CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2));
           ast->enterScope(container);
@@ -893,7 +925,7 @@ opt_comma
     ;
 
 named_enum_declaration
-    : ENUM valid_identifier enum_storage_type
+    : ENUM valid_type_name enum_storage_type
       {
           ast->enterScope(new EnumType($2, convertYYLoc(@2), $3));
       }
