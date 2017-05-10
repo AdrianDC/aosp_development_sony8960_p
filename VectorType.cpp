@@ -569,7 +569,6 @@ void VectorType::emitJavaFieldReaderWriter(
             isReader);
 }
 
-// static
 void VectorType::EmitJavaFieldReaderWriterForElementType(
         Formatter &out,
         size_t depth,
@@ -744,7 +743,6 @@ bool VectorType::containsPointer() const {
 // All hidl_vec<T> have the same size.
 static HidlTypeAssertion assertion("hidl_vec<char>", 16 /* size */);
 
-// static
 void VectorType::getAlignmentAndSizeStatic(size_t *align, size_t *size) {
     *align = 8;  // hidl_vec<T>
     *size = assertion.size();
