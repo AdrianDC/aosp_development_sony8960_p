@@ -25,8 +25,6 @@ namespace android {
 struct MemoryType : public Type {
     MemoryType();
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;

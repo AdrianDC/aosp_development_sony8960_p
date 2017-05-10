@@ -25,8 +25,6 @@ namespace android {
 struct StringType : public Type {
     StringType();
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     bool isString() const override;
 
     bool canCheckEquality() const override;

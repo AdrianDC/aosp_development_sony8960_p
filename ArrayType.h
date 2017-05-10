@@ -46,8 +46,6 @@ struct ArrayType : public Type {
 
     std::string getInternalDataCppType() const;
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     std::string getJavaType(bool forInitializer) const override;
 
     std::string getJavaWrapperType() const override;
