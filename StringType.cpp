@@ -24,10 +24,6 @@ namespace android {
 
 StringType::StringType() {}
 
-void StringType::addNamedTypesToSet(std::set<const FQName> &) const {
-    // do nothing
-}
-
 bool StringType::isString() const {
     return true;
 }
