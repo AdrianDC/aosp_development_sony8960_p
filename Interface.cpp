@@ -621,7 +621,7 @@ std::string Interface::getCppType(StorageMode mode,
     const std::string base =
           std::string(specifyNamespaces ? "::android::" : "")
         + "sp<"
-        + (specifyNamespaces ? fullName() : partialCppName())
+        + fullName()
         + ">";
 
     switch (mode) {

@@ -27,10 +27,6 @@ FmqType::FmqType(const char *nsp, const char *name)
     : mNamespace(nsp), mName(name) {
 }
 
-void FmqType::addNamedTypesToSet(std::set<const FQName> &) const {
-    // do nothing
-}
-
 std::string FmqType::fullName() const {
     return mNamespace +
             (mNamespace.empty() ? "" : "::") +

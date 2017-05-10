@@ -31,10 +31,6 @@ bool PointerType::isElidableType() const {
     return true;
 }
 
-void PointerType::addNamedTypesToSet(std::set<const FQName> &) const {
-    // do nothing
-}
-
 std::string PointerType::getCppType(StorageMode /* mode */,
                                    bool /* specifyNamespaces */) const {
     return "void*";

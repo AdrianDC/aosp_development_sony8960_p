@@ -25,8 +25,6 @@ namespace android {
 struct FmqType : public TemplatedType {
     FmqType(const char *nsp, const char *name);
 
-    void addNamedTypesToSet(std::set<const FQName> &set) const override;
-
     std::string fullName() const;
 
     std::string getCppType(
