@@ -25,10 +25,6 @@ namespace android {
 
 MemoryType::MemoryType() {}
 
-void MemoryType::addNamedTypesToSet(std::set<const FQName> &) const {
-    // do nothing
-}
-
 std::string MemoryType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =

@@ -46,10 +46,6 @@ size_t ArrayType::countDimensions() const {
     return mSizes.size();
 }
 
-void ArrayType::addNamedTypesToSet(std::set<const FQName> &set) const {
-    mElementType->addNamedTypesToSet(set);
-}
-
 bool ArrayType::isArray() const {
     return true;
 }

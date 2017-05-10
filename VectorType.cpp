@@ -66,10 +66,6 @@ bool VectorType::isCompatibleElementType(Type *elementType) const {
     return false;
 }
 
-void VectorType::addNamedTypesToSet(std::set<const FQName> &set) const {
-    mElementType->addNamedTypesToSet(set);
-}
-
 bool VectorType::isVector() const {
     return true;
 }

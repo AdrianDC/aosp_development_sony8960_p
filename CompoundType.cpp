@@ -83,9 +83,8 @@ bool CompoundType::canCheckEquality() const {
 
 std::string CompoundType::getCppType(
         StorageMode mode,
-        bool specifyNamespaces) const {
-    const std::string base =
-        specifyNamespaces ? fullName() : partialCppName();
+        bool /* specifyNamespaces */) const {
+    const std::string base = fullName();
 
     switch (mode) {
         case StorageMode_Stack:

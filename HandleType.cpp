@@ -25,10 +25,6 @@ namespace android {
 
 HandleType::HandleType() {}
 
-void HandleType::addNamedTypesToSet(std::set<const FQName> &) const {
-    // do nothing
-}
-
 bool HandleType::isHandle() const {
     return true;
 }
