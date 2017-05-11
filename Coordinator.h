@@ -35,9 +35,14 @@ struct Type;
 struct Coordinator {
     Coordinator(
             const std::vector<std::string> &packageRootPaths,
-            const std::vector<std::string> &packageRoots);
+            const std::vector<std::string> &packageRoots,
+            const std::string &rootPath);
 
     ~Coordinator();
+
+    const std::string &getRootPath() {
+        return mRootPath;
+    }
 
     // Attempts to parse the interface/types referred to by fqName.
     // Parsing an interface also parses the associated package's types.hal
@@ -106,6 +111,8 @@ private:
     // "hardware/interfaces".
     std::vector<std::string> mPackageRootPaths;
     std::vector<std::string> mPackageRoots;
+
+    std::string mRootPath;
 
     // cache to parse().
     std::map<FQName, AST *> mCache;
