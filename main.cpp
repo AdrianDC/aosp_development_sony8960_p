@@ -33,6 +33,7 @@ using namespace android;
 
 struct OutputHandler {
     std::string mKey;
+    std::string mDescription;
     enum OutputMode {
         NEEDS_DIR,
         NEEDS_FILE,
@@ -46,6 +47,7 @@ struct OutputHandler {
         PASS_FULL
     };
     const std::string& name() { return mKey; }
+    const std::string& description() { return mDescription; }
 
     using ValidationFunction = std::function<ValRes(const FQName &, const std::string &language)>;
     using GenerationFunction = std::function<status_t(const FQName &fqName,
@@ -1153,36 +1155,42 @@ static status_t generateHashOutput(const FQName &fqName,
 
 static std::vector<OutputHandler> formats = {
     {"check",
+     "Parses the interface to see if valid but doesn't write any files.",
      OutputHandler::NOT_NEEDED /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("check")
     },
 
     {"c++",
+     "(internal) (deprecated) Generates C++ interface files for talking to HIDL interfaces.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++")
     },
 
     {"c++-headers",
+     "(internal) Generates C++ headers for interface files for talking to HIDL interfaces.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-headers")
     },
 
     {"c++-sources",
+     "(internal) Generates C++ sources for interface files for talking to HIDL interfaces.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-sources")
     },
 
     {"export-header",
+     "Generates a header file from @export enumerations to help maintain legacy code.",
      OutputHandler::NEEDS_FILE /* mOutputMode */,
      validateForExportHeader,
      generateExportHeaderForPackage(false /* forJava */)
     },
 
     {"c++-impl",
+     "Generates boilerplate implementation of a hidl interface in C++ (for convenience).",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-impl")
@@ -1190,42 +1198,49 @@ static std::vector<OutputHandler> formats = {
 
 
     {"java",
+     "(internal) Generates Java library for talking to HIDL interfaces in Java.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("java")
     },
 
     {"java-constants",
+     "(internal) Like export-header but for Java (always created by -Lmakefile if @export exists).",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForExportHeader,
      generateExportHeaderForPackage(true /* forJava */)
     },
 
     {"vts",
+     "(internal) Generates vts proto files for use in vtsd.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("vts")
     },
 
     {"makefile",
+     "(internal) Generates makefiles for -Ljava and -Ljava-constants.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
      validateForMakefile,
      generateMakefileForPackage,
     },
 
     {"androidbp",
+     "(internal) Generates Soong bp files for -Lc++-headers and -Lc++-sources.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
      validateForMakefile,
      generateAndroidBpForPackage,
     },
 
     {"androidbp-impl",
+     "Generates boilerplate bp files for implementation created with -Lc++-impl.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForMakefile,
      generateAndroidBpImplForPackage,
     },
 
     {"hash",
+     "Prints hashes of interface in `current.txt` format to standard out.",
      OutputHandler::NOT_NEEDED /* mOutputMode */,
      validateForSource,
      generateHashOutput,
@@ -1234,21 +1249,17 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-p root-path] -o output-path -L <language> (-r interface-root)+ fqname+\n",
+            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ fqname+\n",
             me);
 
-    fprintf(stderr, "         -p root path to android build system (defaults to $ANDROID_BUILD_TOP or pwd)\n");
-    fprintf(stderr, "         -o output path\n");
-
-    fprintf(stderr, "         -L <language> (one of");
+    fprintf(stderr, "         -h: Prints this menu.\n");
+    fprintf(stderr, "         -L <language>: The following options are available:\n");
     for (auto &e : formats) {
-        fprintf(stderr, " %s", e.name().c_str());
+        fprintf(stderr, "            %-16s: %s\n", e.name().c_str(), e.description().c_str());
     }
-    fprintf(stderr, ")\n");
-
-    fprintf(stderr,
-            "         -r package:path root "
-            "(e.g., android.hardware:hardware/interfaces)\n");
+    fprintf(stderr, "         -o <output path>: Location to output files.\n");
+    fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
+    fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
