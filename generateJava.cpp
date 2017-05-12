@@ -67,7 +67,7 @@ status_t AST::generateJavaTypes(
         path.append(typeName);
         path.append(".java");
 
-        CHECK(Coordinator::MakeParentHierarchy(path));
+        CHECK(Coordinator::MakeParentHierarchy(path)) << path;
         FILE *file = fopen(path.c_str(), "w");
 
         if (file == NULL) {
