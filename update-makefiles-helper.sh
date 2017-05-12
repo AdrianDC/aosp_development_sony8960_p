@@ -14,11 +14,14 @@ function package_root_to_root() {
 
 ##
 # Makes sure the appropriate directories are visible.
-# Usage: check_dirs [package:root ...]
+# Usage: check_dirs root_or_cwd [package:root ...]
 function check_dirs() {
+  local root_or_cwd=$1
+  shift 1
+
   for package_root in "$@"; do
       dir=$(package_root_to_root $package_root)
-      if [ ! -d $dir ] ; then
+      if [ ! -d $root_or_cwd$dir ] ; then
         echo "Where is $dir?";
         return 1;
       fi
@@ -69,12 +72,14 @@ function get_bp_dirs() {
 # Where the first package root is the current one.
 #
 function do_makefiles_update() {
+  local root_or_cwd=${ANDROID_BUILD_TOP%%/}${ANDROID_BUILD_TOP:+/}
+
   local current_package=$(package_root_to_package $1)
-  local current_dir=$(package_root_to_root $1)
+  local current_dir=$root_or_cwd$(package_root_to_root $1)
 
   echo "Updating makefiles for $current_package in $current_dir."
 
-  check_dirs $@ || return 1
+  check_dirs "$root_or_cwd" $@ || return 1
 
   local packages=$(get_packages $current_dir $current_package) || return 1
   local root_arguments=$(get_root_arguments $@) || return 1
