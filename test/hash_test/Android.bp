@@ -1,7 +1,6 @@
 genrule {
     name: "hidl_hash_test_gen",
     tools: [
-        "c2hal",
         "hidl-gen",
     ],
     cmd: "$(location hidl-gen) -L check " +
