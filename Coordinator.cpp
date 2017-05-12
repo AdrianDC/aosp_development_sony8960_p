@@ -107,8 +107,6 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
     status_t err = parseFile(ast);
 
     if (err != OK) {
-        // LOG(ERROR) << "parsing '" << path << "' FAILED.";
-
         delete ast;
         ast = nullptr;
 
@@ -288,7 +286,11 @@ status_t Coordinator::getPackageInterfaceFiles(
     DIR *dir = opendir(packagePath.c_str());
 
     if (dir == NULL) {
-        LOG(ERROR) << "Could not open package path: " << packagePath;
+        fprintf(stderr,
+                "ERROR: Could not open package path %s for package %s:\n%s\n",
+                getPackagePath(package).c_str(),
+                package.string().c_str(),
+                packagePath.c_str());
         return -errno;
     }
 
