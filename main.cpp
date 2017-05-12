@@ -1286,6 +1286,11 @@ int main(int argc, char **argv) {
     const char *me = argv[0];
     OutputHandler *outputFormat = nullptr;
 
+    if (argc == 1) {
+        usage(me);
+        exit(1);
+    }
+
     int res;
     while ((res = getopt(argc, argv, "hp:o:r:L:")) >= 0) {
         switch (res) {
