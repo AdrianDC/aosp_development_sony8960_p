@@ -40,10 +40,6 @@ struct Coordinator {
 
     ~Coordinator();
 
-    const std::string &getRootPath() {
-        return mRootPath;
-    }
-
     // adds path only if it doesn't exist
     void addDefaultPackagePath(const std::string& root, const std::string& path);
 

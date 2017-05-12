@@ -36,6 +36,7 @@ struct OutputHandler {
     enum OutputMode {
         NEEDS_DIR,
         NEEDS_FILE,
+        NEEDS_SRC, // for changes inside the source tree itself
         NOT_NEEDED
     } mOutputMode;
 
@@ -454,7 +455,7 @@ static status_t generateMakefileForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator,
-        const std::string &) {
+        const std::string &outputPath) {
 
     CHECK(packageFQName.isValid() &&
           !packageFQName.isFullyQualified() &&
@@ -515,7 +516,7 @@ static status_t generateMakefileForPackage(
         return OK;
     }
 
-    std::string path = coordinator->getRootPath();
+    std::string path = outputPath;
     path.append(coordinator->getPackagePath(packageFQName, false /* relative */));
     path.append("Android.mk");
 
@@ -696,7 +697,7 @@ static status_t generateAndroidBpForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator,
-        const std::string &) {
+        const std::string &outputPath) {
 
     CHECK(packageFQName.isValid() &&
           !packageFQName.isFullyQualified() &&
@@ -733,7 +734,7 @@ static status_t generateAndroidBpForPackage(
         ast->getImportedPackagesHierarchy(&importedPackagesHierarchy);
     }
 
-    std::string path = coordinator->getRootPath();
+    std::string path = outputPath;
     path.append(coordinator->getPackagePath(packageFQName, false /* relative */));
     path.append("Android.bp");
 
@@ -1229,13 +1230,13 @@ static std::vector<OutputHandler> formats = {
     },
 
     {"makefile",
-     OutputHandler::NOT_NEEDED /* mOutputMode */,
+     OutputHandler::NEEDS_SRC /* mOutputMode */,
      validateForMakefile,
      generateMakefileForPackage,
     },
 
     {"androidbp",
-     OutputHandler::NOT_NEEDED /* mOutputMode */,
+     OutputHandler::NEEDS_SRC /* mOutputMode */,
      validateForMakefile,
      generateAndroidBpForPackage,
     },
@@ -1396,6 +1397,14 @@ int main(int argc, char **argv) {
                     outputPath += "/";
                 }
             }
+            break;
+        }
+        case OutputHandler::NEEDS_SRC:
+        {
+            if (outputPath.empty()) {
+                outputPath = rootPath;
+            }
+
             break;
         }
 
