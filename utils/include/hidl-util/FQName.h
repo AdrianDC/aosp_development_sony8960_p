@@ -88,6 +88,7 @@ struct FQName {
     FQName typeName() const;
     std::string valueName() const;
 
+    // has package version and name
     bool isFullyQualified() const;
 
     // true if:
