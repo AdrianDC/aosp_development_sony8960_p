@@ -44,6 +44,9 @@ struct Coordinator {
         return mRootPath;
     }
 
+    // adds path only if it doesn't exist
+    void addDefaultPackagePath(const std::string& root, const std::string& path);
+
     // Attempts to parse the interface/types referred to by fqName.
     // Parsing an interface also parses the associated package's types.hal
     // file if it exists.
