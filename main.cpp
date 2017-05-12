@@ -515,9 +515,8 @@ static status_t generateMakefileForPackage(
         return OK;
     }
 
-    std::string path =
-        coordinator->getPackagePath(packageFQName, false /* relative */);
-
+    std::string path = coordinator->getRootPath();
+    path.append(coordinator->getPackagePath(packageFQName, false /* relative */));
     path.append("Android.mk");
 
     CHECK(Coordinator::MakeParentHierarchy(path));
@@ -734,9 +733,8 @@ static status_t generateAndroidBpForPackage(
         ast->getImportedPackagesHierarchy(&importedPackagesHierarchy);
     }
 
-    std::string path =
-        coordinator->getPackagePath(packageFQName, false /* relative */);
-
+    std::string path = coordinator->getRootPath();
+    path.append(coordinator->getPackagePath(packageFQName, false /* relative */));
     path.append("Android.bp");
 
     CHECK(Coordinator::MakeParentHierarchy(path));
@@ -1257,9 +1255,10 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s -o output-path -L <language> (-r interface-root)+ fqname+\n",
+            "usage: %s [-p root-path] -o output-path -L <language> (-r interface-root)+ fqname+\n",
             me);
 
+    fprintf(stderr, "         -p root path to android build system (defaults to $ANDROID_BUILD_TOP or pwd)\n");
     fprintf(stderr, "         -o output path\n");
 
     fprintf(stderr, "         -L <language> (one of");
@@ -1280,6 +1279,7 @@ extern "C" const char *__asan_default_options() {
 
 int main(int argc, char **argv) {
     std::string outputPath;
+    std::string rootPath;
     std::vector<std::string> packageRootPaths;
     std::vector<std::string> packageRoots;
 
@@ -1287,8 +1287,14 @@ int main(int argc, char **argv) {
     OutputHandler *outputFormat = nullptr;
 
     int res;
-    while ((res = getopt(argc, argv, "ho:r:L:")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:r:L:")) >= 0) {
         switch (res) {
+            case 'p':
+            {
+                rootPath = optarg;
+                break;
+            }
+
             case 'o':
             {
                 outputPath = optarg;
@@ -1354,6 +1360,20 @@ int main(int argc, char **argv) {
     argc -= optind;
     argv += optind;
 
+    if (rootPath.empty()) {
+        const char *ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
+
+        if (ANDROID_BUILD_TOP != nullptr) {
+            rootPath = ANDROID_BUILD_TOP;
+        }
+
+        // else default to pwd
+    }
+
+    if (!rootPath.empty() && !StringHelper::EndsWith(rootPath, "/")) {
+        rootPath += "/";
+    }
+
     if (packageRootPaths.empty()) {
         // Pick reasonable defaults.
 
@@ -1398,7 +1418,7 @@ int main(int argc, char **argv) {
             break;
     }
 
-    Coordinator coordinator(packageRootPaths, packageRoots);
+    Coordinator coordinator(packageRootPaths, packageRoots, rootPath);
 
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
