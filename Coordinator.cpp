@@ -44,9 +44,11 @@ namespace android {
 
 Coordinator::Coordinator(
         const std::vector<std::string> &packageRootPaths,
-        const std::vector<std::string> &packageRoots)
+        const std::vector<std::string> &packageRoots,
+        const std::string &rootPath)
     : mPackageRootPaths(packageRootPaths),
-      mPackageRoots(packageRoots) {
+      mPackageRoots(packageRoots),
+      mRootPath(rootPath) {
     // empty
 }
 
@@ -82,7 +84,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
         // fall through.
     }
 
-    std::string path = getPackagePath(fqName);
+    std::string path = mRootPath + getPackagePath(fqName);
 
     path.append(fqName.name());
     path.append(".hal");
@@ -274,7 +276,7 @@ status_t Coordinator::getPackageInterfaceFiles(
         std::vector<std::string> *fileNames) const {
     fileNames->clear();
 
-    const std::string packagePath = getPackagePath(package);
+    const std::string packagePath = mRootPath + getPackagePath(package);
 
     DIR *dir = opendir(packagePath.c_str());
 
@@ -411,7 +413,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
     FQName prevPacakge = currentPackage;
     while (prevPacakge.getPackageMinorVersion() > 0) {
         prevPacakge = prevPacakge.downRev();
-        if (existdir(getPackagePath(prevPacakge).c_str())) {
+        if (existdir((mRootPath + getPackagePath(prevPacakge)).c_str())) {
             hasPrevPackage = true;
             break;
         }
