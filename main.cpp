@@ -41,15 +41,10 @@ struct OutputHandler {
         NOT_NEEDED
     } mOutputMode;
 
-    enum ValRes {
-        FAILED,
-        PASS_PACKAGE,
-        PASS_FULL
-    };
     const std::string& name() { return mKey; }
     const std::string& description() { return mDescription; }
 
-    using ValidationFunction = std::function<ValRes(const FQName &, const std::string &language)>;
+    using ValidationFunction = std::function<bool(const FQName &, const std::string &language)>;
     using GenerationFunction = std::function<status_t(const FQName &fqName,
                                                       const char *hidl_gen,
                                                       Coordinator *coordinator,
@@ -627,25 +622,25 @@ static status_t generateMakefileForPackage(
     return OK;
 }
 
-OutputHandler::ValRes validateForMakefile(
+bool validateIsPackage(
         const FQName &fqName, const std::string & /* language */) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
-        return OutputHandler::FAILED;
+        return false;
     }
 
     if (fqName.version().empty()) {
         fprintf(stderr, "ERROR: Expecting package version\n");
-        return OutputHandler::FAILED;
+        return false;
     }
 
     if (!fqName.name().empty()) {
         fprintf(stderr,
                 "ERROR: Expecting only package name and version.\n");
-        return OutputHandler::FAILED;
+        return false;
     }
 
-    return OutputHandler::PASS_PACKAGE;
+    return true;
 }
 
 static void generateAndroidBpGenSection(
@@ -962,22 +957,22 @@ static status_t generateAndroidBpImplForPackage(
     return OK;
 }
 
-OutputHandler::ValRes validateForSource(
+bool validateForSource(
         const FQName &fqName, const std::string &language) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
-        return OutputHandler::FAILED;
+        return false;
     }
 
     if (fqName.version().empty()) {
         fprintf(stderr, "ERROR: Expecting package version\n");
-        return OutputHandler::FAILED;
+        return false;
     }
 
     const std::string &name = fqName.name();
     if (!name.empty()) {
         if (name.find('.') == std::string::npos) {
-            return OutputHandler::PASS_FULL;
+            return true;
         }
 
         if (language != "java" || name.find("types.") != 0) {
@@ -987,36 +982,14 @@ OutputHandler::ValRes validateForSource(
             // android.hardware.Foo@1.0::types.TopLevelTypeName.
             // In all other cases (different language, not 'types') the dot
             // notation in the name is illegal in this context.
-            return OutputHandler::FAILED;
+            return false;
         }
 
-        return OutputHandler::PASS_FULL;
+        return true;
     }
 
-    return OutputHandler::PASS_PACKAGE;
+    return true;
 }
-
-OutputHandler::ValRes validateForExportHeader(
-        const FQName &fqName, const std::string & /* language */) {
-    if (fqName.package().empty()) {
-        fprintf(stderr, "ERROR: Expecting package name\n");
-        return OutputHandler::FAILED;
-    }
-
-    if (fqName.version().empty()) {
-        fprintf(stderr, "ERROR: Expecting package version\n");
-        return OutputHandler::FAILED;
-    }
-
-    if (!fqName.name().empty()) {
-        fprintf(stderr,
-                "ERROR: Expecting only package name and version.\n");
-        return OutputHandler::FAILED;
-    }
-
-    return OutputHandler::PASS_PACKAGE;
-}
-
 
 OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
     return [forJava](const FQName &packageFQName,
@@ -1185,7 +1158,7 @@ static std::vector<OutputHandler> formats = {
     {"export-header",
      "Generates a header file from @export enumerations to help maintain legacy code.",
      OutputHandler::NEEDS_FILE /* mOutputMode */,
-     validateForExportHeader,
+     validateIsPackage,
      generateExportHeaderForPackage(false /* forJava */)
     },
 
@@ -1207,7 +1180,7 @@ static std::vector<OutputHandler> formats = {
     {"java-constants",
      "(internal) Like export-header but for Java (always created by -Lmakefile if @export exists).",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
-     validateForExportHeader,
+     validateIsPackage,
      generateExportHeaderForPackage(true /* forJava */)
     },
 
@@ -1221,21 +1194,21 @@ static std::vector<OutputHandler> formats = {
     {"makefile",
      "(internal) Generates makefiles for -Ljava and -Ljava-constants.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
-     validateForMakefile,
+     validateIsPackage,
      generateMakefileForPackage,
     },
 
     {"androidbp",
      "(internal) Generates Soong bp files for -Lc++-headers and -Lc++-sources.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
-     validateForMakefile,
+     validateIsPackage,
      generateAndroidBpForPackage,
     },
 
     {"androidbp-impl",
      "Generates boilerplate bp files for implementation created with -Lc++-impl.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
-     validateForMakefile,
+     validateIsPackage,
      generateAndroidBpImplForPackage,
     },
 
@@ -1417,10 +1390,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        OutputHandler::ValRes valid =
-            outputFormat->validate(fqName, outputFormat->name());
-
-        if (valid == OutputHandler::FAILED) {
+        if (!outputFormat->validate(fqName, outputFormat->name())) {
             fprintf(stderr,
                     "ERROR: output handler failed.\n");
             exit(1);
