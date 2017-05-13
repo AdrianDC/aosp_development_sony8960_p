@@ -80,14 +80,12 @@ status_t AST::generateStubImplMethod(Formatter &out,
 }
 
 status_t AST::generateStubImplHeader(const std::string &outputPath) const {
-    std::string ifaceName;
-    if (!AST::isInterface(&ifaceName)) {
+    if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
     }
 
     const Interface *iface = mRootScope->getInterface();
-
     const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
@@ -129,7 +127,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     out << "struct "
         << baseName
         << " : public "
-        << ifaceName
+        << iface->localName()
         << " {\n";
 
     out.indent();
@@ -155,9 +153,9 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 
     out << "// FIXME: most likely delete, this is only for passthrough implementations\n"
         << "// extern \"C\" "
-        << ifaceName
+        << iface->localName()
         << "* ";
-    generateFetchSymbol(out, ifaceName);
+    generateFetchSymbol(out, iface->localName());
     out << "(const char* name);\n\n";
 
     out << "}  // namespace implementation\n";
@@ -169,8 +167,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
 }
 
 status_t AST::generateStubImplSource(const std::string &outputPath) const {
-    std::string ifaceName;
-    if (!AST::isInterface(&ifaceName)) {
+    if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
     }
@@ -205,9 +202,9 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
     }
 
     out.setLinePrefix("//");
-    out << ifaceName
+    out << iface->localName()
         << "* ";
-    generateFetchSymbol(out, ifaceName);
+    generateFetchSymbol(out, iface->localName());
     out << "(const char* /* name */) {\n";
     out.indent();
     out << "return new " << baseName << "();\n";

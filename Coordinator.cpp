@@ -122,17 +122,16 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
 
         err = UNKNOWN_ERROR;
     } else {
-        std::string ifaceName;
-        if (ast->isInterface(&ifaceName)) {
+        if (ast->isInterface()) {
             if (fqName.name() == "types") {
                 fprintf(stderr,
                         "ERROR: File at '%s' declares an interface '%s' "
                         "instead of the expected types common to the package.\n",
                         path.c_str(),
-                        ifaceName.c_str());
+                        ast->getInterface()->localName().c_str());
 
                 err = UNKNOWN_ERROR;
-            } else if (ifaceName != fqName.name()) {
+            } else if (ast->getInterface()->localName() != fqName.name()) {
                 fprintf(stderr,
                         "ERROR: File at '%s' does not declare interface type "
                         "'%s'.\n",
