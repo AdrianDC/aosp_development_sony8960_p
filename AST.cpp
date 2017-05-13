@@ -33,7 +33,7 @@
 
 namespace android {
 
-AST::AST(Coordinator *coordinator, const std::string &path)
+AST::AST(const Coordinator *coordinator, const std::string &path)
     : mCoordinator(coordinator),
       mPath(path),
       mScanner(NULL),
@@ -46,8 +46,6 @@ AST::~AST() {
     mRootScope = nullptr;
 
     CHECK(mScanner == NULL);
-
-    // Ownership of "coordinator" was NOT transferred.
 }
 
 // used by the parser.

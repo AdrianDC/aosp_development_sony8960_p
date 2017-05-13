@@ -50,7 +50,7 @@ struct Coordinator {
     // into the set.
     // If !enforce, enforceRestrictionsOnPackage won't be run.
     AST *parse(const FQName &fqName, std::set<AST *> *parsedASTs = nullptr,
-            bool enforce = true);
+            bool enforce = true) const;
 
     // Given package-root paths of ["hardware/interfaces",
     // "vendor/<something>/interfaces"], package roots of
@@ -97,7 +97,7 @@ struct Coordinator {
     //    - minor version upgrades
     // "packages" contains names like "android.hardware.nfc@1.1".
     //    - hashing restrictions
-    status_t enforceRestrictionsOnPackage(const FQName &fqName);
+    status_t enforceRestrictionsOnPackage(const FQName &fqName) const;
 
     static bool MakeParentHierarchy(const std::string &path);
 
@@ -114,17 +114,17 @@ private:
     std::string mRootPath;
 
     // cache to parse().
-    std::map<FQName, AST *> mCache;
+    mutable std::map<FQName, AST *> mCache;
 
     // cache to enforceRestrictionsOnPackage().
-    std::set<FQName> mPackagesEnforced;
+    mutable std::set<FQName> mPackagesEnforced;
 
     std::vector<std::string>::const_iterator findPackageRoot(
             const FQName &fqName) const;
 
     // Rules of enforceRestrictionsOnPackage are listed below.
-    status_t enforceMinorVersionUprevs(const FQName &fqName);
-    status_t enforceHashes(const FQName &fqName);
+    status_t enforceMinorVersionUprevs(const FQName &fqName) const;
+    status_t enforceHashes(const FQName &fqName) const;
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
 };
