@@ -40,7 +40,7 @@ struct Scope;
 struct EnumValue;
 
 struct AST {
-    AST(Coordinator *coordinator, const std::string &path);
+    AST(const Coordinator *coordinator, const std::string &path);
     ~AST();
 
     bool setPackage(const char *package);
@@ -121,7 +121,7 @@ struct AST {
     const Interface *getInterface() const;
 
 private:
-    Coordinator *mCoordinator;
+    const Coordinator *mCoordinator;
     std::string mPath;
     std::vector<Scope *> mScopePath;
 
