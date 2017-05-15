@@ -1379,25 +1379,6 @@ int main(int argc, char **argv) {
         rootPath += "/";
     }
 
-    if (packageRootPaths.empty()) {
-        // Pick reasonable defaults.
-
-        packageRoots.push_back("android.hardware");
-
-        const char *TOP = getenv("TOP");
-        if (TOP == nullptr) {
-            fprintf(stderr,
-                    "ERROR: No root path (-r) specified"
-                    " and $TOP environment variable not set.\n");
-            exit(1);
-        }
-
-        std::string path = TOP;
-        path.append("/hardware/interfaces");
-
-        packageRootPaths.push_back(path);
-    }
-
     // Valid options are now in argv[0] .. argv[argc - 1].
 
     switch (outputFormat->mOutputMode) {
@@ -1424,6 +1405,10 @@ int main(int argc, char **argv) {
     }
 
     Coordinator coordinator(packageRootPaths, packageRoots, rootPath);
+    coordinator.addDefaultPackagePath("android.hardware", "hardware/interfaces");
+    coordinator.addDefaultPackagePath("android.hidl", "system/libhidl/transport");
+    coordinator.addDefaultPackagePath("android.frameworks", "frameworks/hardware/interfaces");
+    coordinator.addDefaultPackagePath("android.system", "system/hardware/interfaces");
 
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
