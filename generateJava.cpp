@@ -108,12 +108,12 @@ status_t AST::generateJava(
         return UNKNOWN_ERROR;
     }
 
-    std::string ifaceName;
-    if (!AST::isInterface(&ifaceName)) {
+    if (!AST::isInterface()) {
         return generateJavaTypes(outputPath, limitToType);
     }
 
     const Interface *iface = mRootScope->getInterface();
+    std::string ifaceName = iface->localName();
 
     const std::string baseName = iface->getBaseName();
 
