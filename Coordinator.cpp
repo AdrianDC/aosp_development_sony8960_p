@@ -56,6 +56,13 @@ Coordinator::~Coordinator() {
     // empty
 }
 
+void Coordinator::addDefaultPackagePath(const std::string& root, const std::string& path) {
+    if (std::find(mPackageRoots.begin(), mPackageRoots.end(), root) == mPackageRoots.end()) {
+        mPackageRoots.push_back(root);
+        mPackageRootPaths.push_back(path);
+    }
+}
+
 AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool enforce) {
     CHECK(fqName.isFullyQualified());
 
