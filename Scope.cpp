@@ -95,17 +95,6 @@ Interface *Scope::getInterface() const {
     return NULL;
 }
 
-bool Scope::containsSingleInterface(std::string *ifaceName) const {
-    Interface *iface = getInterface();
-
-    if (iface != NULL) {
-        *ifaceName = iface->localName();
-        return true;
-    }
-
-    return false;
-}
-
 bool Scope::containsInterfaces() const {
     for (const NamedType *type : mTypes) {
         if (type->isInterface()) {

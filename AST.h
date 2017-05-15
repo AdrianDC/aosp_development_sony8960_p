@@ -48,7 +48,7 @@ struct AST {
 
     // package and version really.
     FQName package() const;
-    bool isInterface(std::string *ifaceName) const;
+    bool isInterface() const;
     bool containsInterfaces() const;
 
     void enterScope(Scope *container);
@@ -118,7 +118,11 @@ struct AST {
 
     bool isIBase() const;
 
+    // or nullptr if not isInterface
     const Interface *getInterface() const;
+
+    // types or Interface base name (e.x. Foo)
+    std::string getBaseName() const;
 
 private:
     const Coordinator *mCoordinator;

@@ -47,7 +47,6 @@ struct Scope : public NamedType {
     // Returns the single interface or NULL.
     Interface *getInterface() const;
 
-    bool containsSingleInterface(std::string *ifaceName) const;
     bool containsInterfaces() const;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
