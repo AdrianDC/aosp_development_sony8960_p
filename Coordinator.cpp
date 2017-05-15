@@ -63,7 +63,7 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
     }
 }
 
-AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool enforce) {
+AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool enforce) const {
     CHECK(fqName.isFullyQualified());
 
     auto it = mCache.find(fqName);
@@ -375,7 +375,7 @@ std::string Coordinator::convertPackageRootToPath(const FQName &fqName) const {
 }
 
 
-status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) {
+status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) const {
     // need fqName to be something like android.hardware.foo@1.0.
     // name and valueName is ignored.
     if (fqName.package().empty() || fqName.version().empty()) {
@@ -407,7 +407,7 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) {
     return OK;
 }
 
-status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
+status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) const {
     if(!currentPackage.hasVersion()) {
         LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
                    << ": missing version.";
@@ -510,7 +510,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) {
     return OK;
 }
 
-status_t Coordinator::enforceHashes(const FQName &currentPackage) {
+status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
     status_t err = OK;
     std::vector<FQName> packageInterfaces;
     err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
