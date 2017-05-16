@@ -54,10 +54,10 @@ function get_root_arguments() {
 #
 # Usage: get_bp_dirs dir
 function get_bp_dirs() {
-  find $1/*/                         \
+  find $1/*                          \
+    -mindepth 1                      \
     -name "Android.bp"               \
-    -printf "%h\n"                   \
-    | cut -d "/" -f1-3               \
+    -printf "%H\n"                   \
     | sort | uniq
 }
 
