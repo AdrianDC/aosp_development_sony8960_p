@@ -886,6 +886,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         << " const std::string& HidlInstrumentor_package,"
         << " const std::string& HidlInstrumentor_interface);"
         << "\n\n";
+    out << "virtual ~" << klassName << "();\n\n";
     out << "::android::status_t onTransact(\n";
     out.indent();
     out.indent();
@@ -1511,6 +1512,11 @@ status_t AST::generateStubSource(
         out << "}\n\n";
     }
 
+    out << klassName << "::~" << klassName << "() ";
+    out.block([&]() {
+        out << "::android::hardware::details::gBnMap.erase(_hidl_mImpl.get());\n";
+    }).endl().endl();
+
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
         if (!method->isHidlReserved() || !method->overridesCppImpl(IMPL_STUB_IMPL)) {
             return OK;
@@ -1962,8 +1968,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
             out << "return ::android::hardware::details::castInterface<";
             out << iface->localName() << ", "
                 << superType->fqName().cppName() << ", "
-                << iface->getProxyName() << ", "
-                << superType->getProxyFqName().cppName()
+                << iface->getProxyName()
                 << ">(\n";
             out.indent();
             out.indent();
