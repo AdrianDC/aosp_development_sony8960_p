@@ -418,10 +418,10 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
     }
 
     bool hasPrevPackage = false;
-    FQName prevPacakge = currentPackage;
-    while (prevPacakge.getPackageMinorVersion() > 0) {
-        prevPacakge = prevPacakge.downRev();
-        if (existdir((mRootPath + getPackagePath(prevPacakge)).c_str())) {
+    FQName prevPackage = currentPackage;
+    while (prevPackage.getPackageMinorVersion() > 0) {
+        prevPackage = prevPackage.downRev();
+        if (existdir((mRootPath + getPackagePath(prevPackage)).c_str())) {
             hasPrevPackage = true;
             break;
         }
@@ -431,9 +431,9 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         return OK;
     }
 
-    if (prevPacakge != currentPackage.downRev()) {
+    if (prevPackage != currentPackage.downRev()) {
         LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
-                   << ": Found package " << prevPacakge.string() << " but missing "
+                   << ": Found package " << prevPackage.string() << " but missing "
                    << currentPackage.downRev().string() << "; you cannot skip a minor version.";
         return UNKNOWN_ERROR;
     }
@@ -450,8 +450,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         if (currentFQName.name() == "types") {
             continue; // ignore types.hal
         }
-        // Assume that currentFQName == android.hardware.foo@2.2::IFoo.
-        // Then prevFQName == android.hardware.foo@2.1::IFoo.
+
         const Interface *iface = nullptr;
         AST *currentAST = parse(currentFQName);
         if (currentAST != nullptr) {
@@ -470,31 +469,40 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
             continue;
         }
 
-        // android.hardware.foo@2.2::IFoo exists. Now make sure
-        // @2.2::IFoo extends @2.1::IFoo. If any interface IFoo in @2.2
-        // ensures this, @2.2 passes the enforcement.
-        FQName prevFQName(prevPacakge.package(), prevPacakge.version(),
-                currentFQName.name());
         if (iface->superType() == nullptr) {
-            // @2.2::IFoo doesn't extend anything. (This is probably IBase.)
-            continue;
-        }
-        if (iface->superType()->fqName() != prevFQName) {
-            // @2.2::IFoo doesn't extend @2.1::IFoo.
-            if (iface->superType()->fqName().getPackageAndVersion() ==
-                    prevPacakge.getPackageAndVersion()) {
-                LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
-                           << ": " << iface->fqName().string() << " extends "
-                           << iface->superType()->fqName().string() << ", which is not allowed.";
-                return UNKNOWN_ERROR;
-            }
-            // @2.2::IFoo extends something from a package with a different package name.
-            // Check the next interface.
+            CHECK(iface->isIBase());
             continue;
         }
 
-        // @2.2::IFoo passes. Check next interface.
-        extendedInterface = true;
+        // Assume that currentFQName == android.hardware.foo@2.2::IFoo.
+        FQName lastFQName(prevPackage.package(), prevPackage.version(),
+                currentFQName.name());
+        AST *lastAST = parse(lastFQName);
+
+        for (; lastFQName.getPackageMinorVersion() > 0 &&
+               (lastAST == nullptr || lastAST->getInterface() == nullptr)
+             ; lastFQName = lastFQName.downRev(), lastAST = parse(lastFQName)) {
+            // nothing
+        }
+
+        // Then lastFQName == android.hardware.foo@2.1::IFoo or
+        //      lastFQName == android.hardware.foo@2.0::IFoo if 2.1 doesn't exist.
+
+        bool lastFQNameExists = lastAST != nullptr && lastAST->getInterface() != nullptr;
+
+        if (iface->superType()->fqName() != lastFQName && lastFQNameExists) {
+            LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
+                       << ": " << iface->fqName().string() << " extends "
+                       << iface->superType()->fqName().string()
+                       << ", which is not allowed. It must extend " << lastFQName.string();
+            return UNKNOWN_ERROR;
+        }
+
+        // at least one interface must extend the previous version
+        if (lastFQName.getPackageAndVersion() == prevPackage.getPackageAndVersion()) {
+            extendedInterface = true;
+        }
+
         LOG(VERBOSE) << "enforceMinorVersionUprevs: " << currentFQName.string() << " passes.";
     }
 
@@ -502,7 +510,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         // No interface extends the interface with the same name in @x.(y-1).
         LOG(ERROR) << currentPackage.string() << " doesn't pass minor version uprev requirement. "
                    << "Requires at least one interface to extend an interface with the same name "
-                   << "from " << prevPacakge.string() << ".";
+                   << "from " << prevPackage.string() << ".";
         return UNKNOWN_ERROR;
     }
 
