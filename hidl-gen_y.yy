@@ -304,6 +304,13 @@ bool isValidTypeName(const char *identifier, std::string *errorMsg) {
 
 %%
 
+program
+    : opt_error_stmt
+      package
+      imports
+      body
+    ;
+
 valid_identifier
     : IDENTIFIER
       {
@@ -447,13 +454,6 @@ require_semicolon
           std::cerr << "ERROR: missing ; at " << @$ << "\n";
           ast->addSyntaxError();
       }
-    ;
-
-program
-    : opt_error_stmt
-      package
-      imports
-      body
     ;
 
 fqname
