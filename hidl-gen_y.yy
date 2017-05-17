@@ -246,7 +246,7 @@ bool isValidTypeName(const char *identifier, std::string *errorMsg) {
 /* Precedence level 3, RTL; but we have to use %left here */
 %left UNARY_MINUS UNARY_PLUS '!' '~'
 
-%type<str> error_stmt opt_error_stmt error
+%type<str> error_stmt error
 %type<str> package
 %type<fqName> fqname
 %type<type> fqtype
@@ -303,6 +303,12 @@ bool isValidTypeName(const char *identifier, std::string *errorMsg) {
 }
 
 %%
+
+program
+    : package
+      imports
+      body
+    ;
 
 valid_identifier
     : IDENTIFIER
@@ -431,13 +437,7 @@ error_stmt
     {
       $$ = $1;
       ast->addSyntaxError();
-      // std::cerr << "WARNING: skipping errors until " << @2 << ".\n";
     }
-  ;
-
-opt_error_stmt
-  : /* empty */ { $$ = NULL; }
-  | error_stmt  { $$ = $1; }
   ;
 
 require_semicolon
@@ -447,13 +447,6 @@ require_semicolon
           std::cerr << "ERROR: missing ; at " << @$ << "\n";
           ast->addSyntaxError();
       }
-    ;
-
-program
-    : opt_error_stmt
-      package
-      imports
-      body
     ;
 
 fqname
@@ -507,6 +500,13 @@ package
               YYERROR;
           }
       }
+    | error
+    {
+      std::cerr << "ERROR: Package statement must be at the beginning of the file (" << @1 << ")\n";
+      $$ = $1;
+      ast->addSyntaxError();
+    }
+    ;
 
 import_stmt
     : IMPORT FQNAME require_semicolon
