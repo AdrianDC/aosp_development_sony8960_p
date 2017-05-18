@@ -203,14 +203,36 @@ static void implementGetService(Formatter &out,
             out << "ALOGE(\"getService: defaultServiceManager()->getTransport returns %s\", "
                 << "transportRet.description().c_str());\n";
             out << "return nullptr;\n";
-        });
-
-        out.endl();
+        }).endl();
 
         out << "Transport transport = transportRet;\n";
         out << "const bool vintfHwbinder = (transport == Transport::HWBINDER);\n"
-            << "const bool vintfPassthru = (transport == Transport::PASSTHROUGH);\n"
-            << "const bool vintfEmpty    = (transport == Transport::EMPTY);\n\n";
+            << "const bool vintfPassthru = (transport == Transport::PASSTHROUGH);\n\n";
+
+        // This means that you must set TREBLE_TESTING_OVERRIDE when running a test such
+        // as hidl_test. Ideally these binaries set this value themselves. This allows
+        // test modules to dynamically add and unset services even though they are not
+        // declared in the device manifest. This prevents a problem where framework
+        // changes are accidentally made in a way that is not backwards compatible. For
+        // instance, consider the following situation for two devices developed in the
+        // same tree:
+        // A: serves @1.1::IFoo, declares @1.0::IFoo (incorrect)
+        // B: serves @1.0::IFoo, declares @1.0::IFoo (correct configuration)
+        // If development is done on device A, then framework code like: "V1_1::IFoo::
+        // getService()->doV1_0Api()" will work. However, this will unintentionally break
+        // the feature for devices like device B for which "V1_1::IFoo::getService()
+        // will return nullptr. In order to prevent problems like this, we only allow
+        // fetching an interface if it is declared in a VINTF manifest.
+        out << "#ifdef __ANDROID_TREBLE__\n\n"
+            << "#ifdef __ANDROID_DEBUGGABLE__\n"
+            << "const char* env = std::getenv(\"TREBLE_TESTING_OVERRIDE\");\n"
+            << "const bool vintfLegacy = (transport == Transport::EMPTY) && env && !strcmp(env, \"true\");\n"
+            << "#else // __ANDROID_TREBLE__ but not __ANDROID_DEBUGGABLE__\n"
+            << "const bool vintfLegacy = false;\n"
+            << "#endif // __ANDROID_DEBUGGABLE__\n\n"
+            << "#else // not __ANDROID_TREBLE__\n"
+            << "const bool vintfLegacy = (transport == Transport::EMPTY);\n\n"
+            << "#endif // __ANDROID_TREBLE__\n\n";
 
         // if (getStub) {
         //     getPassthroughServiceManager()->get only once.
@@ -220,7 +242,7 @@ static void implementGetService(Formatter &out,
         //             waitForHwService
         //             defaultServiceManager()->get
         //         }
-        //     } else if (vintfEmpty) {
+        //     } else if (vintfLegacy) {
         //         defaultServiceManager()->get only once.
         //         getPassthroughServiceManager()->get only once.
         //     } else if (vintfPassthru) {
@@ -229,11 +251,11 @@ static void implementGetService(Formatter &out,
         // }
 
         out << "bool tried = false;\n";
-        out.sWhile("!getStub && (vintfHwbinder || (vintfEmpty && !tried))", [&] {
+        out.sWhile("!getStub && (vintfHwbinder || (vintfLegacy && !tried))", [&] {
 
             out.sIf("tried", [&] {
                 // sleep only after the first trial.
-                out << "ALOGI(\"getService: retrying in 1s...\");\n"
+                out << "ALOGI(\"" << functionName << ": retrying in 1s...\");\n"
                     << "sleep(1);\n";
             }).endl();
 
@@ -254,7 +276,7 @@ static void implementGetService(Formatter &out,
 
             out.sIf("!ret.isOk()", [&] {
                 // hwservicemanager fails, may be security issue
-                out << "ALOGE(\"getService: defaultServiceManager()->get returns %s\", "
+                out << "ALOGE(\"" << interfaceName << ": defaultServiceManager()->get returns %s\", "
                     << "ret.description().c_str());\n"
                     << "break;\n";
             }).endl();
@@ -263,7 +285,7 @@ static void implementGetService(Formatter &out,
             out.sIf("base == nullptr", [&] {
                 // race condition. hwservicemanager drops the service
                 // from waitForHwService to here
-                out << "ALOGW(\"getService: found null hwbinder interface\");\n"
+                out << "ALOGW(\"" << interfaceName << ": found null hwbinder interface\");\n"
                     << (isTry ? "break" : "continue")
                     << ";\n";
             }).endl();
@@ -272,11 +294,11 @@ static void implementGetService(Formatter &out,
             out.sIf("!castRet.isOk()", [&] {
                 out.sIf("castRet.isDeadObject()", [&] {
                     // service is dead (castFrom cannot call interfaceChain)
-                    out << "ALOGW(\"getService: found dead hwbinder service\");\n"
+                    out << "ALOGW(\"" << interfaceName << ": found dead hwbinder service\");\n"
                         << (isTry ? "break" : "continue")
                         << ";\n";
                 }).sElse([&] {
-                    out << "ALOGW(\"getService: cannot call into hwbinder service: %s"
+                    out << "ALOGW(\"" << interfaceName << ": cannot call into hwbinder service: %s"
                         << "; No permission? Check for selinux denials.\", "
                         << "castRet.description().c_str());\n"
                         << "break;\n";
@@ -287,14 +309,14 @@ static void implementGetService(Formatter &out,
                 // returned service isn't of correct type; this is a bug
                 // to hwservicemanager or to the service itself (interfaceChain
                 // is not consistent).
-                out << "ALOGW(\"getService: received incompatible service; bug in hwservicemanager?\");\n"
+                out << "ALOGW(\"" << interfaceName << ": received incompatible service; bug in hwservicemanager?\");\n"
                     << "break;\n";
             }).endl();
 
             out << "return iface;\n";
         }).endl();
 
-        out.sIf("getStub || vintfPassthru || vintfEmpty", [&] {
+        out.sIf("getStub || vintfPassthru || vintfLegacy", [&] {
             out << "const sp<::android::hidl::manager::V1_0::IServiceManager> pm"
                 << " = getPassthroughServiceManager();\n";
 

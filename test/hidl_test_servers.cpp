@@ -105,6 +105,8 @@ void signal_handler(int signal) {
 }
 
 int main(int /* argc */, char* /* argv */ []) {
+    setenv("TREBLE_TESTING_OVERRIDE", "true", true);
+
     forkServer<IMemoryTest>("memory");
     forkServer<IChild>("child");
     forkServer<IParent>("parent");
