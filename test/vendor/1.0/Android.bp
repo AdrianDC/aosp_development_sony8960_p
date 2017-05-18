@@ -11,7 +11,7 @@ filegroup {
 genrule {
     name: "tests.vendor@1.0_genc++",
     tools: ["hidl-gen"],
-    cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
+    cmd: "$(location hidl-gen) -o $(genDir) -Lc++-sources -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
     srcs: [
         ":tests.vendor@1.0_hal",
     ],
@@ -24,7 +24,7 @@ genrule {
 genrule {
     name: "tests.vendor@1.0_genc++_headers",
     tools: ["hidl-gen"],
-    cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
+    cmd: "$(location hidl-gen) -o $(genDir) -Lc++-headers -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
     srcs: [
         ":tests.vendor@1.0_hal",
     ],
@@ -41,6 +41,7 @@ genrule {
 
 cc_library_shared {
     name: "tests.vendor@1.0",
+    defaults: ["hidl-module-defaults"],
     generated_sources: ["tests.vendor@1.0_genc++"],
     generated_headers: ["tests.vendor@1.0_genc++_headers"],
     export_generated_headers: ["tests.vendor@1.0_genc++_headers"],
