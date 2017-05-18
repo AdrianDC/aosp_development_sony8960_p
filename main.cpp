@@ -811,6 +811,7 @@ static status_t generateAndroidBpForPackage(
     out << "cc_library_shared {\n";
     out.indent();
     out << "name: \"" << libraryName << "\",\n"
+        << "defaults: [\"hidl-module-defaults\"],\n"
         << "generated_sources: [\"" << genSourceName << "\"],\n"
         << "generated_headers: [\"" << genHeaderName << "\"],\n"
         << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
