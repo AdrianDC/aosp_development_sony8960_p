@@ -77,9 +77,7 @@ my_robolectric_jars := \
     $(my_robolectric_path)/maven-project-2.2.1.jar \
     $(my_robolectric_path)/maven-repository-metadata-2.2.1.jar \
     $(my_robolectric_path)/maven-settings-2.2.1.jar \
-    $(my_robolectric_path)/mockito-core-1.10.19.jar \
     $(my_robolectric_path)/nekohtml-1.9.6.2.jar \
-    $(my_robolectric_path)/objenesis-2.1.jar \
     $(my_robolectric_path)/plexus-container-default-1.0-alpha-9-stable-1.jar \
     $(my_robolectric_path)/plexus-interpolation-1.11.jar \
     $(my_robolectric_path)/plexus-utils-1.5.15.jar \

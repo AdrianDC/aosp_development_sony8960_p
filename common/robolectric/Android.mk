@@ -2,6 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 
 ############################
 # Adding the Robolectric .JAR prebuilts from this directory into a single target.
+# This is the one you probably want.
 include $(CLEAR_VARS)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
@@ -32,7 +33,8 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
-    platform-mockito-prebuilt:lib/mockito-core-1.10.19.jar \
+    platform-deprecated-mockito-prebuilt:lib/mockito-core-1.10.19.jar \
+    platform-deprecated-objenesis-prebuilt:lib/objenesis-2.1.jar \
     platform-robolectric-annotations:lib/robolectric-annotations-3.1.1.jar \
     platform-robolectric-multidex:lib/shadows-multidex-3.1.1.jar \
     platform-robolectric-resources:lib/robolectric-resources-3.1.1.jar \
@@ -61,13 +63,16 @@ LOCAL_MIN_SDK_VERSION := o-b1
 include $(BUILD_PREBUILT)
 
 ############################
-# Target for a runnable Robolectric bundled with JUnit. This is the one you probably want.
+# Deprecated. Use platform-robolectric-prebuilt and mockito-robolectric-prebuilt instead
+#
+# Target for a runnable Robolectric bundled with JUnit.
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := platform-system-robolectric
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-    platform-mockito-prebuilt \
+    platform-deprecated-mockito-prebuilt \
+    platform-deprecated-objenesis-prebuilt \
     guava \
 
 LOCAL_JAVA_LIBRARIES += \
