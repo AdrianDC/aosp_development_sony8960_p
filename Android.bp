@@ -25,6 +25,15 @@ hidl_flags = [
     "-Werror",
 ]
 
+cc_defaults {
+    name: "hidl-module-defaults",
+    product_variables: {
+        treble: {
+            cflags: ["-D__ANDROID_TREBLE__"]
+        }
+    }
+}
+
 //
 // libhidl-gen-hash
 //
