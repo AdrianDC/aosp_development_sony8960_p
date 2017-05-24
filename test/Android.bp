@@ -2,6 +2,7 @@ subdirs = [
     "vendor/1.0",
     "java_test",
     "hash_test",
+    "version_test",
 ]
 
 cc_test {
