@@ -272,8 +272,7 @@ status_t AST::generateJava(
         const bool needsCallback = method->results().size() > 1;
 
         if (needsCallback) {
-            out << "\npublic interface "
-                << method->name()
+            out << "\n@java.lang.FunctionalInterface\npublic interface " << method->name()
                 << "Callback {\n";
 
             out.indent();
