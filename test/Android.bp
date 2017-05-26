@@ -1,5 +1,6 @@
 subdirs = [
     "vendor/1.0",
+    "error_test",
     "java_test",
     "hash_test",
     "version_test",
