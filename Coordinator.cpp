@@ -91,7 +91,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
         // fall through.
     }
 
-    std::string path = mRootPath + getPackagePath(fqName);
+    std::string path = getAbsolutePackagePath(fqName);
 
     path.append(fqName.name());
     path.append(".hal");
@@ -216,6 +216,16 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
     return ret;
 }
 
+std::string Coordinator::getAbsolutePackagePath(const FQName& fqName) const {
+    const std::string packagePath = getPackagePath(fqName);
+
+    if (StringHelper::StartsWith(packagePath, "/") || mRootPath.empty()) {
+        return packagePath;
+    }
+
+    return StringHelper::RTrim(mRootPath, "/") + "/" + packagePath;
+}
+
 std::string Coordinator::getPackageRoot(const FQName &fqName) const {
     auto it = findPackageRoot(fqName);
     auto prefix = *it;
@@ -280,7 +290,7 @@ status_t Coordinator::getPackageInterfaceFiles(
         std::vector<std::string> *fileNames) const {
     fileNames->clear();
 
-    const std::string packagePath = mRootPath + getPackagePath(package);
+    const std::string packagePath = getAbsolutePackagePath(package);
 
     DIR *dir = opendir(packagePath.c_str());
 
@@ -421,7 +431,7 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
     FQName prevPackage = currentPackage;
     while (prevPackage.getPackageMinorVersion() > 0) {
         prevPackage = prevPackage.downRev();
-        if (existdir((mRootPath + getPackagePath(prevPackage)).c_str())) {
+        if (existdir(getAbsolutePackagePath(prevPackage).c_str())) {
             hasPrevPackage = true;
             break;
         }
