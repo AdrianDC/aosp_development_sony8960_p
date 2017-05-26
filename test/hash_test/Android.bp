@@ -15,6 +15,13 @@ genrule {
          "&&" +
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
+
+    srcs: [
+        "bad/hash/1.0/IHash.hal",
+        "bad/current.txt",
+        "good/hash/1.0/IHash.hal",
+        "good/current.txt",
+    ],
 }
 
 cc_test_host {
