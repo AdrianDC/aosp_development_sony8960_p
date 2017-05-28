@@ -492,6 +492,8 @@ TEST_F(HidlTest, BazReturnABunchOfStringsMethodTest) {
 }
 
 int main(int argc, char **argv) {
+    setenv("TREBLE_TESTING_OVERRIDE", "true", true);
+
     using namespace android::hardware;
 
     const char *me = argv[0];
