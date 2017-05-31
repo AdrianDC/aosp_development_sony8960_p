@@ -48,7 +48,7 @@ extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void 
     );
 }
 
-bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
+bool isValidInterfaceField(const std::string& identifier, std::string *errorMsg) {
     static const std::vector<std::string> reserved({
         // Injected names to C++ interfaces by auto-generated code
         "isRemote", "descriptor", "hidlStaticBlock", "onTransact",
@@ -76,29 +76,27 @@ bool isValidInterfaceField(const char *identifier, std::string *errorMsg) {
         // Inherited names from Java IHwInterface
         "asBinder",
     });
-    std::string idstr(identifier);
-    if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {
-        *errorMsg = idstr + " cannot be a name inside an interface";
+    if (std::find(reserved.begin(), reserved.end(), identifier) != reserved.end()) {
+        *errorMsg = identifier + " cannot be a name inside an interface";
         return false;
     }
     return true;
 }
 
-bool isValidStructField(const char *identifier, std::string *errorMsg) {
+bool isValidStructField(const std::string& identifier, std::string *errorMsg) {
     static const std::vector<std::string> reserved({
         // Injected names to structs and unions by auto-generated code
         "readEmbeddedFromParcel", "writeEmbeddedToParcel", "readVectorFromParcel",
         "writeVectorToParcel", "writeEmbeddedToBlob",
     });
-    std::string idstr(identifier);
-    if (std::find(reserved.begin(), reserved.end(), idstr) != reserved.end()) {
-        *errorMsg = idstr + " cannot be a name inside an struct or union";
+    if (std::find(reserved.begin(), reserved.end(), identifier) != reserved.end()) {
+        *errorMsg = identifier + " cannot be a name inside an struct or union";
         return false;
     }
     return true;
 }
 
-bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
+bool isValidIdentifier(const std::string& identifier, std::string *errorMsg) {
     static const std::vector<std::string> keywords({
         "uint8_t", "uint16_t", "uint32_t", "uint64_t",
         "int8_t", "int16_t", "int32_t", "int64_t", "bool", "float", "double",
@@ -133,39 +131,38 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
     });
 
     // errors
-    std::string idstr(identifier);
-    if (std::find(keywords.begin(), keywords.end(), idstr) != keywords.end()) {
-        *errorMsg = idstr + " is a HIDL keyword "
+    if (std::find(keywords.begin(), keywords.end(), identifier) != keywords.end()) {
+        *errorMsg = identifier + " is a HIDL keyword "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (std::find(cppKeywords.begin(), cppKeywords.end(), idstr) != cppKeywords.end()) {
-        *errorMsg = idstr + " is a C++ keyword "
+    if (std::find(cppKeywords.begin(), cppKeywords.end(), identifier) != cppKeywords.end()) {
+        *errorMsg = identifier + " is a C++ keyword "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (std::find(javaKeywords.begin(), javaKeywords.end(), idstr) != javaKeywords.end()) {
-        *errorMsg = idstr + " is a Java keyword "
+    if (std::find(javaKeywords.begin(), javaKeywords.end(), identifier) != javaKeywords.end()) {
+        *errorMsg = identifier + " is a Java keyword "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (std::find(cppCollide.begin(), cppCollide.end(), idstr) != cppCollide.end()) {
-        *errorMsg = idstr + " collides with reserved names in C++ code "
+    if (std::find(cppCollide.begin(), cppCollide.end(), identifier) != cppCollide.end()) {
+        *errorMsg = identifier + " collides with reserved names in C++ code "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (StringHelper::StartsWith(idstr, "_hidl_")) {
-        *errorMsg = idstr + " starts with _hidl_ "
+    if (StringHelper::StartsWith(identifier, "_hidl_")) {
+        *errorMsg = identifier + " starts with _hidl_ "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (StringHelper::StartsWith(idstr, "hidl_")) {
-        *errorMsg = idstr + " starts with hidl_ "
+    if (StringHelper::StartsWith(identifier, "hidl_")) {
+        *errorMsg = identifier + " starts with hidl_ "
             "and is therefore not a valid identifier";
         return false;
     }
-    if (StringHelper::EndsWith(idstr, "_cb")) {
-        *errorMsg = idstr + " ends with _cb "
+    if (StringHelper::EndsWith(identifier, "_cb")) {
+        *errorMsg = identifier + " ends with _cb "
             "and is therefore not a valid identifier";
         return false;
     }
@@ -174,14 +171,13 @@ bool isValidIdentifier(const char *identifier, std::string *errorMsg) {
 }
 
 // Return true if identifier is an acceptable name for an UDT.
-bool isValidTypeName(const char *identifier, std::string *errorMsg) {
+bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
     if (!isValidIdentifier(identifier, errorMsg)) {
         return false;
     }
 
-    std::string idstr(identifier);
-    if (idstr == "toString") {
-        *errorMsg = idstr + " is not a valid type name";
+    if (identifier == "toString") {
+        *errorMsg = identifier + " is not a valid type name";
         return false;
     }
 
@@ -203,24 +199,25 @@ bool isValidTypeName(const char *identifier, std::string *errorMsg) {
 %skeleton "glr.cc"
 
 %expect-rr 0
+%error-verbose
 
-%token<str> ENUM
-%token<str> EXTENDS
-%token<str> FQNAME
-%token<str> GENERATES
-%token<str> IDENTIFIER
-%token<str> IMPORT
-%token<str> INTEGER
-%token<str> FLOAT
-%token<str> INTERFACE
-%token<str> PACKAGE
-%token<type> TYPE
-%token<str> STRUCT
-%token<str> STRING_LITERAL
-%token<str> TYPEDEF
-%token<str> UNION
-%token<templatedType> TEMPLATED
-%token<void> ONEWAY
+%token<str> ENUM "keyword `enum`"
+%token<str> EXTENDS "keyword `extends`"
+%token<str> FQNAME "fully-qualified name"
+%token<str> GENERATES "keyword `generates`"
+%token<str> IDENTIFIER "identifier"
+%token<str> IMPORT "keyword `import`"
+%token<str> INTEGER "integer value"
+%token<str> FLOAT "float value"
+%token<str> INTERFACE "keyword `interface`"
+%token<str> PACKAGE "keyword `package`"
+%token<type> TYPE "type"
+%token<str> STRUCT "keyword `struct`"
+%token<str> STRING_LITERAL "string literal"
+%token<str> TYPEDEF "keyword `typedef`"
+%token<str> UNION "keyword `union`"
+%token<templatedType> TEMPLATED "templated type"
+%token<void> ONEWAY "keyword `oneway`"
 
 /* Operator precedence and associativity, as per
  * http://en.cppreference.com/w/cpp/language/operator_precedence */
@@ -307,7 +304,7 @@ bool isValidTypeName(const char *identifier, std::string *errorMsg) {
 program
     : package
       imports
-      body
+      type_declarations
     ;
 
 valid_identifier
@@ -537,10 +534,6 @@ imports
 opt_extends
     : /* empty */ { $$ = NULL; }
     | EXTENDS fqtype { $$ = $2; }
-
-body
-    : type_declarations
-    ;
 
 interface_declarations
     : /* empty */
@@ -1048,7 +1041,7 @@ type
           // "interface" is a synonym of android.hidl.base@1.0::IBase
           $$ = ast->lookupType(gIBaseFqName);
           if ($$ == nullptr) {
-              std::cerr << "FATAL: Cannot find "
+              std::cerr << "ERROR: Cannot find "
                         << gIBaseFqName.string()
                         << " at " << @1 << "\n";
 
