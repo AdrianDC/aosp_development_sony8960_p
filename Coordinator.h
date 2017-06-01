@@ -58,7 +58,6 @@ struct Coordinator {
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackagePath()
     // will return "hardware/interfaces/nfc/1.0" (if sanitized = false)
     // or "hardware/interfaces/nfc/V1_0" (if sanitized = true).
-
     std::string getPackagePath(
             const FQName &fqName, bool relative = false,
             bool sanitized = false) const;
@@ -67,7 +66,6 @@ struct Coordinator {
     // "vendor.<something>.hardware"] and a FQName of
     // "android.hardware.nfc@1.0::INfc, then getPackageRoot() will
     // return "android.hardware".
-
     std::string getPackageRoot(const FQName &fqName) const;
 
     // Given package-root paths of ["hardware/interfaces",
@@ -75,7 +73,6 @@ struct Coordinator {
     // ["android.hardware", "vendor.<something>.hardware"], and a
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackageRootPath()
     // will return "hardware/interfaces".
-
     std::string getPackageRootPath(const FQName &fqName) const;
 
     // return getPackageRoot + ":" + getPackageRootPath
@@ -121,6 +118,14 @@ private:
 
     std::vector<std::string>::const_iterator findPackageRoot(
             const FQName &fqName) const;
+
+    // Returns abs package path by prepending the root path if a package
+    // path is non-absolute.
+    // If root is '/android/master' and getPackagePath returns 'h/i/nfc/V1_0'
+    // this will return '/android/master/h/i/nfc/V1_0'.
+    // If root is '/android/master' and getPackagePath returns '/abs/path/to/nfc/V1_0'
+    // this will return '/abs/path/to/nfc/V1_0'
+    std::string getAbsolutePackagePath(const FQName& fqName) const;
 
     // Rules of enforceRestrictionsOnPackage are listed below.
     status_t enforceMinorVersionUprevs(const FQName &fqName) const;
