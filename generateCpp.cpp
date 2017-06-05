@@ -759,11 +759,13 @@ status_t AST::generatePassthroughMethod(Formatter &out,
         out << "});\n\n";
     } else {
         out << ");\n\n";
+
+        // used by generateCppInstrumentationCall
         if (elidedReturn != nullptr) {
-            out << elidedReturn->type().getCppResultType()
-                << " _hidl_out_"
-                << elidedReturn->name()
-                << " = _hidl_return;\n";
+            out << "#ifdef __ANDROID_DEBUGGABLE__\n"
+                << elidedReturn->type().getCppResultType() << " _hidl_out_" << elidedReturn->name()
+                << " = _hidl_return;\n"
+                << "#endif // __ANDROID_DEBUGGABLE__\n";
         }
         status_t status = generateCppInstrumentationCall(
                 out,
@@ -2054,6 +2056,7 @@ status_t AST::generateCppInstrumentationCall(
         return err;
     }
 
+    out << "#ifdef __ANDROID_DEBUGGABLE__\n";
     out << "if (UNLIKELY(mEnableInstrumentation)) {\n";
     out.indent();
     out << "std::vector<void *> _hidl_args;\n";
@@ -2147,7 +2150,8 @@ status_t AST::generateCppInstrumentationCall(
     out.unindent();
     out << "}\n";
     out.unindent();
-    out << "}\n\n";
+    out << "}\n";
+    out << "#endif // __ANDROID_DEBUGGABLE__\n\n";
 
     return OK;
 }
