@@ -697,9 +697,11 @@ status_t AST::generatePassthroughMethod(Formatter &out,
     out << "auto _hidl_return = ";
 
     if (method->isOneway()) {
-        out << "addOnewayTask([mImpl = this->mImpl, "
-               "mEnableInstrumentation = this->mEnableInstrumentation, "
-               "mInstrumentationCallbacks = this->mInstrumentationCallbacks";
+        out << "addOnewayTask([mImpl = this->mImpl\n"
+            << "#ifdef __ANDROID_DEBUGGABLE__\n"
+               ", mEnableInstrumentation = this->mEnableInstrumentation, "
+               "mInstrumentationCallbacks = this->mInstrumentationCallbacks\n"
+            << "#endif // __ANDROID_DEBUGGABLE__\n";
         for (const auto &arg : method->args()) {
             out << ", "
                 << (arg->type().isInterface() ? "_hidl_wrapped_" : "")
