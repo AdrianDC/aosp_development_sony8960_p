@@ -67,6 +67,7 @@ genrule {
 
 cc_test_library {
     name: "c2hal_test",
+    defaults: ["hidl-module-defaults"],
     generated_headers: ["c2hal_test_genc++_headers"],
     generated_sources: ["c2hal_test_genc++"],
     export_generated_headers: ["c2hal_test_genc++_headers"],
