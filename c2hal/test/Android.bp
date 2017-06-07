@@ -39,8 +39,8 @@ genrule {
         "android/hardware/c2hal_test/1.0/BsSimpleLocation.h",
         "android/hardware/c2hal_test/1.0/IHwSimpleLocation.h",
         "android/hardware/c2hal_test/1.0/ISimpleLocation.h",
-        "android/hardware/bluetooth/1.0/types.h",
-        "android/hardware/bluetooth/1.0/hwtypes.h",
+        "android/hardware/c2hal_test/1.0/types.h",
+        "android/hardware/c2hal_test/1.0/hwtypes.h",
     ],
 }
 
