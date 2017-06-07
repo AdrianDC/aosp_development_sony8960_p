@@ -37,6 +37,7 @@ public final class HidlTestJava {
         try {
             exitCode = new HidlTestJava().run(args);
         } catch (Exception e) {
+            e.printStackTrace();
             Log.e(TAG, "Error ", e);
         }
         System.exit(exitCode);
@@ -49,6 +50,7 @@ public final class HidlTestJava {
             server();
         } else {
             Log.e(TAG, "Usage: HidlTestJava  -c(lient) | -s(erver)");
+            System.err.printf("Usage: HidlTestJava  -c(lient) | -s(erver)\n");
             return 1;
         }
 
