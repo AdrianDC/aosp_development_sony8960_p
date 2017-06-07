@@ -1041,9 +1041,6 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
         // This is a no-op for IServiceManager itself.
         out << "#include <android/hidl/manager/1.0/IServiceManager.h>\n";
 
-        // TODO(b/34274385) remove this
-        out << "#include <hidl/LegacySupport.h>\n";
-
         generateCppPackageInclude(out, mPackage, iface->getProxyName());
         generateCppPackageInclude(out, mPackage, iface->getStubName());
         generateCppPackageInclude(out, mPackage, iface->getPassthroughName());
