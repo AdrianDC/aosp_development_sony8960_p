@@ -43,6 +43,10 @@ std::string MemoryType::getCppType(StorageMode mode,
     }
 }
 
+std::string MemoryType::typeName() const {
+    return "memory";
+}
+
 std::string MemoryType::getVtsType() const {
     return "TYPE_HIDL_MEMORY";
 }
