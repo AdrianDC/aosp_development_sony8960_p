@@ -770,6 +770,66 @@ TEST_F(HidlTest, TestSharedMemory) {
     memory->commit();
 }
 
+TEST_F(HidlTest, BatchSharedMemory) {
+    const uint8_t kValue = 0xCA;
+    const uint64_t kBatchSize = 2;
+    hidl_vec<hidl_memory> batchCopy;
+
+    EXPECT_OK(ashmemAllocator->batchAllocate(1024, kBatchSize,
+        [&](bool success, const hidl_vec<hidl_memory>& batch) {
+            ASSERT_TRUE(success);
+            EXPECT_EQ(kBatchSize, batch.size());
+
+            for (uint64_t i = 0; i < batch.size(); i++) {
+                sp<IMemory> memory = mapMemory(batch[i]);
+
+                EXPECT_NE(nullptr, memory.get());
+
+                uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+                EXPECT_NE(nullptr, data);
+
+                EXPECT_EQ(memory->getSize(), batch[i].size());
+
+                memory->update();
+                memset(data, kValue, memory->getSize());
+                memory->commit();
+            }
+
+            batchCopy = batch;
+        }));
+
+    for (uint64_t i = 0; i < batchCopy.size(); i++) {
+        // Test the memory persists after the call
+        sp<IMemory> memory = mapMemory(batchCopy[i]);
+
+        EXPECT_NE(memory, nullptr);
+
+        uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+        EXPECT_NE(data, nullptr);
+
+        memory->read();
+        for (size_t i = 0; i < batchCopy[i].size(); i++) {
+            EXPECT_EQ(kValue, data[i]);
+        }
+        memory->commit();
+    }
+}
+
+inline uint64_t operator""_GB(unsigned long long num) {
+    return num * 1024 * 1024 * 1024;
+}
+
+TEST_F(HidlTest, FailedBatchSharedMemory) {
+    EXPECT_OK(ashmemAllocator->batchAllocate(1024, UINT64_MAX, [&](bool success, const auto& v) {
+        EXPECT_FALSE(success);
+        EXPECT_EQ(0u, v.size());
+    }));
+    EXPECT_OK(ashmemAllocator->batchAllocate(1_GB, 1024, [&](bool success, const auto& v) {
+        EXPECT_FALSE(success);
+        EXPECT_EQ(0u, v.size());
+    }));
+}
+
 TEST_F(HidlTest, NullSharedMemory) {
     hidl_memory memory{};
 

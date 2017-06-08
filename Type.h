@@ -43,6 +43,7 @@ struct Type {
     virtual bool isHandle() const;
     virtual bool isInterface() const;
     virtual bool isNamedType() const;
+    virtual bool isMemory() const;
     virtual bool isPointer() const;
     virtual bool isScope() const;
     virtual bool isScalar() const;
