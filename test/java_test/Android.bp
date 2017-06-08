@@ -1,4 +1,4 @@
-cc_binary {
+cc_test {
     name: "hidl_test_java_native",
     srcs: ["hidl_test_java_native.cpp"],
 
@@ -14,18 +14,9 @@ cc_binary {
         "android.hardware.tests.inheritance@1.0",
     ],
 
-    static_libs: ["libgtest"],
     required: [
         "android.hardware.tests.baz@1.0-impl",
     ],
 
     compile_multilib: "both",
-    multilib: {
-        lib32: {
-            suffix: "32",
-        },
-        lib64: {
-            suffix: "64",
-        },
-    },
 }
