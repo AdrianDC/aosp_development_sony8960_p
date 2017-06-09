@@ -243,7 +243,8 @@ static void implementGetService(Formatter &out,
         // } else {
         //     if (vintfHwbinder) {
         //         while (no alive service) {
-        //             waitForHwService
+        //             if (have already tried to get service)
+        //                 waitForHwService
         //             defaultServiceManager()->get
         //         }
         //     } else if (vintfLegacy) {
@@ -254,20 +255,16 @@ static void implementGetService(Formatter &out,
         //     }
         // }
 
-        out << "bool tried = false;\n";
-        out.sWhile("!getStub && (vintfHwbinder || (vintfLegacy && !tried))", [&] {
-
-            out.sIf("tried", [&] {
-                // sleep only after the first trial.
-                out << "ALOGI(\"" << functionName << ": retrying in 1s...\");\n"
-                    << "sleep(1);\n";
-            }).endl();
-
-            out << "tried = true;\n";
-
-
+        out.sFor("int tries = 0; !getStub && (vintfHwbinder || (vintfLegacy && tries == 0)); tries++", [&] {
             if (!isTry) {
-                out.sIf("vintfHwbinder", [&] {
+                out.sIf("tries > 1", [&] {
+                    // sleep only after the first time we've called waitForHwService.
+                    out << "ALOGI(\"" << functionName << ": Will do try %d for %s/%s in 1s...\", tries, "
+                        << interfaceName << "::descriptor, serviceName.c_str());\n"
+                        << "sleep(1);\n";
+                }).endl();
+
+                out.sIf("vintfHwbinder && tries > 0", [&] {
                     out << "waitForHwService("
                         << interfaceName << "::descriptor, serviceName);\n";
                 }).endl();
@@ -287,10 +284,12 @@ static void implementGetService(Formatter &out,
 
             out << "sp<" << gIBaseFqName.cppName() << "> base = ret;\n";
             out.sIf("base == nullptr", [&] {
-                // race condition. hwservicemanager drops the service
+                // if tries > 0: race condition. hwservicemanager drops the service
                 // from waitForHwService to here
-                out << "ALOGW(\"" << interfaceName << ": found null hwbinder interface\");\n"
-                    << (isTry ? "break" : "continue")
+                out.sIf("tries > 0", [&] {
+                    out << "ALOGW(\"" << interfaceName << ": found null hwbinder interface\");\n";
+                });
+                out << (isTry ? "break" : "continue")
                     << ";\n";
             }).endl();
             out << "Return<sp<" << interfaceName
