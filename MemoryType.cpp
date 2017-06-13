@@ -137,6 +137,10 @@ bool MemoryType::resultNeedsDeref() const {
     return true;
 }
 
+bool MemoryType::isMemory() const {
+    return true;
+}
+
 bool MemoryType::isJavaCompatible() const {
     return false;
 }

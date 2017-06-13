@@ -55,6 +55,9 @@ bool VectorType::isCompatibleElementType(Type *elementType) const {
     if (elementType->isHandle()) {
         return true;
     }
+    if (elementType->isMemory()) {
+        return true;
+    }
     if (elementType->isTemplatedType()) {
         Type *inner = static_cast<TemplatedType *>(elementType)->getElementType();
         return this->isCompatibleElementType(inner) && !inner->isInterface();
