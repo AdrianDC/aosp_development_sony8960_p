@@ -1160,7 +1160,8 @@ void AST::generateCheckNonNull(Formatter &out, const std::string &nonNull) {
     out.sIf(nonNull + " == nullptr", [&] {
         out << "return ::android::hardware::Status::fromExceptionCode(\n";
         out.indent(2, [&] {
-            out << "::android::hardware::Status::EX_ILLEGAL_ARGUMENT);\n";
+            out << "::android::hardware::Status::EX_ILLEGAL_ARGUMENT,\n"
+                << "\"Null synchronous callback passed.\");\n";
         });
     }).endl().endl();
 }
@@ -1984,7 +1985,8 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
         out << "return ::android::hardware::Status::fromExceptionCode(\n";
         out.indent();
         out.indent();
-        out << "::android::hardware::Status::EX_TRANSACTION_FAILED);\n";
+        out << "::android::hardware::Status::EX_TRANSACTION_FAILED,\n"
+            << "\"Passthrough oneway function queue exceeds maximum size.\");\n";
         out.unindent();
         out.unindent();
         out.unindent();
