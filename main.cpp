@@ -686,6 +686,60 @@ static void generateAndroidBpGenSection(
     out << "}\n\n";
 }
 
+static void generateAndroidBpLibSection(
+        Formatter &out,
+        bool generateVendor,
+        const std::string &libraryName,
+        const std::string &genSourceName,
+        const std::string &genHeaderName,
+        const std::set<FQName> &importedPackagesHierarchy) {
+
+    // C++ library definition
+    out << "cc_library_shared {\n";
+    out.indent();
+    out << "name: \"" << libraryName << (generateVendor ? "_vendor" : "") << "\",\n"
+        << "defaults: [\"hidl-module-defaults\"],\n"
+        << "generated_sources: [\"" << genSourceName << "\"],\n"
+        << "generated_headers: [\"" << genHeaderName << "\"],\n"
+        << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
+
+    if (generateVendor) {
+        out << "vendor: true,\n";
+    } else {
+        out << "vendor_available: true,\n";
+    }
+    out << "shared_libs: [\n";
+
+    out.indent();
+    out << "\"libhidlbase\",\n"
+        << "\"libhidltransport\",\n"
+        << "\"libhwbinder\",\n"
+        << "\"liblog\",\n"
+        << "\"libutils\",\n"
+        << "\"libcutils\",\n";
+    for (const auto &importedPackage : importedPackagesHierarchy) {
+        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+    }
+    out.unindent();
+
+    out << "],\n";
+
+    out << "export_shared_lib_headers: [\n";
+    out.indent();
+    out << "\"libhidlbase\",\n"
+        << "\"libhidltransport\",\n"
+        << "\"libhwbinder\",\n"
+        << "\"libutils\",\n";
+    for (const auto &importedPackage : importedPackagesHierarchy) {
+        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
+    }
+    out.unindent();
+    out << "],\n";
+    out.unindent();
+
+    out << "}\n";
+}
+
 static status_t generateAndroidBpForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -807,56 +861,40 @@ static status_t generateAndroidBpForPackage(
                 }
             });
 
-    // C++ library definition
-    out << "cc_library_shared {\n";
-    out.indent();
-    out << "name: \"" << libraryName << "\",\n"
-        << "defaults: [\"hidl-module-defaults\"],\n"
-        << "generated_sources: [\"" << genSourceName << "\"],\n"
-        << "generated_headers: [\"" << genHeaderName << "\"],\n"
-        << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
+    generateAndroidBpLibSection(
+        out,
+        false /* generateVendor */,
+        libraryName,
+        genSourceName,
+        genHeaderName,
+        importedPackagesHierarchy);
 
-    // TODO(b/35813011): make always vendor_available
-    // Explicitly mark libraries vendor until BOARD_VNDK_VERSION can
-    // be enabled.
-    if (packageFQName.inPackage("android.hidl") ||
+    // TODO(b/35813011): make all libraries vendor_available
+    // Explicitly create '_vendor' copies of libraries so that
+    // vendor code can link against the extensions. When this is
+    // used, framework code should link against vendor.awesome.foo@1.0
+    // and code on the vendor image should link against
+    // vendor.awesome.foo@1.0_vendor. For libraries with the below extensions,
+    // they will be available even on the generic system image.
+    // Because of this, they should always be referenced without the
+    // '_vendor' name suffix.
+    if (!(packageFQName.inPackage("android.hidl") ||
             packageFQName.inPackage("android.system") ||
             packageFQName.inPackage("android.frameworks") ||
-            packageFQName.inPackage("android.hardware")) {
-        out << "vendor_available: true,\n";
-    } else {
-        out << "vendor: true,\n";
+            packageFQName.inPackage("android.hardware"))) {
+
+        // Note, not using cc_defaults here since it's already not used and
+        // because generating this libraries will be removed when the VNDK
+        // is enabled (done by the build system itself).
+        out.endl();
+        generateAndroidBpLibSection(
+            out,
+            true /* generateVendor */,
+            libraryName,
+            genSourceName,
+            genHeaderName,
+            importedPackagesHierarchy);
     }
-    out << "shared_libs: [\n";
-
-    out.indent();
-    out << "\"libhidlbase\",\n"
-        << "\"libhidltransport\",\n"
-        << "\"libhwbinder\",\n"
-        << "\"liblog\",\n"
-        << "\"libutils\",\n"
-        << "\"libcutils\",\n";
-    for (const auto &importedPackage : importedPackagesHierarchy) {
-        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
-    }
-    out.unindent();
-
-    out << "],\n";
-
-    out << "export_shared_lib_headers: [\n";
-    out.indent();
-    out << "\"libhidlbase\",\n"
-        << "\"libhidltransport\",\n"
-        << "\"libhwbinder\",\n"
-        << "\"libutils\",\n";
-    for (const auto &importedPackage : importedPackagesHierarchy) {
-        out << "\"" << makeLibraryName(importedPackage) << "\",\n";
-    }
-    out.unindent();
-    out << "],\n";
-    out.unindent();
-
-    out << "}\n";
 
     return OK;
 }
