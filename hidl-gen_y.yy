@@ -904,7 +904,9 @@ enum_storage_type
           $$ = $2;
 
           if ($$ != NULL && !$$->isValidEnumStorageType()) {
-              std::cerr << "ERROR: Invalid enum storage type specified. at "
+              std::cerr << "ERROR: Invalid enum storage type ("
+                        << $2->typeName()
+                        << ") specified. at "
                         << @2 << "\n";
 
               YYERROR;
