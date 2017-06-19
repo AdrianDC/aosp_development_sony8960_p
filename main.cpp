@@ -1367,6 +1367,12 @@ int main(int argc, char **argv) {
     argc -= optind;
     argv += optind;
 
+    if (argc == 0) {
+        fprintf(stderr, "ERROR: no fqname specified.\n");
+        usage(me);
+        exit(1);
+    }
+
     if (rootPath.empty()) {
         const char *ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
 
