@@ -42,11 +42,12 @@ std::string PointerType::getVtsType() const {
 
 void PointerType::emitReaderWriter(
         Formatter& out,
-        const std::string& /* name */,
+        const std::string& name,
         const std::string& /* parcelObj */,
         bool /* parcelObjIsPointer */,
         bool /* isReader */,
         ErrorMode /* mode */) const {
+    out << "(void)" << name << ";\n";
     out << "LOG_ALWAYS_FATAL(\"Pointer is only supported in passthrough mode\");\n";
 }
 
