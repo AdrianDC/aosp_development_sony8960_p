@@ -1250,6 +1250,13 @@ TEST_F(HidlTest, FooNullNativeHandleTest) {
     }));
 }
 
+TEST_F(HidlTest, FooNullSynchronousCallbackTest) {
+    Return<void> ret = foo->echoNullInterface(nullptr, nullptr /* synchronous callback */);
+
+    EXPECT_FAIL(ret);
+    EXPECT_TRUE(ret.description().find("Null synchronous callback passed") != std::string::npos);
+}
+
 TEST_F(HidlTest, FooNullCallbackTest) {
     EXPECT_OK(foo->echoNullInterface(nullptr,
                 [](const auto receivedNull, const auto &intf) {
