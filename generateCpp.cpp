@@ -226,11 +226,14 @@ static void implementGetService(Formatter &out,
         out << "#ifdef __ANDROID_TREBLE__\n\n"
             << "#ifdef __ANDROID_DEBUGGABLE__\n"
             << "const char* env = std::getenv(\"TREBLE_TESTING_OVERRIDE\");\n"
-            << "const bool vintfLegacy = (transport == Transport::EMPTY) && env && !strcmp(env, \"true\");\n"
+            << "const bool trebleTestingOverride =  env && !strcmp(env, \"true\");\n"
+            << "const bool vintfLegacy = (transport == Transport::EMPTY) && trebleTestingOverride;\n"
             << "#else // __ANDROID_TREBLE__ but not __ANDROID_DEBUGGABLE__\n"
+            << "const bool trebleTestingOverride = false;\n"
             << "const bool vintfLegacy = false;\n"
             << "#endif // __ANDROID_DEBUGGABLE__\n\n"
             << "#else // not __ANDROID_TREBLE__\n"
+            << "const bool trebleTestingOverride = false;\n"
             << "const bool vintfLegacy = (transport == Transport::EMPTY);\n\n"
             << "#endif // __ANDROID_TREBLE__\n\n";
 
@@ -328,8 +331,10 @@ static void implementGetService(Formatter &out,
                     out << "sp<" << gIBaseFqName.cppName()
                         << "> baseInterface = ret;\n";
                     out.sIf("baseInterface != nullptr", [&]() {
-                        out << "iface = new " << fqName.getInterfacePassthroughName()
-                            << "(" << interfaceName << "::castFrom(baseInterface));\n";
+                        out << "iface = " << interfaceName << "::castFrom(baseInterface);\n";
+                        out.sIf("!getStub || trebleTestingOverride", [&] () {
+                            out << "iface = new " << fqName.getInterfacePassthroughName() << "(iface);\n";
+                        }).endl();
                     }).endl();
                 }).endl();
             }).endl();
