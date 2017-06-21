@@ -13,6 +13,11 @@ genrule {
          "    -r test.hash:system/tools/hidl/test/hash_test/bad" +
          "    test.hash.hash@1.0 2> /dev/null)" +
          "&&" +
+         "$(location hidl-gen) -L hash " +
+         "    -r android.hidl:system/libhidl/transport" +
+         "    -r test.hash:system/tools/hidl/test/hash_test/bad" +
+         "    test.hash.hash@1.0 > /dev/null" +
+         "&&" +
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
 
