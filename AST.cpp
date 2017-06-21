@@ -116,7 +116,7 @@ bool AST::addImport(const char *import) {
 
         for (const auto &subFQName : packageInterfaces) {
             // Do not enforce restrictions on imports.
-            AST *ast = mCoordinator->parse(subFQName, &mImportedASTs, false /* enforce */);
+            AST* ast = mCoordinator->parse(subFQName, &mImportedASTs, Coordinator::Enforce::NONE);
             if (ast == nullptr) {
                 return false;
             }
@@ -135,7 +135,7 @@ bool AST::addImport(const char *import) {
     // assume it is an interface, and try to import it.
     const FQName interfaceName = fqName.getTopLevelType();
     // Do not enforce restrictions on imports.
-    importAST = mCoordinator->parse(interfaceName, &mImportedASTs, false /* enforce */);
+    importAST = mCoordinator->parse(interfaceName, &mImportedASTs, Coordinator::Enforce::NONE);
 
     if (importAST != nullptr) {
         // cases like android.hardware.foo@1.0::IFoo.Internal
@@ -165,7 +165,7 @@ bool AST::addImport(const char *import) {
     FQName typesFQName = fqName.getTypesForPackage();
 
     // Do not enforce restrictions on imports.
-    importAST = mCoordinator->parse(typesFQName, &mImportedASTs, false /* enforce */);
+    importAST = mCoordinator->parse(typesFQName, &mImportedASTs, Coordinator::Enforce::NONE);
 
     if (importAST != nullptr) {
         // Attempt to find Abc.Internal in types.
@@ -524,7 +524,7 @@ void AST::getImportedPackagesHierarchy(std::set<FQName> *importSet) const {
 void AST::getAllImportedNames(std::set<FQName> *allImportNames) const {
     for (const auto& name : mImportedNames) {
         allImportNames->insert(name);
-        AST *ast = mCoordinator->parse(name, nullptr /* imported */, false /* enforce */);
+        AST* ast = mCoordinator->parse(name, nullptr /* imported */, Coordinator::Enforce::NONE);
         ast->getAllImportedNames(allImportNames);
     }
 }
