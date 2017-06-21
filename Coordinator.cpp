@@ -63,7 +63,8 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
     }
 }
 
-AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool enforce) const {
+AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
+                        Enforce enforcement) const {
     CHECK(fqName.isFullyQualified());
 
     auto it = mCache.find(fqName);
@@ -86,7 +87,7 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
         // Any interface file implicitly imports its package's types.hal.
         FQName typesName = fqName.getTypesForPackage();
         // Do not enforce on imports.
-        typesAST = parse(typesName, parsedASTs, false /* enforce */);
+        typesAST = parse(typesName, parsedASTs, Enforce::NONE);
 
         // fall through.
     }
@@ -171,15 +172,13 @@ AST *Coordinator::parse(const FQName &fqName, std::set<AST *> *parsedASTs, bool 
     // parse fqName.
     mCache[fqName] = ast;
 
-    if (enforce) {
-        // For each .hal file that hidl-gen parses, the whole package will be checked.
-        err = enforceRestrictionsOnPackage(fqName);
-        if (err != OK) {
-            mCache[fqName] = nullptr;
-            delete ast;
-            ast = nullptr;
-            return nullptr;
-        }
+    // For each .hal file that hidl-gen parses, the whole package will be checked.
+    err = enforceRestrictionsOnPackage(fqName, enforcement);
+    if (err != OK) {
+        mCache[fqName] = nullptr;
+        delete ast;
+        ast = nullptr;
+        return nullptr;
     }
 
     return ast;
@@ -383,8 +382,11 @@ std::string Coordinator::convertPackageRootToPath(const FQName &fqName) const {
     return packageRoot; // now converted to a path
 }
 
+status_t Coordinator::enforceRestrictionsOnPackage(const FQName& fqName,
+                                                   Enforce enforcement) const {
+    CHECK(enforcement == Enforce::FULL || enforcement == Enforce::NO_HASH ||
+          enforcement == Enforce::NONE);
 
-status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) const {
     // need fqName to be something like android.hardware.foo@1.0.
     // name and valueName is ignored.
     if (fqName.package().empty() || fqName.version().empty()) {
@@ -392,6 +394,11 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) const {
                    << ": package or version is missing.";
         return BAD_VALUE;
     }
+
+    if (enforcement == Enforce::NONE) {
+        return OK;
+    }
+
     FQName package = fqName.getPackageAndVersion();
     // look up cache.
     if (mPackagesEnforced.find(package) != mPackagesEnforced.end()) {
@@ -406,9 +413,11 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName &fqName) const {
         return err;
     }
 
-    err = enforceHashes(package);
-    if (err != OK) {
-        return err;
+    if (enforcement != Enforce::NO_HASH) {
+        err = enforceHashes(package);
+        if (err != OK) {
+            return err;
+        }
     }
 
     // cache it so that it won't need to be enforced again.

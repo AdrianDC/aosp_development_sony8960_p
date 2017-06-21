@@ -1147,7 +1147,8 @@ static status_t generateHashOutput(const FQName &fqName,
     }
 
     for (const auto &currentFqName : packageInterfaces) {
-        AST *ast = coordinator->parse(currentFqName);
+        AST* ast = coordinator->parse(currentFqName, {} /* parsed */,
+                                      Coordinator::Enforce::NO_HASH /* enforcement */);
 
         if (ast == NULL) {
             fprintf(stderr,
