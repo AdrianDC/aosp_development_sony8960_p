@@ -17,14 +17,9 @@ LOCAL_PATH:= $(call my-dir)
 # for Android JUnit runner and rules
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test
-LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := rules/rules-0.6-beta-2-release.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-LOCAL_SDK_VERSION := 8
-# Uninstallable static Java libraries.
-LOCAL_UNINSTALLABLE_MODULE := true
-include $(BUILD_PREBUILT)
+LOCAL_SDK_VERSION := 15
+LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-nodep
@@ -35,10 +30,10 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-rules-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := rules/rules-0.6-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := rules/rules_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-LOCAL_SDK_VERSION := 8
+LOCAL_SDK_VERSION := 15
 # Uninstallable static Java libraries.
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
@@ -46,30 +41,26 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-runner-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := runner/runner-0.6-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := runner/runner_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-LOCAL_SDK_VERSION := 8
+LOCAL_SDK_VERSION := 15
 # Uninstallable static Java libraries.
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
 
 # for espresso-core
-## Note: the following jar already contains android-support-test
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-core-2.3-beta-2-release.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-# Uninstallable static Java libraries.
-LOCAL_UNINSTALLABLE_MODULE := true
-include $(BUILD_PREBUILT)
+LOCAL_SDK_VERSION := 15
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core-nodep android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-core-2.3-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso_core_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 # Uninstallable static Java libraries.
@@ -77,21 +68,17 @@ LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
 
 # for espresso-contrib
-## Note: the following jar already contains espresso-core
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-contrib
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-contrib-2.3-beta-2-release.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-# Uninstallable static Java libraries.
-LOCAL_UNINSTALLABLE_MODULE := true
-include $(BUILD_PREBUILT)
+LOCAL_SDK_VERSION := 15
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core android-support-design android-support-v7-recyclerview android-support-v4
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-contrib-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-contrib-2.3-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso_contrib_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 # Uninstallable static Java libraries.
@@ -102,7 +89,7 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-idling-resource-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-idling-resource-2.3-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso_idling_resource_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 # Uninstallable static Java libraries.
@@ -110,21 +97,17 @@ LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
 
 # for espresso-intents
-## Note: the following jar already contains espresso-core
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-intents
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-intents-2.3-beta-2-release.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-# Uninstallable static Java libraries.
-LOCAL_UNINSTALLABLE_MODULE := true
-include $(BUILD_PREBUILT)
+LOCAL_SDK_VERSION := 15
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-intents-nodep espresso-core android-support-test-rules-nodep 
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-intents-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-intents-2.3-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso_intents_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 # Uninstallable static Java libraries.
@@ -132,21 +115,17 @@ LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
 
 # for espresso-web
-## Note: the following jar already contains espresso-core
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-web
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-web-2.3-beta-2-release.jar
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
-# Uninstallable static Java libraries.
-LOCAL_UNINSTALLABLE_MODULE := true
-include $(BUILD_PREBUILT)
+LOCAL_SDK_VERSION := 15
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core android-support-annotations tagsoup-android
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-web-nodep
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := espresso/espresso-web-2.3-beta-2-release-no-dep.jar
+LOCAL_SRC_FILES := espresso/espresso_web_release_no_deps.jar
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
 # Uninstallable static Java libraries.
