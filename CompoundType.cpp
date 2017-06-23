@@ -445,25 +445,13 @@ status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
     }).endl().endl();
 
     if (canCheckEquality()) {
-        out << "static inline bool operator==("
-            << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
-            << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
-        out.block([&] {
-            for (const auto &field : *mFields) {
-                out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
-                    out << "return false;\n";
-                }).endl();
-            }
-            out << "return true;\n";
-        }).endl().endl();
+        out << "bool operator==("
+            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
 
-        out << "static inline bool operator!=("
-            << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
-        out.block([&] {
-            out << "return !(lhs == rhs);\n";
-        }).endl().endl();
+        out << "bool operator!=("
+            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
     } else {
-        out << "// operator== and operator!= are not generated for " << localName() << "\n";
+        out << "// operator== and operator!= are not generated for " << localName() << "\n\n";
     }
 
     return OK;
@@ -529,6 +517,28 @@ status_t CompoundType::emitTypeDefinitions(
     if (needsResolveReferences()) {
         emitResolveReferenceDef(out, prefix, true /* isReader */);
         emitResolveReferenceDef(out, prefix, false /* isReader */);
+    }
+
+    if (canCheckEquality()) {
+        out << "bool operator==("
+            << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
+            << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
+        out.block([&] {
+            for (const auto &field : *mFields) {
+                out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
+                    out << "return false;\n";
+                }).endl();
+            }
+            out << "return true;\n";
+        }).endl().endl();
+
+        out << "bool operator!=("
+            << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
+        out.block([&] {
+            out << "return !(lhs == rhs);\n";
+        }).endl().endl();
+    } else {
+        out << "// operator== and operator!= are not generated for " << localName() << "\n";
     }
 
     return OK;
