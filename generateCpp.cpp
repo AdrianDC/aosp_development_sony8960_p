@@ -820,6 +820,10 @@ status_t AST::generateMethods(Formatter &out, MethodGenerator gen) const {
     return OK;
 }
 
+void AST::generateTemplatizationLink(Formatter& out) const {
+    out << "typedef " << mRootScope->getInterface()->localName() << " Pure;\n\n";
+}
+
 status_t AST::generateStubHeader(const std::string &outputPath) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
@@ -887,6 +891,9 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "TransactCallback _hidl_cb = nullptr) override;\n\n";
     out.unindent();
     out.unindent();
+
+    out.endl();
+    generateTemplatizationLink(out);
 
     out << "::android::sp<" << iface->localName() << "> getImpl() { return _hidl_mImpl; };\n";
     out.unindent();
@@ -977,6 +984,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << proxyName
         << "(const ::android::sp<::android::hardware::IBinder> &_hidl_impl);"
         << "\n\n";
+
+    generateTemplatizationLink(out);
 
     out << "virtual bool isRemote() const override { return true; }\n\n";
 
@@ -1856,6 +1865,9 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
         << "(const ::android::sp<"
         << iface->localName()
         << "> impl);\n";
+
+    out.endl();
+    generateTemplatizationLink(out);
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
         return generatePassthroughMethod(out, method);
