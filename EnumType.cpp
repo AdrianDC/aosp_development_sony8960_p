@@ -273,31 +273,22 @@ status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
     emitBitFieldBitwiseAssignmentOperator(out, "|");
     emitBitFieldBitwiseAssignmentOperator(out, "&");
 
-    // toString for bitfields, equivalent to dumpBitfield in Java
-    out << "template<typename>\n"
-        << "std::string toString("
-        << resolveToScalarType()->getCppArgumentType()
-        << " o);\n";
-    out << "template<>\n"
-        << "std::string toString<" << getCppStackType() << ">("
-        << resolveToScalarType()->getCppArgumentType()
-        << " o);\n\n";
-
-    // toString for enum itself
-    out << "std::string toString("
-        << getCppArgumentType()
-        << " o);\n\n";
+    emitToStringDefinitions(out);
 
     return OK;
 }
 
-status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* prefix */) const {
+status_t EnumType::emitToStringDefinitions(Formatter &out) const {
 
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
+    out << "template<typename>\n"
+        << "static inline std::string toString("
+        << resolveToScalarType()->getCppArgumentType()
+        << " o);\n";
     out << "template<>\n"
-        << "std::string toString<" << getCppStackType() << ">("
+        << "inline std::string toString<" << getCppStackType() << ">("
         << scalarType->getCppArgumentType()
         << " o) ";
     out.block([&] {
@@ -329,7 +320,7 @@ status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* pref
         out << "return os;\n";
     }).endl().endl();
 
-    out << "std::string toString("
+    out << "static inline std::string toString("
         << getCppArgumentType()
         << " o) ";
 
