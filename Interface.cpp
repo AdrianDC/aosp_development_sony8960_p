@@ -729,19 +729,9 @@ status_t Interface::emitGlobalTypeDeclarations(Formatter &out) const {
     if (status != OK) {
         return status;
     }
-
-    out << "static inline std::string toString("
+    out << "std::string toString("
         << getCppArgumentType()
-        << " o) ";
-
-    out.block([&] {
-        out << "std::string os = \"[class or subclass of \";\n"
-            << "os += " << fullName() << "::descriptor;\n"
-            << "os += \"]\";\n"
-            << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
-            << "return os;\n";
-    }).endl().endl();
-
+        << ");\n";
     return OK;
 }
 
@@ -753,6 +743,18 @@ status_t Interface::emitTypeDefinitions(
     if (err != OK) {
         return err;
     }
+
+    out << "std::string toString("
+        << getCppArgumentType()
+        << " o) ";
+
+    out.block([&] {
+        out << "std::string os = \"[class or subclass of \";\n"
+            << "os += " << fullName() << "::descriptor;\n"
+            << "os += \"]\";\n"
+            << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
+            << "return os;\n";
+    }).endl().endl();
 
     return OK;
 }
