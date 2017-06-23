@@ -421,28 +421,9 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
 status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
     Scope::emitGlobalTypeDeclarations(out);
 
-    out << "static inline std::string toString("
+    out << "std::string toString("
         << getCppArgumentType()
-        << (mFields->empty() ? "" : " o")
-        << ") ";
-
-    out.block([&] {
-        // include toString for scalar types
-        out << "using ::android::hardware::toString;\n"
-            << "std::string os;\n";
-        out << "os += \"{\";\n";
-
-        for (const CompoundField *field : *mFields) {
-            out << "os += \"";
-            if (field != *(mFields->begin())) {
-                out << ", ";
-            }
-            out << "." << field->name() << " = \";\n";
-            field->type().emitDump(out, "os", "o." + field->name());
-        }
-
-        out << "os += \"}\"; return os;\n";
-    }).endl().endl();
+        << ");\n\n";
 
     if (canCheckEquality()) {
         out << "bool operator==("
@@ -518,6 +499,29 @@ status_t CompoundType::emitTypeDefinitions(
         emitResolveReferenceDef(out, prefix, true /* isReader */);
         emitResolveReferenceDef(out, prefix, false /* isReader */);
     }
+
+    out << "std::string toString("
+        << getCppArgumentType()
+        << (mFields->empty() ? "" : " o")
+        << ") ";
+
+    out.block([&] {
+        // include toString for scalar types
+        out << "using ::android::hardware::toString;\n"
+            << "std::string os;\n";
+        out << "os += \"{\";\n";
+
+        for (const CompoundField *field : *mFields) {
+            out << "os += \"";
+            if (field != *(mFields->begin())) {
+                out << ", ";
+            }
+            out << "." << field->name() << " = \";\n";
+            field->type().emitDump(out, "os", "o." + field->name());
+        }
+
+        out << "os += \"}\"; return os;\n";
+    }).endl().endl();
 
     if (canCheckEquality()) {
         out << "bool operator==("
