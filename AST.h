@@ -197,6 +197,8 @@ private:
     // is effectively useless.
     using MethodGenerator = std::function<status_t(const Method *, const Interface *)>;
 
+    void generateTemplatizationLink(Formatter& out) const;
+
     status_t generateStubImplHeader(const std::string &outputPath) const;
     status_t generateStubImplSource(const std::string &outputPath) const;
 
