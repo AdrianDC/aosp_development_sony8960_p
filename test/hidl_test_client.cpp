@@ -1438,14 +1438,18 @@ TEST_F(HidlTest, BarThisIsNewTest) {
     ALOGI("CLIENT thisIsNew returned.");
 }
 
-static void expectGoodChild(const sp<IChild> &child) {
+static void expectGoodChild(sp<IChild> child) {
+    ASSERT_NE(child.get(), nullptr);
+    child = IChild::castFrom(child);
     ASSERT_NE(child.get(), nullptr);
     EXPECT_OK(child->doGrandparent());
     EXPECT_OK(child->doParent());
     EXPECT_OK(child->doChild());
 }
 
-static void expectGoodParent(const sp<IParent> &parent) {
+static void expectGoodParent(sp<IParent> parent) {
+    ASSERT_NE(parent.get(), nullptr);
+    parent = IParent::castFrom(parent);
     ASSERT_NE(parent.get(), nullptr);
     EXPECT_OK(parent->doGrandparent());
     EXPECT_OK(parent->doParent());
@@ -1453,7 +1457,9 @@ static void expectGoodParent(const sp<IParent> &parent) {
     expectGoodChild(child);
 }
 
-static void expectGoodGrandparent(const sp<IGrandparent> &grandparent) {
+static void expectGoodGrandparent(sp<IGrandparent> grandparent) {
+    ASSERT_NE(grandparent.get(), nullptr);
+    grandparent = IGrandparent::castFrom(grandparent);
     ASSERT_NE(grandparent.get(), nullptr);
     EXPECT_OK(grandparent->doGrandparent());
     sp<IParent> parent = IParent::castFrom(grandparent);
@@ -1461,7 +1467,6 @@ static void expectGoodGrandparent(const sp<IGrandparent> &grandparent) {
 }
 
 TEST_F(HidlTest, FooHaveAnInterfaceTest) {
-
     sp<ISimple> in = new Complicated(42);
     Return<sp<ISimple>> ret = bar->haveAInterface(in);
     EXPECT_OK(ret);
