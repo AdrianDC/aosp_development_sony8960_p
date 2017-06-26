@@ -233,7 +233,8 @@ static void implementGetService(Formatter &out,
             << "const bool vintfLegacy = false;\n"
             << "#endif // __ANDROID_DEBUGGABLE__\n\n"
             << "#else // not __ANDROID_TREBLE__\n"
-            << "const bool trebleTestingOverride = false;\n"
+            << "const char* env = std::getenv(\"TREBLE_TESTING_OVERRIDE\");\n"
+            << "const bool trebleTestingOverride =  env && !strcmp(env, \"true\");\n"
             << "const bool vintfLegacy = (transport == Transport::EMPTY);\n\n"
             << "#endif // __ANDROID_TREBLE__\n\n";
 
