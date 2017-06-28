@@ -1561,16 +1561,23 @@ status_t AST::generateStubSource(
     out << "default:\n{\n";
     out.indent();
 
-    out << "return onTransact(\n";
+    if (iface->isIBase()) {
+        out << "(void)_hidl_flags;\n";
+        out << "return ::android::UNKNOWN_TRANSACTION;\n";
+    } else {
+        out << "return ";
+        out << gIBaseFqName.getInterfaceStubFqName().cppName();
+        out << "::onTransact(\n";
 
-    out.indent();
-    out.indent();
+        out.indent();
+        out.indent();
 
-    out << "_hidl_code, _hidl_data, _hidl_reply, "
-        << "_hidl_flags, _hidl_cb);\n";
+        out << "_hidl_code, _hidl_data, _hidl_reply, "
+            << "_hidl_flags, _hidl_cb);\n";
 
-    out.unindent();
-    out.unindent();
+        out.unindent();
+        out.unindent();
+    }
 
     out.unindent();
     out << "}\n";

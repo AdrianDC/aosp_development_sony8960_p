@@ -18,6 +18,8 @@
 #include <android/hardware/tests/foo/1.0/BsSimple.h>
 #include <android/hardware/tests/foo/1.0/BpHwSimple.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
+#include <android/hardware/tests/bar/1.0/BpHwBar.h>
+#include <android/hardware/tests/bar/1.0/BnHwBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/bar/1.0/IImportRules.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
@@ -1580,6 +1582,35 @@ TEST_F(HidlTest, EnumEqualTest) {
     // explicitly invoke operator== here.
     EXPECT_TRUE(e1 == e2);
     EXPECT_TRUE(e1 != e3);
+}
+
+TEST_F(HidlTest, InvalidTransactionTest) {
+    using ::android::hardware::tests::bar::V1_0::BnHwBar;
+    using ::android::hardware::tests::bar::V1_0::BpHwBar;
+    using ::android::hardware::IBinder;
+    using ::android::hardware::Parcel;
+    using ::android::status_t;
+    using ::android::OK;
+
+    Parcel request, reply;
+    sp<IBinder> binder;
+    status_t status = request.writeInterfaceToken(::android::hardware::tests::bar::V1_0::IBar::descriptor);
+
+    EXPECT_EQ(status, OK);
+
+    if (mode == BINDERIZED) {
+        EXPECT_TRUE(bar->isRemote());
+        binder = ::android::hardware::toBinder<IBar, BpHwBar>(bar);
+    } else {
+        // For a local test, just wrap the implementation with a BnHwBar
+        binder = new BnHwBar(bar);
+    }
+
+    status = binder->transact(1234, request, &reply);
+
+    EXPECT_EQ(status, ::android::UNKNOWN_TRANSACTION);
+    // Try another call, to make sure nothing is messed up
+    EXPECT_OK(bar->thisIsNew());
 }
 
 #if HIDL_RUN_POINTER_TESTS
