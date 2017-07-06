@@ -30,6 +30,7 @@ cc_test {
         "android.hardware.tests.inheritance@1.0",
         "android.hardware.tests.pointer@1.0",
         "android.hardware.tests.memory@1.0",
+        "android.hardware.tests.multithread@1.0",
         "android.hidl.allocator@1.0",
         "android.hidl.memory@1.0",
         "android.hidl.token@1.0",
@@ -48,6 +49,7 @@ cc_test {
         "android.hardware.tests.inheritance@1.0-impl",
         "android.hardware.tests.pointer@1.0-impl",
         "android.hardware.tests.memory@1.0-impl",
+        "android.hardware.tests.multithread@1.0-impl",
     ],
 }
 
@@ -71,6 +73,7 @@ cc_test {
         "android.hardware.tests.inheritance@1.0",
         "android.hardware.tests.pointer@1.0",
         "android.hardware.tests.memory@1.0",
+        "android.hardware.tests.multithread@1.0",
         "android.hidl.memory@1.0",
         "android.hidl.token@1.0",
     ],
