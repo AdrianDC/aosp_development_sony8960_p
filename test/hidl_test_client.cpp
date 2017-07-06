@@ -13,20 +13,23 @@
 
 #include <android/hidl/token/1.0/ITokenManager.h>
 
-#include <android/hardware/tests/foo/1.0/IFoo.h>
-#include <android/hardware/tests/foo/1.0/BnHwSimple.h>
-#include <android/hardware/tests/foo/1.0/BsSimple.h>
-#include <android/hardware/tests/foo/1.0/BpHwSimple.h>
+#include <android/hardware/tests/bar/1.0/BpHwBar.h>
+#include <android/hardware/tests/bar/1.0/BnHwBar.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/bar/1.0/IImportRules.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
+#include <android/hardware/tests/foo/1.0/BnHwSimple.h>
+#include <android/hardware/tests/foo/1.0/BpHwSimple.h>
+#include <android/hardware/tests/foo/1.0/BsSimple.h>
+#include <android/hardware/tests/foo/1.0/IFoo.h>
 #include <android/hardware/tests/hash/1.0/IHash.h>
+#include <android/hardware/tests/inheritance/1.0/IChild.h>
 #include <android/hardware/tests/inheritance/1.0/IFetcher.h>
 #include <android/hardware/tests/inheritance/1.0/IGrandparent.h>
 #include <android/hardware/tests/inheritance/1.0/IParent.h>
-#include <android/hardware/tests/inheritance/1.0/IChild.h>
 #include <android/hardware/tests/memory/1.0/IMemoryTest.h>
+#include <android/hardware/tests/multithread/1.0/IMultithread.h>
 #include <android/hardware/tests/pointer/1.0/IGraph.h>
 #include <android/hardware/tests/pointer/1.0/IPointer.h>
 
@@ -41,21 +44,23 @@
 #error "GTest did not detect pthread library."
 #endif
 
-#include <algorithm>
-#include <condition_variable>
 #include <getopt.h>
 #include <inttypes.h>
+#include <algorithm>
+#include <condition_variable>
+#include <future>
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include <hidl-test/FooHelper.h>
 #include <hidl-test/PointerHelper.h>
 
-#include <hidl/Status.h>
 #include <hidl/ServiceManagement.h>
+#include <hidl/Status.h>
 #include <hidlmemory/mapping.h>
 
 #include <utils/Condition.h>
@@ -95,6 +100,7 @@ using ::android::hardware::tests::inheritance::V1_0::IChild;
 using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::tests::memory::V1_0::IMemoryTest;
+using ::android::hardware::tests::multithread::V1_0::IMultithread;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
@@ -354,6 +360,7 @@ public:
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
+    sp<IMultithread> multithreadInterface;
     TestMode mode;
     bool enableDelayMeasurementTests;
     HidlEnvironment(TestMode mode, bool enableDelayMeasurementTests) :
@@ -410,6 +417,11 @@ public:
         // use passthrough mode as the validation object.
         validationPointerInterface = IPointer::getService("pointer", true /* getStub */);
         ASSERT_NE(validationPointerInterface, nullptr);
+
+        multithreadInterface =
+            IMultithread::getService("multithread", mode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(multithreadInterface, nullptr);
+        ASSERT_EQ(multithreadInterface->isRemote(), mode == BINDERIZED);
     }
 
     virtual void SetUp() {
@@ -1506,6 +1518,54 @@ TEST_F(HidlTest, EnumEqualTest) {
     // explicitly invoke operator== here.
     EXPECT_TRUE(e1 == e2);
     EXPECT_TRUE(e1 != e3);
+}
+
+class HidlMultithreadTest : public ::testing::Test {
+   public:
+    sp<IMultithread> multithreadInterface;
+    TestMode mode = TestMode::PASSTHROUGH;
+
+    virtual void SetUp() override {
+        ALOGI("Test setup beginning...");
+        multithreadInterface = gHidlEnvironment->multithreadInterface;
+        mode = gHidlEnvironment->mode;
+        ALOGI("Test setup complete");
+    }
+
+    void test_multithread(int maxThreads, int numThreads) {
+        LOG(INFO) << "CLIENT call setNumThreads("
+                  << maxThreads << ", " << numThreads << ")";
+        EXPECT_OK(multithreadInterface->setNumThreads(maxThreads, numThreads));
+
+        std::vector<std::future<bool>> threads;
+
+        for (int i = 0; i != numThreads; ++i) {
+            LOG(INFO) << "CLIENT call runNewThread";
+            threads.emplace_back(std::async(
+                std::launch::async, [&]() { return (bool)multithreadInterface->runNewThread(); }));
+        }
+
+        bool noTimeout = std::all_of(threads.begin(), threads.end(),
+                                     [](std::future<bool>& thread) { return thread.get(); });
+        EXPECT_EQ(noTimeout, maxThreads >= numThreads || mode == PASSTHROUGH);
+    }
+};
+
+// If it fails first try to increment timeout duration at
+// hardware/interfaces/tests/multithread/1.0/default
+TEST_F(HidlMultithreadTest, MultithreadTest) {
+    // configureRpcThreadpool doesn't stop threads,
+    // so maxThreads should not decrease
+    test_multithread(1, 1);
+    test_multithread(2, 1);
+    test_multithread(2, 2);
+    test_multithread(2, 3);
+    test_multithread(10, 5);
+    test_multithread(10, 10);
+    test_multithread(10, 15);
+    test_multithread(20, 30);
+    test_multithread(20, 20);
+    test_multithread(20, 10);
 }
 
 #if HIDL_RUN_POINTER_TESTS
