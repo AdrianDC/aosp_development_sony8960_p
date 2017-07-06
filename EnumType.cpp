@@ -415,6 +415,10 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
         out << "java.util.ArrayList<String> list = new java.util.ArrayList<>();\n";
         out << bitfieldType << " flipped = 0;\n";
         for (EnumValue *value : values()) {
+            if (value->constExpr()->castSizeT() == 0) {
+                out << "list.add(\"" << value->name() << "\"); // " << value->name() << " == 0\n";
+                continue;
+            }
             out.sIf("(o & " + value->name() + ") == " + value->name(), [&] {
                 out << "list.add(\"" << value->name() << "\");\n";
                 out << "flipped |= " << value->name() << ";\n";
