@@ -211,7 +211,7 @@ bool Interface::fillSyspropsChangedMethod(Method *method) const {
                 out << "return ::android::hardware::Void();";
             } } }, /*cppImpl */
             { { IMPL_INTERFACE, [](auto &out) { /* javaImpl */
-                out << "android.os.SystemProperties.reportSyspropChanged();";
+                out << "android.os.HwBinder.reportSyspropChanged();";
             } } } /*javaImpl */
     );
     return true;
