@@ -897,12 +897,11 @@ public final class HidlTestJava {
     }
 
     private void server() throws RemoteException {
+        HwBinder.configureRpcThreadpool(1, true);
+
         Baz baz = new Baz();
         baz.registerAsService("baz");
 
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-        }
+        HwBinder.joinRpcThreadpool();
     }
 }
