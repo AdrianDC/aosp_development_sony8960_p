@@ -8,7 +8,6 @@ subdirs = [
 
 cc_test {
     name: "hidl_test_client",
-    vendor: true,
     cflags: hidl_flags,
     srcs: ["hidl_test_client.cpp", "FooCallback.cpp"],
 
@@ -53,7 +52,6 @@ cc_test {
 
 cc_test {
     name: "hidl_test_servers",
-    vendor: true,
     srcs: ["hidl_test_servers.cpp"],
     gtest: false,
 
