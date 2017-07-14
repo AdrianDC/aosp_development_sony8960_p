@@ -24,10 +24,10 @@
         <option name="push" value="DATA/nativetest64/hidl_test_client/hidl_test_client->/data/nativetest64/hidl_test_client/hidl_test_client" />
         <option name="push" value="DATA/nativetest64/hidl_test_helper->/data/nativetest64/hidl_test_helper" />
         <option name="push" value="DATA/nativetest64/hidl_test->/data/nativetest64/hidl_test" />
-        <option name="push" value="vendor/lib/libfootest.so->/system/lib/libfootest.so" />
-        <option name="push" value="vendor/lib64/libfootest.so->/system/lib64/libfootest.so" />
-        <option name="push" value="vendor/lib/libpointertest.so->/system/lib/libpointertest.so" />
-        <option name="push" value="vendor/lib64/libpointertest.so->/system/lib64/libpointertest.so" />
+        <option name="push" value="DATA/vendor/lib/libfootest.so->/system/lib/libfootest.so" />
+        <option name="push" value="DATA/vendor/lib64/libfootest.so->/system/lib64/libfootest.so" />
+        <option name="push" value="DATA/vendor/lib/libpointertest.so->/system/lib/libpointertest.so" />
+        <option name="push" value="DATA/vendor/lib64/libpointertest.so->/system/lib64/libpointertest.so" />
         <option name="push" value="DATA/lib/android.hardware.tests.foo@1.0.so->/system/lib/android.hardware.tests.foo@1.0.so" />
         <option name="push" value="DATA/lib64/android.hardware.tests.foo@1.0.so->/system/lib64/android.hardware.tests.foo@1.0.so" />
         <option name="push" value="DATA/lib/android.hardware.tests.bar@1.0.so->/system/lib/android.hardware.tests.bar@1.0.so" />
@@ -42,20 +42,20 @@
         <option name="push" value="DATA/lib64/android.hardware.tests.pointer@1.0.so->/system/lib64/android.hardware.tests.pointer@1.0.so" />
         <option name="push" value="DATA/lib/android.hardware.tests.memory@1.0.so->/system/lib/android.hardware.tests.memory@1.0.so" />
         <option name="push" value="DATA/lib64/android.hardware.tests.memory@1.0.so->/system/lib64/android.hardware.tests.memory@1.0.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.foo@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.foo@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.foo@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.foo@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.bar@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.bar@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.bar@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.bar@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.baz@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.baz@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.baz@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.baz@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.hash@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.hash@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.hash@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.hash@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.inheritance@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.inheritance@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.inheritance@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.inheritance@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.pointer@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.pointer@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.pointer@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.pointer@1.0-impl.so" />
-        <option name="push" value="vendor/lib/hw/android.hardware.tests.memory@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.memory@1.0-impl.so" />
-        <option name="push" value="vendor/lib64/hw/android.hardware.tests.memory@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.memory@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.foo@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.foo@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.foo@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.foo@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.bar@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.bar@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.bar@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.bar@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.baz@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.baz@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.baz@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.baz@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.hash@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.hash@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.hash@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.hash@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.inheritance@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.inheritance@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.inheritance@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.inheritance@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.pointer@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.pointer@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.pointer@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.pointer@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib/hw/android.hardware.tests.memory@1.0-impl.so->/vendor/lib/hw/android.hardware.tests.memory@1.0-impl.so" />
+        <option name="push" value="DATA/vendor/lib64/hw/android.hardware.tests.memory@1.0-impl.so->/vendor/lib64/hw/android.hardware.tests.memory@1.0-impl.so" />
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer" />
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
