@@ -49,7 +49,7 @@ status_t AST::generateJavaTypes(
         const std::string &outputPath, const std::string &limitToType) const {
     // Splits types.hal up into one java file per declared type.
 
-    for (const auto &type : mRootScope->getSubTypes()) {
+    for (const auto& type : mRootScope.getSubTypes()) {
         std::string typeName = type->localName();
 
         if (type->isTypeDef()) {
@@ -112,7 +112,7 @@ status_t AST::generateJava(
         return generateJavaTypes(outputPath, limitToType);
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     std::string ifaceName = iface->localName();
 
     const std::string baseName = iface->getBaseName();
@@ -697,7 +697,7 @@ status_t AST::generateJava(
 }
 
 status_t AST::emitJavaTypeDeclarations(Formatter &out) const {
-    return mRootScope->emitJavaTypeDeclarations(out, false /* atTopLevel */);
+    return mRootScope.emitJavaTypeDeclarations(out, false /* atTopLevel */);
 }
 
 }  // namespace android

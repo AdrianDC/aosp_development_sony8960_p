@@ -85,7 +85,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;
@@ -172,7 +172,7 @@ status_t AST::generateStubImplSource(const std::string &outputPath) const {
         return OK;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
     std::string path = outputPath;

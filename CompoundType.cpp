@@ -23,11 +23,9 @@
 
 namespace android {
 
-CompoundType::CompoundType(Style style, const char *localName, const Location &location)
-    : Scope(localName, location),
-      mStyle(style),
-      mFields(NULL) {
-}
+CompoundType::CompoundType(Style style, const char* localName, const Location& location,
+                           Scope* parent)
+    : Scope(localName, location, parent), mStyle(style), mFields(NULL) {}
 
 CompoundType::Style CompoundType::style() const {
     return mStyle;

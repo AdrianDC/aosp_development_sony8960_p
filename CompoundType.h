@@ -32,7 +32,7 @@ struct CompoundType : public Scope {
         STYLE_UNION,
     };
 
-    CompoundType(Style style, const char *localName, const Location &location);
+    CompoundType(Style style, const char* localName, const Location& location, Scope* parent);
 
     Style style() const;
 

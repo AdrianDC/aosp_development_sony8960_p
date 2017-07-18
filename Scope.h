@@ -30,8 +30,7 @@ struct Interface;
 struct LocalIdentifier;
 
 struct Scope : public NamedType {
-    Scope(const char *localName,
-          const Location &location);
+    Scope(const char* localName, const Location& location, Scope* parent);
     virtual ~Scope();
 
     bool addType(NamedType *type, std::string *errorMsg);

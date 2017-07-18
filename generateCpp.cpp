@@ -555,7 +555,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "};\n\n";
     }
 
-    err = mRootScope->emitGlobalTypeDeclarations(out);
+    err = mRootScope.emitGlobalTypeDeclarations(out);
 
     if (err != OK) {
         return err;
@@ -614,7 +614,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 
     enterLeaveNamespace(out, true /* enter */);
 
-    status_t err = mRootScope->emitGlobalHwDeclarations(out);
+    status_t err = mRootScope.emitGlobalHwDeclarations(out);
     if (err != OK) {
         return err;
     }
@@ -627,7 +627,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 }
 
 status_t AST::emitTypeDeclarations(Formatter &out) const {
-    return mRootScope->emitTypeDeclarations(out);
+    return mRootScope.emitTypeDeclarations(out);
 }
 
 static void wrapPassthroughArg(Formatter &out,
@@ -797,7 +797,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
 }
 
 status_t AST::generateMethods(Formatter &out, MethodGenerator gen) const {
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
 
     const Interface *prevIterface = nullptr;
     for (const auto &tuple : iface->allMethodsFromRoot()) {
@@ -826,7 +826,7 @@ status_t AST::generateMethods(Formatter &out, MethodGenerator gen) const {
 }
 
 void AST::generateTemplatizationLink(Formatter& out) const {
-    out << "typedef " << mRootScope->getInterface()->localName() << " Pure;\n\n";
+    out << "typedef " << mRootScope.getInterface()->localName() << " Pure;\n\n";
 }
 
 status_t AST::generateStubHeader(const std::string &outputPath) const {
@@ -835,7 +835,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     const std::string klassName = iface->getStubName();
 
     std::string path = outputPath;
@@ -943,7 +943,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     const std::string proxyName = iface->getProxyName();
 
     std::string path = outputPath;
@@ -1080,7 +1080,7 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
     status_t err = generateTypeSource(out, iface ? iface->localName() : "");
 
     if (err == OK && iface) {
-        const Interface *iface = mRootScope->getInterface();
+        const Interface* iface = mRootScope.getInterface();
 
         // need to be put here, generateStubSource is using this.
         out << "const char* "
@@ -1151,7 +1151,7 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
     }
 
     if (err == OK && iface) {
-        const Interface *iface = mRootScope->getInterface();
+        const Interface* iface = mRootScope.getInterface();
 
         if (isIBase()) {
             out << "// skipped getService, registerAsService, registerForNotifications\n";
@@ -1183,7 +1183,7 @@ void AST::generateCheckNonNull(Formatter &out, const std::string &nonNull) {
 
 status_t AST::generateTypeSource(
         Formatter &out, const std::string &ifaceName) const {
-    return mRootScope->emitTypeDefinitions(out, ifaceName);
+    return mRootScope.emitTypeDefinitions(out, ifaceName);
 }
 
 void AST::declareCppReaderLocals(
@@ -1830,7 +1830,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
         return OK;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     CHECK(iface != nullptr);
 
     const std::string klassName = iface->getPassthroughName();
@@ -1925,7 +1925,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 }
 
 status_t AST::generateInterfaceSource(Formatter &out) const {
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
 
     // generate castFrom functions
     std::string childTypeResult = iface->getCppResultType();
@@ -1986,7 +1986,7 @@ status_t AST::generateInterfaceSource(Formatter &out) const {
 }
 
 status_t AST::generatePassthroughSource(Formatter &out) const {
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
 
     const std::string klassName = iface->getPassthroughName();
 
@@ -2039,7 +2039,7 @@ status_t AST::generatePassthroughSource(Formatter &out) const {
 status_t AST::generateCppAtraceCall(Formatter &out,
                                     InstrumentationEvent event,
                                     const Method *method) const {
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     std::string baseString = "HIDL::" + iface->localName() + "::" + method->name();
     switch (event) {
         case SERVER_API_ENTRY:
@@ -2162,7 +2162,7 @@ status_t AST::generateCppInstrumentationCall(
         }
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
 
     out << "for (const auto &callback: mInstrumentationCallbacks) {\n";
     out.indent();
