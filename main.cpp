@@ -293,7 +293,7 @@ static void generateMakefileSection(
         if (fqName.name() == "types") {
             CHECK(typesAST != nullptr);
 
-            Scope *rootScope = typesAST->scope();
+            Scope* rootScope = typesAST->getRootScope();
 
             std::vector<NamedType *> subTypes = rootScope->getSubTypes();
             std::sort(
@@ -405,7 +405,7 @@ static bool packageNeedsJavaCode(
     // We'll have to generate Java code if types.hal contains any non-typedef
     // type declarations.
 
-    Scope *rootScope = typesAST->scope();
+    Scope* rootScope = typesAST->getRootScope();
     std::vector<NamedType *> subTypes = rootScope->getSubTypes();
 
     for (const auto &subType : subTypes) {

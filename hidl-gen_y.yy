@@ -25,6 +25,7 @@
 #include "Interface.h"
 #include "Location.h"
 #include "Method.h"
+#include "Scope.h"
 #include "VectorType.h"
 #include "RefType.h"
 
@@ -37,9 +38,17 @@
 
 using namespace android;
 
-extern int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
+extern int yylex(yy::parser::semantic_type*, yy::parser::location_type*, void*);
 
-#define scanner ast->scanner()
+void enterScope(AST* /* ast */, Scope** scope, Scope* container) {
+    CHECK(container->parent() == (*scope));
+    *scope = container;
+}
+
+void leaveScope(AST* ast, Scope** scope) {
+    CHECK((*scope) != ast->getRootScope());
+    *scope = (*scope)->parent();
+}
 
 ::android::Location convertYYLoc(const yy::parser::location_type &loc) {
     return ::android::Location(
@@ -192,8 +201,10 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
         const_cast<std::string *>(&ast->getFilename());
 }
 
-%parse-param { android::AST *ast }
-%lex-param { void *scanner }
+%parse-param { void* scanner }
+%parse-param { android::AST* const ast }
+%parse-param { android::Scope** const scope }
+%lex-param { void* scanner }
 %pure-parser
 %glr-parser
 %skeleton "glr.cc"
@@ -472,7 +483,7 @@ fqname
 fqtype
     : fqname
       {
-          $$ = ast->lookupType(*($1));
+          $$ = ast->lookupType(*($1), *scope);
           if ($$ == NULL) {
               std::cerr << "ERROR: Failed to lookup type '" << $1->string() << "' at "
                         << @1
@@ -560,13 +571,13 @@ interface_declarations
           }
 
           if ($2 != nullptr) {
-            if (!ast->scope()->isInterface()) {
+            if (!(*scope)->isInterface()) {
                 std::cerr << "ERROR: unknown error in interface declaration at "
                     << @2 << "\n";
                 YYERROR;
             }
 
-            Interface *iface = static_cast<Interface *>(ast->scope());
+            Interface *iface = static_cast<Interface *>(*scope);
             if (!iface->addMethod($2)) {
                 std::cerr << "ERROR: Unable to add method '" << $2->name()
                           << "' at " << @2 << "\n";
@@ -623,7 +634,7 @@ interface_declaration
                   YYERROR;
               }
               if (parent == nullptr) {
-                parent = ast->lookupType(gIBaseFqName);
+                parent = ast->lookupType(gIBaseFqName, *scope);
               }
           }
 
@@ -641,34 +652,43 @@ interface_declaration
               YYERROR;
           }
 
-          Interface *iface = new Interface($2, convertYYLoc(@2), static_cast<Interface *>(parent));
+          if (*scope != ast->getRootScope()) {
+              std::cerr << "ERROR: All interface must declared in "
+                        << "global scope. at " << @2 << "\n";
+
+              YYERROR;
+          }
+
+          Interface* iface = new Interface(
+              $2, convertYYLoc(@2), *scope,
+              static_cast<Interface *>(parent));
 
           // Register interface immediately so it can be referenced inside
           // definition.
           std::string errorMsg;
-          if (!ast->addScopedType(iface, &errorMsg)) {
+          if (!ast->addScopedType(iface, &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
 
-          ast->enterScope(iface);
+          enterScope(ast, scope, iface);
       }
       '{' interface_declarations '}'
       {
-          if (!ast->scope()->isInterface()) {
+          if (!(*scope)->isInterface()) {
               std::cerr << "ERROR: unknown error in interface declaration at "
                   << @5 << "\n";
               YYERROR;
           }
 
-          Interface *iface = static_cast<Interface *>(ast->scope());
+          Interface *iface = static_cast<Interface *>(*scope);
           if (!iface->addAllReservedMethods()) {
               std::cerr << "ERROR: unknown error in adding reserved methods at "
                   << @5 << "\n";
               YYERROR;
           }
 
-          ast->leaveScope();
+          leaveScope(ast, scope);
 
           $$ = iface;
       }
@@ -678,7 +698,7 @@ typedef_declaration
     : TYPEDEF type valid_type_name
       {
           std::string errorMsg;
-          if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg)) {
+          if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
@@ -699,7 +719,7 @@ const_expr
           }
           if($1->isIdentifier()) {
               std::string identifier = $1->name();
-              LocalIdentifier *iden = ast->scope()->lookupIdentifier(identifier);
+              LocalIdentifier *iden = (*scope)->lookupIdentifier(identifier);
               if(!iden) {
                   std::cerr << "ERROR: identifier " << $1->string()
                             << " could not be found at " << @1 << ".\n";
@@ -714,7 +734,7 @@ const_expr
                       *(static_cast<EnumValue *>(iden)->constExpr()), $1->string());
           } else {
               std::string errorMsg;
-              EnumValue *v = ast->lookupEnumValue(*($1), &errorMsg);
+              EnumValue *v = ast->lookupEnumValue(*($1), &errorMsg, *scope);
               if(v == nullptr) {
                   std::cerr << "ERROR: " << errorMsg << " at " << @1 << ".\n";
                   YYERROR;
@@ -810,17 +830,17 @@ struct_or_union_keyword
 named_struct_or_union_declaration
     : struct_or_union_keyword valid_type_name
       {
-          CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2));
-          ast->enterScope(container);
+          CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2), *scope);
+          enterScope(ast, scope, container);
       }
       struct_or_union_body
       {
-          if (!ast->scope()->isCompoundType()) {
+          if (!(*scope)->isCompoundType()) {
               std::cerr << "ERROR: unknown error in struct or union declaration at "
                   << @4 << "\n";
               YYERROR;
           }
-          CompoundType *container = static_cast<CompoundType *>(ast->scope());
+          CompoundType *container = static_cast<CompoundType *>(*scope);
 
           std::string errorMsg;
           if (!container->setFields($4, &errorMsg)) {
@@ -828,9 +848,9 @@ named_struct_or_union_declaration
               YYERROR;
           }
 
-          ast->leaveScope();
+          leaveScope(ast, scope);
 
-          if (!ast->addScopedType(container, &errorMsg)) {
+          if (!ast->addScopedType(container, &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
@@ -860,8 +880,8 @@ field_declaration
     | type valid_identifier require_semicolon
       {
         std::string errorMsg;
-        if (ast->scope()->isCompoundType() &&
-            static_cast<CompoundType *>(ast->scope())->style() == CompoundType::STYLE_STRUCT &&
+        if ((*scope)->isCompoundType() &&
+            static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
             !isValidStructField($2, &errorMsg)) {
             std::cerr << "ERROR: " << errorMsg << " at "
                       << @2 << "\n";
@@ -872,8 +892,8 @@ field_declaration
     | annotated_compound_declaration ';'
       {
         std::string errorMsg;
-        if (ast->scope()->isCompoundType() &&
-            static_cast<CompoundType *>(ast->scope())->style() == CompoundType::STYLE_STRUCT &&
+        if ((*scope)->isCompoundType() &&
+            static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
             $1 != nullptr &&
             $1->isNamedType() &&
             !isValidStructField(static_cast<NamedType *>($1)->localName().c_str(), &errorMsg)) {
@@ -922,21 +942,21 @@ opt_comma
 named_enum_declaration
     : ENUM valid_type_name enum_storage_type
       {
-          ast->enterScope(new EnumType($2, convertYYLoc(@2), $3));
+          enterScope(ast, scope, new EnumType($2, convertYYLoc(@2), $3, *scope));
       }
       enum_declaration_body
       {
-          if (!ast->scope()->isEnum()) {
+          if (!(*scope)->isEnum()) {
               std::cerr << "ERROR: unknown error in enum declaration at "
                   << @5 << "\n";
               YYERROR;
           }
 
-          EnumType *enumType = static_cast<EnumType *>(ast->scope());
-          ast->leaveScope();
+          EnumType *enumType = static_cast<EnumType *>(*scope);
+          leaveScope(ast, scope);
 
           std::string errorMsg;
-          if (!ast->addScopedType(enumType, &errorMsg)) {
+          if (!ast->addScopedType(enumType, &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
           }
@@ -959,23 +979,23 @@ enum_values
       { /* do nothing */ }
     | enum_value
       {
-          if (!ast->scope()->isEnum()) {
+          if (!(*scope)->isEnum()) {
               std::cerr << "ERROR: unknown error in enum declaration at "
                   << @1 << "\n";
               YYERROR;
           }
 
-          static_cast<EnumType *>(ast->scope())->addValue($1);
+          static_cast<EnumType *>(*scope)->addValue($1);
       }
     | enum_values ',' enum_value
       {
-          if (!ast->scope()->isEnum()) {
+          if (!(*scope)->isEnum()) {
               std::cerr << "ERROR: unknown error in enum declaration at "
                   << @3 << "\n";
               YYERROR;
           }
 
-          static_cast<EnumType *>(ast->scope())->addValue($3);
+          static_cast<EnumType *>(*scope)->addValue($3);
       }
     ;
 
@@ -1041,7 +1061,7 @@ type
     | INTERFACE
       {
           // "interface" is a synonym of android.hidl.base@1.0::IBase
-          $$ = ast->lookupType(gIBaseFqName);
+          $$ = ast->lookupType(gIBaseFqName, *scope);
           if ($$ == nullptr) {
               std::cerr << "ERROR: Cannot find "
                         << gIBaseFqName.string()
