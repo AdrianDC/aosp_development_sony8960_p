@@ -81,6 +81,8 @@ struct AST {
     status_t generateCppHeaders(const std::string &outputPath) const;
     status_t generateCppSources(const std::string &outputPath) const;
     status_t generateCppImpl(const std::string &outputPath) const;
+    status_t generateStubImplHeader(const std::string& outputPath) const;
+    status_t generateStubImplSource(const std::string& outputPath) const;
 
     status_t generateJava(
             const std::string &outputPath,
@@ -198,9 +200,6 @@ private:
     using MethodGenerator = std::function<status_t(const Method *, const Interface *)>;
 
     void generateTemplatizationLink(Formatter& out) const;
-
-    status_t generateStubImplHeader(const std::string &outputPath) const;
-    status_t generateStubImplSource(const std::string &outputPath) const;
 
     status_t generateMethods(Formatter &out, MethodGenerator gen) const;
     status_t generateStubImplMethod(Formatter &out,
