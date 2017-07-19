@@ -58,6 +58,14 @@ Type *ArrayType::getElementType() const {
     return mElementType;
 }
 
+std::string ArrayType::typeName() const {
+    if (dimension() == 1) {
+        return "array of " + mElementType->typeName();
+    }
+
+    return std::to_string(dimension()) + "d array of " + mElementType->typeName();
+}
+
 std::string ArrayType::getCppType(StorageMode mode,
                                   bool specifyNamespaces) const {
     const std::string base = mElementType->getCppStackType(specifyNamespaces);

@@ -54,7 +54,7 @@ struct Type {
 
     virtual const ScalarType *resolveToScalarType() const;
 
-    virtual std::string typeName() const;
+    virtual std::string typeName() const = 0;
 
     bool isValidEnumStorageType() const;
     virtual bool isElidableType() const;
