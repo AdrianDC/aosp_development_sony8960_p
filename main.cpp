@@ -99,6 +99,12 @@ static status_t generateSourcesForFile(
     if (lang == "c++-impl") {
         return ast->generateCppImpl(outputDir);
     }
+    if (lang == "c++-impl-headers") {
+        return ast->generateStubImplHeader(outputDir);
+    }
+    if (lang == "c++-impl-sources") {
+        return ast->generateStubImplSource(outputDir);
+    }
     if (lang == "java") {
         return ast->generateJava(outputDir, limitToType);
     }
@@ -1208,7 +1214,18 @@ static std::vector<OutputHandler> formats = {
      validateForSource,
      generationFunctionForFileOrPackage("c++-impl")
     },
-
+    {"c++-impl-headers",
+     "c++-impl but headers only",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-impl-headers")
+    },
+    {"c++-impl-sources",
+     "c++-impl but sources only",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-impl-sources")
+    },
 
     {"java",
      "(internal) Generates Java library for talking to HIDL interfaces in Java.",
