@@ -185,6 +185,14 @@ void Scope::appendToExportedTypesVector(
     });
 }
 
+RootScope::RootScope(const char* localName, const Location& location, Scope* parent)
+    : Scope(localName, location, parent) {}
+RootScope::~RootScope() {}
+
+std::string RootScope::typeName() const {
+    return "(root scope)";
+}
+
 LocalIdentifier::LocalIdentifier(){}
 LocalIdentifier::~LocalIdentifier(){}
 

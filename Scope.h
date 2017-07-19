@@ -77,6 +77,13 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Scope);
 };
 
+struct RootScope : public Scope {
+    RootScope(const char* localName, const Location& location, Scope* parent);
+    virtual ~RootScope();
+
+    std::string typeName() const override;
+};
+
 struct LocalIdentifier {
     LocalIdentifier();
     virtual ~LocalIdentifier();

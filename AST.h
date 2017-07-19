@@ -124,7 +124,7 @@ struct AST {
     const Coordinator *mCoordinator;
     std::string mPath;
 
-    Scope mRootScope;
+    RootScope mRootScope;
 
     FQName mPackage;
 

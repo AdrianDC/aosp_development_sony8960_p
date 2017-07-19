@@ -42,6 +42,8 @@ struct CompoundType : public Scope {
 
     bool canCheckEquality() const override;
 
+    std::string typeName() const override;
+
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 

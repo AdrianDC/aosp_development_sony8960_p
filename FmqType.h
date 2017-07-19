@@ -27,6 +27,8 @@ struct FmqType : public TemplatedType {
 
     std::string fullName() const;
 
+    std::string typeName() const;
+
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;
