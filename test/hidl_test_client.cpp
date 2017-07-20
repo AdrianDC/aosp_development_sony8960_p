@@ -48,6 +48,7 @@
 #include <inttypes.h>
 #include <algorithm>
 #include <condition_variable>
+#include <fstream>
 #include <future>
 #include <mutex>
 #include <set>
@@ -125,6 +126,17 @@ using ::android::DELAY_NS;
 using ::android::TOLERANCE_NS;
 using ::android::ONEWAY_TOLERANCE_NS;
 using std::to_string;
+
+bool isLibraryOpen(const std::string &lib) {
+    std::ifstream ifs("/proc/self/maps");
+    for (std::string line; std::getline(ifs, line);) {
+        if (line.size() >= lib.size() && line.substr(line.size() - lib.size()) == lib) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 template <typename T>
 static inline ::testing::AssertionResult isOk(const ::android::hardware::Return<T> &ret) {
@@ -463,6 +475,19 @@ public:
         ALOGI("Test setup complete");
     }
 };
+
+TEST_F(HidlTest, PreloadTest) {
+    // in passthrough mode, this will already be opened
+    if (mode == BINDERIZED) {
+        using android::hardware::preloadPassthroughService;
+
+        static const std::string kLib = "android.hardware.tests.inheritance@1.0-impl.so";
+
+        EXPECT_FALSE(isLibraryOpen(kLib));
+        preloadPassthroughService<IParent>();
+        EXPECT_TRUE(isLibraryOpen(kLib));
+    }
+}
 
 TEST_F(HidlTest, ToStringTest) {
     using namespace android::hardware;
