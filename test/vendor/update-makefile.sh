@@ -6,3 +6,5 @@ options="-r tests:system/tools/hidl/test/ \
 
 hidl-gen -Lmakefile $options tests.vendor@1.0;
 hidl-gen -Landroidbp $options tests.vendor@1.0;
+hidl-gen -Lmakefile $options tests.vendor@1.1;
+hidl-gen -Landroidbp $options tests.vendor@1.1;
