@@ -78,6 +78,10 @@ bool Type::isNamedType() const {
     return false;
 }
 
+bool Type::isMemory() const {
+    return false;
+}
+
 bool Type::isCompoundType() const {
     return false;
 }
