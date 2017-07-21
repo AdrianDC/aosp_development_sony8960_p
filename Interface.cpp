@@ -700,8 +700,6 @@ void Interface::emitReaderWriter(
             << "::android::hardware::toBinder<\n";
         out.indent(2, [&] {
             out << fqName().cppName()
-                << ", "
-                << getProxyFqName().cppName()
                 << ">("
                 << name
                 << ");\n";
