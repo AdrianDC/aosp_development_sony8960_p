@@ -67,11 +67,9 @@ enum {
     LAST_HIDL_TRANSACTION   = 0x0fffffff,
 };
 
-Interface::Interface(const char *localName, const Location &location, Interface *super)
-    : Scope(localName, location),
-      mSuperType(super),
-      mIsJavaCompatibleInProgress(false) {
-}
+Interface::Interface(const char* localName, const Location& location, Scope* parent,
+                     Interface* super)
+    : Scope(localName, location, parent), mSuperType(super), mIsJavaCompatibleInProgress(false) {}
 
 std::string Interface::typeName() const {
     return "interface " + localName();

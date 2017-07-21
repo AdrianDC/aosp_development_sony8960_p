@@ -24,10 +24,8 @@
 
 namespace android {
 
-Scope::Scope(const char *localName,
-        const Location &location)
-    : NamedType(localName, location) {
-}
+Scope::Scope(const char* localName, const Location& location, Scope* parent)
+    : NamedType(localName, location, parent) {}
 Scope::~Scope(){}
 
 bool Scope::addType(NamedType *type, std::string *errorMsg) {
