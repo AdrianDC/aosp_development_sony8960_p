@@ -31,11 +31,11 @@ namespace android {
 
 status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
     if (AST::isInterface()) {
-      const Interface *iface = mRootScope->getInterface();
-      return iface->emitVtsAttributeDeclaration(out);
+        const Interface* iface = mRootScope.getInterface();
+        return iface->emitVtsAttributeDeclaration(out);
     }
 
-    for (const auto &type : mRootScope->getSubTypes()) {
+    for (const auto& type : mRootScope.getSubTypes()) {
         // Skip for TypeDef as it is just an alias of a defined type.
         if (type->isTypeDef()) {
             continue;
@@ -94,7 +94,7 @@ status_t AST::generateVts(const std::string &outputPath) const {
     out << "\n";
 
     if (isInterface()) {
-        const Interface *iface = mRootScope->getInterface();
+        const Interface* iface = mRootScope.getInterface();
         out << "interface: {\n";
         out.indent();
 

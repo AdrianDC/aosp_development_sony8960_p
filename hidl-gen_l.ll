@@ -53,8 +53,6 @@ FQNAME                  ({COMPONENT}|{VERSION})(({DOT}|":"+){COMPONENT}|{VERSION
 using namespace android;
 using token = yy::parser::token;
 
-int check_type(yyscan_t yyscanner, struct yyguts_t *yyg);
-
 #define SCALAR_TYPE(kind)                                       \
     do {                                                        \
         yylval->type = new ScalarType(ScalarType::kind);        \
@@ -179,22 +177,22 @@ L?\"(\\.|[^\\"])*\"	{ yylval->str = strdup(yytext); return token::STRING_LITERAL
 status_t parseFile(AST *ast) {
     FILE *file = fopen(ast->getFilename().c_str(), "rb");
 
-    if (file == NULL) {
+    if (file == nullptr) {
         return -errno;
     }
 
     yyscan_t scanner;
-    yylex_init_extra(ast, &scanner);
-    ast->setScanner(scanner);
+    yylex_init(&scanner);
 
     yyset_in(file, scanner);
-    int res = yy::parser(ast).parse();
+
+    Scope* scopeStack = ast->getRootScope();
+    int res = yy::parser(scanner, ast, &scopeStack).parse();
 
     yylex_destroy(scanner);
-    ast->setScanner(NULL);
 
     fclose(file);
-    file = NULL;
+    file = nullptr;
 
     if (res != 0 || ast->syntaxErrors() != 0) {
         return UNKNOWN_ERROR;
