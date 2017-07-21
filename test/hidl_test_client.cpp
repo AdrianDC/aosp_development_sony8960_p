@@ -16,8 +16,6 @@
 #include <android/hardware/tests/bar/1.0/BpHwBar.h>
 #include <android/hardware/tests/bar/1.0/BnHwBar.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
-#include <android/hardware/tests/bar/1.0/BpHwBar.h>
-#include <android/hardware/tests/bar/1.0/BnHwBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/bar/1.0/IImportRules.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
