@@ -25,27 +25,23 @@
 #include "Scope.h"
 #include "TypeDef.h"
 
-#include <hidl-util/Formatter.h>
-#include <hidl-util/FQName.h>
 #include <android-base/logging.h>
-#include <iostream>
+#include <hidl-util/FQName.h>
+#include <hidl-util/Formatter.h>
+#include <hidl-util/StringHelper.h>
 #include <stdlib.h>
+#include <algorithm>
+#include <iostream>
 
 namespace android {
 
-AST::AST(const Coordinator *coordinator, const std::string &path)
+AST::AST(const Coordinator* coordinator, const std::string& path)
     : mCoordinator(coordinator),
       mPath(path),
-      mScanner(NULL),
-      mRootScope(new Scope("" /* localName */, Location::startOf(path))) {
-    enterScope(mRootScope);
-}
+      mRootScope("" /* localName */, Location::startOf(path), nullptr /* parent */) {}
 
-AST::~AST() {
-    delete mRootScope;
-    mRootScope = nullptr;
-
-    CHECK(mScanner == NULL);
+Scope* AST::getRootScope() {
+    return &mRootScope;
 }
 
 // used by the parser.
@@ -55,14 +51,6 @@ void AST::addSyntaxError() {
 
 size_t AST::syntaxErrors() const {
     return mSyntaxErrors;
-}
-
-void *AST::scanner() {
-    return mScanner;
-}
-
-void AST::setScanner(void *scanner) {
-    mScanner = scanner;
 }
 
 const std::string &AST::getFilename() const {
@@ -87,11 +75,11 @@ FQName AST::package() const {
 }
 
 bool AST::isInterface() const {
-    return mRootScope->getInterface() != nullptr;
+    return mRootScope.getInterface() != nullptr;
 }
 
 bool AST::containsInterfaces() const {
-    return mRootScope->containsInterfaces();
+    return mRootScope.containsInterfaces();
 }
 
 bool AST::addImport(const char *import) {
@@ -187,51 +175,33 @@ void AST::addImportedAST(AST *ast) {
     mImportedASTs.insert(ast);
 }
 
-void AST::enterScope(Scope *container) {
-    mScopePath.push_back(container);
-}
-
-void AST::leaveScope() {
-    mScopePath.pop_back();
-}
-
-Scope *AST::scope() {
-    CHECK(!mScopePath.empty());
-    return mScopePath.back();
-}
-
-bool AST::addTypeDef(const char *localName, Type *type, const Location &location,
-        std::string *errorMsg) {
+bool AST::addTypeDef(const char* localName, Type* type, const Location& location,
+                     std::string* errorMsg, Scope* scope) {
     // The reason we wrap the given type in a TypeDef is simply to suppress
     // emitting any type definitions later on, since this is just an alias
     // to a type defined elsewhere.
-    return addScopedTypeInternal(
-            new TypeDef(localName, location, type), errorMsg);
+    return addScopedTypeInternal(new TypeDef(localName, location, scope, type), errorMsg, scope);
 }
 
-bool AST::addScopedType(NamedType *type, std::string *errorMsg) {
-    return addScopedTypeInternal(
-            type, errorMsg);
+bool AST::addScopedType(NamedType* type, std::string* errorMsg, Scope* scope) {
+    return addScopedTypeInternal(type, errorMsg, scope);
 }
 
-bool AST::addScopedTypeInternal(
-        NamedType *type,
-        std::string *errorMsg) {
-
-    bool success = scope()->addType(type, errorMsg);
+bool AST::addScopedTypeInternal(NamedType* type, std::string* errorMsg, Scope* scope) {
+    bool success = scope->addType(type, errorMsg);
     if (!success) {
         return false;
     }
 
-    std::string path;
-    for (size_t i = 1; i < mScopePath.size(); ++i) {
-        path.append(mScopePath[i]->localName());
-        path.append(".");
+    std::vector<std::string> pathComponents{{type->localName()}};
+    for (; scope != &mRootScope; scope = scope->parent()) {
+        pathComponents.push_back(scope->localName());
     }
-    path.append(type->localName());
+
+    std::reverse(pathComponents.begin(), pathComponents.end());
+    std::string path = StringHelper::JoinStrings(pathComponents, ".");
 
     FQName fqName(mPackage.package(), mPackage.version(), path);
-
     type->setFullName(fqName);
 
     mDefinedTypesByFullName[fqName] = type;
@@ -239,15 +209,14 @@ bool AST::addScopedTypeInternal(
     return true;
 }
 
-EnumValue *AST::lookupEnumValue(const FQName &fqName, std::string *errorMsg) {
-
+EnumValue* AST::lookupEnumValue(const FQName& fqName, std::string* errorMsg, Scope* scope) {
     FQName enumTypeName = fqName.typeName();
     std::string enumValueName = fqName.valueName();
 
     CHECK(enumTypeName.isValid());
     CHECK(!enumValueName.empty());
 
-    Type *type = lookupType(enumTypeName);
+    Type* type = lookupType(enumTypeName, scope);
     if(type == nullptr) {
         *errorMsg = "Cannot find type " + enumTypeName.string();
         return nullptr;
@@ -266,7 +235,7 @@ EnumValue *AST::lookupEnumValue(const FQName &fqName, std::string *errorMsg) {
     return v;
 }
 
-Type *AST::lookupType(const FQName &fqName) {
+Type* AST::lookupType(const FQName& fqName, Scope* scope) {
     CHECK(fqName.isValid());
 
     if (fqName.name().empty()) {
@@ -278,7 +247,7 @@ Type *AST::lookupType(const FQName &fqName) {
 
     if (fqName.package().empty() && fqName.version().empty()) {
         // resolve locally first if possible.
-        returnedType = lookupTypeLocally(fqName);
+        returnedType = lookupTypeLocally(fqName, scope);
         if (returnedType != nullptr) {
             return returnedType;
         }
@@ -298,12 +267,12 @@ Type *AST::lookupType(const FQName &fqName) {
 }
 
 // Rule 0: try resolve locally
-Type *AST::lookupTypeLocally(const FQName &fqName) {
+Type* AST::lookupTypeLocally(const FQName& fqName, Scope* scope) {
     CHECK(fqName.package().empty() && fqName.version().empty()
         && !fqName.name().empty() && fqName.valueName().empty());
 
-    for (size_t i = mScopePath.size(); i-- > 0;) {
-        Type *type = mScopePath[i]->lookupType(fqName);
+    for (; scope != nullptr; scope = scope->parent()) {
+        Type* type = scope->lookupType(fqName);
 
         if (type != nullptr) {
             // Resolve typeDefs to the target type.
@@ -329,7 +298,7 @@ status_t AST::lookupAutofilledType(const FQName &fqName, Type **returnedType) {
     // in import.
     Type *local = findDefinedType(autofilled, &matchingName);
     CHECK(local == nullptr || autofilled == matchingName);
-    Type *fromImport = lookupType(autofilled);
+    Type* fromImport = lookupType(autofilled, nullptr /* scope */);
 
     if (local != nullptr && fromImport != nullptr && local != fromImport) {
         // Something bad happen; two types have the same FQName.
@@ -531,7 +500,7 @@ void AST::getAllImportedNames(std::set<FQName> *allImportNames) const {
 
 bool AST::isJavaCompatible() const {
     if (!AST::isInterface()) {
-        for (const auto *type : mRootScope->getSubTypes()) {
+        for (const auto* type : mRootScope.getSubTypes()) {
             if (!type->isJavaCompatible()) {
                 return false;
             }
@@ -540,26 +509,26 @@ bool AST::isJavaCompatible() const {
         return true;
     }
 
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
     return iface->isJavaCompatible();
 }
 
 void AST::appendToExportedTypesVector(
         std::vector<const Type *> *exportedTypes) const {
-    mRootScope->appendToExportedTypesVector(exportedTypes);
+    mRootScope.appendToExportedTypesVector(exportedTypes);
 }
 
 bool AST::isIBase() const {
-    Interface *iface = mRootScope->getInterface();
+    Interface* iface = mRootScope.getInterface();
     return iface != nullptr && iface->isIBase();
 }
 
 const Interface *AST::getInterface() const {
-    return mRootScope->getInterface();
+    return mRootScope.getInterface();
 }
 
 std::string AST::getBaseName() const {
-    const Interface *iface = mRootScope->getInterface();
+    const Interface* iface = mRootScope.getInterface();
 
     return iface ? iface->getBaseName() : "types";
 }

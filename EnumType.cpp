@@ -25,13 +25,9 @@
 
 namespace android {
 
-EnumType::EnumType(
-        const char *localName,
-        const Location &location,
-        Type *storageType)
-    : Scope(localName, location),
-      mValues(),
-      mStorageType(storageType) {
+EnumType::EnumType(const char* localName, const Location& location, Type* storageType,
+                   Scope* parent)
+    : Scope(localName, location, parent), mValues(), mStorageType(storageType) {
     mBitfieldType = new BitFieldType();
     mBitfieldType->setElementType(this);
 }
