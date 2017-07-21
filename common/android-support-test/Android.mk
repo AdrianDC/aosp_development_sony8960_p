@@ -54,7 +54,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core
 LOCAL_MODULE_TAGS := optional
 LOCAL_SDK_VERSION := 15
-LOCAL_STATIC_JAVA_LIBRARIES := espresso-core-nodep android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core-nodep espresso-idling-resource-nodep android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations jsr330
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
