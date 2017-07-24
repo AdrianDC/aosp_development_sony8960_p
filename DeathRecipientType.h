@@ -32,6 +32,7 @@ struct DeathRecipientType : public Type {
     std::string getJavaType(bool forInitializer) const override;
 
     std::string getVtsType() const override;
+    std::string typeName() const override;
 
     void emitReaderWriter(
             Formatter &out,

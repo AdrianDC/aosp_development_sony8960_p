@@ -29,6 +29,10 @@ bool HandleType::isHandle() const {
     return true;
 }
 
+std::string HandleType::typeName() const {
+    return "handle";
+}
+
 std::string HandleType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =

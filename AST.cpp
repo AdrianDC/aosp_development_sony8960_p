@@ -38,7 +38,7 @@ namespace android {
 AST::AST(const Coordinator* coordinator, const std::string& path)
     : mCoordinator(coordinator),
       mPath(path),
-      mRootScope("" /* localName */, Location::startOf(path), nullptr /* parent */) {}
+      mRootScope("(root scope)", Location::startOf(path), nullptr /* parent */) {}
 
 Scope* AST::getRootScope() {
     return &mRootScope;
