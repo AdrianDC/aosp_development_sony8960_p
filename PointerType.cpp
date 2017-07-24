@@ -36,6 +36,10 @@ std::string PointerType::getCppType(StorageMode /* mode */,
     return "void*";
 }
 
+std::string PointerType::typeName() const {
+    return "local pointer";
+}
+
 std::string PointerType::getVtsType() const {
     return "TYPE_POINTER";
 }

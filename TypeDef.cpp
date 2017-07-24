@@ -42,6 +42,10 @@ bool TypeDef::isEnum() const {
     return false;
 }
 
+std::string TypeDef::typeName() const {
+    return "typedef " + localName();
+}
+
 bool TypeDef::isTypeDef() const {
     return true;
 }

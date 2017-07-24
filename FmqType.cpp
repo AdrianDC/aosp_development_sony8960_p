@@ -27,6 +27,10 @@ FmqType::FmqType(const char *nsp, const char *name)
     : mNamespace(nsp), mName(name) {
 }
 
+std::string FmqType::typeName() const {
+    return mName + " of " + mElementType->typeName();
+}
+
 std::string FmqType::fullName() const {
     return mNamespace +
             (mNamespace.empty() ? "" : "::") +
