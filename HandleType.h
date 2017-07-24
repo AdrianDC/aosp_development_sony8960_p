@@ -27,6 +27,8 @@ struct HandleType : public Type {
 
     bool isHandle() const override;
 
+    std::string typeName() const override;
+
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;

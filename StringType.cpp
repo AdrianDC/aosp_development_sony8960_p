@@ -32,6 +32,10 @@ bool StringType::canCheckEquality() const {
     return true;
 }
 
+std::string StringType::typeName() const {
+    return "string";
+}
+
 std::string StringType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
