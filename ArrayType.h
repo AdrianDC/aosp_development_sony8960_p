@@ -41,6 +41,8 @@ struct ArrayType : public Type {
     void appendDimension(ConstantExpression *size);
     size_t countDimensions() const;
 
+    std::string typeName() const override;
+
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 

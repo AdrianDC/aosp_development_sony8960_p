@@ -79,6 +79,18 @@ bool CompoundType::canCheckEquality() const {
     return true;
 }
 
+std::string CompoundType::typeName() const {
+    switch (mStyle) {
+        case STYLE_STRUCT: {
+            return "struct " + localName();
+        }
+        case STYLE_UNION: {
+            return "union " + localName();
+        }
+    }
+    CHECK(!"Should not be here");
+}
+
 std::string CompoundType::getCppType(
         StorageMode mode,
         bool /* specifyNamespaces */) const {
@@ -111,6 +123,7 @@ std::string CompoundType::getVtsType() const {
             return "TYPE_UNION";
         }
     }
+    CHECK(!"Should not be here");
 }
 
 void CompoundType::emitReaderWriter(

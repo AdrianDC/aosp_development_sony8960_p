@@ -29,6 +29,8 @@ struct PointerType : public Type {
 
     bool isElidableType() const override;
 
+    std::string typeName() const override;
+
     std::string getCppType(
             StorageMode mode,
             bool specifyNamespaces) const override;
