@@ -1,3 +1,5 @@
+set -e
+
 source /data/nativetest64/hidl_test_helper
 
 chmod a+x /data/nativetest/hidl_test_servers/hidl_test_servers
