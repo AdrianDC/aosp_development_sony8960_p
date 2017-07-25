@@ -20,6 +20,10 @@ LOCAL_PREBUILT_JAVA_LIBRARIES := \
     asm-5.2.jar \
     asm-analysis-5.2.jar \
     asm-commons-5.2.jar \
-    asm-tree-5.2.jar
+    asm-tree-5.2.jar \
+    asm-6.0_BETA.jar \
+    asm-analysis-6.0_BETA.jar \
+    asm-commons-6.0_BETA.jar \
+    asm-tree-6.0_BETA.jar \
 
 include $(BUILD_HOST_PREBUILT)
