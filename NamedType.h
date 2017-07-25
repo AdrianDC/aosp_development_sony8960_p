@@ -30,7 +30,7 @@ namespace android {
 struct Scope;
 
 struct NamedType : public Type {
-    NamedType(const char* localName, const Location& loc, Scope* mParent);
+    NamedType(const char* localName, const Location& loc, Scope* parent);
 
     bool isNamedType() const override;
 

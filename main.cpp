@@ -189,7 +189,7 @@ static void generatePackagePathsSection(
         options.insert(coordinator->getPackageRootOption(interface));
     }
     options.insert(coordinator->getPackageRootOption(packageFQName));
-    options.insert(coordinator->getPackageRootOption(gIBasePackageFqName));
+    options.insert(coordinator->getPackageRootOption(gIBaseFqName));
     for (const auto &option : options) {
         out << "-r"
             << option
@@ -649,9 +649,9 @@ bool validateIsPackage(
     return true;
 }
 
-bool isHidlTransportPackage(const FQName &package) {
-    return package == gIBasePackageFqName ||
-           package == gIManagerPackageFqName;
+bool isHidlTransportPackage(const FQName& fqName) {
+    return fqName.package() == gIBasePackageFqName.string() ||
+           fqName.package() == gIManagerPackageFqName.string();
 }
 
 bool isSystemPackage(const FQName &package) {
