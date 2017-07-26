@@ -187,7 +187,6 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
 std::vector<std::string>::const_iterator
 Coordinator::findPackageRoot(const FQName &fqName) const {
     CHECK(!fqName.package().empty());
-    CHECK(!fqName.version().empty());
 
     // Find the right package prefix and path for this FQName.  For
     // example, if FQName is "android.hardware.nfc@1.0::INfc", and the
