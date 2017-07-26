@@ -625,7 +625,7 @@ interface_declaration
       {
           Type *parent = $3;
 
-          if (ast->package() != gIBasePackageFqName) {
+          if (ast->package().package() != gIBasePackageFqName.string()) {
               if (!ast->addImport(gIBaseFqName.string().c_str())) {
                   std::cerr << "ERROR: Unable to automatically import '"
                             << gIBaseFqName.string()

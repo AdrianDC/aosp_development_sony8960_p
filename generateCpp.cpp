@@ -482,7 +482,9 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         }
         out << "{ return false; }\n\n";
 
-        for (const auto &method : iface->methods()) {
+        for (const auto& tuple : iface->allMethodsFromRoot()) {
+            const Method* method = tuple.method();
+
             out << "\n";
 
             const bool returnsValue = !method->results().empty();
