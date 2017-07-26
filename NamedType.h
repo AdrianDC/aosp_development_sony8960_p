@@ -47,8 +47,7 @@ struct NamedType : public Type {
     /* short for fqName().fullJavaName() */
     std::string fullJavaName() const;
 
-    // returns null if no location is set for this type.
-    const Location &location() const;
+    const Location& location() const;
 
     void emitDump(
             Formatter &out,
@@ -58,9 +57,9 @@ struct NamedType : public Type {
     Scope* parent() const;
 
    private:
-    std::string mLocalName;
+    const std::string mLocalName;
     FQName mFullName;
-    Location mLocation;
+    const Location mLocation;
     Scope* const mParent;
 
     DISALLOW_COPY_AND_ASSIGN(NamedType);
