@@ -467,6 +467,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
 
         out.indent();
 
+        generateCppTag(out, "android::hardware::details::i_tag");
     }
 
     status_t err = emitTypeDeclarations(out);
@@ -831,6 +832,10 @@ void AST::generateTemplatizationLink(Formatter& out) const {
     out << "typedef " << mRootScope.getInterface()->localName() << " Pure;\n\n";
 }
 
+void AST::generateCppTag(Formatter& out, const std::string& tag) const {
+    out << "typedef " << tag << " _hidl_tag;\n\n";
+}
+
 status_t AST::generateStubHeader(const std::string &outputPath) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
@@ -861,6 +866,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     out << "#define " << guard << "\n\n";
 
     generateCppPackageInclude(out, mPackage, iface->getHwName());
+
     out << "\n";
 
     enterLeaveNamespace(out, true /* enter */);
@@ -902,6 +908,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
 
     out.endl();
     generateTemplatizationLink(out);
+    generateCppTag(out, "android::hardware::details::bnhw_tag");
 
     out << "::android::sp<" << iface->localName() << "> getImpl() { return _hidl_mImpl; };\n";
     out.unindent();
@@ -994,6 +1001,7 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
         << "\n\n";
 
     generateTemplatizationLink(out);
+    generateCppTag(out, "android::hardware::details::bphw_tag");
 
     out << "virtual bool isRemote() const override { return true; }\n\n";
 
@@ -1892,6 +1900,7 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 
     out.endl();
     generateTemplatizationLink(out);
+    generateCppTag(out, "android::hardware::details::bs_tag");
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
         return generatePassthroughMethod(out, method);
