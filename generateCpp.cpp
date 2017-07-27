@@ -1516,7 +1516,7 @@ status_t AST::generateStubSource(
 
     out << klassName << "::~" << klassName << "() ";
     out.block([&]() {
-        out << "::android::hardware::details::gBnMap.erase(_hidl_mImpl.get());\n";
+        out << "::android::hardware::details::gBnMap.eraseIfEqual(_hidl_mImpl.get(), this);\n";
     }).endl().endl();
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
