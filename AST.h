@@ -191,12 +191,15 @@ struct AST {
 
     void generateTemplatizationLink(Formatter& out) const;
 
-    status_t generateMethods(Formatter &out, MethodGenerator gen) const;
+    status_t generateMethods(Formatter &out, MethodGenerator gen, bool includeParents = true) const;
     status_t generateStubImplMethod(Formatter &out,
                                     const std::string &className,
                                     const Method *method) const;
     status_t generatePassthroughMethod(Formatter &out,
                                        const Method *method) const;
+    status_t generateStaticProxyMethodSource(Formatter &out,
+                                             const std::string &className,
+                                             const Method *method) const;
     status_t generateProxyMethodSource(Formatter &out,
                                        const std::string &className,
                                        const Method *method,
@@ -210,8 +213,12 @@ struct AST {
     status_t generateStubSource(
             Formatter &out, const Interface *iface) const;
 
-    status_t generateStubSourceForMethod(
-            Formatter &out, const Interface *iface, const Method *method) const;
+    status_t generateStubSourceForMethod(Formatter &out,
+                                         const Method *method,
+                                         const Interface *superInterface) const;
+    status_t generateStaticStubMethodSource(Formatter &out,
+                                            const std::string &className,
+                                            const Method *method) const;
 
     status_t generatePassthroughSource(Formatter &out) const;
 
