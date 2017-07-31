@@ -230,12 +230,12 @@ struct AST {
         PASSTHROUGH_EXIT,
     };
 
-    status_t generateCppAtraceCall(
+    void generateCppAtraceCall(
             Formatter &out,
             InstrumentationEvent event,
             const Method *method) const;
 
-    status_t generateCppInstrumentationCall(
+    void generateCppInstrumentationCall(
             Formatter &out,
             InstrumentationEvent event,
             const Method *method) const;
