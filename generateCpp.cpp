@@ -510,15 +510,6 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             out << method->name()
                 << "(";
             method->emitCppArgSignature(out, true /* specify namespaces */);
-
-            if (returnsValue && elidedReturn == nullptr) {
-                if (!method->args().empty()) {
-                    out << ", ";
-                }
-
-                out << method->name() << "_cb _hidl_cb";
-            }
-
             out << ")";
             if (method->isHidlReserved()) {
                 if (!isIBase()) {
