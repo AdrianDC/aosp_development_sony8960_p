@@ -729,7 +729,7 @@ static void generateAndroidBpLibSection(
         const std::set<FQName> &importedPackagesHierarchy) {
 
     // C++ library definition
-    out << "cc_library_shared {\n";
+    out << "cc_library {\n";
     out.indent();
     out << "name: \"" << libraryName << (generateVendor ? "_vendor" : "") << "\",\n"
         << "defaults: [\"hidl-module-defaults\"],\n"
