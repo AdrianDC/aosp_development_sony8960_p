@@ -45,7 +45,7 @@ cc_defaults {
 //
 // libhidl-gen-hash
 //
-cc_library_shared {
+cc_library {
     name: "libhidl-gen-hash",
     host_supported: true,
     cflags: hidl_flags,
