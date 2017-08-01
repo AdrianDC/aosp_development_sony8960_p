@@ -190,6 +190,7 @@ struct AST {
     using MethodGenerator = std::function<status_t(const Method *, const Interface *)>;
 
     void generateTemplatizationLink(Formatter& out) const;
+    void generateCppTag(Formatter& out, const std::string& tag) const;
 
     status_t generateMethods(Formatter &out, MethodGenerator gen) const;
     status_t generateStubImplMethod(Formatter &out,
