@@ -582,6 +582,10 @@ static status_t generateMakefileForPackage(
             out << "\n";
             out.unindent();
         }
+        out << "\nLOCAL_NO_STANDARD_LIBRARIES := true";
+        out << "\nLOCAL_JAVA_LIBRARIES "
+            << ((importedPackages.empty() || style == LIBRARY_STYLE_STATIC) ? ":= " : "+= ")
+            << "core-oj hwbinder";
 
         generateMakefileSection(
                 out,
