@@ -42,18 +42,18 @@ void Formatter::unindent(size_t level) {
     mIndentDepth -= level;
 }
 
-Formatter &Formatter::indent(size_t level, std::function<void(void)> func) {
+Formatter& Formatter::indent(size_t level, const std::function<void(void)>& func) {
     this->indent(level);
     func();
     this->unindent(level);
     return *this;
 }
 
-Formatter &Formatter::indent(std::function<void(void)> func) {
+Formatter& Formatter::indent(const std::function<void(void)>& func) {
     return this->indent(1, func);
 }
 
-Formatter &Formatter::block(std::function<void(void)> func) {
+Formatter& Formatter::block(const std::function<void(void)>& func) {
     (*this) << "{\n";
     this->indent(func);
     return (*this) << "}";
@@ -71,42 +71,42 @@ Formatter &Formatter::endl() {
     return (*this) << "\n";
 }
 
-Formatter &Formatter::sIf(const std::string &cond, std::function<void(void)> block) {
+Formatter& Formatter::sIf(const std::string& cond, const std::function<void(void)>& block) {
     (*this) << "if (" << cond << ") ";
     return this->block(block);
 }
 
-Formatter &Formatter::sElseIf(const std::string &cond, std::function<void(void)> block) {
+Formatter& Formatter::sElseIf(const std::string& cond, const std::function<void(void)>& block) {
     (*this) << " else if (" << cond << ") ";
     return this->block(block);
 }
 
-Formatter &Formatter::sElse(std::function<void(void)> block) {
+Formatter& Formatter::sElse(const std::function<void(void)>& block) {
     (*this) << " else ";
     return this->block(block);
 }
 
-Formatter &Formatter::sFor(const std::string &stmts, std::function<void(void)> block) {
+Formatter& Formatter::sFor(const std::string& stmts, const std::function<void(void)>& block) {
     (*this) << "for (" << stmts << ") ";
     return this->block(block);
 }
 
-Formatter &Formatter::sTry(std::function<void(void)> block) {
+Formatter& Formatter::sTry(const std::function<void(void)>& block) {
     (*this) << "try ";
     return this->block(block);
 }
 
-Formatter &Formatter::sCatch(const std::string &exception, std::function<void(void)> block) {
+Formatter& Formatter::sCatch(const std::string& exception, const std::function<void(void)>& block) {
     (*this) << " catch (" << exception << ") ";
     return this->block(block);
 }
 
-Formatter &Formatter::sFinally(std::function<void(void)> block) {
+Formatter& Formatter::sFinally(const std::function<void(void)>& block) {
     (*this) << " finally ";
     return this->block(block);
 }
 
-Formatter &Formatter::sWhile(const std::string &cond, std::function<void(void)> block) {
+Formatter& Formatter::sWhile(const std::string& cond, const std::function<void(void)>& block) {
     (*this) << "while (" << cond << ") ";
     return this->block(block);
 }
@@ -115,7 +115,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
     const size_t len = out.length();
     size_t start = 0;
     while (start < len) {
-        size_t pos = out.find("\n", start);
+        size_t pos = out.find('\n', start);
 
         if (pos == std::string::npos) {
             if (mAtStartOfLine) {

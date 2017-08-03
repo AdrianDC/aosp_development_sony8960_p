@@ -784,7 +784,9 @@ status_t AST::generatePassthroughMethod(Formatter &out,
     return OK;
 }
 
-status_t AST::generateMethods(Formatter &out, MethodGenerator gen, bool includeParent) const {
+status_t AST::generateMethods(Formatter& out,
+                              const MethodGenerator& gen,
+                              bool includeParent) const {
     const Interface* iface = mRootScope.getInterface();
 
     const Interface *prevIterface = nullptr;

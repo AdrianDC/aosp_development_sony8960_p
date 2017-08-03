@@ -585,7 +585,7 @@ bool Coordinator::MakeParentHierarchy(const std::string &path) {
 
     size_t start = 1;  // Ignore leading '/'
     size_t slashPos;
-    while ((slashPos = path.find("/", start)) != std::string::npos) {
+    while ((slashPos = path.find('/', start)) != std::string::npos) {
         std::string partial = path.substr(0, slashPos);
 
         struct stat st;

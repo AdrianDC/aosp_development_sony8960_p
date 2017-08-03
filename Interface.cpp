@@ -576,7 +576,7 @@ std::vector<InterfaceAndMethod> Interface::allSuperMethodsFromRoot() const {
     return isIBase() ? std::vector<InterfaceAndMethod>() : superType()->allMethodsFromRoot();
 }
 
-Method *Interface::lookupMethod(std::string name) const {
+Method *Interface::lookupMethod(const std::string& name) const {
     for (const auto &tuple : allMethodsFromRoot()) {
         Method *method = tuple.method();
         if (method->name() == name) {
@@ -736,9 +736,7 @@ status_t Interface::emitGlobalTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-
-status_t Interface::emitTypeDefinitions(
-        Formatter &out, const std::string prefix) const {
+status_t Interface::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
     std::string space = prefix.empty() ? "" : (prefix + "::");
     status_t err = Scope::emitTypeDefinitions(out, space + localName());
     if (err != OK) {
