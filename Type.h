@@ -24,6 +24,8 @@
 #include <vector>
 #include <set>
 
+#include "Reference.h"
+
 namespace android {
 
 struct Annotation;
@@ -255,16 +257,17 @@ private:
 
 /* Base type for VectorType and RefType. */
 struct TemplatedType : public Type {
-    void setElementType(Type *elementType);
-    Type *getElementType() const;
+    void setElementType(const Reference<Type>& elementType);
+    Type* getElementType() const;
     bool isTemplatedType() const override;
-    virtual bool isCompatibleElementType(Type *elementType) const = 0;
+    virtual bool isCompatibleElementType(Type* elementType) const = 0;
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsAttributeType(Formatter &out) const override;
 protected:
     TemplatedType();
-    Type *mElementType;
-private:
+    Reference<Type> mElementType;
+
+   private:
     DISALLOW_COPY_AND_ASSIGN(TemplatedType);
 };
 
