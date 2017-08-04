@@ -745,6 +745,10 @@ static void generateAndroidBpLibSection(
         out << "vendor: true,\n";
     } else {
         out << "vendor_available: true,\n";
+        out << "vndk: ";
+        out.block([&]() {
+            out << "enabled: true,\n";
+        }) << ",\n";
     }
     out << "shared_libs: [\n";
 
