@@ -470,16 +470,18 @@ status_t Type::emitExportedHeader(
 
 ////////////////////////////////////////
 
-TemplatedType::TemplatedType() : mElementType(nullptr) {
-}
+TemplatedType::TemplatedType() {}
 
-void TemplatedType::setElementType(Type *elementType) {
-    CHECK(mElementType == nullptr); // can only be set once.
+void TemplatedType::setElementType(const Reference<Type>& elementType) {
+    // can only be set once.
+    CHECK(mElementType.isEmptyReference());
+    CHECK(!elementType.isEmptyReference());
+
     CHECK(isCompatibleElementType(elementType));
     mElementType = elementType;
 }
 
-Type *TemplatedType::getElementType() const {
+Type* TemplatedType::getElementType() const {
     return mElementType;
 }
 
@@ -512,5 +514,6 @@ status_t TemplatedType::emitVtsAttributeType(Formatter &out) const {
     out << "}\n";
     return OK;
 }
+
 }  // namespace android
 

@@ -23,13 +23,14 @@
 namespace android {
 
 struct TypeDef : public NamedType {
-    TypeDef(const char* localName, const Location& location, Scope* parent, Type* type);
+    TypeDef(const char* localName, const Location& location, Scope* parent,
+            const Reference<Type>& type);
 
     const ScalarType *resolveToScalarType() const override;
 
     std::string typeName() const override;
 
-    Type *referencedType() const;
+    Type* referencedType() const;
 
     bool isInterface() const override;
     bool isEnum() const override;
@@ -39,8 +40,8 @@ struct TypeDef : public NamedType {
 
     status_t emitTypeDeclarations(Formatter &out) const override;
 
-private:
-    Type *mReferencedType;
+   private:
+    Reference<Type> mReferencedType;
 
     DISALLOW_COPY_AND_ASSIGN(TypeDef);
 };
