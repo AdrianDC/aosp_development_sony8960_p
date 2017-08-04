@@ -17,6 +17,8 @@ LOCAL_JAVA_LIBRARIES := \
     android.hidl.base-V1.0-java \
     tests.vendor-V1.0-java \
 
+LOCAL_NO_STANDARD_LIBRARIES := true
+LOCAL_JAVA_LIBRARIES += core-oj hwbinder
 
 #
 # Build IVendor.hal
@@ -38,44 +40,6 @@ $(GEN): $(LOCAL_PATH)/IVendor.hal
 	$(transform-generated-source)
 LOCAL_GENERATED_SOURCES += $(GEN)
 include $(BUILD_JAVA_LIBRARY)
-
-
-################################################################################
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := tests.vendor-V1.1-java-static
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-
-intermediates := $(call local-generated-sources-dir, COMMON)
-
-HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
-
-LOCAL_STATIC_JAVA_LIBRARIES := \
-    android.hardware.tests.baz-V1.0-java-static \
-    android.hidl.base-V1.0-java-static \
-    tests.vendor-V1.0-java-static \
-
-
-#
-# Build IVendor.hal
-#
-GEN := $(intermediates)/tests/vendor/V1_1/IVendor.java
-$(GEN): $(HIDL)
-$(GEN): PRIVATE_HIDL := $(HIDL)
-$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IVendor.hal
-$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
-$(GEN): PRIVATE_CUSTOM_TOOL = \
-        $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
-        -Ljava \
-        -randroid.hardware:hardware/interfaces \
-        -randroid.hidl:system/libhidl/transport \
-        -rtests:system/tools/hidl/test/ \
-        tests.vendor@1.1::IVendor
-
-$(GEN): $(LOCAL_PATH)/IVendor.hal
-	$(transform-generated-source)
-LOCAL_GENERATED_SOURCES += $(GEN)
-include $(BUILD_STATIC_JAVA_LIBRARY)
 
 
 
