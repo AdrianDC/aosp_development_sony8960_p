@@ -17,28 +17,27 @@
 #ifndef LOCATION_H_
 #define LOCATION_H_
 
-#include <stdint.h>
 #include <iostream>
+#include <stdint.h>
 #include <string>
 
 // Mimics for yy::location and yy::position
 namespace android {
 
 struct Position {
-    Position() = default;
     Position(std::string f, size_t l, size_t c)
             : mFilename(f), mLine(l), mColumn(c) {}
     inline const std::string &filename() const { return mFilename; }
     inline size_t line() const { return mLine; }
     inline size_t column() const { return mColumn; }
 
-   private:
+private:
     // File name to which this position refers.
-    std::string mFilename;
+    const std::string mFilename;
     // Current line number.
-    size_t mLine;
+    const size_t mLine;
     // Current column number.
-    size_t mColumn;
+    const size_t mColumn;
 };
 
 inline std::ostream& operator<< (std::ostream& ostr, const Position& pos) {
@@ -49,30 +48,20 @@ inline std::ostream& operator<< (std::ostream& ostr, const Position& pos) {
 }
 
 struct Location {
-    Location() = default;
-    Location(const Position& begin, const Position& end) { setLocation(begin, end); }
+    Location (Position begin, Position end)
+            : mBegin(begin), mEnd(end) {}
+    inline const Position &begin() const { return mBegin; }
+    inline const Position &end() const { return mEnd; }
 
-    void setLocation(const Position& begin, const Position& end) {
-        mIsValid = true;
-        mBegin = begin;
-        mEnd = end;
-    }
-
-    bool isValid() const { return mIsValid; }
-    const Position& begin() const { return mBegin; }
-    const Position& end() const { return mEnd; }
-
-    static Location startOf(const std::string& path) {
+    inline static Location startOf(const std::string &path) {
         return Location(Position(path, 1, 1), Position(path, 1, 1));
     }
 
-   private:
-    bool mIsValid = false;
-
+private:
     // Beginning of the located region.
-    Position mBegin;
+    const Position mBegin;
     // End of the located region.
-    Position mEnd;
+    const Position mEnd;
 };
 
 inline std::ostream& operator<< (std::ostream& ostr, const Location& loc) {

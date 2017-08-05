@@ -1115,9 +1115,9 @@ void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CompoundField::CompoundField(const char* name, const Reference<Type>& type)
-    : mName(name), mType(type) {
-    CHECK(!type.isEmptyReference());
+CompoundField::CompoundField(const char *name, Type *type)
+    : mName(name),
+      mType(type) {
 }
 
 std::string CompoundField::name() const {
@@ -1125,7 +1125,7 @@ std::string CompoundField::name() const {
 }
 
 const Type &CompoundField::type() const {
-    return *(mType.get());
+    return *mType;
 }
 
 }  // namespace android
