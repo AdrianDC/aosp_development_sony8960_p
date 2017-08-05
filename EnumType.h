@@ -19,7 +19,6 @@
 #define ENUM_TYPE_H_
 
 #include "ConstantExpression.h"
-#include "Reference.h"
 #include "Scope.h"
 
 #include <vector>
@@ -30,8 +29,7 @@ struct EnumValue;
 struct BitFieldType;
 
 struct EnumType : public Scope {
-    EnumType(const char* localName, const Location& location, const Reference<Type>& storageType,
-             Scope* parent);
+    EnumType(const char* localName, const Location& location, Type* storageType, Scope* parent);
 
     const Type *storageType() const;
     const std::vector<EnumValue *> &values() const;
@@ -114,10 +112,8 @@ private:
             const std::string &op) const;
 
     std::vector<EnumValue *> mValues;
-    Reference<Type> mStorageType;
-    // TODO(b/64272670): Dot not store BitFieldType as it is not owned.
-    // It is kept here to avoid const-cast (BitFieldType owns non-const EnumType).
-    Reference<BitFieldType> mBitfieldType;
+    Type *mStorageType;
+    BitFieldType *mBitfieldType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };
