@@ -29,9 +29,8 @@ ArrayType::ArrayType(ArrayType *srcArray, ConstantExpression *size)
     prependDimension(size);
 }
 
-ArrayType::ArrayType(const Reference<Type>& elementType, ConstantExpression* size)
+ArrayType::ArrayType(Type *elementType, ConstantExpression *size)
     : mElementType(elementType) {
-    CHECK(!elementType.isEmptyReference());
     prependDimension(size);
 }
 
@@ -55,7 +54,7 @@ bool ArrayType::canCheckEquality() const {
     return mElementType->canCheckEquality();
 }
 
-Type* ArrayType::getElementType() const {
+Type *ArrayType::getElementType() const {
     return mElementType;
 }
 
