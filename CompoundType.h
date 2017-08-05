@@ -18,7 +18,6 @@
 
 #define COMPOUND_TYPE_H_
 
-#include "Reference.h"
 #include "Scope.h"
 
 #include <vector>
@@ -148,14 +147,14 @@ private:
 };
 
 struct CompoundField {
-    CompoundField(const char* name, const Reference<Type>& type);
+    CompoundField(const char *name, Type *type);
 
     std::string name() const;
     const Type &type() const;
 
 private:
     std::string mName;
-    Reference<Type> mType;
+    Type *mType;
 
     DISALLOW_COPY_AND_ASSIGN(CompoundField);
 };
