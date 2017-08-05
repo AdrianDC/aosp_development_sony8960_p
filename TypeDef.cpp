@@ -21,8 +21,7 @@
 
 namespace android {
 
-TypeDef::TypeDef(const char* localName, const Location& location, Scope* parent,
-                 const Reference<Type>& type)
+TypeDef::TypeDef(const char* localName, const Location& location, Scope* parent, Type* type)
     : NamedType(localName, location, parent), mReferencedType(type) {}
 
 const ScalarType *TypeDef::resolveToScalarType() const {
@@ -30,7 +29,7 @@ const ScalarType *TypeDef::resolveToScalarType() const {
     return NULL;
 }
 
-Type* TypeDef::referencedType() const {
+Type *TypeDef::referencedType() const {
     return mReferencedType;
 }
 
