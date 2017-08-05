@@ -68,10 +68,8 @@ enum {
 };
 
 Interface::Interface(const char* localName, const Location& location, Scope* parent,
-                     const Reference<Interface>& superType)
-    : Scope(localName, location, parent),
-      mSuperType(superType),
-      mIsJavaCompatibleInProgress(false) {}
+                     Interface* super)
+    : Scope(localName, location, parent), mSuperType(super), mIsJavaCompatibleInProgress(false) {}
 
 std::string Interface::typeName() const {
     return "interface " + localName();
@@ -463,7 +461,7 @@ bool Interface::addMethod(Method *method) {
 
     serial += userDefinedMethods().size();
 
-    const Interface* ancestor = superType();
+    const Interface *ancestor = mSuperType;
     while (ancestor != nullptr) {
         serial += ancestor->userDefinedMethods().size();
         ancestor = ancestor->superType();
@@ -512,8 +510,8 @@ bool Interface::addAllReservedMethods() {
     return true;
 }
 
-const Interface* Interface::superType() const {
-    return isIBase() ? nullptr : mSuperType;
+const Interface *Interface::superType() const {
+    return mSuperType;
 }
 
 std::vector<const Interface *> Interface::typeChain() const {
@@ -521,13 +519,13 @@ std::vector<const Interface *> Interface::typeChain() const {
     const Interface *iface = this;
     while (iface != nullptr) {
         v.push_back(iface);
-        iface = iface->superType();
+        iface = iface->mSuperType;
     }
     return v;
 }
 
 std::vector<const Interface *> Interface::superTypeChain() const {
-    return isIBase() ? std::vector<const Interface*>() : superType()->typeChain();
+    return superType()->typeChain(); // should work even if superType is nullptr
 }
 
 bool Interface::isElidableType() const {
@@ -892,7 +890,7 @@ bool Interface::isJavaCompatible() const {
         return true;
     }
 
-    if (superType() != nullptr && !superType()->isJavaCompatible()) {
+    if (mSuperType != nullptr && !mSuperType->isJavaCompatible()) {
         mIsJavaCompatibleInProgress = false;
         return false;
     }
