@@ -946,11 +946,7 @@ named_enum_declaration
       }
       enum_declaration_body
       {
-          if (!(*scope)->isEnum()) {
-              std::cerr << "ERROR: unknown error in enum declaration at "
-                  << @5 << "\n";
-              YYERROR;
-          }
+          CHECK((*scope)->isEnum());
 
           EnumType *enumType = static_cast<EnumType *>(*scope);
           leaveScope(ast, scope);
@@ -979,23 +975,27 @@ enum_values
       { /* do nothing */ }
     | enum_value
       {
-          if (!(*scope)->isEnum()) {
-              std::cerr << "ERROR: unknown error in enum declaration at "
-                  << @1 << "\n";
-              YYERROR;
-          }
-
+          CHECK((*scope)->isEnum());
           static_cast<EnumType *>(*scope)->addValue($1);
       }
     | enum_values ',' enum_value
       {
-          if (!(*scope)->isEnum()) {
-              std::cerr << "ERROR: unknown error in enum declaration at "
-                  << @3 << "\n";
-              YYERROR;
-          }
-
+          CHECK((*scope)->isEnum());
           static_cast<EnumType *>(*scope)->addValue($3);
+      }
+    | error ',' enum_value
+      {
+          ast->addSyntaxError();
+
+          CHECK((*scope)->isEnum());
+          static_cast<EnumType *>(*scope)->addValue($3);
+      }
+    | enum_values ',' error ',' enum_value
+      {
+          ast->addSyntaxError();
+
+          CHECK((*scope)->isEnum());
+          static_cast<EnumType *>(*scope)->addValue($5);
       }
     ;
 
