@@ -242,17 +242,14 @@ const TypedVar* Method::canElideCallback() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TypedVar::TypedVar(const char *name, Type *type)
-    : mName(name),
-      mType(type) {
-}
+TypedVar::TypedVar(const char* name, const Reference<Type>& type) : mName(name), mType(type) {}
 
 std::string TypedVar::name() const {
     return mName;
 }
 
 const Type &TypedVar::type() const {
-    return *mType;
+    return *(mType.get());
 }
 
 bool TypedVar::isJavaCompatible() const {

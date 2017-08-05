@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "Reference.h"
+
 namespace android {
 
 struct Annotation;
@@ -114,7 +116,7 @@ private:
 };
 
 struct TypedVar {
-    TypedVar(const char *name, Type *type);
+    TypedVar(const char* name, const Reference<Type>& type);
 
     std::string name() const;
     const Type &type() const;
@@ -123,7 +125,7 @@ struct TypedVar {
 
 private:
     std::string mName;
-    Type *mType;
+    Reference<Type> mType;
 
     DISALLOW_COPY_AND_ASSIGN(TypedVar);
 };
