@@ -725,7 +725,7 @@ bool VectorType::isJavaCompatible() const {
     }
 
     if (mElementType->isArray()) {
-        return static_cast<ArrayType*>(mElementType.get())->countDimensions() == 1;
+        return static_cast<ArrayType *>(mElementType)->countDimensions() == 1;
     }
 
     if (mElementType->isVector()) {

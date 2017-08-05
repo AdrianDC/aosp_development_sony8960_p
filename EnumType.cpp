@@ -17,7 +17,6 @@
 #include "EnumType.h"
 
 #include "Annotation.h"
-#include "Location.h"
 #include "ScalarType.h"
 
 #include <inttypes.h>
@@ -26,12 +25,11 @@
 
 namespace android {
 
-EnumType::EnumType(const char* localName, const Location& location,
-                   const Reference<Type>& storageType, Scope* parent)
+EnumType::EnumType(const char* localName, const Location& location, Type* storageType,
+                   Scope* parent)
     : Scope(localName, location, parent), mValues(), mStorageType(storageType) {
-    BitFieldType* bitfieldType = new BitFieldType();
-    bitfieldType->setElementType(Reference<Type>(this, Location()));
-    mBitfieldType.set(bitfieldType);
+    mBitfieldType = new BitFieldType();
+    mBitfieldType->setElementType(this);
 }
 
 const Type *EnumType::storageType() const {
@@ -101,7 +99,7 @@ std::string EnumType::getVtsType() const {
     return "TYPE_ENUM";
 }
 
-BitFieldType* EnumType::getBitfieldType() const {
+BitFieldType *EnumType::getBitfieldType() const {
     return mBitfieldType;
 }
 
@@ -724,7 +722,7 @@ std::string BitFieldType::typeName() const {
     return "mask" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
 }
 
-bool BitFieldType::isCompatibleElementType(Type* elementType) const {
+bool BitFieldType::isCompatibleElementType(Type *elementType) const {
     return elementType->isEnum();
 }
 
@@ -766,8 +764,8 @@ status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
     out << "scalar_type: \""
         << mElementType->resolveToScalarType()->getVtsScalarType()
         << "\"\n";
-    out << "predefined_type: \"" << static_cast<NamedType*>(mElementType.get())->fullName()
-        << "\"\n";
+    out << "predefined_type: \""
+        << static_cast<NamedType *>(mElementType)->fullName() << "\"\n";
     return OK;
 }
 
@@ -792,9 +790,9 @@ void BitFieldType::emitReaderWriter(
             true /* needsCast */);
 }
 
-EnumType* BitFieldType::getEnumType() const {
+EnumType *BitFieldType::getEnumType() const {
     CHECK(mElementType->isEnum());
-    return static_cast<EnumType*>(mElementType.get());
+    return static_cast<EnumType *>(mElementType);
 }
 
 // a bitfield maps to the underlying scalar type in C++, so operator<< is
