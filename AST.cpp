@@ -175,19 +175,7 @@ void AST::addImportedAST(AST *ast) {
     mImportedASTs.insert(ast);
 }
 
-bool AST::addTypeDef(const char* localName, Type* type, const Location& location,
-                     std::string* errorMsg, Scope* scope) {
-    // The reason we wrap the given type in a TypeDef is simply to suppress
-    // emitting any type definitions later on, since this is just an alias
-    // to a type defined elsewhere.
-    return addScopedTypeInternal(new TypeDef(localName, location, scope, type), errorMsg, scope);
-}
-
 bool AST::addScopedType(NamedType* type, std::string* errorMsg, Scope* scope) {
-    return addScopedTypeInternal(type, errorMsg, scope);
-}
-
-bool AST::addScopedTypeInternal(NamedType* type, std::string* errorMsg, Scope* scope) {
     bool success = scope->addType(type, errorMsg);
     if (!success) {
         return false;

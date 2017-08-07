@@ -51,10 +51,6 @@ struct AST {
     bool containsInterfaces() const;
 
     // Returns true iff successful.
-    bool addTypeDef(const char* localName, Type* type, const Location& location,
-                    std::string* errorMsg, Scope* scope);
-
-    // Returns true iff successful.
     bool addScopedType(NamedType* type, std::string* errorMsg, Scope* scope);
 
     const std::string &getFilename() const;
@@ -146,8 +142,6 @@ struct AST {
 
     // used by the parser.
     size_t mSyntaxErrors = 0;
-
-    bool addScopedTypeInternal(NamedType* type, std::string* errorMsg, Scope* scope);
 
     // Helper functions for lookupType.
     Type* lookupTypeLocally(const FQName& fqName, Scope* scope);
