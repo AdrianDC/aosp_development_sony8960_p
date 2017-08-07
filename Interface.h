@@ -18,8 +18,10 @@
 
 #define INTERFACE_H_
 
-#include "Scope.h"
 #include <vector>
+
+#include "Reference.h"
+#include "Scope.h"
 
 namespace android {
 
@@ -27,7 +29,8 @@ struct Method;
 struct InterfaceAndMethod;
 
 struct Interface : public Scope {
-    Interface(const char* localName, const Location& location, Scope* parent, Interface* super);
+    Interface(const char* localName, const Location& location, Scope* parent,
+              const Reference<Interface>& superType);
 
     bool addMethod(Method *method);
     bool addAllReservedMethods();
@@ -35,11 +38,10 @@ struct Interface : public Scope {
     bool isElidableType() const override;
     bool isInterface() const override;
     bool isBinder() const override;
-    bool isRootType() const { return mSuperType == nullptr; }
     bool isIBase() const { return fqName() == gIBaseFqName; }
     std::string typeName() const override;
 
-    const Interface *superType() const;
+    const Interface* superType() const;
 
     Method *lookupMethod(std::string name) const;
     // Super type chain to root type.
@@ -109,21 +111,24 @@ struct Interface : public Scope {
 
     bool isJavaCompatible() const override;
 
-private:
-    Interface *mSuperType;
-    std::vector<Method *> mUserMethods;
-    std::vector<Method *> mReservedMethods;
+   private:
+    Reference<Interface> mSuperType;
+
+    std::vector<Method*> mUserMethods;
+    std::vector<Method*> mReservedMethods;
+
     mutable bool mIsJavaCompatibleInProgress;
-    bool fillPingMethod(Method *method) const;
-    bool fillDescriptorChainMethod(Method *method) const;
-    bool fillGetDescriptorMethod(Method *method) const;
-    bool fillHashChainMethod(Method *method) const;
-    bool fillSyspropsChangedMethod(Method *method) const;
-    bool fillLinkToDeathMethod(Method *method) const;
-    bool fillUnlinkToDeathMethod(Method *method) const;
-    bool fillSetHALInstrumentationMethod(Method *method) const;
-    bool fillGetDebugInfoMethod(Method *method) const;
-    bool fillDebugMethod(Method *method) const;
+
+    bool fillPingMethod(Method* method) const;
+    bool fillDescriptorChainMethod(Method* method) const;
+    bool fillGetDescriptorMethod(Method* method) const;
+    bool fillHashChainMethod(Method* method) const;
+    bool fillSyspropsChangedMethod(Method* method) const;
+    bool fillLinkToDeathMethod(Method* method) const;
+    bool fillUnlinkToDeathMethod(Method* method) const;
+    bool fillSetHALInstrumentationMethod(Method* method) const;
+    bool fillGetDebugInfoMethod(Method* method) const;
+    bool fillDebugMethod(Method* method) const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
@@ -135,7 +140,8 @@ struct InterfaceAndMethod {
           mMethod(method) {}
     Method *method() const { return mMethod; }
     const Interface *interface() const { return mInterface; }
-private:
+
+   private:
     // do not own these objects.
     const Interface *mInterface;
     Method *mMethod;
