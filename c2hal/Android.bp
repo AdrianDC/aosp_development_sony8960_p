@@ -18,7 +18,7 @@ subdirs = [
 
 cc_binary_host {
     name: "c2hal",
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: [
         "AST.cpp",
         "c2hal_l.ll",
