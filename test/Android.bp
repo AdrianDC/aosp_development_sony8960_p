@@ -10,7 +10,7 @@ subdirs = [
 
 cc_test {
     name: "hidl_test_client",
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: ["hidl_test_client.cpp", "FooCallback.cpp"],
 
     shared_libs: [
