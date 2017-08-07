@@ -18,6 +18,7 @@
 
 #define ARRAY_TYPE_H_
 
+#include "Reference.h"
 #include "Type.h"
 
 #include <vector>
@@ -30,12 +31,12 @@ struct ArrayType : public Type {
     // Extends existing array by adding another dimension.
     ArrayType(ArrayType *srcArray, ConstantExpression *size);
 
-    ArrayType(Type *elementType, ConstantExpression *size);
+    ArrayType(const Reference<Type>& elementType, ConstantExpression* size);
 
     bool isArray() const override;
     bool canCheckEquality() const override;
 
-    Type *getElementType() const;
+    Type* getElementType() const;
 
     void prependDimension(ConstantExpression *size);
     void appendDimension(ConstantExpression *size);
@@ -131,9 +132,9 @@ struct ArrayType : public Type {
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
-private:
-    Type *mElementType;
-    std::vector<ConstantExpression *> mSizes;
+   private:
+    Reference<Type> mElementType;
+    std::vector<ConstantExpression*> mSizes;
 
     size_t dimension() const;
 
