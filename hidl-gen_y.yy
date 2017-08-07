@@ -16,8 +16,8 @@
 
 %{
 
-#include "Annotation.h"
 #include "AST.h"
+#include "Annotation.h"
 #include "ArrayType.h"
 #include "CompoundType.h"
 #include "ConstantExpression.h"
@@ -25,9 +25,10 @@
 #include "Interface.h"
 #include "Location.h"
 #include "Method.h"
-#include "Scope.h"
-#include "VectorType.h"
 #include "RefType.h"
+#include "Scope.h"
+#include "TypeDef.h"
+#include "VectorType.h"
 
 #include "hidl-gen_y.h"
 
@@ -257,13 +258,13 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
 %type<str> error_stmt error
 %type<str> package
 %type<fqName> fqname
-%type<type> fqtype
+%type<referenceToType> fqtype
 %type<str> valid_identifier valid_type_name
 
-%type<type> type enum_storage_type
-%type<type> array_type_base
+%type<referenceToType> type enum_storage_type
+%type<referenceToType> array_type_base
 %type<arrayType> array_type
-%type<type> opt_extends
+%type<referenceToInterface> opt_extends
 %type<type> type_declaration type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
 %type<type> compound_declaration annotated_compound_declaration
@@ -288,7 +289,9 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
 
 %union {
     const char *str;
-    android::Type *type;
+    android::Type* type;
+    android::Reference<android::Type>* referenceToType;
+    android::Reference<android::Interface>* referenceToInterface;
     android::ArrayType *arrayType;
     android::TemplatedType *templatedType;
     android::FQName *fqName;
@@ -483,7 +486,9 @@ fqname
 fqtype
     : fqname
       {
-          $$ = ast->lookupType(*($1), *scope);
+          $$ = new Reference<Type>(*$1, convertYYLoc(@1));
+
+          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
           if ($$ == NULL) {
               std::cerr << "ERROR: Failed to lookup type '" << $1->string() << "' at "
                         << @1
@@ -491,8 +496,13 @@ fqtype
 
               YYERROR;
           }
+
+          $$->set(type);
       }
     | TYPE
+      {
+          $$ = new Reference<Type>($1, convertYYLoc(@1));
+      }
     ;
 
 package
@@ -543,17 +553,46 @@ imports
     ;
 
 opt_extends
-    : /* empty */ { $$ = NULL; }
-    | EXTENDS fqtype { $$ = $2; }
+    : /* empty */
+      {
+          $$ = nullptr;
+      }
+    | EXTENDS fqtype
+      {
+          if (!(*$2)->isInterface()) {
+              std::cerr << "ERROR: You can only extend interfaces. at " << @2
+                        << "\n";
+
+              YYERROR;
+          }
+
+          // TODO(b/31827278)
+          // While deleting lookup calls, clear this messy conversion
+          $2->clearResolved();
+          $$ = new Reference<Interface>(*$2);
+
+          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
+          if (type == nullptr) {
+              std::cerr << "ERROR: Failed to lookup type '" << $$->getLookupFqName().string() << "' at "
+                        << @2
+                        << "\n";
+              YYERROR;
+          }
+          if (!type->isInterface()) {
+              std::cerr << "ERROR: You can only extend interfaces. at " << @2
+                        << "\n";
+              YYERROR;
+          }
+          $$->set(static_cast<Interface*>(type));
+      }
 
 interface_declarations
     : /* empty */
     | interface_declarations type_declaration
       {
           std::string errorMsg;
-          if ($2 != nullptr &&
-              $2->isNamedType() &&
-              !isValidInterfaceField(static_cast<NamedType *>($2)->localName().c_str(),
+          if ($2 != nullptr && $2->isNamedType() &&
+              !isValidInterfaceField(static_cast<NamedType*>($2)->localName().c_str(),
                     &errorMsg)) {
               std::cerr << "ERROR: " << errorMsg << " at "
                         << @2 << "\n";
@@ -577,7 +616,7 @@ interface_declarations
                 YYERROR;
             }
 
-            Interface *iface = static_cast<Interface *>(*scope);
+            Interface *iface = static_cast<Interface*>(*scope);
             if (!iface->addMethod($2)) {
                 std::cerr << "ERROR: Unable to add method '" << $2->name()
                           << "' at " << @2 << "\n";
@@ -598,7 +637,7 @@ type_declarations
 type_declaration
     : opt_annotations type_declaration_body
       {
-          if ($2 != nullptr) {
+          if (!$2->isTypeDef()) {
               $2->setAnnotations($1);
           } else if (!$1->empty()) {
               // Since typedefs are always resolved to their target it makes
@@ -623,9 +662,18 @@ type_declaration_body
 interface_declaration
     : INTERFACE valid_type_name opt_extends
       {
-          Type *parent = $3;
+          Reference<Interface>* superType = $3;
+          bool isIBase = ast->package().package() == gIBasePackageFqName.string();
 
-          if (ast->package().package() != gIBasePackageFqName.string()) {
+          if (isIBase) {
+              if (superType != nullptr) {
+                  std::cerr << "ERROR: IBase must not extend any interface. at " << @3
+                        << "\n";
+
+                  YYERROR;
+              }
+              superType = new Reference<Interface>();
+          } else {
               if (!ast->addImport(gIBaseFqName.string().c_str())) {
                   std::cerr << "ERROR: Unable to automatically import '"
                             << gIBaseFqName.string()
@@ -633,16 +681,13 @@ interface_declaration
                             << "\n";
                   YYERROR;
               }
-              if (parent == nullptr) {
-                parent = ast->lookupType(gIBaseFqName, *scope);
+
+              if (superType == nullptr) {
+                  superType = new Reference<Interface>(gIBaseFqName, convertYYLoc(@$));
+                  Type* type = ast->lookupType(superType->getLookupFqName(), *scope);
+                  CHECK(type != nullptr && type->isInterface());
+                  superType->set(static_cast<Interface*>(type));
               }
-          }
-
-          if (parent != NULL && !parent->isInterface()) {
-              std::cerr << "ERROR: You can only extend interfaces. at " << @3
-                        << "\n";
-
-              YYERROR;
           }
 
           if ($2[0] != 'I') {
@@ -660,8 +705,7 @@ interface_declaration
           }
 
           Interface* iface = new Interface(
-              $2, convertYYLoc(@2), *scope,
-              static_cast<Interface *>(parent));
+              $2, convertYYLoc(@2), *scope, *superType);
 
           // Register interface immediately so it can be referenced inside
           // definition.
@@ -697,13 +741,18 @@ interface_declaration
 typedef_declaration
     : TYPEDEF type valid_type_name
       {
+          // The reason we wrap the given type in a TypeDef is simply to suppress
+          // emitting any type definitions later on, since this is just an alias
+          // to a type defined elsewhere.
+          TypeDef* typeDef = new TypeDef($3, convertYYLoc(@2), *scope, *$2);
+
           std::string errorMsg;
-          if (!ast->addTypeDef($3, $2, convertYYLoc(@3), &errorMsg, *scope)) {
+          if (!ast->addScopedType(typeDef, &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
               YYERROR;
           }
 
-          $$ = nullptr;
+          $$ = typeDef;
       }
     ;
 
@@ -734,11 +783,13 @@ const_expr
                       *(static_cast<EnumValue *>(iden)->constExpr()), $1->string());
           } else {
               std::string errorMsg;
-              EnumValue *v = ast->lookupEnumValue(*($1), &errorMsg, *scope);
+              EnumValue* v = ast->lookupEnumValue(*$1, &errorMsg, *scope);
               if(v == nullptr) {
                   std::cerr << "ERROR: " << errorMsg << " at " << @1 << ".\n";
                   YYERROR;
               }
+
+              // TODO: Support Reference
               $$ = new ConstantExpression(*(v->constExpr()), $1->string());
           }
       }
@@ -818,7 +869,7 @@ typed_vars
       }
     ;
 
-typed_var : type valid_identifier { $$ = new TypedVar($2, $1); }
+typed_var : type valid_identifier { $$ = new TypedVar($2, *$1); }
     ;
 
 
@@ -869,7 +920,8 @@ field_declarations
       {
           $$ = $1;
 
-          if ($2 != NULL) {
+          // Compound declaration or error
+          if ($2 != nullptr) {
               $$->push_back($2);
           }
       }
@@ -887,27 +939,28 @@ field_declaration
                       << @2 << "\n";
             YYERROR;
         }
-        $$ = new CompoundField($2, $1);
+        $$ = new CompoundField($2, *$1);
       }
     | annotated_compound_declaration ';'
       {
         std::string errorMsg;
         if ((*scope)->isCompoundType() &&
             static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
-            $1 != nullptr &&
-            $1->isNamedType() &&
-            !isValidStructField(static_cast<NamedType *>($1)->localName().c_str(), &errorMsg)) {
+            $1 != nullptr && $1->isNamedType() &&
+            !isValidStructField(static_cast<NamedType*>($1)->localName().c_str(), &errorMsg)) {
             std::cerr << "ERROR: " << errorMsg << " at "
                       << @2 << "\n";
             YYERROR;
         }
-        $$ = NULL;
+        // Returns fields only
+        $$ = nullptr;
       }
     ;
 
 annotated_compound_declaration
     : opt_annotations compound_declaration
       {
+          CHECK($2 != nullptr);
           $2->setAnnotations($1);
           $$ = $2;
       }
@@ -923,9 +976,9 @@ enum_storage_type
       {
           $$ = $2;
 
-          if ($$ != NULL && !$$->isValidEnumStorageType()) {
+          if ($$ != NULL && !(*$$)->isValidEnumStorageType()) {
               std::cerr << "ERROR: Invalid enum storage type ("
-                        << $2->typeName()
+                        << (*$2)->typeName()
                         << ") specified. at "
                         << @2 << "\n";
 
@@ -942,7 +995,7 @@ opt_comma
 named_enum_declaration
     : ENUM valid_type_name enum_storage_type
       {
-          enterScope(ast, scope, new EnumType($2, convertYYLoc(@2), $3, *scope));
+          enterScope(ast, scope, new EnumType($2, convertYYLoc(@2), *$3, *scope));
       }
       enum_declaration_body
       {
@@ -1003,48 +1056,50 @@ array_type_base
     : fqtype { $$ = $1; }
     | TEMPLATED '<' type '>'
       {
-          if (!$1->isCompatibleElementType($3)) {
-              std::cerr << "ERROR: " << $1->typeName() << " of " << $3->typeName()
+          if (!$1->isCompatibleElementType($3->get())) {
+              std::cerr << "ERROR: " << $1->typeName() << " of " << (*$3)->typeName()
                         << " is not supported. at " << @3 << "\n";
 
               YYERROR;
           }
-          $1->setElementType($3);
-          $$ = $1;
+          $1->setElementType(*$3);
+          $$ = new Reference<Type>($1, convertYYLoc(@1));
       }
     | TEMPLATED '<' TEMPLATED '<' type RSHIFT
       {
-          if (!$3->isCompatibleElementType($5)) {
-              std::cerr << "ERROR: " << $3->typeName() << " of " << $5->typeName()
-                        << " is not supported. at " << @3 << "\n";
+          if (!$3->isCompatibleElementType($5->get())) {
+              std::cerr << "ERROR: " << $3->typeName() << " of " << (*$5)->typeName()
+                        << " is not supported. at " << @5 << "\n";
 
               YYERROR;
           }
-          $3->setElementType($5);
+          $3->setElementType(*$5);
           if (!$1->isCompatibleElementType($3)) {
               std::cerr << "ERROR: " << $1->typeName() << " of " << $3->typeName()
                         << " is not supported. at " << @3 << "\n";
 
               YYERROR;
           }
-          $1->setElementType($3);
-          $$ = $1;
+          $1->setElementType(Reference<Type>($3, convertYYLoc(@3)));
+          $$ = new Reference<Type>($1, convertYYLoc(@1));
       }
     ;
 
 array_type
     : array_type_base '[' const_expr ']'
       {
-          if ($1->isBinder()) {
+          Reference<Type> type = *$1;
+
+          if (type->isBinder()) {
               std::cerr << "ERROR: Arrays of interface types are not supported."
                         << " at " << @1 << "\n";
 
               YYERROR;
           }
-          if ($1->isArray()) {
-              $$ = new ArrayType(static_cast<ArrayType *>($1), $3);
+          if (type.isResolved() && type->isArray()) {
+              $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3);
           } else {
-              $$ = new ArrayType($1, $3);
+              $$ = new ArrayType(type, $3);
           }
       }
     | array_type '[' const_expr ']'
@@ -1056,20 +1111,25 @@ array_type
 
 type
     : array_type_base { $$ = $1; }
-    | array_type { $$ = $1; }
-    | annotated_compound_declaration { $$ = $1; }
+    | array_type { $$ = new Reference<Type>($1, convertYYLoc(@1)); }
+    | annotated_compound_declaration
+      {
+          $$ = new Reference<Type>($1, convertYYLoc(@1));
+      }
     | INTERFACE
       {
           // "interface" is a synonym of android.hidl.base@1.0::IBase
-          $$ = ast->lookupType(gIBaseFqName, *scope);
-          if ($$ == nullptr) {
+          $$ = new Reference<Type>(gIBaseFqName, convertYYLoc(@1));
+          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
+          if (type == nullptr) {
               std::cerr << "ERROR: Cannot find "
                         << gIBaseFqName.string()
                         << " at " << @1 << "\n";
 
               YYERROR;
+          }
+          $$->set(type);
       }
-    }
     ;
 
 %%
