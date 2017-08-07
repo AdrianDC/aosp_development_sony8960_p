@@ -18,12 +18,15 @@ subdirs = [
     "utils",
 ]
 
-hidl_flags = [
-    "-O0",
-    "-g",
-    "-Wall",
-    "-Werror",
-]
+cc_defaults {
+    name: "hidl-gen-defaults",
+    cflags: [
+        "-O0",
+        "-g",
+        "-Wall",
+        "-Werror",
+    ],
+}
 
 // This configuration is inherited by all hidl-gen-generated modules.
 cc_defaults {
@@ -48,7 +51,7 @@ cc_defaults {
 cc_library {
     name: "libhidl-gen-hash",
     host_supported: true,
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: ["Hash.cpp"],
     local_include_dirs: ["include_hash/hidl-hash"],
     export_include_dirs: ["include_hash"],
@@ -64,7 +67,7 @@ cc_library {
 //
 cc_library_host_shared {
     name: "libhidl-gen",
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: [
         "Annotation.cpp",
         "ArrayType.cpp",
@@ -102,7 +105,7 @@ cc_library_host_shared {
 
 cc_library_host_shared {
     name: "libhidl-gen-ast",
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: [
         "Coordinator.cpp",
         "generateCpp.cpp",
@@ -127,7 +130,7 @@ cc_library_host_shared {
 //
 cc_binary_host {
     name: "hidl-gen",
-    cflags: hidl_flags,
+    defaults: ["hidl-gen-defaults"],
     srcs: ["main.cpp"],
     shared_libs: [
         "libbase",
