@@ -654,6 +654,16 @@ bool isHidlTransportPackage(const FQName& fqName) {
            fqName.package() == gIManagerPackageFqName.string();
 }
 
+bool isSystemProcessSupportedPackage(const FQName& fqName) {
+    // Technically, so is hidl IBase + IServiceManager, but
+    // these are part of libhidltransport.
+    return fqName.string() == "android.hardware.graphics.allocator@2.0" ||
+           fqName.string() == "android.hardware.graphics.common@1.0" ||
+           fqName.string() == "android.hardware.graphics.mapper@2.0" ||
+           fqName.string() == "android.hardware.renderscript@1.0" ||
+           fqName.string() == "android.hidl.memory@1.0";
+}
+
 bool isSystemPackage(const FQName &package) {
     return package.inPackage("android.hidl") ||
            package.inPackage("android.system") ||
@@ -723,6 +733,7 @@ static void generateAndroidBpDependencyList(
 static void generateAndroidBpLibSection(
         Formatter &out,
         bool generateVendor,
+        const FQName &packageFQName,
         const std::string &libraryName,
         const std::string &genSourceName,
         const std::string &genHeaderName,
@@ -744,6 +755,9 @@ static void generateAndroidBpLibSection(
         out << "vndk: ";
         out.block([&]() {
             out << "enabled: true,\n";
+            if (isSystemProcessSupportedPackage(packageFQName)) {
+                out << "support_system_process: true,\n";
+            }
         }) << ",\n";
     }
     out << "shared_libs: [\n";
@@ -900,6 +914,7 @@ static status_t generateAndroidBpForPackage(
         generateAndroidBpLibSection(
             out,
             false /* generateVendor */,
+            packageFQName,
             libraryName,
             genSourceName,
             genHeaderName,
@@ -923,6 +938,7 @@ static status_t generateAndroidBpForPackage(
             generateAndroidBpLibSection(
                 out,
                 true /* generateVendor */,
+                packageFQName,
                 libraryName,
                 genSourceName,
                 genHeaderName,
