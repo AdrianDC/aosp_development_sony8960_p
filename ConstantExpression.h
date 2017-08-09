@@ -19,39 +19,45 @@
 #define CONSTANT_EXPRESSION_H_
 
 #include <android-base/macros.h>
-#include <memory>
 #include <string>
-
-#include "Reference.h"
 #include "ScalarType.h"
 
 namespace android {
-
-struct LocalIdentifier;
-
-struct LiteralConstantExpression;
-struct UnaryConstantExpression;
-struct BinaryConstantExpression;
-struct TernaryConstantExpression;
-struct ReferenceConstantExpression;
 
 /**
  * A constant expression is represented by a tree.
  */
 struct ConstantExpression {
-    static std::unique_ptr<ConstantExpression> Zero(ScalarType::Kind kind);
-    static std::unique_ptr<ConstantExpression> One(ScalarType::Kind kind);
-    static std::unique_ptr<ConstantExpression> ValueOf(ScalarType::Kind kind, uint64_t value);
 
-    /*
-     * Runs recursive evaluation.
-     * Provides sort of lazy computation,
-     * mainly used for forward identifier reference.
-     */
-    virtual void evaluate() = 0;
+    enum ConstExprType {
+        kConstExprLiteral,
+        kConstExprUnary,
+        kConstExprBinary,
+        kConstExprTernary
+    };
 
-    /* Returns true iff the value has already been evaluated. */
-    bool isEvaluated() const;
+    /* Default constructor. */
+    ConstantExpression();
+    /* Copy constructor. */
+    ConstantExpression(const ConstantExpression& other);
+    /* Copy constructor, with the expr overriden. */
+    ConstantExpression(const ConstantExpression& other, std::string expr);
+    /* Literals */
+    ConstantExpression(const char *value);
+    /* binary operations */
+    ConstantExpression(const ConstantExpression *value1,
+        const char *op, const ConstantExpression* value2);
+    /* unary operations */
+    ConstantExpression(const char *op, const ConstantExpression *value);
+    /* ternary ?: */
+    ConstantExpression(const ConstantExpression *cond,
+                       const ConstantExpression *trueVal,
+                       const ConstantExpression *falseVal);
+
+    static ConstantExpression Zero(ScalarType::Kind kind);
+    static ConstantExpression One(ScalarType::Kind kind);
+    static ConstantExpression ValueOf(ScalarType::Kind kind, uint64_t value);
+
     /* Evaluated result in a string form. */
     std::string value() const;
     /* Evaluated result in a string form. */
@@ -64,21 +70,22 @@ struct ConstantExpression {
     std::string cppValue(ScalarType::Kind castKind) const;
     /* Evaluated result in a string form, with given contextual kind. */
     std::string javaValue(ScalarType::Kind castKind) const;
-    /* Formatted expression with type. */
-    const std::string& description() const;
+    /* Original expression with type. */
+    const std::string &description() const;
     /* See mTrivialDescription */
     bool descriptionIsTrivial() const;
     /* Return a ConstantExpression that is 1 plus the original. */
-    std::unique_ptr<ConstantExpression> addOne(ScalarType::Kind baseKind);
+    ConstantExpression addOne() const;
+    /* Assignment operator. */
+    ConstantExpression& operator=(const ConstantExpression& other);
 
     size_t castSizeT() const;
 
-   private:
-    /* If the result value has been evaluated. */
-    bool mIsEvaluated = false;
-
+private:
     /* The formatted expression. */
     std::string mExpr;
+    /* The type of the expression. Hints on its original form. */
+    ConstExprType mType;
     /* The kind of the result value. */
     ScalarType::Kind mValueKind;
     /* The stored result value. */
@@ -92,65 +99,15 @@ struct ConstantExpression {
      * digits) converted from mValue.
      */
     std::string rawValue(ScalarType::Kind castKind) const;
+    /* Trim unnecessary information. Only mValue and mValueKind is kept. */
+    ConstantExpression &toLiteral();
 
     /*
      * Return the value casted to the given type.
      * First cast it according to mValueKind, then cast it to T.
      * Assumes !containsIdentifiers()
      */
-    template <typename T>
-    T cast() const;
-
-    friend struct LiteralConstantExpression;
-    friend struct UnaryConstantExpression;
-    friend struct BinaryConstantExpression;
-    friend struct TernaryConstantExpression;
-    friend struct ReferenceConstantExpression;
-};
-
-struct LiteralConstantExpression : public ConstantExpression {
-    LiteralConstantExpression(ScalarType::Kind kind, uint64_t value);
-    LiteralConstantExpression(const std::string& value);
-    void evaluate() override;
-};
-
-struct UnaryConstantExpression : public ConstantExpression {
-    UnaryConstantExpression(const std::string& op, ConstantExpression* value);
-    void evaluate() override;
-
-   private:
-    ConstantExpression* const value;
-    std::string op;
-};
-
-struct BinaryConstantExpression : public ConstantExpression {
-    BinaryConstantExpression(ConstantExpression* lval, const std::string& op,
-                             ConstantExpression* rval);
-    void evaluate() override;
-
-   private:
-    ConstantExpression* const lval;
-    ConstantExpression* const rval;
-    const std::string op;
-};
-
-struct TernaryConstantExpression : public ConstantExpression {
-    TernaryConstantExpression(ConstantExpression* cond, ConstantExpression* trueVal,
-                              ConstantExpression* falseVal);
-    void evaluate() override;
-
-   private:
-    ConstantExpression* const cond;
-    ConstantExpression* const trueVal;
-    ConstantExpression* const falseVal;
-};
-
-struct ReferenceConstantExpression : public ConstantExpression {
-    ReferenceConstantExpression(const Reference<LocalIdentifier>& value, const std::string& expr);
-    void evaluate() override;
-
-   private:
-    Reference<LocalIdentifier> value;
+    template <typename T> T cast() const;
 };
 
 }  // namespace android
