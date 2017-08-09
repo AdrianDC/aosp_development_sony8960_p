@@ -25,8 +25,6 @@
 
 namespace android {
 
-struct CompoundField;
-
 struct CompoundType : public Scope {
     enum Style {
         STYLE_STRUCT,
@@ -37,7 +35,7 @@ struct CompoundType : public Scope {
 
     Style style() const;
 
-    bool setFields(std::vector<CompoundField *> *fields, std::string *errorMsg);
+    bool setFields(std::vector<NamedReference<Type>*>* fields, std::string* errorMsg);
 
     bool isCompoundType() const override;
 
@@ -137,7 +135,7 @@ struct CompoundType : public Scope {
 
 private:
     Style mStyle;
-    std::vector<CompoundField *> *mFields;
+    std::vector<NamedReference<Type>*>* mFields;
 
     void emitStructReaderWriter(
             Formatter &out, const std::string &prefix, bool isReader) const;
@@ -145,19 +143,6 @@ private:
         Formatter &out, const std::string prefix, bool isReader) const;
 
     DISALLOW_COPY_AND_ASSIGN(CompoundType);
-};
-
-struct CompoundField {
-    CompoundField(const char* name, const Reference<Type>& type);
-
-    std::string name() const;
-    const Type &type() const;
-
-private:
-    std::string mName;
-    Reference<Type> mType;
-
-    DISALLOW_COPY_AND_ASSIGN(CompoundField);
 };
 
 }  // namespace android

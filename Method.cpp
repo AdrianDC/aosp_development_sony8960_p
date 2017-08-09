@@ -22,20 +22,14 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <algorithm>
 
 namespace android {
 
-Method::Method(const char *name,
-       std::vector<TypedVar *> *args,
-       std::vector<TypedVar *> *results,
-       bool oneway,
-       std::vector<Annotation *> *annotations)
-    : mName(name),
-      mArgs(args),
-      mResults(results),
-      mOneway(oneway),
-      mAnnotations(annotations) {
-}
+Method::Method(const char* name, std::vector<NamedReference<Type>*>* args,
+               std::vector<NamedReference<Type>*>* results, bool oneway,
+               std::vector<Annotation*>* annotations)
+    : mName(name), mArgs(args), mResults(results), mOneway(oneway), mAnnotations(annotations) {}
 
 void Method::fillImplementation(
         size_t serial,
@@ -57,11 +51,11 @@ std::string Method::name() const {
     return mName;
 }
 
-const std::vector<TypedVar *> &Method::args() const {
+const std::vector<NamedReference<Type>*>& Method::args() const {
     return *mArgs;
 }
 
-const std::vector<TypedVar *> &Method::results() const {
+const std::vector<NamedReference<Type>*>& Method::results() const {
     return *mResults;
 }
 
@@ -121,7 +115,7 @@ bool Method::hasEmptyCppArgSignature() const {
 }
 
 void Method::generateCppReturnType(Formatter &out, bool specifyNamespaces) const {
-    const TypedVar *elidedReturn = canElideCallback();
+    const NamedReference<Type>* elidedReturn = canElideCallback();
     const std::string space = (specifyNamespaces ? "::android::hardware::" : "");
 
     if (elidedReturn == nullptr) {
@@ -149,9 +143,9 @@ void Method::generateCppSignature(Formatter &out,
     out << ")";
 }
 
-static void emitCppArgResultSignature(Formatter &out,
-                         const std::vector<TypedVar *> &args,
-                         bool specifyNamespaces) {
+static void emitCppArgResultSignature(Formatter& out,
+                                      const std::vector<NamedReference<Type>*>& args,
+                                      bool specifyNamespaces) {
     out.join(args.begin(), args.end(), ", ", [&](auto arg) {
         out << arg->type().getCppArgumentType(specifyNamespaces);
         out << " ";
@@ -159,7 +153,8 @@ static void emitCppArgResultSignature(Formatter &out,
     });
 }
 
-static void emitJavaArgResultSignature(Formatter &out, const std::vector<TypedVar *> &args) {
+static void emitJavaArgResultSignature(Formatter& out,
+                                       const std::vector<NamedReference<Type>*>& args) {
     out.join(args.begin(), args.end(), ", ", [&](auto arg) {
         out << arg->type().getJavaType();
         out << " ";
@@ -171,7 +166,7 @@ void Method::emitCppArgSignature(Formatter &out, bool specifyNamespaces) const {
     emitCppArgResultSignature(out, args(), specifyNamespaces);
 
     const bool returnsValue = !results().empty();
-    const TypedVar *elidedReturn = canElideCallback();
+    const NamedReference<Type>* elidedReturn = canElideCallback();
     if (returnsValue && elidedReturn == nullptr) {
         if (!args().empty()) {
             out << ", ";
@@ -210,28 +205,26 @@ bool Method::isJavaCompatible() const {
         return true;
     }
 
-    for (const auto &arg : *mArgs) {
-        if (!arg->isJavaCompatible()) {
-            return false;
-        }
+    if (!std::all_of(mArgs->begin(), mArgs->end(),
+                     [](const auto* arg) { return (*arg)->isJavaCompatible(); })) {
+        return false;
     }
 
-    for (const auto &result : *mResults) {
-        if (!result->isJavaCompatible()) {
-            return false;
-        }
+    if (!std::all_of(mResults->begin(), mResults->end(),
+                     [](const auto* arg) { return (*arg)->isJavaCompatible(); })) {
+        return false;
     }
 
     return true;
 }
 
-const TypedVar* Method::canElideCallback() const {
+const NamedReference<Type>* Method::canElideCallback() const {
     // Can't elide callback for void or tuple-returning methods
     if (mResults->size() != 1) {
         return nullptr;
     }
 
-    const TypedVar *typedVar = mResults->at(0);
+    const NamedReference<Type>* typedVar = mResults->at(0);
 
     if (typedVar->type().isElidableType()) {
         return typedVar;
@@ -242,22 +235,7 @@ const TypedVar* Method::canElideCallback() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TypedVar::TypedVar(const char* name, const Reference<Type>& type) : mName(name), mType(type) {}
-
-std::string TypedVar::name() const {
-    return mName;
-}
-
-const Type &TypedVar::type() const {
-    return *(mType.get());
-}
-
-bool TypedVar::isJavaCompatible() const {
-    return mType->isJavaCompatible();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-bool TypedVarVector::add(TypedVar *v) {
+bool TypedVarVector::add(NamedReference<Type>* v) {
     if (mNames.emplace(v->name()).second) {
         push_back(v);
         return true;
