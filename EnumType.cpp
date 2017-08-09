@@ -692,16 +692,18 @@ ConstantExpression *EnumValue::constExpr() const {
     return mValue;
 }
 
-void EnumValue::autofill(const EnumValue* prev, const ScalarType* type) {
-    if (mValue != nullptr) return;
+void EnumValue::autofill(const EnumValue *prev, const ScalarType *type) {
+    if(mValue != nullptr)
+        return;
     mIsAutoFill = true;
-    if (prev == nullptr) {
-        mValue = ConstantExpression::Zero(type->getKind()).release();
+    ConstantExpression *value = new ConstantExpression();
+    if(prev == nullptr) {
+        *value = ConstantExpression::Zero(type->getKind());
     } else {
         CHECK(prev->mValue != nullptr);
-        mValue = prev->mValue->addOne(type->getKind()).release();
+        *value = prev->mValue->addOne();
     }
-    mValue->evaluate();
+    mValue = value;
 }
 
 bool EnumValue::isAutoFill() const {
