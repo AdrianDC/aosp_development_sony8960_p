@@ -28,7 +28,6 @@
 #include <unistd.h>
 
 #include <iostream>
-#include <memory>
 #include <sstream>
 
 #include <android-base/logging.h>
@@ -288,8 +287,10 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
 }
 
 static void emitDigestChain(
-    Formatter& out, const std::string& prefix, const std::vector<const Interface*>& chain,
-    std::function<std::string(std::unique_ptr<ConstantExpression>)> byteToString) {
+        Formatter &out,
+        const std::string &prefix,
+        const std::vector<const Interface *> &chain,
+        std::function<std::string(const ConstantExpression &)> byteToString) {
     out.join(chain.begin(), chain.end(), ",\n", [&] (const auto &iface) {
         const Hash &hash = Hash::getHash(iface->location().begin().filename());
         out << prefix;
@@ -318,8 +319,8 @@ bool Interface::fillHashChainMethod(Method *method) const {
             std::vector<const Interface *> chain = typeChain();
             out << "_hidl_cb(";
             out.block([&] {
-                emitDigestChain(out, "(" + digestType->getInternalDataCppType() + ")", chain,
-                                [](const auto& e) { return e->cppValue(); });
+                emitDigestChain(out, "(" + digestType->getInternalDataCppType() + ")",
+                    chain, [](const auto &e){return e.cppValue();});
             });
             out << ");\n";
             out << "return ::android::hardware::Void();\n";
@@ -332,7 +333,7 @@ bool Interface::fillHashChainMethod(Method *method) const {
             out.indent(2, [&] {
                 // No need for dimensions when elements are explicitly provided.
                 emitDigestChain(out, "new " + digestType->getJavaType(false /* forInitializer */),
-                                chain, [](const auto& e) { return e->javaValue(); });
+                    chain, [](const auto &e){return e.javaValue();});
             });
             out << "));\n";
         } } } /* javaImpl */
