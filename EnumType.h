@@ -131,14 +131,14 @@ struct EnumValue : public LocalIdentifier {
     std::string javaValue(ScalarType::Kind castKind) const;
     std::string comment() const;
     void autofill(const EnumValue *prev, const ScalarType *type);
-    ConstantExpression *constExpr() const;
+    ConstantExpression* constExpr() const override;
 
     bool isAutoFill() const;
     bool isEnumValue() const override;
 
 
     std::string mName;
-    ConstantExpression *mValue;
+    ConstantExpression* mValue;
     bool mIsAutoFill;
 
     DISALLOW_COPY_AND_ASSIGN(EnumValue);
