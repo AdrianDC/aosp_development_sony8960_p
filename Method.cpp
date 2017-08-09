@@ -28,8 +28,13 @@ namespace android {
 
 Method::Method(const char* name, std::vector<NamedReference<Type>*>* args,
                std::vector<NamedReference<Type>*>* results, bool oneway,
-               std::vector<Annotation*>* annotations)
-    : mName(name), mArgs(args), mResults(results), mOneway(oneway), mAnnotations(annotations) {}
+               std::vector<Annotation*>* annotations, const Location& location)
+    : mName(name),
+      mArgs(args),
+      mResults(results),
+      mOneway(oneway),
+      mAnnotations(annotations),
+      mLocation(location) {}
 
 void Method::fillImplementation(
         size_t serial,
@@ -61,6 +66,44 @@ const std::vector<NamedReference<Type>*>& Method::results() const {
 
 const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
+}
+
+status_t Method::evaluate() {
+    for (auto* arg : *mArgs) {
+        status_t err = (*arg)->callForReference(&Type::evaluate);
+        if (err != OK) return err;
+    }
+
+    for (auto* result : *mResults) {
+        status_t err = (*result)->callForReference(&Type::evaluate);
+        if (err != OK) return err;
+    }
+
+    for (auto* annotaion : *mAnnotations) {
+        status_t err = annotaion->evaluate();
+        if (err != OK) return err;
+    }
+
+    return OK;
+}
+
+status_t Method::validate() const {
+    for (const auto* arg : *mArgs) {
+        status_t err = (*arg)->callForReference(&Type::validate);
+        if (err != OK) return err;
+    }
+
+    for (const auto* result : *mResults) {
+        status_t err = (*result)->callForReference(&Type::validate);
+        if (err != OK) return err;
+    }
+
+    for (const auto* annotaion : *mAnnotations) {
+        status_t err = annotaion->validate();
+        if (err != OK) return err;
+    }
+
+    return OK;
 }
 
 void Method::cppImpl(MethodImplType type, Formatter &out) const {
@@ -98,7 +141,7 @@ bool Method::overridesJavaImpl(MethodImplType type) const {
 }
 
 Method *Method::copySignature() const {
-    return new Method(mName.c_str(), mArgs, mResults, mOneway, mAnnotations);
+    return new Method(mName.c_str(), mArgs, mResults, mOneway, mAnnotations, Location());
 }
 
 void Method::setSerialId(size_t serial) {
@@ -231,6 +274,10 @@ const NamedReference<Type>* Method::canElideCallback() const {
     }
 
     return nullptr;
+}
+
+const Location& Method::location() const {
+    return mLocation;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

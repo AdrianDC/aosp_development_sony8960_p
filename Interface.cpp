@@ -30,6 +30,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <unordered_map>
 
 #include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
@@ -454,26 +455,87 @@ bool Interface::addMethod(Method *method) {
     }
 
     CHECK(!method->isHidlReserved());
-    if (lookupMethod(method->name()) != nullptr) {
-        LOG(ERROR) << "Redefinition of method " << method->name();
-        return false;
-    }
-    size_t serial = FIRST_CALL_TRANSACTION;
-
-    serial += userDefinedMethods().size();
-
-    const Interface* ancestor = superType();
-    while (ancestor != nullptr) {
-        serial += ancestor->userDefinedMethods().size();
-        ancestor = ancestor->superType();
-    }
-
-    CHECK(serial <= LAST_CALL_TRANSACTION) << "More than "
-            << LAST_CALL_TRANSACTION << " methods are not allowed.";
-    method->setSerialId(serial);
     mUserMethods.push_back(method);
 
     return true;
+}
+
+status_t Interface::resolveInheritance() {
+    size_t serial = FIRST_CALL_TRANSACTION;
+    for (const auto* ancestor : superTypeChain()) {
+        serial += ancestor->mUserMethods.size();
+    }
+
+    for (Method* method : mUserMethods) {
+        if (serial > LAST_CALL_TRANSACTION) {
+            std::cerr << "ERROR: More than " << LAST_CALL_TRANSACTION
+                      << " methods (including super and reserved) are not allowed at " << location()
+                      << "\n";
+            return UNKNOWN_ERROR;
+        }
+
+        method->setSerialId(serial);
+        serial++;
+    }
+
+    return Scope::resolveInheritance();
+}
+
+status_t Interface::evaluate() {
+    for (auto* method : methods()) {
+        status_t err = method->evaluate();
+        if (err != OK) return err;
+    }
+
+    return Scope::evaluate();
+}
+
+status_t Interface::validate() const {
+    CHECK(isIBase() == mSuperType.isEmptyReference());
+
+    for (const auto* method : methods()) {
+        status_t err = method->validate();
+        if (err != OK) return err;
+    }
+
+    status_t err = validateUniqueNames();
+    if (err != OK) return err;
+
+    return Scope::validate();
+}
+
+status_t Interface::validateUniqueNames() const {
+    std::unordered_map<std::string, const Interface*> registeredMethodNames;
+    for (auto const& tuple : allSuperMethodsFromRoot()) {
+        // No need to check super method uniqueness
+        registeredMethodNames[tuple.method()->name()] = tuple.interface();
+    }
+
+    for (const Method* method : mUserMethods) {
+        auto registered = registeredMethodNames.find(method->name());
+
+        if (registered != registeredMethodNames.end()) {
+            const Interface* definedInType = registered->second;
+
+            if (definedInType == this) {
+                // Defined in this interface
+                std::cerr << "ERROR: Redefinition of method '" << method->name() << "'";
+            } else if (definedInType->isIBase()) {
+                // Defined in IBase
+                std::cerr << "ERROR: Redefinition of reserved method '" << method->name() << "'";
+            } else {
+                // Defined in super not IBase
+                std::cerr << "ERROR: Redefinition of method '" << method->name()
+                          << "'' defined in interface '" << definedInType->fullName() << "'";
+            }
+            std::cerr << " at " << method->location() << "\n";
+            return UNKNOWN_ERROR;
+        }
+
+        registeredMethodNames[method->name()] = this;
+    }
+
+    return OK;
 }
 
 bool Interface::addAllReservedMethods() {

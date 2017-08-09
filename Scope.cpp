@@ -126,6 +126,36 @@ status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
     return OK;
 }
 
+status_t Scope::resolveInheritance() {
+    status_t err = forEachType(&Type::resolveInheritance);
+    if (err != OK) return err;
+    return NamedType::resolveInheritance();
+}
+
+status_t Scope::evaluate() {
+    status_t err = forEachType(&Type::evaluate);
+    if (err != OK) return err;
+
+    for (auto* annotation : mAnnotations) {
+        err = annotation->evaluate();
+        if (err != OK) return err;
+    }
+
+    return NamedType::evaluate();
+}
+
+status_t Scope::validate() const {
+    status_t err = forEachType(&Type::validate);
+    if (err != OK) return err;
+
+    for (const auto* annotation : mAnnotations) {
+        err = annotation->validate();
+        if (err != OK) return err;
+    }
+
+    return NamedType::validate();
+}
+
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
     return forEachType([&](Type *type) {
         return type->emitTypeDeclarations(out);
@@ -195,6 +225,8 @@ void Scope::appendToExportedTypesVector(
     });
 }
 
+////////////////////////////////////////
+
 RootScope::RootScope(const char* localName, const Location& location, Scope* parent)
     : Scope(localName, location, parent) {}
 RootScope::~RootScope() {}
@@ -202,6 +234,13 @@ RootScope::~RootScope() {}
 std::string RootScope::typeName() const {
     return "(root scope)";
 }
+
+status_t RootScope::validate() const {
+    CHECK(annotations().empty());
+    return Scope::validate();
+}
+
+////////////////////////////////////////
 
 LocalIdentifier::LocalIdentifier(){}
 LocalIdentifier::~LocalIdentifier(){}
@@ -212,6 +251,15 @@ bool LocalIdentifier::isEnumValue() const {
 
 ConstantExpression* LocalIdentifier::constExpr() const {
     return nullptr;
+}
+
+status_t LocalIdentifier::evaluate() {
+    return OK;
+}
+
+status_t LocalIdentifier::validate() const {
+    CHECK(isEnumValue());
+    return OK;
 }
 
 }  // namespace android

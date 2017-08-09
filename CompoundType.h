@@ -35,13 +35,17 @@ struct CompoundType : public Scope {
 
     Style style() const;
 
-    bool setFields(std::vector<NamedReference<Type>*>* fields, std::string* errorMsg);
+    void setFields(std::vector<NamedReference<Type>*>* fields);
 
     bool isCompoundType() const override;
 
     bool canCheckEquality() const override;
 
     std::string typeName() const override;
+
+    status_t evaluate() override;
+    status_t validate() const override;
+    status_t validateUniqueNames() const;
 
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;

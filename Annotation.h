@@ -42,6 +42,9 @@ struct AnnotationParam {
     /* Returns value interpretted as a boolean */
     bool getSingleBool() const;
 
+    virtual status_t evaluate();
+    virtual status_t validate() const;
+
    protected:
     const std::string mName;
 
@@ -65,10 +68,10 @@ struct ConstantExpressionAnnotationParam : AnnotationParam {
     std::vector<std::string> getValues() const override;
     std::string getSingleValue() const override;
 
+    status_t evaluate() override;
+
    private:
     std::vector<ConstantExpression*>* const mValues;
-
-    static std::string convertToString(const ConstantExpression* ce);
 };
 
 using AnnotationParamVector = std::vector<AnnotationParam*>;
@@ -80,9 +83,12 @@ struct Annotation {
     const AnnotationParamVector &params() const;
     const AnnotationParam *getParam(const std::string &name) const;
 
+    status_t evaluate();
+    status_t validate() const;
+
     void dump(Formatter &out) const;
 
-private:
+   private:
     std::string mName;
     AnnotationParamVector *mParams;
 
