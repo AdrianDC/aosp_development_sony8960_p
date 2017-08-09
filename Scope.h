@@ -25,7 +25,6 @@
 
 namespace android {
 
-struct ConstantExpression;
 struct Formatter;
 struct Interface;
 struct LocalIdentifier;
@@ -89,8 +88,6 @@ struct LocalIdentifier {
     LocalIdentifier();
     virtual ~LocalIdentifier();
     virtual bool isEnumValue() const;
-
-    virtual ConstantExpression* constExpr() const;
 };
 
 }  // namespace android
