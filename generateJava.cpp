@@ -19,6 +19,7 @@
 #include "Coordinator.h"
 #include "Interface.h"
 #include "Method.h"
+#include "Reference.h"
 #include "Scope.h"
 
 #include <hidl-util/Formatter.h>
@@ -26,12 +27,9 @@
 
 namespace android {
 
-void AST::emitJavaReaderWriter(
-        Formatter &out,
-        const std::string &parcelObj,
-        const TypedVar *arg,
-        bool isReader,
-        bool addPrefixToName) const {
+void AST::emitJavaReaderWriter(Formatter& out, const std::string& parcelObj,
+                               const NamedReference<Type>* arg, bool isReader,
+                               bool addPrefixToName) const {
     if (isReader) {
         out << arg->type().getJavaType()
             << " "
@@ -602,7 +600,7 @@ status_t AST::generateJava(
         }
 
         if (!needsCallback && returnsValue) {
-            const TypedVar *returnArg = method->results()[0];
+            const NamedReference<Type>* returnArg = method->results()[0];
 
             out << returnArg->type().getJavaType()
                 << " _hidl_out_"
@@ -663,7 +661,7 @@ status_t AST::generateJava(
             out << "_hidl_reply.writeStatus(android.os.HwParcel.STATUS_SUCCESS);\n";
 
             if (returnsValue) {
-                const TypedVar *returnArg = method->results()[0];
+                const NamedReference<Type>* returnArg = method->results()[0];
 
                 emitJavaReaderWriter(
                         out,

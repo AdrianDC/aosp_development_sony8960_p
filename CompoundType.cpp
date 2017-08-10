@@ -31,8 +31,7 @@ CompoundType::Style CompoundType::style() const {
     return mStyle;
 }
 
-bool CompoundType::setFields(
-        std::vector<CompoundField *> *fields, std::string *errorMsg) {
+bool CompoundType::setFields(std::vector<NamedReference<Type>*>* fields, std::string* errorMsg) {
     mFields = fields;
 
     for (const auto &field : *fields) {
@@ -522,7 +521,7 @@ status_t CompoundType::emitTypeDefinitions(
             << "std::string os;\n";
         out << "os += \"{\";\n";
 
-        for (const CompoundField *field : *mFields) {
+        for (const NamedReference<Type>* field : *mFields) {
             out << "os += \"";
             if (field != *(mFields->begin())) {
                 out << ", ";
@@ -1111,21 +1110,6 @@ void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {
         // An empty struct still occupies a byte of space in C++.
         *size = 1;
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CompoundField::CompoundField(const char* name, const Reference<Type>& type)
-    : mName(name), mType(type) {
-    CHECK(!type.isEmptyReference());
-}
-
-std::string CompoundField::name() const {
-    return mName;
-}
-
-const Type &CompoundField::type() const {
-    return *(mType.get());
 }
 
 }  // namespace android
