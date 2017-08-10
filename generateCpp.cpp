@@ -18,9 +18,10 @@
 
 #include "Coordinator.h"
 #include "EnumType.h"
-#include "Interface.h"
 #include "HidlTypeAssertion.h"
+#include "Interface.h"
 #include "Method.h"
+#include "Reference.h"
 #include "ScalarType.h"
 #include "Scope.h"
 
@@ -489,7 +490,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
             out << "\n";
 
             const bool returnsValue = !method->results().empty();
-            const TypedVar *elidedReturn = method->canElideCallback();
+            const NamedReference<Type>* elidedReturn = method->canElideCallback();
 
             if (elidedReturn == nullptr && returnsValue) {
                 out << "using "
@@ -624,9 +625,8 @@ status_t AST::emitTypeDeclarations(Formatter &out) const {
     return mRootScope.emitTypeDeclarations(out);
 }
 
-static void wrapPassthroughArg(Formatter &out,
-        const TypedVar *arg, bool addPrefixToName,
-        std::function<void(void)> handleError) {
+static void wrapPassthroughArg(Formatter& out, const NamedReference<Type>* arg,
+                               bool addPrefixToName, std::function<void(void)> handleError) {
     if (!arg->type().isInterface()) {
         return;
     }
@@ -670,7 +670,7 @@ status_t AST::generatePassthroughMethod(Formatter &out,
     }
 
     const bool returnsValue = !method->results().empty();
-    const TypedVar *elidedReturn = method->canElideCallback();
+    const NamedReference<Type>* elidedReturn = method->canElideCallback();
 
     if (returnsValue && elidedReturn == nullptr) {
         generateCheckNonNull(out, "_hidl_cb");
@@ -932,7 +932,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
             return OK;
         }
         const bool returnsValue = !method->results().empty();
-        const TypedVar *elidedReturn = method->canElideCallback();
+        const NamedReference<Type>* elidedReturn = method->canElideCallback();
 
         if (elidedReturn == nullptr && returnsValue) {
             out << "using " << method->name() << "_cb = "
@@ -1233,10 +1233,8 @@ status_t AST::generateTypeSource(
     return mRootScope.emitTypeDefinitions(out, ifaceName);
 }
 
-void AST::declareCppReaderLocals(
-        Formatter &out,
-        const std::vector<TypedVar *> &args,
-        bool forResults) const {
+void AST::declareCppReaderLocals(Formatter& out, const std::vector<NamedReference<Type>*>& args,
+                                 bool forResults) const {
     if (args.empty()) {
         return;
     }
@@ -1253,14 +1251,9 @@ void AST::declareCppReaderLocals(
     out << "\n";
 }
 
-void AST::emitCppReaderWriter(
-        Formatter &out,
-        const std::string &parcelObj,
-        bool parcelObjIsPointer,
-        const TypedVar *arg,
-        bool isReader,
-        Type::ErrorMode mode,
-        bool addPrefixToName) const {
+void AST::emitCppReaderWriter(Formatter& out, const std::string& parcelObj, bool parcelObjIsPointer,
+                              const NamedReference<Type>* arg, bool isReader, Type::ErrorMode mode,
+                              bool addPrefixToName) const {
     const Type &type = arg->type();
 
     type.emitReaderWriter(
@@ -1272,14 +1265,10 @@ void AST::emitCppReaderWriter(
             mode);
 }
 
-void AST::emitCppResolveReferences(
-        Formatter &out,
-        const std::string &parcelObj,
-        bool parcelObjIsPointer,
-        const TypedVar *arg,
-        bool isReader,
-        Type::ErrorMode mode,
-        bool addPrefixToName) const {
+void AST::emitCppResolveReferences(Formatter& out, const std::string& parcelObj,
+                                   bool parcelObjIsPointer, const NamedReference<Type>* arg,
+                                   bool isReader, Type::ErrorMode mode,
+                                   bool addPrefixToName) const {
     const Type &type = arg->type();
     if(type.needsResolveReferences()) {
         type.emitResolveReferences(
@@ -1312,7 +1301,7 @@ status_t AST::generateProxyMethodSource(Formatter &out,
 
     out.block([&] {
         const bool returnsValue = !method->results().empty();
-        const TypedVar *elidedReturn = method->canElideCallback();
+        const NamedReference<Type>* elidedReturn = method->canElideCallback();
 
         method->generateCppReturnType(out);
 
@@ -1380,7 +1369,7 @@ status_t AST::generateStaticProxyMethodSource(Formatter &out,
     out << "#endif // __ANDROID_DEBUGGABLE__\n";
 
     const bool returnsValue = !method->results().empty();
-    const TypedVar *elidedReturn = method->canElideCallback();
+    const NamedReference<Type>* elidedReturn = method->canElideCallback();
     if (returnsValue && elidedReturn == nullptr) {
         generateCheckNonNull(out, "_hidl_cb");
     }
@@ -1824,7 +1813,7 @@ status_t AST::generateStaticStubMethodSource(Formatter &out,
             method);
 
     const bool returnsValue = !method->results().empty();
-    const TypedVar *elidedReturn = method->canElideCallback();
+    const NamedReference<Type>* elidedReturn = method->canElideCallback();
     const std::string callee = "static_cast<" + klassName + "*>(_hidl_this)->_hidl_mImpl";
 
     if (elidedReturn != nullptr) {

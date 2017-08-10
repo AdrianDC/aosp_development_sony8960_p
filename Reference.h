@@ -105,6 +105,22 @@ struct Reference {
     friend struct Reference;
 };
 
+template <class T>
+struct NamedReference {
+    NamedReference(const std::string& name, const Reference<T>& reference)
+        : mName(name), mReference(reference) {}
+
+    const std::string& name() const { return mName; }
+    const T& type() const { return *mReference.get(); }
+    const T* operator->() const { return mReference.get(); }
+
+   private:
+    const std::string mName;
+    const Reference<T> mReference;
+
+    DISALLOW_COPY_AND_ASSIGN(NamedReference<T>);
+};
+
 }  // namespace android
 
 #endif  // REFERENCE_H_

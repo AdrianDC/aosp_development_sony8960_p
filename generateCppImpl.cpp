@@ -20,6 +20,7 @@
 #include "EnumType.h"
 #include "Interface.h"
 #include "Method.h"
+#include "Reference.h"
 #include "ScalarType.h"
 #include "Scope.h"
 
@@ -62,7 +63,7 @@ status_t AST::generateStubImplMethod(Formatter &out,
     out.indent();
     out << "// TODO implement\n";
 
-    const TypedVar *elidedReturn = method->canElideCallback();
+    const NamedReference<Type>* elidedReturn = method->canElideCallback();
 
     if (elidedReturn == nullptr) {
         out << "return Void();\n";

@@ -31,13 +31,15 @@
 namespace android {
 
 struct Coordinator;
+struct EnumValue;
 struct Formatter;
 struct Interface;
 struct Location;
 struct Method;
 struct NamedType;
-struct TypedVar;
-struct EnumValue;
+template <class T>
+struct NamedReference;
+struct Type;
 
 struct AST {
     AST(const Coordinator *coordinator, const std::string &path);
@@ -242,35 +244,20 @@ struct AST {
             InstrumentationEvent event,
             const Method *method) const;
 
-    void declareCppReaderLocals(
-            Formatter &out,
-            const std::vector<TypedVar *> &arg,
-            bool forResults) const;
+    void declareCppReaderLocals(Formatter& out, const std::vector<NamedReference<Type>*>& arg,
+                                bool forResults) const;
 
-    void emitCppReaderWriter(
-            Formatter &out,
-            const std::string &parcelObj,
-            bool parcelObjIsPointer,
-            const TypedVar *arg,
-            bool isReader,
-            Type::ErrorMode mode,
-            bool addPrefixToName) const;
+    void emitCppReaderWriter(Formatter& out, const std::string& parcelObj, bool parcelObjIsPointer,
+                             const NamedReference<Type>* arg, bool isReader, Type::ErrorMode mode,
+                             bool addPrefixToName) const;
 
-    void emitCppResolveReferences(
-            Formatter &out,
-            const std::string &parcelObj,
-            bool parcelObjIsPointer,
-            const TypedVar *arg,
-            bool isReader,
-            Type::ErrorMode mode,
-            bool addPrefixToName) const;
+    void emitCppResolveReferences(Formatter& out, const std::string& parcelObj,
+                                  bool parcelObjIsPointer, const NamedReference<Type>* arg,
+                                  bool isReader, Type::ErrorMode mode, bool addPrefixToName) const;
 
-    void emitJavaReaderWriter(
-            Formatter &out,
-            const std::string &parcelObj,
-            const TypedVar *arg,
-            bool isReader,
-            bool addPrefixToName) const;
+    void emitJavaReaderWriter(Formatter& out, const std::string& parcelObj,
+                              const NamedReference<Type>* arg, bool isReader,
+                              bool addPrefixToName) const;
 
     status_t emitTypeDeclarations(Formatter &out) const;
     status_t emitJavaTypeDeclarations(Formatter &out) const;
