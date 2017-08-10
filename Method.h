@@ -34,7 +34,6 @@ struct Annotation;
 struct Formatter;
 struct ScalarType;
 struct Type;
-struct TypedVar;
 struct TypedVarVector;
 
 enum MethodImplType {
@@ -48,15 +47,13 @@ enum MethodImplType {
 using MethodImpl = std::map<MethodImplType, std::function<void(Formatter &)>>;
 
 struct Method {
-    Method(const char *name,
-           std::vector<TypedVar *> *args,
-           std::vector<TypedVar *> *results,
-           bool oneway,
-           std::vector<Annotation *> *annotations);
+    Method(const char* name, std::vector<NamedReference<Type>*>* args,
+           std::vector<NamedReference<Type>*>* results, bool oneway,
+           std::vector<Annotation*>* annotations);
 
     std::string name() const;
-    const std::vector<TypedVar *> &args() const;
-    const std::vector<TypedVar *> &results() const;
+    const std::vector<NamedReference<Type>*>& args() const;
+    const std::vector<NamedReference<Type>*>& results() const;
     bool isOneway() const { return mOneway; }
     bool overridesCppImpl(MethodImplType type) const;
     bool overridesJavaImpl(MethodImplType type) const;
@@ -92,7 +89,7 @@ struct Method {
     void emitJavaArgSignature(Formatter &out) const;
     void emitJavaResultSignature(Formatter &out) const;
 
-    const TypedVar* canElideCallback() const;
+    const NamedReference<Type>* canElideCallback() const;
 
     void dumpAnnotations(Formatter &out) const;
 
@@ -101,8 +98,8 @@ struct Method {
 private:
     std::string mName;
     size_t mSerial = 0;
-    std::vector<TypedVar *> *mArgs;
-    std::vector<TypedVar *> *mResults;
+    std::vector<NamedReference<Type>*>* mArgs;
+    std::vector<NamedReference<Type>*>* mResults;
     bool mOneway;
     std::vector<Annotation *> *mAnnotations;
 
@@ -115,26 +112,12 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Method);
 };
 
-struct TypedVar {
-    TypedVar(const char* name, const Reference<Type>& type);
-
-    std::string name() const;
-    const Type &type() const;
-
-    bool isJavaCompatible() const;
-
-private:
-    std::string mName;
-    Reference<Type> mType;
-
-    DISALLOW_COPY_AND_ASSIGN(TypedVar);
-};
-
-struct TypedVarVector : public std::vector<TypedVar *> {
+struct TypedVarVector : public std::vector<NamedReference<Type>*> {
     TypedVarVector() = default;
 
-    bool add(TypedVar *v);
-private:
+    bool add(NamedReference<Type>* v);
+
+   private:
     std::set<std::string> mNames;
 };
 
