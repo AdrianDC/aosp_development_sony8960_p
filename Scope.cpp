@@ -200,9 +200,5 @@ bool LocalIdentifier::isEnumValue() const {
     return false;
 }
 
-ConstantExpression* LocalIdentifier::constExpr() const {
-    return nullptr;
-}
-
 }  // namespace android
 
