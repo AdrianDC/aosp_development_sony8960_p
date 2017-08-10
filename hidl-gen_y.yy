@@ -425,7 +425,6 @@ annotation_const_expr_value
     : const_expr
       {
           $$ = new std::vector<ConstantExpression *>;
-          $1->evaluate();
           $$->push_back($1);
       }
     | '{' annotation_const_expr_values '}' { $$ = $2; }
@@ -435,13 +434,11 @@ annotation_const_expr_values
     : const_expr
       {
           $$ = new std::vector<ConstantExpression *>;
-          $1->evaluate();
           $$->push_back($1);
       }
     | annotation_const_expr_values ',' const_expr
       {
           $$ = $1;
-          $3->evaluate();
           $$->push_back($3);
       }
     ;
@@ -760,7 +757,7 @@ typedef_declaration
     ;
 
 const_expr
-    : INTEGER                   { $$ = new LiteralConstantExpression($1); }
+    : INTEGER                   { $$ = new ConstantExpression($1); }
     | fqname
       {
           if(!$1->isValidValueName()) {
@@ -769,7 +766,6 @@ const_expr
                         << @1 << ".\n";
               YYERROR;
           }
-
           if($1->isIdentifier()) {
               std::string identifier = $1->name();
               LocalIdentifier *iden = (*scope)->lookupIdentifier(identifier);
@@ -783,8 +779,8 @@ const_expr
                             << " is not an enum value at " << @1 << ".\n";
                   YYERROR;
               }
-              $$ = new ReferenceConstantExpression(
-                  Reference<LocalIdentifier>(iden, convertYYLoc(@1)), $1->string());
+              $$ = new ConstantExpression(
+                      *(static_cast<EnumValue *>(iden)->constExpr()), $1->string());
           } else {
               std::string errorMsg;
               EnumValue* v = ast->lookupEnumValue(*$1, &errorMsg, *scope);
@@ -793,42 +789,42 @@ const_expr
                   YYERROR;
               }
 
-              $$ = new ReferenceConstantExpression(
-                  Reference<LocalIdentifier>(v, convertYYLoc(@1)), $1->string());
+              // TODO: Support Reference
+              $$ = new ConstantExpression(*(v->constExpr()), $1->string());
           }
       }
     | const_expr '?' const_expr ':' const_expr
       {
-          $$ = new TernaryConstantExpression($1, $3, $5);
+          $$ = new ConstantExpression($1, $3, $5);
       }
-    | const_expr LOGICAL_OR const_expr  { $$ = new BinaryConstantExpression($1, "||", $3); }
-    | const_expr LOGICAL_AND const_expr { $$ = new BinaryConstantExpression($1, "&&", $3); }
-    | const_expr '|' const_expr { $$ = new BinaryConstantExpression($1, "|" , $3); }
-    | const_expr '^' const_expr { $$ = new BinaryConstantExpression($1, "^" , $3); }
-    | const_expr '&' const_expr { $$ = new BinaryConstantExpression($1, "&" , $3); }
-    | const_expr EQUALITY const_expr { $$ = new BinaryConstantExpression($1, "==", $3); }
-    | const_expr NEQ const_expr { $$ = new BinaryConstantExpression($1, "!=", $3); }
-    | const_expr '<' const_expr { $$ = new BinaryConstantExpression($1, "<" , $3); }
-    | const_expr '>' const_expr { $$ = new BinaryConstantExpression($1, ">" , $3); }
-    | const_expr LEQ const_expr { $$ = new BinaryConstantExpression($1, "<=", $3); }
-    | const_expr GEQ const_expr { $$ = new BinaryConstantExpression($1, ">=", $3); }
-    | const_expr LSHIFT const_expr { $$ = new BinaryConstantExpression($1, "<<", $3); }
-    | const_expr RSHIFT const_expr { $$ = new BinaryConstantExpression($1, ">>", $3); }
-    | const_expr '+' const_expr { $$ = new BinaryConstantExpression($1, "+" , $3); }
-    | const_expr '-' const_expr { $$ = new BinaryConstantExpression($1, "-" , $3); }
-    | const_expr '*' const_expr { $$ = new BinaryConstantExpression($1, "*" , $3); }
-    | const_expr '/' const_expr { $$ = new BinaryConstantExpression($1, "/" , $3); }
-    | const_expr '%' const_expr { $$ = new BinaryConstantExpression($1, "%" , $3); }
-    | '+' const_expr %prec UNARY_PLUS  { $$ = new UnaryConstantExpression("+", $2); }
-    | '-' const_expr %prec UNARY_MINUS { $$ = new UnaryConstantExpression("-", $2); }
-    | '!' const_expr { $$ = new UnaryConstantExpression("!", $2); }
-    | '~' const_expr { $$ = new UnaryConstantExpression("~", $2); }
+    | const_expr LOGICAL_OR const_expr  { $$ = new ConstantExpression($1, "||", $3); }
+    | const_expr LOGICAL_AND const_expr { $$ = new ConstantExpression($1, "&&", $3); }
+    | const_expr '|' const_expr { $$ = new ConstantExpression($1, "|" , $3); }
+    | const_expr '^' const_expr { $$ = new ConstantExpression($1, "^" , $3); }
+    | const_expr '&' const_expr { $$ = new ConstantExpression($1, "&" , $3); }
+    | const_expr EQUALITY const_expr { $$ = new ConstantExpression($1, "==", $3); }
+    | const_expr NEQ const_expr { $$ = new ConstantExpression($1, "!=", $3); }
+    | const_expr '<' const_expr { $$ = new ConstantExpression($1, "<" , $3); }
+    | const_expr '>' const_expr { $$ = new ConstantExpression($1, ">" , $3); }
+    | const_expr LEQ const_expr { $$ = new ConstantExpression($1, "<=", $3); }
+    | const_expr GEQ const_expr { $$ = new ConstantExpression($1, ">=", $3); }
+    | const_expr LSHIFT const_expr { $$ = new ConstantExpression($1, "<<", $3); }
+    | const_expr RSHIFT const_expr { $$ = new ConstantExpression($1, ">>", $3); }
+    | const_expr '+' const_expr { $$ = new ConstantExpression($1, "+" , $3); }
+    | const_expr '-' const_expr { $$ = new ConstantExpression($1, "-" , $3); }
+    | const_expr '*' const_expr { $$ = new ConstantExpression($1, "*" , $3); }
+    | const_expr '/' const_expr { $$ = new ConstantExpression($1, "/" , $3); }
+    | const_expr '%' const_expr { $$ = new ConstantExpression($1, "%" , $3); }
+    | '+' const_expr %prec UNARY_PLUS  { $$ = new ConstantExpression("+", $2); }
+    | '-' const_expr %prec UNARY_MINUS { $$ = new ConstantExpression("-", $2); }
+    | '!' const_expr { $$ = new ConstantExpression("!", $2); }
+    | '~' const_expr { $$ = new ConstantExpression("~", $2); }
     | '(' const_expr ')' { $$ = $2; }
     | '(' error ')'
       {
         ast->addSyntaxError();
         // to avoid segfaults
-        $$ = ConstantExpression::Zero(ScalarType::KIND_INT32).release();
+        $$ = new ConstantExpression(ConstantExpression::Zero(ScalarType::KIND_INT32));
       }
     ;
 
@@ -1024,7 +1020,7 @@ enum_declaration_body
 
 enum_value
     : valid_identifier { $$ = new EnumValue($1); }
-    | valid_identifier '=' const_expr { $3->evaluate(); $$ = new EnumValue($1, $3); }
+    | valid_identifier '=' const_expr { $$ = new EnumValue($1, $3); }
     ;
 
 enum_values
@@ -1100,8 +1096,6 @@ array_type
 
               YYERROR;
           }
-
-          $3->evaluate();
           if (type.isResolved() && type->isArray()) {
               $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3);
           } else {
@@ -1111,7 +1105,6 @@ array_type
     | array_type '[' const_expr ']'
       {
           $$ = $1;
-          $3->evaluate();
           $$->appendDimension($3);
       }
     ;
