@@ -117,12 +117,12 @@ struct LiteralConstantExpression : public ConstantExpression {
 };
 
 struct UnaryConstantExpression : public ConstantExpression {
-    UnaryConstantExpression(const std::string& op, ConstantExpression* value);
+    UnaryConstantExpression(const std::string& mOp, ConstantExpression* value);
     void evaluate() override;
 
    private:
-    ConstantExpression* const value;
-    std::string op;
+    ConstantExpression* const mUnary;
+    std::string mOp;
 };
 
 struct BinaryConstantExpression : public ConstantExpression {
@@ -131,9 +131,9 @@ struct BinaryConstantExpression : public ConstantExpression {
     void evaluate() override;
 
    private:
-    ConstantExpression* const lval;
-    ConstantExpression* const rval;
-    const std::string op;
+    ConstantExpression* const mLval;
+    ConstantExpression* const mRval;
+    const std::string mOp;
 };
 
 struct TernaryConstantExpression : public ConstantExpression {
@@ -142,9 +142,9 @@ struct TernaryConstantExpression : public ConstantExpression {
     void evaluate() override;
 
    private:
-    ConstantExpression* const cond;
-    ConstantExpression* const trueVal;
-    ConstantExpression* const falseVal;
+    ConstantExpression* const mCond;
+    ConstantExpression* const mTrueVal;
+    ConstantExpression* const mFalseVal;
 };
 
 struct ReferenceConstantExpression : public ConstantExpression {
@@ -152,7 +152,7 @@ struct ReferenceConstantExpression : public ConstantExpression {
     void evaluate() override;
 
    private:
-    Reference<LocalIdentifier> value;
+    Reference<LocalIdentifier> mReference;
 };
 
 }  // namespace android
