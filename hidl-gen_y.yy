@@ -296,12 +296,12 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
     android::TemplatedType *templatedType;
     android::FQName *fqName;
     android::CompoundType *compoundType;
-    android::CompoundField *field;
-    std::vector<android::CompoundField *> *fields;
+    android::NamedReference<android::Type>* field;
+    std::vector<android::NamedReference<android::Type>*>* fields;
     android::EnumValue *enumValue;
     android::ConstantExpression *constantExpression;
     std::vector<android::EnumValue *> *enumValues;
-    android::TypedVar *typedVar;
+    android::NamedReference<android::Type>* typedVar;
     android::TypedVarVector *typedVars;
     android::Method *method;
     android::CompoundType::Style compoundStyle;
@@ -836,11 +836,11 @@ method_declaration
     : error_stmt { $$ = nullptr; }
     | opt_annotations valid_identifier '(' typed_vars ')' require_semicolon
       {
-          $$ = new Method($2, $4, new std::vector<TypedVar *>, false, $1);
+          $$ = new Method($2, $4, new std::vector<NamedReference<Type>*>, false, $1);
       }
     | opt_annotations ONEWAY valid_identifier '(' typed_vars ')' require_semicolon
       {
-          $$ = new Method($3, $5, new std::vector<TypedVar *>, true, $1);
+          $$ = new Method($3, $5, new std::vector<NamedReference<Type>*>, true, $1);
       }
     | opt_annotations valid_identifier '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
       {
@@ -873,7 +873,7 @@ typed_vars
       }
     ;
 
-typed_var : type valid_identifier { $$ = new TypedVar($2, *$1); }
+typed_var : type valid_identifier { $$ = new NamedReference<Type>($2, *$1); }
     ;
 
 
@@ -919,7 +919,7 @@ struct_or_union_body
     ;
 
 field_declarations
-    : /* empty */ { $$ = new std::vector<CompoundField *>; }
+    : /* empty */ { $$ = new std::vector<NamedReference<Type>*>; }
     | field_declarations field_declaration
       {
           $$ = $1;
@@ -943,7 +943,7 @@ field_declaration
                       << @2 << "\n";
             YYERROR;
         }
-        $$ = new CompoundField($2, *$1);
+        $$ = new NamedReference<Type>($2, *$1);
       }
     | annotated_compound_declaration ';'
       {
