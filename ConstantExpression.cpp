@@ -28,9 +28,9 @@
 // The macros are really nasty here. Consider removing
 // as many macros as possible.
 
-#define OPEQ(__y__) (std::string(op) == std::string(__y__))
-#define COMPUTE_UNARY(__op__)  if(OPEQ(#__op__)) return __op__ val;
-#define COMPUTE_BINARY(__op__) if(OPEQ(#__op__)) return lval __op__ rval;
+#define OPEQ(__y__) (std::string(mOp) == std::string(__y__))
+#define COMPUTE_UNARY(__op__)  if (op == std::string(#__op__)) return __op__ val;
+#define COMPUTE_BINARY(__op__) if (op == std::string(#__op__)) return lval __op__ rval;
 #define OP_IS_BIN_ARITHMETIC  (OPEQ("+") || OPEQ("-") || OPEQ("*") || OPEQ("/") || OPEQ("%"))
 #define OP_IS_BIN_BITFLIP     (OPEQ("|") || OPEQ("^") || OPEQ("&"))
 #define OP_IS_BIN_COMP        (OPEQ("<") || OPEQ(">") || OPEQ("<=") || OPEQ(">=") || OPEQ("==") || OPEQ("!="))
@@ -135,7 +135,7 @@ T handleShift(T lval, const std::string& op, int64_t rval) {
     COMPUTE_BINARY(>>)
     COMPUTE_BINARY(<<)
     // Should not reach here.
-    SHOULD_NOT_REACH() << "Could not handleShift for"
+    SHOULD_NOT_REACH() << "Could not handleShift for "
                        << lval << " " << op << " " << rval;
     return static_cast<T>(0xdeadbeef);
 }
@@ -144,7 +144,7 @@ bool handleLogical(bool lval, const std::string& op, bool rval) {
     COMPUTE_BINARY(||);
     COMPUTE_BINARY(&&);
     // Should not reach here.
-    SHOULD_NOT_REACH() << "Could not handleLogical for"
+    SHOULD_NOT_REACH() << "Could not handleLogical for "
                        << lval << " " << op << " " << rval;
     return false;
 }
@@ -235,14 +235,14 @@ void LiteralConstantExpression::evaluate() {
 
 void UnaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    value->evaluate();
+    mUnary->evaluate();
     mIsEvaluated = true;
 
-    mExpr = std::string("(") + op + value->description() + ")";
-    mValueKind = value->mValueKind;
+    mExpr = std::string("(") + mOp + mUnary->description() + ")";
+    mValueKind = mUnary->mValueKind;
 
-#define CASE_UNARY(__type__)                                        \
-    mValue = handleUnary(op, static_cast<__type__>(value->mValue)); \
+#define CASE_UNARY(__type__)                                          \
+    mValue = handleUnary(mOp, static_cast<__type__>(mUnary->mValue)); \
     return;
 
     SWITCH_KIND(mValueKind, CASE_UNARY, SHOULD_NOT_REACH(); return;)
@@ -250,38 +250,38 @@ void UnaryConstantExpression::evaluate() {
 
 void BinaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    lval->evaluate();
-    rval->evaluate();
+    mLval->evaluate();
+    mRval->evaluate();
     mIsEvaluated = true;
 
-    mExpr = std::string("(") + lval->description() + " " + op + " " + rval->description() + ")";
+    mExpr = std::string("(") + mLval->description() + " " + mOp + " " + mRval->description() + ")";
 
     bool isArithmeticOrBitflip = OP_IS_BIN_ARITHMETIC || OP_IS_BIN_BITFLIP;
 
     // CASE 1: + - *  / % | ^ & < > <= >= == !=
     if(isArithmeticOrBitflip || OP_IS_BIN_COMP) {
         // promoted kind for both operands.
-        ScalarType::Kind promoted = usualArithmeticConversion(integralPromotion(lval->mValueKind),
-                                                              integralPromotion(rval->mValueKind));
+        ScalarType::Kind promoted = usualArithmeticConversion(integralPromotion(mLval->mValueKind),
+                                                              integralPromotion(mRval->mValueKind));
         // result kind.
         mValueKind = isArithmeticOrBitflip
                     ? promoted // arithmetic or bitflip operators generates promoted type
                     : SK(BOOL); // comparison operators generates bool
 
-#define CASE_BINARY_COMMON(__type__)                                     \
-    mValue = handleBinaryCommon(static_cast<__type__>(lval->mValue), op, \
-                                static_cast<__type__>(rval->mValue));    \
+#define CASE_BINARY_COMMON(__type__)                                       \
+    mValue = handleBinaryCommon(static_cast<__type__>(mLval->mValue), mOp, \
+                                static_cast<__type__>(mRval->mValue));     \
     return;
 
         SWITCH_KIND(promoted, CASE_BINARY_COMMON, SHOULD_NOT_REACH(); return;)
     }
 
     // CASE 2: << >>
-    std::string newOp = op;
+    std::string newOp = mOp;
     if(OP_IS_BIN_SHIFT) {
-        mValueKind = integralPromotion(lval->mValueKind);
+        mValueKind = integralPromotion(mLval->mValueKind);
         // instead of promoting rval, simply casting it to int64 should also be good.
-        int64_t numBits = rval->cast<int64_t>();
+        int64_t numBits = mRval->cast<int64_t>();
         if(numBits < 0) {
             // shifting with negative number of bits is undefined in C. In HIDL it
             // is defined as shifting into the other direction.
@@ -289,8 +289,8 @@ void BinaryConstantExpression::evaluate() {
             numBits = -numBits;
         }
 
-#define CASE_SHIFT(__type__)                                                   \
-    mValue = handleShift(static_cast<__type__>(lval->mValue), newOp, numBits); \
+#define CASE_SHIFT(__type__)                                                    \
+    mValue = handleShift(static_cast<__type__>(mLval->mValue), newOp, numBits); \
     return;
 
         SWITCH_KIND(mValueKind, CASE_SHIFT, SHOULD_NOT_REACH(); return;)
@@ -300,7 +300,7 @@ void BinaryConstantExpression::evaluate() {
     if(OP_IS_BIN_LOGICAL) {
         mValueKind = SK(BOOL);
         // easy; everything is bool.
-        mValue = handleLogical(lval->mValue, op, rval->mValue);
+        mValue = handleLogical(mLval->mValue, mOp, mRval->mValue);
         return;
     }
 
@@ -309,20 +309,20 @@ void BinaryConstantExpression::evaluate() {
 
 void TernaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    cond->evaluate();
-    trueVal->evaluate();
-    falseVal->evaluate();
+    mCond->evaluate();
+    mTrueVal->evaluate();
+    mFalseVal->evaluate();
     mIsEvaluated = true;
 
-    mExpr = std::string("(") + cond->description() + "?" + trueVal->description() + ":" +
-            falseVal->description() + ")";
+    mExpr = std::string("(") + mCond->description() + "?" + mTrueVal->description() + ":" +
+            mFalseVal->description() + ")";
 
     // note: for ?:, unlike arithmetic ops, integral promotion is not necessary.
-    mValueKind = usualArithmeticConversion(trueVal->mValueKind, falseVal->mValueKind);
+    mValueKind = usualArithmeticConversion(mTrueVal->mValueKind, mFalseVal->mValueKind);
 
-#define CASE_TERNARY(__type__)                                         \
-    mValue = cond->mValue ? (static_cast<__type__>(trueVal->mValue))   \
-                          : (static_cast<__type__>(falseVal->mValue)); \
+#define CASE_TERNARY(__type__)                                           \
+    mValue = mCond->mValue ? (static_cast<__type__>(mTrueVal->mValue))   \
+                           : (static_cast<__type__>(mFalseVal->mValue)); \
     return;
 
     SWITCH_KIND(mValueKind, CASE_TERNARY, SHOULD_NOT_REACH(); return;)
@@ -331,7 +331,7 @@ void TernaryConstantExpression::evaluate() {
 void ReferenceConstantExpression::evaluate() {
     if (isEvaluated()) return;
 
-    ConstantExpression* expr = value->constExpr();
+    ConstantExpression* expr = mReference->constExpr();
     CHECK(expr != nullptr);
     expr->evaluate();
 
@@ -438,20 +438,20 @@ size_t ConstantExpression::castSizeT() const {
 }
 
 UnaryConstantExpression::UnaryConstantExpression(const std::string& op, ConstantExpression* value)
-    : value(value), op(op) {}
+    : mUnary(value), mOp(op) {}
 
 BinaryConstantExpression::BinaryConstantExpression(ConstantExpression* lval, const std::string& op,
                                                    ConstantExpression* rval)
-    : lval(lval), rval(rval), op(op) {}
+    : mLval(lval), mRval(rval), mOp(op) {}
 
 TernaryConstantExpression::TernaryConstantExpression(ConstantExpression* cond,
                                                      ConstantExpression* trueVal,
                                                      ConstantExpression* falseVal)
-    : cond(cond), trueVal(trueVal), falseVal(falseVal) {}
+    : mCond(cond), mTrueVal(trueVal), mFalseVal(falseVal) {}
 
 ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalIdentifier>& value,
                                                          const std::string& expr)
-    : value(value) {
+    : mReference(value) {
     mExpr = expr;
 }
 
