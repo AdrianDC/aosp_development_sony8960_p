@@ -838,7 +838,7 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
                 const AnnotationParam *param =
                         annotation->getParam("next");
                 if (param != nullptr) {
-                    for (auto value : *param->getValues()) {
+                    for (const auto& value : param->getValues()) {
                         out << "next: " << value << "\n";
                     }
                 }
