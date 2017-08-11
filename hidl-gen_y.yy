@@ -593,6 +593,8 @@ interface_declarations
     : /* empty */
     | interface_declarations type_declaration
       {
+          CHECK((*scope)->isInterface());
+
           std::string errorMsg;
           if ($2 != nullptr && $2->isNamedType() &&
               !isValidInterfaceField(static_cast<NamedType*>($2)->localName().c_str(),
@@ -604,6 +606,8 @@ interface_declarations
       }
     | interface_declarations method_declaration
       {
+          CHECK((*scope)->isInterface());
+
           std::string errorMsg;
           if ($2 != nullptr &&
               !isValidInterfaceField($2->name().c_str(), &errorMsg)) {
@@ -613,12 +617,6 @@ interface_declarations
           }
 
           if ($2 != nullptr) {
-            if (!(*scope)->isInterface()) {
-                std::cerr << "ERROR: unknown error in interface declaration at "
-                    << @2 << "\n";
-                YYERROR;
-            }
-
             Interface *iface = static_cast<Interface*>(*scope);
             if (!iface->addMethod($2)) {
                 std::cerr << "ERROR: Unable to add method '" << $2->name()
@@ -722,18 +720,10 @@ interface_declaration
       }
       '{' interface_declarations '}'
       {
-          if (!(*scope)->isInterface()) {
-              std::cerr << "ERROR: unknown error in interface declaration at "
-                  << @5 << "\n";
-              YYERROR;
-          }
+          CHECK((*scope)->isInterface());
 
           Interface *iface = static_cast<Interface *>(*scope);
-          if (!iface->addAllReservedMethods()) {
-              std::cerr << "ERROR: unknown error in adding reserved methods at "
-                  << @5 << "\n";
-              YYERROR;
-          }
+          CHECK(iface->addAllReservedMethods());
 
           leaveScope(ast, scope);
 
@@ -890,11 +880,7 @@ named_struct_or_union_declaration
       }
       struct_or_union_body
       {
-          if (!(*scope)->isCompoundType()) {
-              std::cerr << "ERROR: unknown error in struct or union declaration at "
-                  << @4 << "\n";
-              YYERROR;
-          }
+          CHECK((*scope)->isCompoundType());
           CompoundType *container = static_cast<CompoundType *>(*scope);
 
           std::string errorMsg;
@@ -935,29 +921,31 @@ field_declaration
     : error_stmt { $$ = nullptr; }
     | type valid_identifier require_semicolon
       {
-        std::string errorMsg;
-        if ((*scope)->isCompoundType() &&
-            static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
-            !isValidStructField($2, &errorMsg)) {
-            std::cerr << "ERROR: " << errorMsg << " at "
-                      << @2 << "\n";
-            YYERROR;
-        }
-        $$ = new NamedReference<Type>($2, *$1);
+          CHECK((*scope)->isCompoundType());
+
+          std::string errorMsg;
+          if (static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
+              !isValidStructField($2, &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at "
+                        << @2 << "\n";
+              YYERROR;
+          }
+          $$ = new NamedReference<Type>($2, *$1);
       }
     | annotated_compound_declaration ';'
       {
-        std::string errorMsg;
-        if ((*scope)->isCompoundType() &&
-            static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
-            $1 != nullptr && $1->isNamedType() &&
-            !isValidStructField(static_cast<NamedType*>($1)->localName().c_str(), &errorMsg)) {
-            std::cerr << "ERROR: " << errorMsg << " at "
-                      << @2 << "\n";
-            YYERROR;
-        }
-        // Returns fields only
-        $$ = nullptr;
+          CHECK((*scope)->isCompoundType());
+
+          std::string errorMsg;
+          if (static_cast<CompoundType *>(*scope)->style() == CompoundType::STYLE_STRUCT &&
+              $1 != nullptr && $1->isNamedType() &&
+              !isValidStructField(static_cast<NamedType*>($1)->localName().c_str(), &errorMsg)) {
+              std::cerr << "ERROR: " << errorMsg << " at "
+                        << @2 << "\n";
+              YYERROR;
+          }
+          // Returns fields only
+          $$ = nullptr;
       }
     ;
 
