@@ -1141,8 +1141,6 @@ type
 
 %%
 
-#include <android-base/logging.h>
-
 void yy::parser::error(
         const yy::parser::location_type &where,
         const std::string &errstr) {
