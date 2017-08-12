@@ -391,11 +391,11 @@ annotation_params
 annotation_param
     : IDENTIFIER '=' annotation_string_value
       {
-          $$ = new AnnotationParam($1, $3);
+          $$ = new StringAnnotationParam($1, $3);
       }
     | IDENTIFIER '=' annotation_const_expr_value
       {
-          $$ = new AnnotationParam($1, $3);
+          $$ = new ConstantExpressionAnnotationParam($1, $3);
       }
     ;
 
