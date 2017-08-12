@@ -29,15 +29,12 @@ namespace android {
 struct Formatter;
 
 struct AnnotationParam {
-    AnnotationParam(const std::string &name,
-                    std::vector<std::string> *values);
-    AnnotationParam(const std::string &name,
-                    std::vector<ConstantExpression *> *values);
+    virtual ~AnnotationParam() {}
 
-    const std::string &getName() const;
-    const std::vector<std::string> *getValues() const;
+    const std::string& getName() const;
 
-    const std::string &getSingleValue() const;
+    virtual std::vector<std::string> getValues() const = 0;
+    virtual std::string getSingleValue() const = 0;
 
     /* Returns unquoted version of getSingleValue */
     std::string getSingleString() const;
@@ -45,12 +42,36 @@ struct AnnotationParam {
     /* Returns value interpretted as a boolean */
     bool getSingleBool() const;
 
-private:
+   protected:
     const std::string mName;
-    std::vector<std::string> *mValues;
+
+    AnnotationParam(const std::string& name);
 };
 
-using AnnotationParamVector = std::vector<const AnnotationParam*>;
+struct StringAnnotationParam : AnnotationParam {
+    StringAnnotationParam(const std::string& name, std::vector<std::string>* values);
+
+    std::vector<std::string> getValues() const override;
+    std::string getSingleValue() const override;
+
+   private:
+    std::vector<std::string>* const mValues;
+};
+
+struct ConstantExpressionAnnotationParam : AnnotationParam {
+    ConstantExpressionAnnotationParam(const std::string& name,
+                                      std::vector<ConstantExpression*>* values);
+
+    std::vector<std::string> getValues() const override;
+    std::string getSingleValue() const override;
+
+   private:
+    std::vector<ConstantExpression*>* const mValues;
+
+    static std::string convertToString(const ConstantExpression* ce);
+};
+
+using AnnotationParamVector = std::vector<AnnotationParam*>;
 
 struct Annotation {
     Annotation(const char *name, AnnotationParamVector *params);
