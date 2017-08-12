@@ -16,7 +16,6 @@ genrule {
          "    test.no_interface_in_types@1.0  >/dev/null 2>&1)" +
          "&&" +
          "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    -r test.error:system/tools/hidl/test/error_test/" +
          "    test.no_two_interfaces@1.0  >/dev/null 2>&1)" +
          "&&" +
          "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
