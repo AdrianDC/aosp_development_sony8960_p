@@ -23,31 +23,10 @@
 
 namespace android {
 
+AnnotationParam::AnnotationParam(const std::string& name) : mName(name) {}
 
-AnnotationParam::AnnotationParam(const std::string &name,
-                std::vector<std::string> *values)
-: mName(name), mValues(values) {}
-
-AnnotationParam::AnnotationParam(const std::string &name,
-                std::vector<ConstantExpression *> *values)
-        : mName(name) {
-    mValues = new std::vector<std::string>();
-    for(ConstantExpression *ce : *values) {
-        mValues->push_back(ce->value() + " /* " + ce->description() + " */");
-    }
-}
-
-const std::string &AnnotationParam::getName() const {
+const std::string& AnnotationParam::getName() const {
     return mName;
-}
-
-const std::vector<std::string> *AnnotationParam::getValues() const {
-    return mValues;
-}
-
-const std::string &AnnotationParam::getSingleValue() const {
-    CHECK_EQ(mValues->size(), 1u) << mName << " requires one values but has multiple";
-    return mValues->at(0);
 }
 
 std::string AnnotationParam::getSingleString() const {
@@ -75,10 +54,43 @@ bool AnnotationParam::getSingleBool() const {
     return false;
 }
 
-Annotation::Annotation(const char *name,AnnotationParamVector *params)
-        : mName(name),
-          mParams(params) {
+StringAnnotationParam::StringAnnotationParam(const std::string& name,
+                                             std::vector<std::string>* values)
+    : AnnotationParam(name), mValues(values) {}
+
+std::vector<std::string> StringAnnotationParam::getValues() const {
+    return *mValues;
 }
+
+std::string StringAnnotationParam::getSingleValue() const {
+    CHECK_EQ(mValues->size(), 1u) << mName << " requires one value but has multiple";
+    return mValues->at(0);
+}
+
+ConstantExpressionAnnotationParam::ConstantExpressionAnnotationParam(
+    const std::string& name, std::vector<ConstantExpression*>* values)
+    : AnnotationParam(name), mValues(values) {}
+
+std::vector<std::string> ConstantExpressionAnnotationParam::getValues() const {
+    std::vector<std::string> ret;
+    for (const auto* ce : *mValues) {
+        ret.push_back(convertToString(ce));
+    };
+
+    return ret;
+}
+
+std::string ConstantExpressionAnnotationParam::getSingleValue() const {
+    CHECK_EQ(mValues->size(), 1u) << mName << " requires one value but has multiple";
+    return convertToString(mValues->at(0));
+}
+
+std::string ConstantExpressionAnnotationParam::convertToString(const ConstantExpression* ce) {
+    return ce->value() + " /* " + ce->description() + " */";
+}
+
+Annotation::Annotation(const char* name, AnnotationParamVector* params)
+    : mName(name), mParams(params) {}
 
 std::string Annotation::name() const {
     return mName;
@@ -116,14 +128,14 @@ void Annotation::dump(Formatter &out) const {
 
         out << param->getName() << "=";
 
-        const std::vector<std::string> *values = param->getValues();
-        if (values->size() > 1) {
+        const std::vector<std::string>& values = param->getValues();
+        if (values.size() > 1) {
             out << "{";
         }
 
-        out << StringHelper::JoinStrings(*values, ", ");
+        out << StringHelper::JoinStrings(values, ", ");
 
-        if (values->size() > 1) {
+        if (values.size() > 1) {
             out << "}";
         }
     }
