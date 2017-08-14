@@ -952,7 +952,6 @@ field_declaration
 annotated_compound_declaration
     : opt_annotations compound_declaration
       {
-          CHECK($2 != nullptr);
           $2->setAnnotations($1);
           $$ = $2;
       }
