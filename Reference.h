@@ -42,13 +42,6 @@ struct Reference {
     Reference(const Reference& ref)
         : mResolved(ref.mResolved), mFqName(ref.mFqName), mLocation(ref.mLocation) {}
 
-    /* Storing type cast, valid only before resolving */
-    template <class OtherT>
-    Reference(const Reference<OtherT>& ref)
-        : mResolved(nullptr), mFqName(ref.mFqName), mLocation(ref.mLocation) {
-        CHECK(!ref.isResolved());
-    }
-
     /* Returns true iff referred type is resolved
        Referred type's field might be not resolved */
     bool isResolved() const { return mResolved != nullptr; }
@@ -61,8 +54,6 @@ struct Reference {
         CHECK(mResolved != nullptr);
         return mResolved;
     }
-
-    void clearResolved() { mResolved = nullptr; }
 
     void set(T* resolved) {
         CHECK(!isResolved());
