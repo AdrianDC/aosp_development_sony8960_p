@@ -67,6 +67,9 @@ struct Interface : public Scope {
     // this->hidlReservedMethods()
     std::vector<InterfaceAndMethod> allMethodsFromRoot() const;
 
+    // allMethodsFromRoot for parent
+    std::vector<InterfaceAndMethod> allSuperMethodsFromRoot() const;
+
     // aliases for corresponding methods in this->fqName()
     std::string getBaseName() const;
     std::string getProxyName() const;

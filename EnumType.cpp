@@ -46,8 +46,7 @@ void EnumType::addValue(EnumValue *value) {
     CHECK(value != nullptr);
 
     EnumValue *prev = nullptr;
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
+    std::vector<const EnumType*> chain = typeChain();
     for (auto it = chain.begin(); it != chain.end(); ++it) {
         const auto &type = *it;
         if(!type->values().empty()) {
@@ -106,8 +105,7 @@ BitFieldType* EnumType::getBitfieldType() const {
 }
 
 LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
+    std::vector<const EnumType*> chain = typeChain();
     for (auto it = chain.begin(); it != chain.end(); ++it) {
         const auto &type = *it;
         for(EnumValue *v : type->values()) {
@@ -165,8 +163,7 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
 
     out.indent();
 
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
+    std::vector<const EnumType*> chain = typeChain();
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
@@ -362,8 +359,7 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
     const std::string typeName =
         scalarType->getJavaType(false /* forInitializer */);
 
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
+    std::vector<const EnumType*> chain = typeChain();
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
@@ -448,8 +444,7 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
     out << "scalar_type: \""
         << scalarType->getVtsScalarType()
         << "\"\n\n";
-    std::vector<const EnumType *> chain;
-    getTypeChain(&chain);
+    std::vector<const EnumType*> chain = typeChain();
 
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const auto &type = *it;
@@ -489,19 +484,28 @@ void EnumType::emitJavaDump(
         << name << "));\n";
 }
 
-void EnumType::getTypeChain(std::vector<const EnumType *> *out) const {
-    out->clear();
-    const EnumType *type = this;
-    for (;;) {
-        out->push_back(type);
+std::vector<const EnumType*> EnumType::typeChain() const {
+    std::vector<const EnumType*> types;
+    for (const EnumType* type = this; type != nullptr;) {
+        types.push_back(type);
 
-        const Type *superType = type->storageType();
-        if (superType == NULL || !superType->isEnum()) {
-            break;
+        const Type* superType = type->storageType();
+        if (superType != nullptr && superType->isEnum()) {
+            type = static_cast<const EnumType*>(superType);
+        } else {
+            type = nullptr;
         }
-
-        type = static_cast<const EnumType *>(superType);
     }
+
+    return types;
+}
+
+std::vector<const EnumType*> EnumType::superTypeChain() const {
+    const Type* superType = storageType();
+    if (superType == nullptr || !superType->isEnum()) {
+        return {};
+    }
+    return static_cast<const EnumType*>(superType)->typeChain();
 }
 
 void EnumType::getAlignmentAndSize(size_t *align, size_t *size) const {
@@ -559,7 +563,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
 
     std::vector<const EnumType *> chain;
     if (exportParent) {
-        getTypeChain(&chain);
+        chain = typeChain();
     } else {
         chain = { this };
     }
