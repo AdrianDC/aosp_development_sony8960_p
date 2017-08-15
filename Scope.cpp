@@ -16,6 +16,7 @@
 
 #include "Scope.h"
 
+#include "Annotation.h"
 #include "Interface.h"
 
 #include <android-base/logging.h>
@@ -101,6 +102,16 @@ bool Scope::containsInterfaces() const {
     }
 
     return false;
+}
+
+const std::vector<Annotation*>& Scope::annotations() const {
+    return mAnnotations;
+}
+
+void Scope::setAnnotations(std::vector<Annotation*>* annotations) {
+    CHECK(mAnnotations.empty());
+    CHECK(annotations != nullptr);
+    mAnnotations = *annotations;
 }
 
 status_t Scope::forEachType(std::function<status_t(Type *)> func) const {

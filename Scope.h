@@ -25,6 +25,7 @@
 
 namespace android {
 
+struct Annotation;
 struct ConstantExpression;
 struct Formatter;
 struct Interface;
@@ -49,6 +50,10 @@ struct Scope : public NamedType {
 
     bool containsInterfaces() const;
 
+    const std::vector<Annotation*>& annotations() const;
+
+    void setAnnotations(std::vector<Annotation*>* annotations);
+
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalHwDeclarations(Formatter &out) const override;
@@ -72,6 +77,7 @@ struct Scope : public NamedType {
 private:
     std::vector<NamedType *> mTypes;
     std::map<std::string, size_t> mTypeIndexByName;
+    std::vector<Annotation*> mAnnotations;
 
     status_t forEachType(std::function<status_t(Type *)> func) const;
 
