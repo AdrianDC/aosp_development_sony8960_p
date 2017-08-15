@@ -99,8 +99,10 @@ struct EnumType : public Scope {
 
     status_t emitExportedHeader(Formatter &out, bool forJava) const override;
 
-private:
-    void getTypeChain(std::vector<const EnumType *> *out) const;
+   private:
+    std::vector<const EnumType*> typeChain() const;
+    std::vector<const EnumType*> superTypeChain() const;
+
     const Annotation *findExportAnnotation() const;
 
     void emitEnumBitwiseOperator(
