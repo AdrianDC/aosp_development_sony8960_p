@@ -562,6 +562,8 @@ opt_extends
       }
     | EXTENDS fqtype
       {
+          // TODO(b/31827278)
+          // While deleting lookup calls, move this check
           if (!(*$2)->isInterface()) {
               std::cerr << "ERROR: You can only extend interfaces. at " << @2
                         << "\n";
@@ -569,24 +571,7 @@ opt_extends
               YYERROR;
           }
 
-          // TODO(b/31827278)
-          // While deleting lookup calls, clear this messy conversion
-          $2->clearResolved();
-          $$ = new Reference<Interface>(*$2);
-
-          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
-          if (type == nullptr) {
-              std::cerr << "ERROR: Failed to lookup type '" << $$->getLookupFqName().string() << "' at "
-                        << @2
-                        << "\n";
-              YYERROR;
-          }
-          if (!type->isInterface()) {
-              std::cerr << "ERROR: You can only extend interfaces. at " << @2
-                        << "\n";
-              YYERROR;
-          }
-          $$->set(static_cast<Interface*>(type));
+          $$ = new Reference<Interface>(static_cast<Interface*>($2->get()), $2->getLocation());
       }
 
 interface_declarations
