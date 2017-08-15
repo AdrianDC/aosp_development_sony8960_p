@@ -28,7 +28,6 @@
 
 namespace android {
 
-struct Annotation;
 struct Formatter;
 struct ScalarType;
 struct FQName;
@@ -210,9 +209,6 @@ struct Type {
     virtual bool containsPointer() const;
     virtual void getAlignmentAndSize(size_t *align, size_t *size) const;
 
-    void setAnnotations(std::vector<Annotation *> *annotations);
-    const std::vector<Annotation *> &annotations() const;
-
     virtual void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
 
@@ -250,8 +246,6 @@ protected:
             const std::string &name) const;
 
 private:
-    std::vector<Annotation *> *mAnnotations;
-
     DISALLOW_COPY_AND_ASSIGN(Type);
 };
 

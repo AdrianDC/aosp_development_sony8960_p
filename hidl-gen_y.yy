@@ -624,7 +624,8 @@ type_declaration
     : opt_annotations type_declaration_body
       {
           if (!$2->isTypeDef()) {
-              $2->setAnnotations($1);
+              CHECK($2->isScope());
+              static_cast<Scope*>($2)->setAnnotations($1);
           } else if (!$1->empty()) {
               // Since typedefs are always resolved to their target it makes
               // little sense to annotate them and have their annotations
@@ -937,7 +938,8 @@ field_declaration
 annotated_compound_declaration
     : opt_annotations compound_declaration
       {
-          $2->setAnnotations($1);
+          CHECK($2->isScope());
+          static_cast<Scope*>($2)->setAnnotations($1);
           $$ = $2;
       }
     ;
