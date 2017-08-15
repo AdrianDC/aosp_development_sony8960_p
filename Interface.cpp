@@ -572,6 +572,10 @@ std::vector<InterfaceAndMethod> Interface::allMethodsFromRoot() const {
     return v;
 }
 
+std::vector<InterfaceAndMethod> Interface::allSuperMethodsFromRoot() const {
+    return isIBase() ? std::vector<InterfaceAndMethod>() : superType()->allMethodsFromRoot();
+}
+
 Method *Interface::lookupMethod(std::string name) const {
     for (const auto &tuple : allMethodsFromRoot()) {
         Method *method = tuple.method();
