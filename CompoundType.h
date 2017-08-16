@@ -115,8 +115,7 @@ struct CompoundType : public Scope {
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalHwDeclarations(Formatter &out) const override;
 
-    status_t emitTypeDefinitions(
-            Formatter &out, const std::string prefix) const override;
+    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
     status_t emitJavaTypeDeclarations(
             Formatter &out, bool atTopLevel) const override;
@@ -139,8 +138,7 @@ private:
 
     void emitStructReaderWriter(
             Formatter &out, const std::string &prefix, bool isReader) const;
-    void emitResolveReferenceDef(
-        Formatter &out, const std::string prefix, bool isReader) const;
+    void emitResolveReferenceDef(Formatter& out, const std::string& prefix, bool isReader) const;
 
     DISALLOW_COPY_AND_ASSIGN(CompoundType);
 };
