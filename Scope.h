@@ -61,8 +61,7 @@ struct Scope : public NamedType {
     status_t emitJavaTypeDeclarations(
             Formatter &out, bool atTopLevel) const override;
 
-    status_t emitTypeDefinitions(
-            Formatter &out, const std::string prefix) const override;
+    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
     const std::vector<NamedType *> &getSubTypes() const;
 
@@ -79,7 +78,7 @@ private:
     std::map<std::string, size_t> mTypeIndexByName;
     std::vector<Annotation*> mAnnotations;
 
-    status_t forEachType(std::function<status_t(Type *)> func) const;
+    status_t forEachType(const std::function<status_t(Type*)>& func) const;
 
     DISALLOW_COPY_AND_ASSIGN(Scope);
 };

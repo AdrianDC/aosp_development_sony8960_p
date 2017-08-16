@@ -187,8 +187,7 @@ struct Type {
     // at global scope for transport, e.g. read/writeEmbeddedTo/FromParcel
     virtual status_t emitGlobalHwDeclarations(Formatter &out) const;
 
-    virtual status_t emitTypeDefinitions(
-            Formatter &out, const std::string prefix) const;
+    virtual status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const;
 
     virtual status_t emitJavaTypeDeclarations(
             Formatter &out, bool atTopLevel) const;

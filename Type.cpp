@@ -371,8 +371,7 @@ status_t Type::emitGlobalHwDeclarations(Formatter &) const {
     return OK;
 }
 
-status_t Type::emitTypeDefinitions(
-        Formatter &, const std::string) const {
+status_t Type::emitTypeDefinitions(Formatter&, const std::string&) const {
     return OK;
 }
 

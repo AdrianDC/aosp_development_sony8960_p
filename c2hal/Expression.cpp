@@ -29,7 +29,7 @@ static const std::regex RE_U32("[^ul]u$");
 static const std::regex RE_S64("[^ul](l|ll)$");
 static const std::regex RE_U64("[^ul](ul|ull)$");
 
-Expression::Type Expression::integralType(std::string integer) {
+Expression::Type Expression::integralType(const std::string& integer) {
     if (std::regex_search(integer, RE_S32)) {
         return Type::S32;
     }
