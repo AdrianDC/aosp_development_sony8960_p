@@ -19,10 +19,10 @@
 #define TYPE_H_
 
 #include <android-base/macros.h>
-#include <string>
 #include <utils/Errors.h>
-#include <vector>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "Reference.h"
 
@@ -52,6 +52,26 @@ struct Type {
     virtual bool isTemplatedType() const;
     virtual bool isTypeDef() const;
     virtual bool isVector() const;
+
+    // Recursive tree pass that completes type declarations
+    // that depend on super types
+    virtual status_t resolveInheritance();
+
+    // Recursive tree pass that evaluates constant expressions
+    virtual status_t evaluate();
+
+    // Recursive tree pass that validates all type-related
+    // syntax restrictions
+    virtual status_t validate() const;
+
+    // Runs recursive tree pass for completing type declaration in references
+    // The only current case when type is declared in reference is
+    // array (array size is reference-related) and templates (as they can
+    // contain array as element type)
+    // A special call is needed to avoid recursive loop. ex:
+    // struct S { S[42] arr; }; -- we need to avoid pass call for S from array
+    status_t callForReference(std::function<status_t(Type*)> func);
+    status_t callForReference(std::function<status_t(const Type*)> func) const;
 
     virtual const ScalarType *resolveToScalarType() const;
 
@@ -256,7 +276,11 @@ struct TemplatedType : public Type {
     virtual bool isCompatibleElementType(Type* elementType) const = 0;
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsAttributeType(Formatter &out) const override;
-protected:
+
+    virtual status_t evaluate() override;
+    virtual status_t validate() const override;
+
+   protected:
     TemplatedType();
     Reference<Type> mElementType;
 

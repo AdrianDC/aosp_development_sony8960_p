@@ -18,8 +18,10 @@
 
 #include "ArrayType.h"
 #include "VectorType.h"
-#include <hidl-util/Formatter.h>
+
 #include <android-base/logging.h>
+#include <hidl-util/Formatter.h>
+#include <unordered_set>
 
 namespace android {
 
@@ -31,35 +33,63 @@ CompoundType::Style CompoundType::style() const {
     return mStyle;
 }
 
-bool CompoundType::setFields(std::vector<NamedReference<Type>*>* fields, std::string* errorMsg) {
+void CompoundType::setFields(std::vector<NamedReference<Type>*>* fields) {
     mFields = fields;
+}
 
-    for (const auto &field : *fields) {
-        const Type &type = field->type();
+status_t CompoundType::evaluate() {
+    for (auto* field : *mFields) {
+        status_t err = (*field)->callForReference(&Type::evaluate);
+        if (err != OK) return err;
+    }
+
+    return Scope::evaluate();
+}
+
+status_t CompoundType::validate() const {
+    for (const auto* field : *mFields) {
+        status_t err = (*field)->callForReference(&Type::validate);
+        if (err != OK) return err;
+
+        const Type& type = field->type();
 
         if (type.isBinder()
                 || (type.isVector()
                     && static_cast<const VectorType *>(
                         &type)->isVectorOfBinders())) {
-            *errorMsg =
-                "Structs/Unions must not contain references to interfaces.";
-
-            return false;
+            std::cerr << "ERROR: Struct/Union must not contain references to interfaces at "
+                      << field->location() << "\n";
+            return UNKNOWN_ERROR;
         }
 
         if (mStyle == STYLE_UNION) {
             if (type.needsEmbeddedReadWrite()) {
-                // Can't have those in a union.
-
-                *errorMsg =
-                    "Unions must not contain any types that need fixup.";
-
-                return false;
+                std::cerr << "ERROR: Union must not contain any types that need fixup at "
+                          << field->location() << "\n";
+                return UNKNOWN_ERROR;
             }
         }
     }
 
-    return true;
+    status_t err = validateUniqueNames();
+    if (err != OK) return err;
+
+    return Scope::validate();
+}
+
+status_t CompoundType::validateUniqueNames() const {
+    std::unordered_set<std::string> names;
+
+    for (const auto* field : *mFields) {
+        if (names.find(field->name()) != names.end()) {
+            std::cerr << "ERROR: Redefinition of field '" << field->name() << "' at "
+                      << field->location() << "\n";
+            return UNKNOWN_ERROR;
+        }
+        names.insert(field->name());
+    }
+
+    return OK;
 }
 
 bool CompoundType::isCompoundType() const {

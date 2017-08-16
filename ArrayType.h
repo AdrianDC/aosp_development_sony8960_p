@@ -44,6 +44,9 @@ struct ArrayType : public Type {
 
     std::string typeName() const override;
 
+    status_t evaluate() override;
+    status_t validate() const override;
+
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
 
