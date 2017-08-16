@@ -188,7 +188,9 @@ struct AST {
     void generateTemplatizationLink(Formatter& out) const;
     void generateCppTag(Formatter& out, const std::string& tag) const;
 
-    status_t generateMethods(Formatter &out, MethodGenerator gen, bool includeParents = true) const;
+    status_t generateMethods(Formatter &out,
+                             const MethodGenerator &gen,
+                             bool includeParents = true) const;
     status_t generateStubImplMethod(Formatter &out,
                                     const std::string &className,
                                     const Method *method) const;

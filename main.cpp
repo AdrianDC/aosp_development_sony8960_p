@@ -235,7 +235,7 @@ static void generateMakefileSectionForType(
         AST *ast = coordinator->parse(fqName);
         CHECK(ast != nullptr);
         const std::set<FQName>& refs = ast->getImportedNames();
-        for (auto depFQName : refs) {
+        for (const auto& depFQName : refs) {
             // If the package of depFQName is the same as this fqName's package,
             // then add it explicitly as a .hal dependency within the same
             // package.
@@ -657,17 +657,16 @@ bool isSystemPackage(const FQName &package) {
 }
 
 static void generateAndroidBpGenSection(
-        Formatter &out,
-        const FQName &packageFQName,
-        const char *hidl_gen,
-        Coordinator *coordinator,
-        const std::string &halFilegroupName,
-        const std::string &genName,
-        const char *language,
-        const std::vector<FQName> &packageInterfaces,
-        const std::set<FQName> &importedPackages,
-        const std::function<void(Formatter&, const FQName)> outputFn) {
-
+    Formatter& out,
+    const FQName& packageFQName,
+    const char* hidl_gen,
+    Coordinator* coordinator,
+    const std::string& halFilegroupName,
+    const std::string& genName,
+    const char* language,
+    const std::vector<FQName>& packageInterfaces,
+    const std::set<FQName>& importedPackages,
+    const std::function<void(Formatter&, const FQName)>& outputFn) {
     out << "genrule {\n";
     out.indent();
     out << "name: \"" << genName << "\",\n"
