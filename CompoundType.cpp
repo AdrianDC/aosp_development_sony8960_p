@@ -491,8 +491,7 @@ status_t CompoundType::emitGlobalHwDeclarations(Formatter &out) const  {
     return OK;
 }
 
-status_t CompoundType::emitTypeDefinitions(
-        Formatter &out, const std::string prefix) const {
+status_t CompoundType::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
     std::string space = prefix.empty() ? "" : (prefix + "::");
     status_t err = Scope::emitTypeDefinitions(out, space + localName());
 
@@ -871,8 +870,8 @@ void CompoundType::emitStructReaderWriter(
     out << "}\n\n";
 }
 
-void CompoundType::emitResolveReferenceDef(
-        Formatter &out, const std::string prefix, bool isReader) const {
+void CompoundType::emitResolveReferenceDef(Formatter& out, const std::string& prefix,
+                                           bool isReader) const {
     out << "::android::status_t ";
     const std::string space(prefix.empty() ? "" : (prefix + "::"));
 
