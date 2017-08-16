@@ -19,13 +19,15 @@
 #define METHOD_H_
 
 #include <android-base/macros.h>
-#include <functional>
 #include <hidl-util/Formatter.h>
+#include <utils/Errors.h>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "Location.h"
 #include "Reference.h"
 
 namespace android {
@@ -49,7 +51,7 @@ using MethodImpl = std::map<MethodImplType, std::function<void(Formatter &)>>;
 struct Method {
     Method(const char* name, std::vector<NamedReference<Type>*>* args,
            std::vector<NamedReference<Type>*>* results, bool oneway,
-           std::vector<Annotation*>* annotations);
+           std::vector<Annotation*>* annotations, const Location& location);
 
     std::string name() const;
     const std::vector<NamedReference<Type>*>& args() const;
@@ -62,6 +64,9 @@ struct Method {
     bool isHidlReserved() const { return mIsHidlReserved; }
     bool isHiddenFromJava() const;
     const std::vector<Annotation *> &annotations() const;
+
+    status_t evaluate();
+    status_t validate() const;
 
     // Make a copy with the same name, args, results, oneway, annotations.
     // Implementations, serial are not copied.
@@ -95,7 +100,9 @@ struct Method {
 
     bool isJavaCompatible() const;
 
-private:
+    const Location& location() const;
+
+   private:
     std::string mName;
     size_t mSerial = 0;
     std::vector<NamedReference<Type>*>* mArgs;
@@ -108,6 +115,8 @@ private:
     // hard-coded implementation for HIDL reserved methods.
     MethodImpl mCppImpl;
     MethodImpl mJavaImpl;
+
+    const Location& mLocation;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };

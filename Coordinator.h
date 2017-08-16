@@ -19,7 +19,6 @@
 #define COORDINATOR_H_
 
 #include <android-base/macros.h>
-#include <functional>
 #include <map>
 #include <set>
 #include <string>

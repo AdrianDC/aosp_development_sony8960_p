@@ -67,6 +67,17 @@ struct AST {
 
     void addImportedAST(AST *ast);
 
+    // Recursive tree pass that completes type declarations
+    // that depend on super types
+    status_t resolveInheritance();
+
+    // Recursive tree pass that evaluates constant expressions
+    status_t evaluate();
+
+    // Recursive tree pass that validates all type-related
+    // syntax restrictions
+    status_t validate() const;
+
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateCppHeaders(const std::string &outputPath) const;
     status_t generateCppSources(const std::string &outputPath) const;

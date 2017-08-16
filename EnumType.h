@@ -60,6 +60,11 @@ struct EnumType : public Scope {
     // Return the type that corresponds to bitfield<T>.
     BitFieldType *getBitfieldType() const;
 
+    status_t resolveInheritance() override;
+    status_t evaluate() override;
+    status_t validate() const override;
+    status_t validateUniqueNames() const;
+
     void emitReaderWriter(
             Formatter &out,
             const std::string &name,
@@ -125,22 +130,28 @@ struct EnumType : public Scope {
 };
 
 struct EnumValue : public LocalIdentifier {
-    EnumValue(const char *name, ConstantExpression *value = nullptr);
+    EnumValue(const char* name, ConstantExpression* value, const Location& location);
 
     std::string name() const;
     std::string value(ScalarType::Kind castKind) const;
     std::string cppValue(ScalarType::Kind castKind) const;
     std::string javaValue(ScalarType::Kind castKind) const;
     std::string comment() const;
-    void autofill(const EnumValue *prev, const ScalarType *type);
+    void autofill(const EnumType* prevType, EnumValue* prevValue, const ScalarType* type);
     ConstantExpression* constExpr() const override;
 
     bool isAutoFill() const;
     bool isEnumValue() const override;
 
+    status_t evaluate() override;
+    status_t validate() const override;
 
+    const Location& location() const;
+
+   private:
     std::string mName;
     ConstantExpression* mValue;
+    const Location mLocation;
     bool mIsAutoFill;
 
     DISALLOW_COPY_AND_ASSIGN(EnumValue);
