@@ -67,6 +67,30 @@ std::string ArrayType::typeName() const {
     return std::to_string(dimension()) + "d array of " + mElementType->typeName();
 }
 
+status_t ArrayType::evaluate() {
+    for (auto* size : mSizes) {
+        size->evaluate();
+    }
+
+    status_t err = mElementType->callForReference(&Type::evaluate);
+    if (err != OK) return err;
+
+    return Type::evaluate();
+}
+
+status_t ArrayType::validate() const {
+    status_t err = mElementType->callForReference(&Type::validate);
+    if (err != OK) return err;
+
+    if (mElementType->isBinder()) {
+        std::cerr << "ERROR: Arrays of interface types are not supported"
+                  << " at " << mElementType.location() << "\n";
+
+        return UNKNOWN_ERROR;
+    }
+    return Type::validate();
+}
+
 std::string ArrayType::getCppType(StorageMode mode,
                                   bool specifyNamespaces) const {
     const std::string base = mElementType->getCppStackType(specifyNamespaces);
