@@ -286,8 +286,7 @@ status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-status_t EnumType::emitTypeDefinitions(Formatter &out, const std::string /* prefix */) const {
-
+status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* prefix */) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
