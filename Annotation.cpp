@@ -29,6 +29,14 @@ const std::string& AnnotationParam::getName() const {
     return mName;
 }
 
+status_t AnnotationParam::evaluate() {
+    return OK;
+}
+
+status_t AnnotationParam::validate() const {
+    return OK;
+}
+
 std::string AnnotationParam::getSingleString() const {
     std::string value = getSingleValue();
 
@@ -71,12 +79,15 @@ ConstantExpressionAnnotationParam::ConstantExpressionAnnotationParam(
     const std::string& name, std::vector<ConstantExpression*>* values)
     : AnnotationParam(name), mValues(values) {}
 
+std::string convertToString(const ConstantExpression* value) {
+    return value->value() + " /* " + value->description() + " */";
+}
+
 std::vector<std::string> ConstantExpressionAnnotationParam::getValues() const {
     std::vector<std::string> ret;
-    for (const auto* ce : *mValues) {
-        ret.push_back(convertToString(ce));
+    for (const auto* value : *mValues) {
+        ret.push_back(convertToString(value));
     };
-
     return ret;
 }
 
@@ -85,8 +96,11 @@ std::string ConstantExpressionAnnotationParam::getSingleValue() const {
     return convertToString(mValues->at(0));
 }
 
-std::string ConstantExpressionAnnotationParam::convertToString(const ConstantExpression* ce) {
-    return ce->value() + " /* " + ce->description() + " */";
+status_t ConstantExpressionAnnotationParam::evaluate() {
+    for (auto* value : *mValues) {
+        value->evaluate();
+    }
+    return AnnotationParam::evaluate();
 }
 
 Annotation::Annotation(const char* name, AnnotationParamVector* params)
@@ -108,6 +122,22 @@ const AnnotationParam *Annotation::getParam(const std::string &name) const {
     }
 
     return nullptr;
+}
+
+status_t Annotation::evaluate() {
+    for (auto* param : *mParams) {
+        status_t err = param->evaluate();
+        if (err != OK) return err;
+    }
+    return OK;
+}
+
+status_t Annotation::validate() const {
+    for (const auto* param : *mParams) {
+        status_t err = param->validate();
+        if (err != OK) return err;
+    }
+    return OK;
 }
 
 void Annotation::dump(Formatter &out) const {

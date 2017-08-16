@@ -91,6 +91,28 @@ bool Type::isPointer() const {
     return false;
 }
 
+status_t Type::resolveInheritance() {
+    return OK;
+}
+
+status_t Type::evaluate() {
+    return OK;
+}
+
+status_t Type::validate() const {
+    return OK;
+}
+
+status_t Type::callForReference(std::function<status_t(Type*)> func) {
+    if (isScope()) return OK;
+    return func(this);
+}
+
+status_t Type::callForReference(std::function<status_t(const Type*)> func) const {
+    if (isScope()) return OK;
+    return func(this);
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
@@ -465,7 +487,6 @@ void TemplatedType::setElementType(const Reference<Type>& elementType) {
     CHECK(mElementType.isEmptyReference());
     CHECK(!elementType.isEmptyReference());
 
-    CHECK(isCompatibleElementType(elementType));
     mElementType = elementType;
 }
 
@@ -475,6 +496,24 @@ Type* TemplatedType::getElementType() const {
 
 bool TemplatedType::isTemplatedType() const {
     return true;
+}
+
+status_t TemplatedType::evaluate() {
+    status_t err = mElementType->callForReference(&Type::evaluate);
+    if (err != OK) return err;
+    return Type::evaluate();
+}
+
+status_t TemplatedType::validate() const {
+    if (!isCompatibleElementType(mElementType)) {
+        std::cerr << "ERROR: " << typeName() /* contains element type */
+                  << " is not supported at " << mElementType.location() << "\n";
+        return UNKNOWN_ERROR;
+    }
+
+    status_t err = mElementType->callForReference(&Type::validate);
+    if (err != OK) return err;
+    return Type::validate();
 }
 
 status_t TemplatedType::emitVtsTypeDeclarations(Formatter &out) const {

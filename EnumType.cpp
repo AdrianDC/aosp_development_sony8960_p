@@ -16,13 +16,13 @@
 
 #include "EnumType.h"
 
+#include <hidl-util/Formatter.h>
+#include <inttypes.h>
+#include <unordered_map>
+
 #include "Annotation.h"
 #include "Location.h"
 #include "ScalarType.h"
-
-#include <inttypes.h>
-#include <hidl-util/Formatter.h>
-#include <android-base/logging.h>
 
 namespace android {
 
@@ -42,21 +42,95 @@ const std::vector<EnumValue *> &EnumType::values() const {
     return mValues;
 }
 
-void EnumType::addValue(EnumValue *value) {
+void EnumType::addValue(EnumValue* value) {
     CHECK(value != nullptr);
+    mValues.push_back(value);
+}
 
-    EnumValue *prev = nullptr;
-    std::vector<const EnumType*> chain = typeChain();
-    for (auto it = chain.begin(); it != chain.end(); ++it) {
-        const auto &type = *it;
-        if(!type->values().empty()) {
-            prev = type->values().back();
+status_t EnumType::resolveInheritance() {
+    const EnumType* prevType = nullptr;
+    EnumValue* prevValue = nullptr;
+
+    for (const auto* type : superTypeChain()) {
+        if (!type->values().empty()) {
+            prevType = type;
+            prevValue = type->values().back();
             break;
         }
     }
 
-    value->autofill(prev, resolveToScalarType());
-    mValues.push_back(value);
+    for (auto* value : mValues) {
+        value->autofill(prevType, prevValue, mStorageType->resolveToScalarType());
+        prevType = this;
+        prevValue = value;
+    }
+
+    return Scope::resolveInheritance();
+}
+
+status_t EnumType::evaluate() {
+    status_t err = mStorageType->callForReference(&Type::evaluate);
+    if (err != OK) return err;
+
+    for (auto* value : mValues) {
+        err = value->evaluate();
+        if (err != OK) return err;
+    }
+    return Scope::evaluate();
+}
+
+status_t EnumType::validate() const {
+    status_t err = mStorageType->callForReference(&Type::validate);
+    if (err != OK) return err;
+
+    for (auto* value : mValues) {
+        err = value->validate();
+        if (err != OK) return err;
+    }
+
+    if (!isElidableType() || !mStorageType->isValidEnumStorageType()) {
+        std::cerr << "ERROR: Invalid enum storage type (" << (mStorageType)->typeName()
+                  << ") specified at " << mStorageType.location() << "\n";
+        return UNKNOWN_ERROR;
+    }
+
+    err = validateUniqueNames();
+    if (err != OK) return err;
+
+    return Scope::validate();
+}
+
+status_t EnumType::validateUniqueNames() const {
+    std::unordered_map<std::string, const EnumType*> registeredValueNames;
+    for (const auto* type : superTypeChain()) {
+        for (const auto* enumValue : type->mValues) {
+            // No need to check super value uniqueness
+            registeredValueNames[enumValue->name()] = type;
+        }
+    }
+
+    for (const auto* value : mValues) {
+        auto registered = registeredValueNames.find(value->name());
+
+        if (registered != registeredValueNames.end()) {
+            const EnumType* definedInType = registered->second;
+
+            if (definedInType == this) {
+                // Defined in this enum
+                std::cerr << "ERROR: Redefinition of value '" << value->name() << "'";
+            } else {
+                // Defined in super enum
+                std::cerr << "ERROR: Redefinition of value '" << value->name() << "define in enum '"
+                          << definedInType->fullName() << "'";
+            }
+            std::cerr << " at " << value->location() << "\n";
+            return UNKNOWN_ERROR;
+        }
+
+        registeredValueNames[value->name()] = this;
+    }
+
+    return OK;
 }
 
 bool EnumType::isElidableType() const {
@@ -661,11 +735,8 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-EnumValue::EnumValue(const char *name, ConstantExpression *value)
-    : mName(name),
-      mValue(value),
-      mIsAutoFill(false) {
-}
+EnumValue::EnumValue(const char* name, ConstantExpression* value, const Location& location)
+    : mName(name), mValue(value), mLocation(location), mIsAutoFill(false) {}
 
 std::string EnumValue::name() const {
     return mName;
@@ -695,16 +766,21 @@ ConstantExpression *EnumValue::constExpr() const {
     return mValue;
 }
 
-void EnumValue::autofill(const EnumValue* prev, const ScalarType* type) {
+void EnumValue::autofill(const EnumType* prevType, EnumValue* prevValue, const ScalarType* type) {
+    // Value is defined explicitly
     if (mValue != nullptr) return;
+
+    CHECK((prevType == nullptr) == (prevValue == nullptr));
+
     mIsAutoFill = true;
-    if (prev == nullptr) {
+    if (prevValue == nullptr) {
         mValue = ConstantExpression::Zero(type->getKind()).release();
     } else {
-        CHECK(prev->mValue != nullptr);
-        mValue = prev->mValue->addOne(type->getKind()).release();
+        std::string description = prevType->fullName() + "." + prevValue->name() + " implicitly";
+        auto* prevReference = new ReferenceConstantExpression(
+            Reference<LocalIdentifier>(prevValue, mLocation), description);
+        mValue = prevReference->addOne(type->getKind()).release();
     }
-    mValue->evaluate();
 }
 
 bool EnumValue::isAutoFill() const {
@@ -713,6 +789,20 @@ bool EnumValue::isAutoFill() const {
 
 bool EnumValue::isEnumValue() const {
     return true;
+}
+
+status_t EnumValue::evaluate() {
+    mValue->evaluate();
+    return OK;
+}
+
+status_t EnumValue::validate() const {
+    // TODO(b/64358435) move isSupported from ConstantExpression
+    return OK;
+}
+
+const Location& EnumValue::location() const {
+    return mLocation;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

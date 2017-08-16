@@ -54,6 +54,10 @@ struct Scope : public NamedType {
 
     void setAnnotations(std::vector<Annotation*>* annotations);
 
+    virtual status_t resolveInheritance() override;
+    virtual status_t evaluate() override;
+    virtual status_t validate() const override;
+
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalHwDeclarations(Formatter &out) const override;
@@ -87,6 +91,8 @@ struct RootScope : public Scope {
     RootScope(const char* localName, const Location& location, Scope* parent);
     virtual ~RootScope();
 
+    virtual status_t validate() const override;
+
     std::string typeName() const override;
 };
 
@@ -94,6 +100,9 @@ struct LocalIdentifier {
     LocalIdentifier();
     virtual ~LocalIdentifier();
     virtual bool isEnumValue() const;
+
+    virtual status_t evaluate();
+    virtual status_t validate() const;
 
     virtual ConstantExpression* constExpr() const;
 };

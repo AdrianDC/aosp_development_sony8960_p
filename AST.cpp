@@ -82,6 +82,18 @@ bool AST::containsInterfaces() const {
     return mRootScope.containsInterfaces();
 }
 
+status_t AST::resolveInheritance() {
+    return mRootScope.resolveInheritance();
+}
+
+status_t AST::evaluate() {
+    return mRootScope.evaluate();
+}
+
+status_t AST::validate() const {
+    return mRootScope.validate();
+}
+
 bool AST::addImport(const char *import) {
     FQName fqName(import);
     CHECK(fqName.isValid());

@@ -105,15 +105,15 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
         ast->addImportedAST(typesAST);
     }
 
-    status_t err = parseFile(ast);
-
-    if (err != OK) {
+    if (parseFile(ast) != OK || ast->resolveInheritance() != OK || ast->evaluate() != OK ||
+        ast->validate() != OK) {
         delete ast;
         ast = nullptr;
 
         return nullptr;
     }
 
+    status_t err = OK;
     if (ast->package().package() != fqName.package()
             || ast->package().version() != fqName.version()) {
         fprintf(stderr,

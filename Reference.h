@@ -73,7 +73,7 @@ struct Reference {
 
     bool hasLocation() const { return mLocation.isValid(); }
 
-    const Location& getLocation() const {
+    const Location& location() const {
         CHECK(hasLocation());
         return mLocation;
     }

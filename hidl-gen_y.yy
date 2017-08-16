@@ -425,7 +425,6 @@ annotation_const_expr_value
     : const_expr
       {
           $$ = new std::vector<ConstantExpression *>;
-          $1->evaluate();
           $$->push_back($1);
       }
     | '{' annotation_const_expr_values '}' { $$ = $2; }
@@ -435,13 +434,11 @@ annotation_const_expr_values
     : const_expr
       {
           $$ = new std::vector<ConstantExpression *>;
-          $1->evaluate();
           $$->push_back($1);
       }
     | annotation_const_expr_values ',' const_expr
       {
           $$ = $1;
-          $3->evaluate();
           $$->push_back($3);
       }
     ;
@@ -571,8 +568,10 @@ opt_extends
               YYERROR;
           }
 
-          $$ = new Reference<Interface>(static_cast<Interface*>($2->get()), $2->getLocation());
+          $$ = new Reference<Interface>(
+              static_cast<Interface*>($2->get()), $2->location());
       }
+    ;
 
 interface_declarations
     : /* empty */
@@ -754,11 +753,6 @@ const_expr
                             << " could not be found at " << @1 << ".\n";
                   YYERROR;
               }
-              if(!iden->isEnumValue()) {
-                  std::cerr << "ERROR: identifier " << $1->string()
-                            << " is not an enum value at " << @1 << ".\n";
-                  YYERROR;
-              }
               $$ = new ReferenceConstantExpression(
                   Reference<LocalIdentifier>(iden, convertYYLoc(@1)), $1->string());
           } else {
@@ -812,15 +806,30 @@ method_declaration
     : error_stmt { $$ = nullptr; }
     | opt_annotations valid_identifier '(' typed_vars ')' require_semicolon
       {
-          $$ = new Method($2, $4, new std::vector<NamedReference<Type>*>, false, $1);
+          $$ = new Method($2 /* name */,
+                          $4 /* args */,
+                          new std::vector<NamedReference<Type>*> /* results */,
+                          false /* oneway */,
+                          $1 /* annotations */,
+                          convertYYLoc(@$));
       }
     | opt_annotations ONEWAY valid_identifier '(' typed_vars ')' require_semicolon
       {
-          $$ = new Method($3, $5, new std::vector<NamedReference<Type>*>, true, $1);
+          $$ = new Method($3 /* name */,
+                          $5 /* args */,
+                          new std::vector<NamedReference<Type>*> /* results */,
+                          true /* oneway */,
+                          $1 /* annotations */,
+                          convertYYLoc(@$));
       }
     | opt_annotations valid_identifier '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
       {
-          $$ = new Method($2, $4, $8, false, $1);
+          $$ = new Method($2 /* name */,
+                          $4 /* args */,
+                          $8 /* results */,
+                          false /* oneway */,
+                          $1 /* annotations */,
+                          convertYYLoc(@$));
       }
     ;
 
@@ -868,15 +877,11 @@ named_struct_or_union_declaration
       {
           CHECK((*scope)->isCompoundType());
           CompoundType *container = static_cast<CompoundType *>(*scope);
-
-          std::string errorMsg;
-          if (!container->setFields($4, &errorMsg)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @4 << "\n";
-              YYERROR;
-          }
+          container->setFields($4);
 
           leaveScope(ast, scope);
 
+          std::string errorMsg;
           if (!ast->addScopedType(container, &errorMsg, *scope)) {
               std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
               YYERROR;
@@ -950,19 +955,7 @@ compound_declaration
     ;
 
 enum_storage_type
-    : ':' fqtype
-      {
-          $$ = $2;
-
-          if ($$ != NULL && !(*$$)->isValidEnumStorageType()) {
-              std::cerr << "ERROR: Invalid enum storage type ("
-                        << (*$2)->typeName()
-                        << ") specified. at "
-                        << @2 << "\n";
-
-              YYERROR;
-          }
-      }
+    : ':' fqtype { $$ = $2; }
     ;
 
 opt_comma
@@ -997,8 +990,14 @@ enum_declaration_body
     ;
 
 enum_value
-    : valid_identifier { $$ = new EnumValue($1); }
-    | valid_identifier '=' const_expr { $3->evaluate(); $$ = new EnumValue($1, $3); }
+    : valid_identifier
+      {
+          $$ = new EnumValue($1 /* name */, nullptr /* value */, convertYYLoc(@$));
+      }
+    | valid_identifier '=' const_expr
+      {
+          $$ = new EnumValue($1 /* name */, $3 /* value */, convertYYLoc(@$));
+      }
     ;
 
 enum_values
@@ -1034,30 +1033,12 @@ array_type_base
     : fqtype { $$ = $1; }
     | TEMPLATED '<' type '>'
       {
-          if (!$1->isCompatibleElementType($3->get())) {
-              std::cerr << "ERROR: " << $1->typeName() << " of " << (*$3)->typeName()
-                        << " is not supported. at " << @3 << "\n";
-
-              YYERROR;
-          }
           $1->setElementType(*$3);
           $$ = new Reference<Type>($1, convertYYLoc(@1));
       }
     | TEMPLATED '<' TEMPLATED '<' type RSHIFT
       {
-          if (!$3->isCompatibleElementType($5->get())) {
-              std::cerr << "ERROR: " << $3->typeName() << " of " << (*$5)->typeName()
-                        << " is not supported. at " << @5 << "\n";
-
-              YYERROR;
-          }
           $3->setElementType(*$5);
-          if (!$1->isCompatibleElementType($3)) {
-              std::cerr << "ERROR: " << $1->typeName() << " of " << $3->typeName()
-                        << " is not supported. at " << @3 << "\n";
-
-              YYERROR;
-          }
           $1->setElementType(Reference<Type>($3, convertYYLoc(@3)));
           $$ = new Reference<Type>($1, convertYYLoc(@1));
       }
@@ -1068,14 +1049,6 @@ array_type
       {
           Reference<Type> type = *$1;
 
-          if (type->isBinder()) {
-              std::cerr << "ERROR: Arrays of interface types are not supported."
-                        << " at " << @1 << "\n";
-
-              YYERROR;
-          }
-
-          $3->evaluate();
           if (type.isResolved() && type->isArray()) {
               $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3);
           } else {
@@ -1085,7 +1058,6 @@ array_type
     | array_type '[' const_expr ']'
       {
           $$ = $1;
-          $3->evaluate();
           $$->appendDimension($3);
       }
     ;
