@@ -1817,7 +1817,14 @@ status_t AST::generateStaticStubMethodSource(Formatter &out,
 
     const bool returnsValue = !method->results().empty();
     const TypedVar *elidedReturn = method->canElideCallback();
-    const std::string callee = "static_cast<" + klassName + "*>(_hidl_this)->_hidl_mImpl";
+
+    std::string callee;
+
+    if (method->isHidlReserved() && method->overridesCppImpl(IMPL_STUB_IMPL)) {
+        callee = "_hidl_this";
+    } else {
+        callee = "static_cast<" + klassName + "*>(_hidl_this)->_hidl_mImpl";
+    }
 
     if (elidedReturn != nullptr) {
         out << elidedReturn->type().getCppResultType()
