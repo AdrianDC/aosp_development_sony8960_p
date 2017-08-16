@@ -31,6 +31,7 @@ namespace android {
 template <class T>
 struct Reference {
     Reference() = default;
+    virtual ~Reference() {}
 
     Reference(const FQName& fqName, const Location& location)
         : mResolved(nullptr), mFqName(fqName), mLocation(location) {}
@@ -97,19 +98,17 @@ struct Reference {
 };
 
 template <class T>
-struct NamedReference {
+struct NamedReference : public Reference<T> {
     NamedReference(const std::string& name, const Reference<T>& reference)
-        : mName(name), mReference(reference) {}
+        : Reference<T>(reference), mName(name) {}
 
     const std::string& name() const { return mName; }
-    const T& type() const { return *mReference.get(); }
-    const T* operator->() const { return mReference.get(); }
+
+    // TODO(b/64715470) Legacy
+    const T& type() const { return *Reference<T>::get(); }
 
    private:
     const std::string mName;
-    const Reference<T> mReference;
-
-    DISALLOW_COPY_AND_ASSIGN(NamedReference<T>);
 };
 
 }  // namespace android
