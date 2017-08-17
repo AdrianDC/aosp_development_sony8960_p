@@ -2010,9 +2010,11 @@ TEST_F(HidlTest, PointerReportErrorsTest) {
 #endif
 
 template <class T>
-static void waitForServer(const std::string &serviceName) {
-    ::android::hardware::details::waitForHwService(T::descriptor, serviceName);
-}
+struct WaitForServer {
+    static void run(const std::string& serviceName) {
+        ::android::hardware::details::waitForHwService(T::descriptor, serviceName);
+    }
+};
 
 int forkAndRunTests(TestMode mode, bool enableDelayMeasurementTests) {
     pid_t child;
@@ -2122,7 +2124,7 @@ int main(int argc, char **argv) {
         handleStatus(pStatus, "PASSTHROUGH");
     }
     if (b) {
-        EACH_SERVER(waitForServer);
+        runOnEachServer<WaitForServer>();
         ALOGI("BINDERIZED Test result = %d", bStatus);
         handleStatus(bStatus, "BINDERIZED ");
     }
