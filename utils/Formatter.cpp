@@ -148,10 +148,11 @@ Formatter &Formatter::operator<<(const std::string &out) {
     return *this;
 }
 
-#define FORMATTER_INPUT_INTEGER(__type__)               \
-    Formatter &Formatter::operator<<(__type__ n) {      \
-        return (*this) << std::to_string(n);            \
-    }                                                   \
+// NOLINT to suppress missing parentheses warning about __type__.
+#define FORMATTER_INPUT_INTEGER(__type__)                       \
+    Formatter& Formatter::operator<<(__type__ n) { /* NOLINT */ \
+        return (*this) << std::to_string(n);                    \
+    }
 
 FORMATTER_INPUT_INTEGER(short);
 FORMATTER_INPUT_INTEGER(unsigned short);
@@ -167,10 +168,11 @@ FORMATTER_INPUT_INTEGER(long double);
 
 #undef FORMATTER_INPUT_INTEGER
 
-#define FORMATTER_INPUT_CHAR(__type__)                  \
-    Formatter &Formatter::operator<<(__type__ c) {      \
-        return (*this) << std::string(1, (char)c);    \
-    }                                                   \
+// NOLINT to suppress missing parentheses warning about __type__.
+#define FORMATTER_INPUT_CHAR(__type__)                          \
+    Formatter& Formatter::operator<<(__type__ c) { /* NOLINT */ \
+        return (*this) << std::string(1, (char)c);              \
+    }
 
 FORMATTER_INPUT_CHAR(char);
 FORMATTER_INPUT_CHAR(signed char);

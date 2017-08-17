@@ -69,19 +69,20 @@ void signal_handler_server(int signal) {
 }
 
 template <class T>
-static void forkServer(const std::string &serviceName) {
-    pid_t pid;
+struct ForkServer {
+    static void run(const std::string& serviceName) {
+        pid_t pid;
 
-    if ((pid = fork()) == 0) {
-        // in child process
-        signal(SIGTERM, signal_handler_server);
-        int status = defaultPassthroughServiceImplementation<T>(serviceName);
-        exit(status);
+        if ((pid = fork()) == 0) {
+            // in child process
+            signal(SIGTERM, signal_handler_server);
+            int status = defaultPassthroughServiceImplementation<T>(serviceName);
+            exit(status);
+        }
+
+        gPidList.push_back({serviceName, pid});
     }
-
-    gPidList.push_back({serviceName, pid});
-    return;
-}
+};
 
 static void killServer(pid_t pid, const char *serverName) {
     if (kill(pid, SIGTERM)) {
@@ -111,9 +112,9 @@ void signal_handler(int signal) {
 int main(int /* argc */, char* /* argv */ []) {
     setenv("TREBLE_TESTING_OVERRIDE", "true", true);
 
-    EACH_SERVER(forkServer);
+    runOnEachServer<ForkServer>();
 
-    forkServer<IBaz>("dyingBaz");
+    ForkServer<IBaz>::run("dyingBaz");
 
     signal(SIGTERM, signal_handler);
     // Parent process should not exit before the forked child processes.
