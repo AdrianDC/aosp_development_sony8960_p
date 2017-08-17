@@ -39,6 +39,7 @@
 #define SK(__x__) ScalarType::Kind::KIND_##__x__
 #define SHOULD_NOT_REACH() CHECK(false) << __LINE__ << ": should not reach here: "
 
+// NOLINT to suppress missing parentheses warnings about __def__.
 #define SWITCH_KIND(__cond__, __action__, __def__)           \
         switch(__cond__) {                                        \
             case SK(BOOL): __action__(bool)                         \
@@ -50,8 +51,8 @@
             case SK(INT32): __action__(int32_t)                     \
             case SK(UINT64): __action__(uint64_t)                   \
             case SK(INT64): __action__(int64_t)                     \
-            default: __def__                                        \
-        }                                                         \
+            default: __def__                        /* NOLINT */    \
+        }
 
 namespace android {
 

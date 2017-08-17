@@ -55,8 +55,8 @@ Expression::Type Expression::coalesceTypes(Type lhs, Type rhs) {
     // because we are reducing everything to two ranks, we can heavily simplify
     // conversion rules
 
-#define SIGNED(i) (i & 2) // i & 0b10
-#define MAX_RANK(i) (i | 1) // i | 0b01
+#define SIGNED(i) ((i) & 2) // i & 0b10
+#define MAX_RANK(i) ((i) | 1) // i | 0b01
 
     if (lhs == rhs) {
         return lhs;
