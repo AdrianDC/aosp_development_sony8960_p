@@ -1306,10 +1306,8 @@ static void usage(const char *me) {
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
-// Also disable container overflow detection to prevent false
-// positives (b/64564544)
 extern "C" const char *__asan_default_options() {
-    return "detect_leaks=0:detect_container_overflow=0";
+    return "detect_leaks=0";
 }
 
 int main(int argc, char **argv) {
