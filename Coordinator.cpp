@@ -273,7 +273,7 @@ std::string Coordinator::getPackagePath(
 
         startPos = dotPos + 1;
     }
-    CHECK_LT(startPos + 1, packageSuffix.length());
+    CHECK_LT(startPos, packageSuffix.length());
     packagePath.append(packageSuffix.substr(startPos));
     packagePath.append("/");
 
