@@ -80,6 +80,8 @@ status_t EnumType::evaluate() {
 }
 
 status_t EnumType::validate() const {
+    CHECK(getSubTypes().empty());
+
     status_t err = mStorageType->callForReference(&Type::validate);
     if (err != OK) return err;
 
