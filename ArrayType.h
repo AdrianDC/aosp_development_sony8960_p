@@ -44,6 +44,8 @@ struct ArrayType : public Type {
 
     std::string typeName() const override;
 
+    std::vector<Reference<Type>> getReferences() const override;
+
     status_t evaluate() override;
     status_t validate() const override;
 

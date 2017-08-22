@@ -65,6 +65,8 @@ struct Method {
     bool isHiddenFromJava() const;
     const std::vector<Annotation *> &annotations() const;
 
+    std::vector<Reference<Type>> getReferences() const;
+
     status_t evaluate();
     status_t validate() const;
 

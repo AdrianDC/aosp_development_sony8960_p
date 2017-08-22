@@ -91,6 +91,57 @@ bool Type::isPointer() const {
     return false;
 }
 
+std::vector<Type*> Type::getDefinedTypes() const {
+    return {};
+}
+
+std::vector<Reference<Type>> Type::getReferences() const {
+    return {};
+}
+
+status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
+                             std::unordered_set<const Type*>* visited) {
+    if (visited->find(this) != visited->end()) return OK;
+    visited->insert(this);
+
+    status_t err = func(this);
+    if (err != OK) return err;
+
+    for (auto* nextType : getDefinedTypes()) {
+        err = nextType->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    for (const auto& nextType : getReferences()) {
+        err = nextType->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    return OK;
+}
+
+status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
+                             std::unordered_set<const Type*>* visited) const {
+    if (visited->find(this) != visited->end()) return OK;
+    visited->insert(this);
+
+    status_t err = func(this);
+    if (err != OK) return err;
+
+    for (const auto* nextType : getDefinedTypes()) {
+        err = nextType->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    for (const auto& nextRef : getReferences()) {
+        const auto* nextType = nextRef.get();
+        err = nextType->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    return OK;
+}
+
 status_t Type::resolveInheritance() {
     return OK;
 }
@@ -101,16 +152,6 @@ status_t Type::evaluate() {
 
 status_t Type::validate() const {
     return OK;
-}
-
-status_t Type::callForReference(std::function<status_t(Type*)> func) {
-    if (isScope()) return OK;
-    return func(this);
-}
-
-status_t Type::callForReference(std::function<status_t(const Type*)> func) const {
-    if (isScope()) return OK;
-    return func(this);
 }
 
 const ScalarType *Type::resolveToScalarType() const {
@@ -498,10 +539,8 @@ bool TemplatedType::isTemplatedType() const {
     return true;
 }
 
-status_t TemplatedType::evaluate() {
-    status_t err = mElementType->callForReference(&Type::evaluate);
-    if (err != OK) return err;
-    return Type::evaluate();
+std::vector<Reference<Type>> TemplatedType::getReferences() const {
+    return {mElementType};
 }
 
 status_t TemplatedType::validate() const {
@@ -511,8 +550,6 @@ status_t TemplatedType::validate() const {
         return UNKNOWN_ERROR;
     }
 
-    status_t err = mElementType->callForReference(&Type::validate);
-    if (err != OK) return err;
     return Type::validate();
 }
 
