@@ -122,8 +122,8 @@ status_t EnumType::validateUniqueNames() const {
                 std::cerr << "ERROR: Redefinition of value '" << value->name() << "'";
             } else {
                 // Defined in super enum
-                std::cerr << "ERROR: Redefinition of value '" << value->name() << "define in enum '"
-                          << definedInType->fullName() << "'";
+                std::cerr << "ERROR: Redefinition of value '" << value->name()
+                          << "' defined in enum '" << definedInType->fullName() << "'";
             }
             std::cerr << " at " << value->location() << "\n";
             return UNKNOWN_ERROR;
