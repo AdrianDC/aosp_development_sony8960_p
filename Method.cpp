@@ -68,17 +68,18 @@ const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
 }
 
+std::vector<Reference<Type>> Method::getReferences() const {
+    std::vector<Reference<Type>> ret;
+    for (const auto* arg : *mArgs) {
+        ret.push_back(*arg);
+    }
+    for (const auto* result : *mResults) {
+        ret.push_back(*result);
+    }
+    return ret;
+}
+
 status_t Method::evaluate() {
-    for (auto* arg : *mArgs) {
-        status_t err = (*arg)->callForReference(&Type::evaluate);
-        if (err != OK) return err;
-    }
-
-    for (auto* result : *mResults) {
-        status_t err = (*result)->callForReference(&Type::evaluate);
-        if (err != OK) return err;
-    }
-
     for (auto* annotaion : *mAnnotations) {
         status_t err = annotaion->evaluate();
         if (err != OK) return err;
@@ -88,16 +89,6 @@ status_t Method::evaluate() {
 }
 
 status_t Method::validate() const {
-    for (const auto* arg : *mArgs) {
-        status_t err = (*arg)->callForReference(&Type::validate);
-        if (err != OK) return err;
-    }
-
-    for (const auto* result : *mResults) {
-        status_t err = (*result)->callForReference(&Type::validate);
-        if (err != OK) return err;
-    }
-
     for (const auto* annotaion : *mAnnotations) {
         status_t err = annotaion->validate();
         if (err != OK) return err;

@@ -22,6 +22,7 @@
 #include <utils/Errors.h>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "Reference.h"
@@ -53,6 +54,19 @@ struct Type {
     virtual bool isTypeDef() const;
     virtual bool isVector() const;
 
+    // All types defined in this type.
+    virtual std::vector<Type*> getDefinedTypes() const;
+
+    // All types referenced in this type.
+    virtual std::vector<Reference<Type>> getReferences() const;
+
+    // Proceeds recursive pass
+    // Makes sure to visit each node only once.
+    status_t recursivePass(const std::function<status_t(Type*)>& func,
+                           std::unordered_set<const Type*>* visited);
+    status_t recursivePass(const std::function<status_t(const Type*)>& func,
+                           std::unordered_set<const Type*>* visited) const;
+
     // Recursive tree pass that completes type declarations
     // that depend on super types
     virtual status_t resolveInheritance();
@@ -63,15 +77,6 @@ struct Type {
     // Recursive tree pass that validates all type-related
     // syntax restrictions
     virtual status_t validate() const;
-
-    // Runs recursive tree pass for completing type declaration in references
-    // The only current case when type is declared in reference is
-    // array (array size is reference-related) and templates (as they can
-    // contain array as element type)
-    // A special call is needed to avoid recursive loop. ex:
-    // struct S { S[42] arr; }; -- we need to avoid pass call for S from array
-    status_t callForReference(std::function<status_t(Type*)> func);
-    status_t callForReference(std::function<status_t(const Type*)> func) const;
 
     virtual const ScalarType *resolveToScalarType() const;
 
@@ -272,13 +277,17 @@ private:
 struct TemplatedType : public Type {
     void setElementType(const Reference<Type>& elementType);
     Type* getElementType() const;
-    bool isTemplatedType() const override;
-    virtual bool isCompatibleElementType(Type* elementType) const = 0;
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-    status_t emitVtsAttributeType(Formatter &out) const override;
 
-    virtual status_t evaluate() override;
+    bool isTemplatedType() const override;
+
+    virtual bool isCompatibleElementType(Type* elementType) const = 0;
+
+    std::vector<Reference<Type>> getReferences() const override;
+
     virtual status_t validate() const override;
+
+    status_t emitVtsTypeDeclarations(Formatter& out) const override;
+    status_t emitVtsAttributeType(Formatter& out) const override;
 
    protected:
     TemplatedType();
