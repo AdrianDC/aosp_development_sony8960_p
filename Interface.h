@@ -87,6 +87,7 @@ struct Interface : public Scope {
     std::string getVtsType() const override;
 
     std::vector<Reference<Type>> getReferences() const override;
+    std::vector<Reference<Type>> getStrongReferences() const override;
 
     std::vector<ConstantExpression*> getConstantExpressions() const override;
 
