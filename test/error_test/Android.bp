@@ -24,6 +24,15 @@ genrule {
          "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
          "    test.same_package_name@1.0  >/dev/null 2>&1)" +
          "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.struct_unique_field_names@1.0  >/dev/null 2>&1)" +
+         "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.enum_unique_field_names@1.0  >/dev/null 2>&1)" +
+         "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.enum_unique_field_names_extends@1.0  >/dev/null 2>&1)" +
+         "&&" +
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
     srcs: [
