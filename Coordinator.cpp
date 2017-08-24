@@ -105,8 +105,7 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
         ast->addImportedAST(typesAST);
     }
 
-    if (parseFile(ast) != OK || ast->resolveInheritance() != OK || ast->evaluate() != OK ||
-        ast->validate() != OK) {
+    if (parseFile(ast) != OK || ast->postParse() != OK) {
         delete ast;
         ast = nullptr;
 
