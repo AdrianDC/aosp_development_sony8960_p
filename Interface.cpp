@@ -70,7 +70,7 @@ enum {
 };
 
 Interface::Interface(const char* localName, const Location& location, Scope* parent,
-                     const Reference<Interface>& superType)
+                     const Reference<Type>& superType)
     : Scope(localName, location, parent),
       mSuperType(superType),
       mIsJavaCompatibleInProgress(false) {}
@@ -508,6 +508,11 @@ status_t Interface::evaluate() {
 status_t Interface::validate() const {
     CHECK(isIBase() == mSuperType.isEmptyReference());
 
+    if (!isIBase() && !mSuperType->isInterface()) {
+        std::cerr << "ERROR: You can only extend interfaces at " << mSuperType.location() << "\n";
+        return UNKNOWN_ERROR;
+    }
+
     for (const auto* method : methods()) {
         status_t err = method->validate();
         if (err != OK) return err;
@@ -589,7 +594,13 @@ bool Interface::addAllReservedMethods() {
 }
 
 const Interface* Interface::superType() const {
-    return isIBase() ? nullptr : mSuperType;
+    if (isIBase()) return nullptr;
+    if (!mSuperType->isInterface()) {
+        // This is actually an error
+        // that would be caught in validate
+        return nullptr;
+    }
+    return static_cast<Interface*>(mSuperType.get());
 }
 
 std::vector<const Interface *> Interface::typeChain() const {
