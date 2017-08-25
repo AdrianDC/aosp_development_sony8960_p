@@ -489,7 +489,7 @@ fqtype
           $$ = new Reference<Type>(*$1, convertYYLoc(@1));
 
           Type* type = ast->lookupType($$->getLookupFqName(), *scope);
-          if ($$ == NULL) {
+          if (type == nullptr) {
               std::cerr << "ERROR: Failed to lookup type '" << $1->string() << "' at "
                         << @1
                         << "\n";
