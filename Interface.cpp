@@ -653,17 +653,6 @@ std::vector<InterfaceAndMethod> Interface::allSuperMethodsFromRoot() const {
     return isIBase() ? std::vector<InterfaceAndMethod>() : superType()->allMethodsFromRoot();
 }
 
-Method *Interface::lookupMethod(const std::string& name) const {
-    for (const auto &tuple : allMethodsFromRoot()) {
-        Method *method = tuple.method();
-        if (method->name() == name) {
-            return method;
-        }
-    }
-
-    return nullptr;
-}
-
 std::string Interface::getBaseName() const {
     return fqName().getInterfaceBaseName();
 }
