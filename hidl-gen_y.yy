@@ -629,7 +629,7 @@ type_declaration
               // Since typedefs are always resolved to their target it makes
               // little sense to annotate them and have their annotations
               // impose semantics other than their target type.
-              std::cerr << "ERROR: typedefs cannot be annotated. at " << @2
+              std::cerr << "ERROR: typedefs cannot be annotated at " << @2
                         << "\n";
 
               YYERROR;
@@ -653,7 +653,7 @@ interface_declaration
 
           if (isIBase) {
               if (superType != nullptr) {
-                  std::cerr << "ERROR: IBase must not extend any interface. at " << @3
+                  std::cerr << "ERROR: IBase must not extend any interface at " << @3
                         << "\n";
 
                   YYERROR;
@@ -678,14 +678,14 @@ interface_declaration
 
           if ($2[0] != 'I') {
               std::cerr << "ERROR: All interface names must start with an 'I' "
-                        << "prefix. at " << @2 << "\n";
+                        << "prefix at " << @2 << "\n";
 
               YYERROR;
           }
 
           if (*scope != ast->getRootScope()) {
               std::cerr << "ERROR: All interface must declared in "
-                        << "global scope. at " << @2 << "\n";
+                        << "global scope at " << @2 << "\n";
 
               YYERROR;
           }
