@@ -460,6 +460,21 @@ bool Interface::addMethod(Method *method) {
     return true;
 }
 
+std::vector<Reference<Type>> Interface::getReferences() const {
+    std::vector<Reference<Type>> ret;
+
+    if (superType() != nullptr) {
+        ret.push_back(mSuperType);
+    }
+
+    for (const auto* method : methods()) {
+        const auto& references = method->getReferences();
+        ret.insert(ret.end(), references.begin(), references.end());
+    }
+
+    return ret;
+}
+
 status_t Interface::resolveInheritance() {
     size_t serial = FIRST_CALL_TRANSACTION;
     for (const auto* ancestor : superTypeChain()) {

@@ -40,7 +40,8 @@ struct Reference {
         CHECK(type != nullptr);
     }
 
-    Reference(const Reference& ref)
+    template <class OtherT>
+    Reference(const Reference<OtherT>& ref)
         : mResolved(ref.mResolved), mFqName(ref.mFqName), mLocation(ref.mLocation) {}
 
     /* Returns true iff referred type is resolved

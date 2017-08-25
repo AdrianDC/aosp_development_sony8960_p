@@ -54,6 +54,8 @@ struct Scope : public NamedType {
 
     void setAnnotations(std::vector<Annotation*>* annotations);
 
+    std::vector<Type*> getDefinedTypes() const override;
+
     virtual status_t resolveInheritance() override;
     virtual status_t evaluate() override;
     virtual status_t validate() const override;
