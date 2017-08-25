@@ -264,7 +264,7 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
 %type<referenceToType> type enum_storage_type
 %type<referenceToType> array_type_base
 %type<arrayType> array_type
-%type<referenceToInterface> opt_extends
+%type<referenceToType> opt_extends
 %type<type> type_declaration type_declaration_body interface_declaration typedef_declaration
 %type<type> named_struct_or_union_declaration named_enum_declaration
 %type<type> compound_declaration annotated_compound_declaration
@@ -291,7 +291,6 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
     const char *str;
     android::Type* type;
     android::Reference<android::Type>* referenceToType;
-    android::Reference<android::Interface>* referenceToInterface;
     android::ArrayType *arrayType;
     android::TemplatedType *templatedType;
     android::FQName *fqName;
@@ -553,24 +552,8 @@ imports
     ;
 
 opt_extends
-    : /* empty */
-      {
-          $$ = nullptr;
-      }
-    | EXTENDS fqtype
-      {
-          // TODO(b/31827278)
-          // While deleting lookup calls, move this check
-          if (!(*$2)->isInterface()) {
-              std::cerr << "ERROR: You can only extend interfaces. at " << @2
-                        << "\n";
-
-              YYERROR;
-          }
-
-          $$ = new Reference<Interface>(
-              static_cast<Interface*>($2->get()), $2->location());
-      }
+    : /* empty */ { $$ = nullptr; }
+    | EXTENDS fqtype { $$ = $2; }
     ;
 
 interface_declarations
@@ -648,7 +631,7 @@ type_declaration_body
 interface_declaration
     : INTERFACE valid_type_name opt_extends
       {
-          Reference<Interface>* superType = $3;
+          Reference<Type>* superType = $3;
           bool isIBase = ast->package().package() == gIBasePackageFqName.string();
 
           if (isIBase) {
@@ -658,7 +641,7 @@ interface_declaration
 
                   YYERROR;
               }
-              superType = new Reference<Interface>();
+              superType = new Reference<Type>();
           } else {
               if (!ast->addImport(gIBaseFqName.string().c_str())) {
                   std::cerr << "ERROR: Unable to automatically import '"
@@ -669,10 +652,10 @@ interface_declaration
               }
 
               if (superType == nullptr) {
-                  superType = new Reference<Interface>(gIBaseFqName, convertYYLoc(@$));
+                  superType = new Reference<Type>(gIBaseFqName, convertYYLoc(@$));
                   Type* type = ast->lookupType(superType->getLookupFqName(), *scope);
                   CHECK(type != nullptr && type->isInterface());
-                  superType->set(static_cast<Interface*>(type));
+                  superType->set(type);
               }
           }
 
