@@ -30,7 +30,7 @@ struct InterfaceAndMethod;
 
 struct Interface : public Scope {
     Interface(const char* localName, const Location& location, Scope* parent,
-              const Reference<Interface>& superType);
+              const Reference<Type>& superType);
 
     bool addMethod(Method *method);
     bool addAllReservedMethods();
@@ -120,7 +120,7 @@ struct Interface : public Scope {
     bool isJavaCompatible() const override;
 
    private:
-    Reference<Interface> mSuperType;
+    Reference<Type> mSuperType;
 
     std::vector<Method*> mUserMethods;
     std::vector<Method*> mReservedMethods;
