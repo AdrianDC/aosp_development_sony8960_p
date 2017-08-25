@@ -18,10 +18,10 @@
 
 #include "Coordinator.h"
 #include "EnumType.h"
+#include "FmqType.h"
 #include "HandleType.h"
 #include "Interface.h"
 #include "Location.h"
-#include "FmqType.h"
 #include "Scope.h"
 #include "TypeDef.h"
 
@@ -82,16 +82,30 @@ bool AST::containsInterfaces() const {
     return mRootScope.containsInterfaces();
 }
 
+status_t AST::postParse() {
+    status_t err = resolveInheritance();
+    if (err != OK) return err;
+    err = evaluate();
+    if (err != OK) return err;
+    err = validate();
+    if (err != OK) return err;
+
+    return OK;
+}
+
 status_t AST::resolveInheritance() {
-    return mRootScope.resolveInheritance();
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(&Type::resolveInheritance, &visited);
 }
 
 status_t AST::evaluate() {
-    return mRootScope.evaluate();
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(&Type::evaluate, &visited);
 }
 
 status_t AST::validate() const {
-    return mRootScope.validate();
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(&Type::validate, &visited);
 }
 
 bool AST::addImport(const char *import) {

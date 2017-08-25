@@ -67,6 +67,10 @@ struct AST {
 
     void addImportedAST(AST *ast);
 
+    // Calls all passes after parsing required before
+    // being ready to generate output.
+    status_t postParse();
+
     // Recursive tree pass that completes type declarations
     // that depend on super types
     status_t resolveInheritance();

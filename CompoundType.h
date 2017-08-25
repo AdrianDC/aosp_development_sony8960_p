@@ -43,7 +43,8 @@ struct CompoundType : public Scope {
 
     std::string typeName() const override;
 
-    status_t evaluate() override;
+    std::vector<Reference<Type>> getReferences() const override;
+
     status_t validate() const override;
     status_t validateUniqueNames() const;
 

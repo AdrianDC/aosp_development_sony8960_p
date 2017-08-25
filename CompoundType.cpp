@@ -37,20 +37,16 @@ void CompoundType::setFields(std::vector<NamedReference<Type>*>* fields) {
     mFields = fields;
 }
 
-status_t CompoundType::evaluate() {
-    for (auto* field : *mFields) {
-        status_t err = (*field)->callForReference(&Type::evaluate);
-        if (err != OK) return err;
+std::vector<Reference<Type>> CompoundType::getReferences() const {
+    std::vector<Reference<Type>> ret;
+    for (const auto* field : *mFields) {
+        ret.push_back(*field);
     }
-
-    return Scope::evaluate();
+    return ret;
 }
 
 status_t CompoundType::validate() const {
     for (const auto* field : *mFields) {
-        status_t err = (*field)->callForReference(&Type::validate);
-        if (err != OK) return err;
-
         const Type& type = field->type();
 
         if (type.isBinder()
