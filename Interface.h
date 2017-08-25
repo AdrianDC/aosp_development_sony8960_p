@@ -43,7 +43,6 @@ struct Interface : public Scope {
 
     const Interface* superType() const;
 
-    Method* lookupMethod(const std::string& name) const;
     // Super type chain to root type.
     // First element is superType().
     std::vector<const Interface *> superTypeChain() const;
