@@ -93,14 +93,31 @@ status_t AST::postParse() {
     return OK;
 }
 
+status_t AST::constantExpressionRecursivePass(
+    const std::function<status_t(ConstantExpression*)>& func) {
+    std::unordered_set<const Type*> visitedTypes;
+    std::unordered_set<const ConstantExpression*> visitedCE;
+    return mRootScope.recursivePass(
+        [&](Type* type) -> status_t {
+            for (auto* ce : type->getConstantExpressions()) {
+                status_t err = ce->recursivePass(func, &visitedCE);
+                if (err != OK) return err;
+            }
+            return OK;
+        },
+        &visitedTypes);
+}
+
 status_t AST::resolveInheritance() {
     std::unordered_set<const Type*> visited;
     return mRootScope.recursivePass(&Type::resolveInheritance, &visited);
 }
 
 status_t AST::evaluate() {
-    std::unordered_set<const Type*> visited;
-    return mRootScope.recursivePass(&Type::evaluate, &visited);
+    return constantExpressionRecursivePass([](ConstantExpression* ce) {
+        ce->evaluate();
+        return OK;
+    });
 }
 
 status_t AST::validate() const {
