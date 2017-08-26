@@ -134,18 +134,9 @@ status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
     return OK;
 }
 
-status_t Scope::resolveInheritance() {
-    status_t err = forEachType(&Type::resolveInheritance);
-    if (err != OK) return err;
-    return NamedType::resolveInheritance();
-}
-
 status_t Scope::evaluate() {
-    status_t err = forEachType(&Type::evaluate);
-    if (err != OK) return err;
-
     for (auto* annotation : mAnnotations) {
-        err = annotation->evaluate();
+        status_t err = annotation->evaluate();
         if (err != OK) return err;
     }
 
@@ -153,11 +144,8 @@ status_t Scope::evaluate() {
 }
 
 status_t Scope::validate() const {
-    status_t err = forEachType(&Type::validate);
-    if (err != OK) return err;
-
     for (const auto* annotation : mAnnotations) {
-        err = annotation->validate();
+        status_t err = annotation->validate();
         if (err != OK) return err;
     }
 
