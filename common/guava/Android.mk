@@ -28,6 +28,6 @@ include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-    guava-20.0.jar
+    guava-21.0.jar
 
 include $(BUILD_HOST_PREBUILT)
