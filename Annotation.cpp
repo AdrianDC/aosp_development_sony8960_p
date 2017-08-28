@@ -80,6 +80,9 @@ ConstantExpressionAnnotationParam::ConstantExpressionAnnotationParam(
     : AnnotationParam(name), mValues(values) {}
 
 std::string convertToString(const ConstantExpression* value) {
+    if (value->descriptionIsTrivial()) {
+        return value->value();
+    }
     return value->value() + " /* " + value->description() + " */";
 }
 
