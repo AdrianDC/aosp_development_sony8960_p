@@ -92,7 +92,7 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
         // fall through.
     }
 
-    std::string path = getAbsolutePackagePath(fqName);
+    std::string path = makeAbsolute(getPackagePath(fqName));
 
     path.append(fqName.name());
     path.append(".hal");
@@ -213,14 +213,12 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
     return ret;
 }
 
-std::string Coordinator::getAbsolutePackagePath(const FQName& fqName) const {
-    const std::string packagePath = getPackagePath(fqName);
-
-    if (StringHelper::StartsWith(packagePath, "/") || mRootPath.empty()) {
-        return packagePath;
+std::string Coordinator::makeAbsolute(const std::string& path) const {
+    if (StringHelper::StartsWith(path, "/") || mRootPath.empty()) {
+        return path;
     }
 
-    return StringHelper::RTrim(mRootPath, "/") + "/" + packagePath;
+    return StringHelper::RTrim(mRootPath, "/") + "/" + path;
 }
 
 std::string Coordinator::getPackageRoot(const FQName &fqName) const {
@@ -287,7 +285,7 @@ status_t Coordinator::getPackageInterfaceFiles(
         std::vector<std::string> *fileNames) const {
     fileNames->clear();
 
-    const std::string packagePath = getAbsolutePackagePath(package);
+    const std::string packagePath = makeAbsolute(getPackagePath(package));
 
     DIR *dir = opendir(packagePath.c_str());
 
@@ -438,7 +436,8 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
     FQName prevPackage = currentPackage;
     while (prevPackage.getPackageMinorVersion() > 0) {
         prevPackage = prevPackage.downRev();
-        if (existdir(getAbsolutePackagePath(prevPackage).c_str())) {
+        const std::string prevPackagePath = makeAbsolute(getPackagePath(prevPackage));
+        if (existdir(prevPackagePath.c_str())) {
             hasPrevPackage = true;
             break;
         }
@@ -550,7 +549,7 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
             continue;
         }
 
-        std::string hashPath = getPackageRootPath(currentFQName) + "/current.txt";
+        std::string hashPath = makeAbsolute(getPackageRootPath(currentFQName)) + "/current.txt";
         std::string error;
         std::vector<std::string> frozen = Hash::lookupHash(hashPath, currentFQName.string(), &error);
 
