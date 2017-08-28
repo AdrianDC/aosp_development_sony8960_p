@@ -56,7 +56,6 @@ struct Scope : public NamedType {
 
     std::vector<Type*> getDefinedTypes() const override;
 
-    virtual status_t resolveInheritance() override;
     virtual status_t evaluate() override;
     virtual status_t validate() const override;
 
