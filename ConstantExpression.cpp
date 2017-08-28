@@ -344,7 +344,6 @@ void ReferenceConstantExpression::evaluate() {
 std::unique_ptr<ConstantExpression> ConstantExpression::addOne(ScalarType::Kind baseKind) {
     auto ret = std::make_unique<BinaryConstantExpression>(
         this, "+", ConstantExpression::One(baseKind).release());
-    ret->mTrivialDescription = true;
     return ret;
 }
 
@@ -454,6 +453,7 @@ ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalId
                                                          const std::string& expr)
     : mReference(value) {
     mExpr = expr;
+    mTrivialDescription = mExpr.empty();
 }
 
 /*
