@@ -252,7 +252,7 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
             out << ",";
 
             std::string comment = entry->comment();
-            if (!comment.empty() && comment != value) {
+            if (!comment.empty()) {
                 out << " // " << comment;
             }
 
@@ -452,7 +452,7 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
             out << ";";
 
             std::string comment = entry->comment();
-            if (!comment.empty() && comment != value) {
+            if (!comment.empty()) {
                 out << " // " << comment;
             }
 
@@ -675,7 +675,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
                 out << ";";
 
                 std::string comment = entry->comment();
-                if (!comment.empty() && comment != value) {
+                if (!comment.empty()) {
                     out << " // " << comment;
                 }
 
@@ -713,7 +713,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
             out << ",";
 
             std::string comment = entry->comment();
-            if (!comment.empty() && comment != value) {
+            if (!comment.empty()) {
                 out << " // " << comment;
             }
 
@@ -758,6 +758,7 @@ std::string EnumValue::javaValue(ScalarType::Kind castKind) const {
 
 std::string EnumValue::comment() const {
     CHECK(mValue != nullptr);
+    if (mValue->descriptionIsTrivial()) return "";
     return mValue->description();
 }
 
