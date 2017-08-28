@@ -125,13 +125,9 @@ private:
     std::vector<std::string>::const_iterator findPackageRoot(
             const FQName &fqName) const;
 
-    // Returns abs package path by prepending the root path if a package
-    // path is non-absolute.
-    // If root is '/android/master' and getPackagePath returns 'h/i/nfc/V1_0'
-    // this will return '/android/master/h/i/nfc/V1_0'.
-    // If root is '/android/master' and getPackagePath returns '/abs/path/to/nfc/V1_0'
-    // this will return '/abs/path/to/nfc/V1_0'
-    std::string getAbsolutePackagePath(const FQName& fqName) const;
+    // Returns the given path if it is absolute, otherwise it returns
+    // the path relative to mRootPath
+    std::string makeAbsolute(const std::string& string) const;
 
     // Rules of enforceRestrictionsOnPackage are listed below.
     status_t enforceMinorVersionUprevs(const FQName &fqName) const;
