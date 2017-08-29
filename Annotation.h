@@ -21,6 +21,7 @@
 #include <android-base/macros.h>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "ConstantExpression.h"
 
@@ -42,8 +43,7 @@ struct AnnotationParam {
     /* Returns value interpretted as a boolean */
     bool getSingleBool() const;
 
-    virtual status_t evaluate();
-    virtual status_t validate() const;
+    virtual std::vector<ConstantExpression*> getConstantExpressions() const;
 
    protected:
     const std::string mName;
@@ -68,7 +68,7 @@ struct ConstantExpressionAnnotationParam : AnnotationParam {
     std::vector<std::string> getValues() const override;
     std::string getSingleValue() const override;
 
-    status_t evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
    private:
     std::vector<ConstantExpression*>* const mValues;
@@ -83,8 +83,7 @@ struct Annotation {
     const AnnotationParamVector &params() const;
     const AnnotationParam *getParam(const std::string &name) const;
 
-    status_t evaluate();
-    status_t validate() const;
+    std::vector<ConstantExpression*> getConstantExpressions() const;
 
     void dump(Formatter &out) const;
 

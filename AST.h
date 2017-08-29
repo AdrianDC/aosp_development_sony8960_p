@@ -20,6 +20,7 @@
 
 #include <android-base/macros.h>
 #include <hidl-util/FQName.h>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -31,6 +32,7 @@
 namespace android {
 
 struct Coordinator;
+struct ConstantExpression;
 struct EnumValue;
 struct Formatter;
 struct Interface;
@@ -70,6 +72,10 @@ struct AST {
     // Calls all passes after parsing required before
     // being ready to generate output.
     status_t postParse();
+
+    // Recursive pass on constant expression tree
+    status_t constantExpressionRecursivePass(
+        const std::function<status_t(ConstantExpression*)>& func);
 
     // Recursive tree pass that completes type declarations
     // that depend on super types

@@ -16,6 +16,7 @@
 
 #include "Type.h"
 
+#include "ConstantExpression.h"
 #include "ScalarType.h"
 
 #include <hidl-util/Formatter.h>
@@ -99,6 +100,10 @@ std::vector<Reference<Type>> Type::getReferences() const {
     return {};
 }
 
+std::vector<ConstantExpression*> Type::getConstantExpressions() const {
+    return {};
+}
+
 status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
                              std::unordered_set<const Type*>* visited) {
     if (visited->find(this) != visited->end()) return OK;
@@ -143,10 +148,6 @@ status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
 }
 
 status_t Type::resolveInheritance() {
-    return OK;
-}
-
-status_t Type::evaluate() {
     return OK;
 }
 

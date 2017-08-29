@@ -475,6 +475,15 @@ std::vector<Reference<Type>> Interface::getReferences() const {
     return ret;
 }
 
+std::vector<ConstantExpression*> Interface::getConstantExpressions() const {
+    std::vector<ConstantExpression*> ret;
+    for (const auto* method : methods()) {
+        const auto& retMethod = method->getConstantExpressions();
+        ret.insert(ret.end(), retMethod.begin(), retMethod.end());
+    }
+    return ret;
+}
+
 status_t Interface::resolveInheritance() {
     size_t serial = FIRST_CALL_TRANSACTION;
     for (const auto* ancestor : superTypeChain()) {
@@ -496,26 +505,12 @@ status_t Interface::resolveInheritance() {
     return Scope::resolveInheritance();
 }
 
-status_t Interface::evaluate() {
-    for (auto* method : methods()) {
-        status_t err = method->evaluate();
-        if (err != OK) return err;
-    }
-
-    return Scope::evaluate();
-}
-
 status_t Interface::validate() const {
     CHECK(isIBase() == mSuperType.isEmptyReference());
 
     if (!isIBase() && !mSuperType->isInterface()) {
         std::cerr << "ERROR: You can only extend interfaces at " << mSuperType.location() << "\n";
         return UNKNOWN_ERROR;
-    }
-
-    for (const auto* method : methods()) {
-        status_t err = method->validate();
-        if (err != OK) return err;
     }
 
     status_t err = validateUniqueNames();

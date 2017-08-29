@@ -17,6 +17,7 @@
 #include "Scope.h"
 
 #include "Annotation.h"
+#include "ConstantExpression.h"
 #include "Interface.h"
 
 #include <android-base/logging.h>
@@ -122,6 +123,15 @@ std::vector<Type*> Scope::getDefinedTypes() const {
     return ret;
 }
 
+std::vector<ConstantExpression*> Scope::getConstantExpressions() const {
+    std::vector<ConstantExpression*> ret;
+    for (const auto* annotation : mAnnotations) {
+        const auto& retAnnotation = annotation->getConstantExpressions();
+        ret.insert(ret.end(), retAnnotation.begin(), retAnnotation.end());
+    }
+    return ret;
+}
+
 status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
         status_t err = func(mTypes[i]);
@@ -132,24 +142,6 @@ status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
     }
 
     return OK;
-}
-
-status_t Scope::evaluate() {
-    for (auto* annotation : mAnnotations) {
-        status_t err = annotation->evaluate();
-        if (err != OK) return err;
-    }
-
-    return NamedType::evaluate();
-}
-
-status_t Scope::validate() const {
-    for (const auto* annotation : mAnnotations) {
-        status_t err = annotation->validate();
-        if (err != OK) return err;
-    }
-
-    return NamedType::validate();
 }
 
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
@@ -247,15 +239,6 @@ bool LocalIdentifier::isEnumValue() const {
 
 ConstantExpression* LocalIdentifier::constExpr() const {
     return nullptr;
-}
-
-status_t LocalIdentifier::evaluate() {
-    return OK;
-}
-
-status_t LocalIdentifier::validate() const {
-    CHECK(isEnumValue());
-    return OK;
 }
 
 }  // namespace android
