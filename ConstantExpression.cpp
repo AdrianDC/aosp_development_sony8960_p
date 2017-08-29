@@ -59,7 +59,7 @@ namespace android {
 
 static inline bool isSupported(ScalarType::Kind kind) {
     // TODO(b/64358435) move isSupported to EnumValue
-    return SK(BOOL) == kind || ScalarType(kind).isValidEnumStorageType();
+    return SK(BOOL) == kind || ScalarType(kind, nullptr /* parent */).isValidEnumStorageType();
 }
 
 /* See docs at the end for details on integral promotion. */
@@ -386,9 +386,10 @@ std::string ConstantExpression::cppValue(ScalarType::Kind castKind) const {
     // -(uint64_t)9223372036854775808 == 9223372036854775808 could not
     // be narrowed to int64_t.
     if(castKind == SK(INT64) && (int64_t)mValue == INT64_MIN) {
-        return strdup(("static_cast<"
-            + ScalarType(SK(INT64)).getCppStackType() // "int64_t"
-            + ">(" + literal + "ull)").c_str());
+        return strdup(("static_cast<" +
+                       ScalarType(SK(INT64), nullptr /* parent */).getCppStackType()  // "int64_t"
+                       + ">(" + literal + "ull)")
+                          .c_str());
     }
 
     // add suffix if necessary.

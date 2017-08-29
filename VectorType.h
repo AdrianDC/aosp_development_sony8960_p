@@ -26,7 +26,7 @@
 namespace android {
 
 struct VectorType : public TemplatedType {
-    VectorType();
+    VectorType(Scope* parent);
 
     bool isVector() const override;
     bool isVectorOfBinders() const;

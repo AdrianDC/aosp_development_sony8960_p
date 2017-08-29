@@ -41,6 +41,7 @@ FQNAME                  ({COMPONENT}|{VERSION})(({DOT}|":"+){COMPONENT}|{VERSION
 #include "Method.h"
 #include "PointerType.h"
 #include "ScalarType.h"
+#include "Scope.h"
 #include "StringType.h"
 #include "VectorType.h"
 #include "RefType.h"
@@ -53,11 +54,14 @@ FQNAME                  ({COMPONENT}|{VERSION})(({DOT}|":"+){COMPONENT}|{VERSION
 using namespace android;
 using token = yy::parser::token;
 
-#define SCALAR_TYPE(kind)                                       \
-    do {                                                        \
-        yylval->type = new ScalarType(ScalarType::kind);        \
-        return token::TYPE;                                   \
-    } while (0)
+#define SCALAR_TYPE(kind)                                        \
+    {                                                            \
+        yylval->type = new ScalarType(ScalarType::kind, *scope); \
+        return token::TYPE;                                      \
+    }
+
+#define YY_DECL int yylex(YYSTYPE* yylval_param, YYLTYPE* yylloc_param,  \
+    yyscan_t yyscanner, android::Scope** const scope)
 
 #define YY_USER_ACTION yylloc->step(); yylloc->columns(yyleng);
 
@@ -95,9 +99,9 @@ using token = yy::parser::token;
 "struct"		{ return token::STRUCT; }
 "typedef"		{ return token::TYPEDEF; }
 "union"			{ return token::UNION; }
-"bitfield"		{ yylval->templatedType = new BitFieldType; return token::TEMPLATED; }
-"vec"			{ yylval->templatedType = new VectorType; return token::TEMPLATED; }
-"ref"			{ yylval->templatedType = new RefType; return token::TEMPLATED; }
+"bitfield"		{ yylval->templatedType = new BitFieldType(*scope); return token::TEMPLATED; }
+"vec"			{ yylval->templatedType = new VectorType(*scope); return token::TEMPLATED; }
+"ref"			{ yylval->templatedType = new RefType(*scope); return token::TEMPLATED; }
 "oneway"		{ return token::ONEWAY; }
 
 "bool"			{ SCALAR_TYPE(KIND_BOOL); }
@@ -112,14 +116,14 @@ using token = yy::parser::token;
 "float"			{ SCALAR_TYPE(KIND_FLOAT); }
 "double"		{ SCALAR_TYPE(KIND_DOUBLE); }
 
-"death_recipient"	{ yylval->type = new DeathRecipientType; return token::TYPE; }
-"handle"		{ yylval->type = new HandleType; return token::TYPE; }
-"memory"		{ yylval->type = new MemoryType; return token::TYPE; }
-"pointer"		{ yylval->type = new PointerType; return token::TYPE; }
-"string"		{ yylval->type = new StringType; return token::TYPE; }
+"death_recipient"	{ yylval->type = new DeathRecipientType(*scope); return token::TYPE; }
+"handle"		{ yylval->type = new HandleType(*scope); return token::TYPE; }
+"memory"		{ yylval->type = new MemoryType(*scope); return token::TYPE; }
+"pointer"		{ yylval->type = new PointerType(*scope); return token::TYPE; }
+"string"		{ yylval->type = new StringType(*scope); return token::TYPE; }
 
-"fmq_sync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorSync"); return token::TEMPLATED; }
-"fmq_unsync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorUnsync"); return token::TEMPLATED; }
+"fmq_sync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorSync", *scope); return token::TEMPLATED; }
+"fmq_unsync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorUnsync", *scope); return token::TEMPLATED; }
 
 "("			{ return('('); }
 ")"			{ return(')'); }

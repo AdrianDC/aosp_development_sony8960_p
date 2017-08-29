@@ -23,7 +23,7 @@
 namespace android {
 
 struct PointerType : public Type {
-    PointerType();
+    PointerType(Scope* parent);
 
     bool isPointer() const override;
 

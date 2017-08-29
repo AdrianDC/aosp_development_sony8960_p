@@ -23,14 +23,13 @@
 
 namespace android {
 
-ArrayType::ArrayType(ArrayType *srcArray, ConstantExpression *size)
-    : mElementType(srcArray->mElementType),
-      mSizes(srcArray->mSizes) {
+ArrayType::ArrayType(ArrayType* srcArray, ConstantExpression* size, Scope* parent)
+    : Type(parent), mElementType(srcArray->mElementType), mSizes(srcArray->mSizes) {
     prependDimension(size);
 }
 
-ArrayType::ArrayType(const Reference<Type>& elementType, ConstantExpression* size)
-    : mElementType(elementType) {
+ArrayType::ArrayType(const Reference<Type>& elementType, ConstantExpression* size, Scope* parent)
+    : Type(parent), mElementType(elementType) {
     CHECK(!elementType.isEmptyReference());
     prependDimension(size);
 }

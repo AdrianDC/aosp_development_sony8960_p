@@ -29,9 +29,9 @@ struct ConstantExpression;
 
 struct ArrayType : public Type {
     // Extends existing array by adding another dimension.
-    ArrayType(ArrayType *srcArray, ConstantExpression *size);
+    ArrayType(ArrayType* srcArray, ConstantExpression* size, Scope* parent);
 
-    ArrayType(const Reference<Type>& elementType, ConstantExpression* size);
+    ArrayType(const Reference<Type>& elementType, ConstantExpression* size, Scope* parent);
 
     bool isArray() const override;
     bool canCheckEquality() const override;

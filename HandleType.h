@@ -23,7 +23,7 @@
 namespace android {
 
 struct HandleType : public Type {
-    HandleType();
+    HandleType(Scope* parent);
 
     bool isHandle() const override;
 

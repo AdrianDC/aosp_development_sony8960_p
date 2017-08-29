@@ -23,7 +23,7 @@
 namespace android {
 
 struct FmqType : public TemplatedType {
-    FmqType(const char *nsp, const char *name);
+    FmqType(const char* nsp, const char* name, Scope* parent);
 
     std::string fullName() const;
 

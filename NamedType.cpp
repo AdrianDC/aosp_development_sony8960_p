@@ -19,7 +19,7 @@
 namespace android {
 
 NamedType::NamedType(const char* localName, const Location& loc, Scope* parent)
-    : mLocalName(localName), mLocation(loc), mParent(parent) {}
+    : Type(parent), mLocalName(localName), mLocation(loc) {}
 
 bool NamedType::isNamedType() const {
     return true;
@@ -51,10 +51,6 @@ std::string NamedType::fullJavaName() const {
 
 const Location &NamedType::location() const {
     return mLocation;
-}
-
-Scope* NamedType::parent() const {
-    return mParent;
 }
 
 void NamedType::emitDump(

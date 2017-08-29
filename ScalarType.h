@@ -37,7 +37,7 @@ struct ScalarType : public Type {
         KIND_DOUBLE,
     };
 
-    ScalarType(Kind kind);
+    ScalarType(Kind kind, Scope* parent);
 
     bool isScalar() const override;
 
