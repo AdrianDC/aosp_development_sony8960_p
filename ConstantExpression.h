@@ -83,6 +83,10 @@ struct ConstantExpression {
 
     size_t castSizeT() const;
 
+    // Marks that package proceeding is completed
+    // Post parse passes must be proceeded during owner package parsin
+    void setPostParseCompleted();
+
    private:
     /* If the result value has been evaluated. */
     bool mIsEvaluated = false;
@@ -94,6 +98,8 @@ struct ConstantExpression {
     uint64_t mValue;
     /* true if description() does not offer more information than value(). */
     bool mTrivialDescription = false;
+
+    bool mIsPostParseCompleted = false;
 
     /*
      * Helper function for all cpp/javaValue methods.
