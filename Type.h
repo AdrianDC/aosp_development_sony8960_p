@@ -29,9 +29,10 @@
 
 namespace android {
 
+struct ConstantExpression;
 struct Formatter;
-struct ScalarType;
 struct FQName;
+struct ScalarType;
 
 struct Type {
     Type();
@@ -60,6 +61,9 @@ struct Type {
     // All types referenced in this type.
     virtual std::vector<Reference<Type>> getReferences() const;
 
+    // All constant expressions referenced in this type.
+    virtual std::vector<ConstantExpression*> getConstantExpressions() const;
+
     // Proceeds recursive pass
     // Makes sure to visit each node only once.
     status_t recursivePass(const std::function<status_t(Type*)>& func,
@@ -70,9 +74,6 @@ struct Type {
     // Recursive tree pass that completes type declarations
     // that depend on super types
     virtual status_t resolveInheritance();
-
-    // Recursive tree pass that evaluates constant expressions
-    virtual status_t evaluate();
 
     // Recursive tree pass that validates all type-related
     // syntax restrictions

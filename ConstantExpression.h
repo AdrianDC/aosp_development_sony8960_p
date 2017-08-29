@@ -19,8 +19,11 @@
 #define CONSTANT_EXPRESSION_H_
 
 #include <android-base/macros.h>
+#include <functional>
 #include <memory>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "Reference.h"
 #include "ScalarType.h"
@@ -45,12 +48,17 @@ struct ConstantExpression {
 
     virtual ~ConstantExpression() {}
 
-    /*
-     * Runs recursive evaluation.
-     * Provides sort of lazy computation,
-     * mainly used for forward identifier reference.
-     */
+    // Proceeds recursive pass
+    // Makes sure to visit each node only once
+    // Used to provide lookup and lazy evaluation
+    status_t recursivePass(const std::function<status_t(ConstantExpression*)>& func,
+                           std::unordered_set<const ConstantExpression*>* visited);
+
+    // Evaluates current constant expression
+    // Doesn't call recursive evaluation, so must be called after dependencies
     virtual void evaluate() = 0;
+
+    virtual std::vector<ConstantExpression*> getConstantExpressions() const = 0;
 
     /* Returns true iff the value has already been evaluated. */
     bool isEvaluated() const;
@@ -78,7 +86,6 @@ struct ConstantExpression {
    private:
     /* If the result value has been evaluated. */
     bool mIsEvaluated = false;
-
     /* The formatted expression. */
     std::string mExpr;
     /* The kind of the result value. */
@@ -114,11 +121,13 @@ struct LiteralConstantExpression : public ConstantExpression {
     LiteralConstantExpression(ScalarType::Kind kind, uint64_t value);
     LiteralConstantExpression(const std::string& value);
     void evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 };
 
 struct UnaryConstantExpression : public ConstantExpression {
     UnaryConstantExpression(const std::string& mOp, ConstantExpression* value);
     void evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
    private:
     ConstantExpression* const mUnary;
@@ -129,6 +138,7 @@ struct BinaryConstantExpression : public ConstantExpression {
     BinaryConstantExpression(ConstantExpression* lval, const std::string& op,
                              ConstantExpression* rval);
     void evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
    private:
     ConstantExpression* const mLval;
@@ -140,6 +150,7 @@ struct TernaryConstantExpression : public ConstantExpression {
     TernaryConstantExpression(ConstantExpression* cond, ConstantExpression* trueVal,
                               ConstantExpression* falseVal);
     void evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
    private:
     ConstantExpression* const mCond;
@@ -150,6 +161,7 @@ struct TernaryConstantExpression : public ConstantExpression {
 struct ReferenceConstantExpression : public ConstantExpression {
     ReferenceConstantExpression(const Reference<LocalIdentifier>& value, const std::string& expr);
     void evaluate() override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
    private:
     Reference<LocalIdentifier> mReference;
