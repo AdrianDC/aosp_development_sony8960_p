@@ -106,6 +106,8 @@ std::vector<ConstantExpression*> Type::getConstantExpressions() const {
 
 status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
                              std::unordered_set<const Type*>* visited) {
+    if (mIsPostParseCompleted) return OK;
+
     if (visited->find(this) != visited->end()) return OK;
     visited->insert(this);
 
@@ -127,6 +129,8 @@ status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
 
 status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
                              std::unordered_set<const Type*>* visited) const {
+    if (mIsPostParseCompleted) return OK;
+
     if (visited->find(this) != visited->end()) return OK;
     visited->insert(this);
 
@@ -175,6 +179,11 @@ bool Type::isElidableType() const {
 
 bool Type::canCheckEquality() const {
     return false;
+}
+
+void Type::setPostParseCompleted() {
+    CHECK(!mIsPostParseCompleted);
+    mIsPostParseCompleted = true;
 }
 
 std::string Type::getCppType(StorageMode, bool) const {

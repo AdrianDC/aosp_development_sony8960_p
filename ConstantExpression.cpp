@@ -440,6 +440,8 @@ size_t ConstantExpression::castSizeT() const {
 
 status_t ConstantExpression::recursivePass(const std::function<status_t(ConstantExpression*)>& func,
                                            std::unordered_set<const ConstantExpression*>* visited) {
+    if (mIsPostParseCompleted) return OK;
+
     if (visited->find(this) != visited->end()) return OK;
     visited->insert(this);
 
@@ -453,6 +455,11 @@ status_t ConstantExpression::recursivePass(const std::function<status_t(Constant
     if (err != OK) return err;
 
     return OK;
+}
+
+void ConstantExpression::setPostParseCompleted() {
+    CHECK(!mIsPostParseCompleted);
+    mIsPostParseCompleted = true;
 }
 
 std::vector<ConstantExpression*> LiteralConstantExpression::getConstantExpressions() const {
