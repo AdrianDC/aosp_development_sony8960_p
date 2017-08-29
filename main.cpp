@@ -1430,8 +1430,7 @@ int main(int argc, char **argv) {
             }
 
             if (outputFormat->mOutputMode == OutputHandler::NEEDS_DIR) {
-                const size_t len = outputPath.size();
-                if (outputPath[len - 1] != '/') {
+                if (outputPath.back() != '/') {
                     outputPath += "/";
                 }
             }
@@ -1441,6 +1440,9 @@ int main(int argc, char **argv) {
         {
             if (outputPath.empty()) {
                 outputPath = rootPath;
+            }
+            if (outputPath.back() != '/') {
+                outputPath += "/";
             }
 
             break;
