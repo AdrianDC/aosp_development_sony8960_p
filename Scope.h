@@ -56,8 +56,7 @@ struct Scope : public NamedType {
 
     std::vector<Type*> getDefinedTypes() const override;
 
-    virtual status_t evaluate() override;
-    virtual status_t validate() const override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
@@ -101,9 +100,6 @@ struct LocalIdentifier {
     LocalIdentifier();
     virtual ~LocalIdentifier();
     virtual bool isEnumValue() const;
-
-    virtual status_t evaluate();
-    virtual status_t validate() const;
 
     virtual ConstantExpression* constExpr() const;
 };

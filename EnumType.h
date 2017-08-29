@@ -61,9 +61,9 @@ struct EnumType : public Scope {
     BitFieldType *getBitfieldType() const;
 
     std::vector<Reference<Type>> getReferences() const override;
+    std::vector<ConstantExpression*> getConstantExpressions() const override;
 
     status_t resolveInheritance() override;
-    status_t evaluate() override;
     status_t validate() const override;
     status_t validateUniqueNames() const;
 
@@ -144,9 +144,6 @@ struct EnumValue : public LocalIdentifier {
 
     bool isAutoFill() const;
     bool isEnumValue() const override;
-
-    status_t evaluate() override;
-    status_t validate() const override;
 
     const Location& location() const;
 

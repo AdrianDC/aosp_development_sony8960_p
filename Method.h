@@ -33,6 +33,7 @@
 namespace android {
 
 struct Annotation;
+struct ConstantExpression;
 struct Formatter;
 struct ScalarType;
 struct Type;
@@ -67,8 +68,7 @@ struct Method {
 
     std::vector<Reference<Type>> getReferences() const;
 
-    status_t evaluate();
-    status_t validate() const;
+    std::vector<ConstantExpression*> getConstantExpressions() const;
 
     // Make a copy with the same name, args, results, oneway, annotations.
     // Implementations, serial are not copied.

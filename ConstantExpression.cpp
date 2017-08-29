@@ -57,6 +57,7 @@
 namespace android {
 
 static inline bool isSupported(ScalarType::Kind kind) {
+    // TODO(b/64358435) move isSupported to EnumValue
     return SK(BOOL) == kind || ScalarType(kind).isValidEnumStorageType();
 }
 
@@ -236,7 +237,7 @@ void LiteralConstantExpression::evaluate() {
 
 void UnaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    mUnary->evaluate();
+    CHECK(mUnary->isEvaluated());
     mIsEvaluated = true;
 
     mExpr = std::string("(") + mOp + mUnary->description() + ")";
@@ -251,8 +252,8 @@ void UnaryConstantExpression::evaluate() {
 
 void BinaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    mLval->evaluate();
-    mRval->evaluate();
+    CHECK(mLval->isEvaluated());
+    CHECK(mRval->isEvaluated());
     mIsEvaluated = true;
 
     mExpr = std::string("(") + mLval->description() + " " + mOp + " " + mRval->description() + ")";
@@ -310,15 +311,15 @@ void BinaryConstantExpression::evaluate() {
 
 void TernaryConstantExpression::evaluate() {
     if (isEvaluated()) return;
-    mCond->evaluate();
-    mTrueVal->evaluate();
-    mFalseVal->evaluate();
+    CHECK(mCond->isEvaluated());
+    CHECK(mTrueVal->isEvaluated());
+    CHECK(mFalseVal->isEvaluated());
     mIsEvaluated = true;
 
     mExpr = std::string("(") + mCond->description() + "?" + mTrueVal->description() + ":" +
             mFalseVal->description() + ")";
 
-    // note: for ?:, unlike arithmetic ops, integral promotion is not necessary.
+    // note: for ?:, unlike arithmetic ops, integral promotion is not processed.
     mValueKind = usualArithmeticConversion(mTrueVal->mValueKind, mFalseVal->mValueKind);
 
 #define CASE_TERNARY(__type__)                                           \
@@ -331,10 +332,10 @@ void TernaryConstantExpression::evaluate() {
 
 void ReferenceConstantExpression::evaluate() {
     if (isEvaluated()) return;
+    CHECK(mReference->constExpr() != nullptr);
 
     ConstantExpression* expr = mReference->constExpr();
-    CHECK(expr != nullptr);
-    expr->evaluate();
+    CHECK(expr->isEvaluated());
 
     mValueKind = expr->mValueKind;
     mValue = expr->mValue;
@@ -437,23 +438,61 @@ size_t ConstantExpression::castSizeT() const {
     return this->cast<size_t>();
 }
 
+status_t ConstantExpression::recursivePass(const std::function<status_t(ConstantExpression*)>& func,
+                                           std::unordered_set<const ConstantExpression*>* visited) {
+    if (visited->find(this) != visited->end()) return OK;
+    visited->insert(this);
+
+    for (auto* nextCE : getConstantExpressions()) {
+        status_t err = nextCE->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    // Unlike types, constant expressions need to be proceeded after dependencies
+    status_t err = func(this);
+    if (err != OK) return err;
+
+    return OK;
+}
+
+std::vector<ConstantExpression*> LiteralConstantExpression::getConstantExpressions() const {
+    return {};
+}
+
 UnaryConstantExpression::UnaryConstantExpression(const std::string& op, ConstantExpression* value)
     : mUnary(value), mOp(op) {}
+
+std::vector<ConstantExpression*> UnaryConstantExpression::getConstantExpressions() const {
+    return {mUnary};
+}
 
 BinaryConstantExpression::BinaryConstantExpression(ConstantExpression* lval, const std::string& op,
                                                    ConstantExpression* rval)
     : mLval(lval), mRval(rval), mOp(op) {}
+
+std::vector<ConstantExpression*> BinaryConstantExpression::getConstantExpressions() const {
+    return {mLval, mRval};
+}
 
 TernaryConstantExpression::TernaryConstantExpression(ConstantExpression* cond,
                                                      ConstantExpression* trueVal,
                                                      ConstantExpression* falseVal)
     : mCond(cond), mTrueVal(trueVal), mFalseVal(falseVal) {}
 
+std::vector<ConstantExpression*> TernaryConstantExpression::getConstantExpressions() const {
+    return {mCond, mTrueVal, mFalseVal};
+}
+
 ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalIdentifier>& value,
                                                          const std::string& expr)
     : mReference(value) {
     mExpr = expr;
     mTrivialDescription = mExpr.empty();
+}
+
+std::vector<ConstantExpression*> ReferenceConstantExpression::getConstantExpressions() const {
+    CHECK(mReference->constExpr() != nullptr);
+    return {mReference->constExpr()};
 }
 
 /*

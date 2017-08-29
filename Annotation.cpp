@@ -29,12 +29,8 @@ const std::string& AnnotationParam::getName() const {
     return mName;
 }
 
-status_t AnnotationParam::evaluate() {
-    return OK;
-}
-
-status_t AnnotationParam::validate() const {
-    return OK;
+std::vector<ConstantExpression*> AnnotationParam::getConstantExpressions() const {
+    return {};
 }
 
 std::string AnnotationParam::getSingleString() const {
@@ -99,11 +95,8 @@ std::string ConstantExpressionAnnotationParam::getSingleValue() const {
     return convertToString(mValues->at(0));
 }
 
-status_t ConstantExpressionAnnotationParam::evaluate() {
-    for (auto* value : *mValues) {
-        value->evaluate();
-    }
-    return AnnotationParam::evaluate();
+std::vector<ConstantExpression*> ConstantExpressionAnnotationParam::getConstantExpressions() const {
+    return *mValues;
 }
 
 Annotation::Annotation(const char* name, AnnotationParamVector* params)
@@ -118,7 +111,7 @@ const AnnotationParamVector &Annotation::params() const {
 }
 
 const AnnotationParam *Annotation::getParam(const std::string &name) const {
-    for (auto *i: *mParams) {
+    for (const auto* i : *mParams) {
         if (i->getName() == name) {
             return i;
         }
@@ -127,20 +120,13 @@ const AnnotationParam *Annotation::getParam(const std::string &name) const {
     return nullptr;
 }
 
-status_t Annotation::evaluate() {
-    for (auto* param : *mParams) {
-        status_t err = param->evaluate();
-        if (err != OK) return err;
-    }
-    return OK;
-}
-
-status_t Annotation::validate() const {
+std::vector<ConstantExpression*> Annotation::getConstantExpressions() const {
+    std::vector<ConstantExpression*> ret;
     for (const auto* param : *mParams) {
-        status_t err = param->validate();
-        if (err != OK) return err;
+        const auto& retParam = param->getConstantExpressions();
+        ret.insert(ret.end(), retParam.begin(), retParam.end());
     }
-    return OK;
+    return ret;
 }
 
 void Annotation::dump(Formatter &out) const {
