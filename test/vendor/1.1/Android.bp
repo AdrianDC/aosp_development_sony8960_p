@@ -35,7 +35,7 @@ genrule {
     ],
 }
 
-cc_library {
+cc_test_library {
     name: "tests.vendor@1.1",
     defaults: ["hidl-module-defaults"],
     generated_sources: ["tests.vendor@1.1_genc++"],
@@ -65,7 +65,7 @@ cc_library {
     ],
 }
 
-cc_library {
+cc_test_library {
     name: "tests.vendor@1.1_vendor",
     defaults: ["hidl-module-defaults"],
     generated_sources: ["tests.vendor@1.1_genc++"],
