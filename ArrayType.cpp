@@ -71,12 +71,8 @@ std::vector<Reference<Type>> ArrayType::getReferences() const {
     return {mElementType};
 }
 
-status_t ArrayType::evaluate() {
-    for (auto* size : mSizes) {
-        size->evaluate();
-    }
-
-    return Type::evaluate();
+std::vector<ConstantExpression*> ArrayType::getConstantExpressions() const {
+    return mSizes;
 }
 
 status_t ArrayType::validate() const {

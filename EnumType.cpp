@@ -72,21 +72,16 @@ std::vector<Reference<Type>> EnumType::getReferences() const {
     return {mStorageType};
 }
 
-status_t EnumType::evaluate() {
-    for (auto* value : mValues) {
-        status_t err = value->evaluate();
-        if (err != OK) return err;
+std::vector<ConstantExpression*> EnumType::getConstantExpressions() const {
+    std::vector<ConstantExpression*> ret;
+    for (const auto* value : mValues) {
+        ret.push_back(value->constExpr());
     }
-    return Scope::evaluate();
+    return ret;
 }
 
 status_t EnumType::validate() const {
     CHECK(getSubTypes().empty());
-
-    for (auto* value : mValues) {
-        status_t err = value->validate();
-        if (err != OK) return err;
-    }
 
     if (!isElidableType() || !mStorageType->isValidEnumStorageType()) {
         std::cerr << "ERROR: Invalid enum storage type (" << (mStorageType)->typeName()
@@ -790,16 +785,6 @@ bool EnumValue::isAutoFill() const {
 
 bool EnumValue::isEnumValue() const {
     return true;
-}
-
-status_t EnumValue::evaluate() {
-    mValue->evaluate();
-    return OK;
-}
-
-status_t EnumValue::validate() const {
-    // TODO(b/64358435) move isSupported from ConstantExpression
-    return OK;
 }
 
 const Location& EnumValue::location() const {

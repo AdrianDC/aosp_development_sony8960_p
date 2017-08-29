@@ -17,6 +17,7 @@
 #include "Method.h"
 
 #include "Annotation.h"
+#include "ConstantExpression.h"
 #include "ScalarType.h"
 #include "Type.h"
 
@@ -79,22 +80,13 @@ std::vector<Reference<Type>> Method::getReferences() const {
     return ret;
 }
 
-status_t Method::evaluate() {
-    for (auto* annotaion : *mAnnotations) {
-        status_t err = annotaion->evaluate();
-        if (err != OK) return err;
+std::vector<ConstantExpression*> Method::getConstantExpressions() const {
+    std::vector<ConstantExpression*> ret;
+    for (const auto* annotation : *mAnnotations) {
+        const auto& retAnnotation = annotation->getConstantExpressions();
+        ret.insert(ret.end(), retAnnotation.begin(), retAnnotation.end());
     }
-
-    return OK;
-}
-
-status_t Method::validate() const {
-    for (const auto* annotaion : *mAnnotations) {
-        status_t err = annotaion->validate();
-        if (err != OK) return err;
-    }
-
-    return OK;
+    return ret;
 }
 
 void Method::cppImpl(MethodImplType type, Formatter &out) const {
