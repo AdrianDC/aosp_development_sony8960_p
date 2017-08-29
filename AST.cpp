@@ -90,6 +90,20 @@ status_t AST::postParse() {
     err = validate();
     if (err != OK) return err;
 
+    // Make future packages not to call passes
+    // for processed types and expressions
+    constantExpressionRecursivePass([](ConstantExpression* ce) {
+        ce->setPostParseCompleted();
+        return OK;
+    });
+    std::unordered_set<const Type*> visited;
+    mRootScope.recursivePass(
+        [](Type* type) {
+            type->setPostParseCompleted();
+            return OK;
+        },
+        &visited);
+
     return OK;
 }
 

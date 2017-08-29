@@ -87,6 +87,10 @@ struct Type {
     virtual bool isElidableType() const;
     virtual bool canCheckEquality() const;
 
+    // Marks that package proceeding is completed
+    // Post parse passes must be proceeded during owner package parsing
+    void setPostParseCompleted();
+
     enum StorageMode {
         StorageMode_Stack,
         StorageMode_Argument,
@@ -270,7 +274,9 @@ protected:
             const std::string &methodName,
             const std::string &name) const;
 
-private:
+   private:
+    bool mIsPostParseCompleted = false;
+
     DISALLOW_COPY_AND_ASSIGN(Type);
 };
 
