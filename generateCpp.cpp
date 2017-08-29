@@ -1663,6 +1663,9 @@ status_t AST::generateStubSource(
         const Method *method = tuple.method();
         const Interface *superInterface = tuple.interface();
 
+        if (!isIBase() && method->isHidlReserved()) {
+            continue;
+        }
         out << "case "
             << method->getSerialId()
             << " /* "
