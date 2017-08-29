@@ -31,7 +31,7 @@ struct RefType : public TemplatedType {
     std::string typeName() const override;
     bool isCompatibleElementType(Type *elementType) const override;
 
-    std::vector<Reference<Type>> getStrongReferences() const override;
+    std::vector<const Reference<Type>*> getStrongReferences() const override;
 
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;

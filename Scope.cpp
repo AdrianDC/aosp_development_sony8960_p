@@ -115,16 +115,14 @@ void Scope::setAnnotations(std::vector<Annotation*>* annotations) {
     mAnnotations = *annotations;
 }
 
-std::vector<Type*> Scope::getDefinedTypes() const {
-    std::vector<Type*> ret;
-    for (auto* type : mTypes) {
-        ret.push_back(type);
-    }
+std::vector<const Type*> Scope::getDefinedTypes() const {
+    std::vector<const Type*> ret;
+    ret.insert(ret.end(), mTypes.begin(), mTypes.end());
     return ret;
 }
 
-std::vector<ConstantExpression*> Scope::getConstantExpressions() const {
-    std::vector<ConstantExpression*> ret;
+std::vector<const ConstantExpression*> Scope::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
     for (const auto* annotation : mAnnotations) {
         const auto& retAnnotation = annotation->getConstantExpressions();
         ret.insert(ret.end(), retAnnotation.begin(), retAnnotation.end());

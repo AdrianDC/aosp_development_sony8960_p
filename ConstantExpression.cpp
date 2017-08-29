@@ -16,11 +16,12 @@
 
 #include "ConstantExpression.h"
 
-#include <stdio.h>
-#include <string>
-#include <android-base/parseint.h>
 #include <android-base/logging.h>
+#include <android-base/parseint.h>
+#include <stdio.h>
+#include <algorithm>
 #include <sstream>
+#include <string>
 
 #include "EnumType.h"
 #include "Scope.h"  // LocalIdentifier
@@ -438,6 +439,14 @@ size_t ConstantExpression::castSizeT() const {
     return this->cast<size_t>();
 }
 
+std::vector<ConstantExpression*> ConstantExpression::getConstantExpressions() {
+    const auto& constRet = static_cast<const ConstantExpression*>(this)->getConstantExpressions();
+    std::vector<ConstantExpression*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<ConstantExpression*>(ce); });
+    return ret;
+}
+
 status_t ConstantExpression::recursivePass(const std::function<status_t(ConstantExpression*)>& func,
                                            std::unordered_set<const ConstantExpression*>* visited) {
     if (mIsPostParseCompleted) return OK;
@@ -457,19 +466,40 @@ status_t ConstantExpression::recursivePass(const std::function<status_t(Constant
     return OK;
 }
 
+status_t ConstantExpression::recursivePass(
+    const std::function<status_t(const ConstantExpression*)>& func,
+    std::unordered_set<const ConstantExpression*>* visited) const {
+
+    if (mIsPostParseCompleted) return OK;
+
+    if (visited->find(this) != visited->end()) return OK;
+    visited->insert(this);
+
+    for (const auto* nextCE : getConstantExpressions()) {
+        status_t err = nextCE->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    // Unlike types, constant expressions need to be proceeded after dependencies
+    status_t err = func(this);
+    if (err != OK) return err;
+
+    return OK;
+}
+
 void ConstantExpression::setPostParseCompleted() {
     CHECK(!mIsPostParseCompleted);
     mIsPostParseCompleted = true;
 }
 
-std::vector<ConstantExpression*> LiteralConstantExpression::getConstantExpressions() const {
+std::vector<const ConstantExpression*> LiteralConstantExpression::getConstantExpressions() const {
     return {};
 }
 
 UnaryConstantExpression::UnaryConstantExpression(const std::string& op, ConstantExpression* value)
     : mUnary(value), mOp(op) {}
 
-std::vector<ConstantExpression*> UnaryConstantExpression::getConstantExpressions() const {
+std::vector<const ConstantExpression*> UnaryConstantExpression::getConstantExpressions() const {
     return {mUnary};
 }
 
@@ -477,7 +507,7 @@ BinaryConstantExpression::BinaryConstantExpression(ConstantExpression* lval, con
                                                    ConstantExpression* rval)
     : mLval(lval), mRval(rval), mOp(op) {}
 
-std::vector<ConstantExpression*> BinaryConstantExpression::getConstantExpressions() const {
+std::vector<const ConstantExpression*> BinaryConstantExpression::getConstantExpressions() const {
     return {mLval, mRval};
 }
 
@@ -486,7 +516,7 @@ TernaryConstantExpression::TernaryConstantExpression(ConstantExpression* cond,
                                                      ConstantExpression* falseVal)
     : mCond(cond), mTrueVal(trueVal), mFalseVal(falseVal) {}
 
-std::vector<ConstantExpression*> TernaryConstantExpression::getConstantExpressions() const {
+std::vector<const ConstantExpression*> TernaryConstantExpression::getConstantExpressions() const {
     return {mCond, mTrueVal, mFalseVal};
 }
 
@@ -497,7 +527,7 @@ ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalId
     mTrivialDescription = mExpr.empty();
 }
 
-std::vector<ConstantExpression*> ReferenceConstantExpression::getConstantExpressions() const {
+std::vector<const ConstantExpression*> ReferenceConstantExpression::getConstantExpressions() const {
     CHECK(mReference->constExpr() != nullptr);
     return {mReference->constExpr()};
 }
