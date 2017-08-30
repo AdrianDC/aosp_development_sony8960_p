@@ -560,17 +560,24 @@ TEST_F(HidlTest, TryGetServiceTest) {
 }
 
 TEST_F(HidlTest, HashTest) {
-    uint8_t ihash[32] = {74,38,204,105,102,117,11,15,207,7,238,198,29,35,30,62,100,
-            216,131,182,3,61,162,241,215,211,6,20,251,143,125,161};
+    static constexpr uint64_t kHashSize = 32u;
+    // unreleased interface has an empty hash
+    uint8_t ihash[kHashSize] = {0};
+    uint8_t ibase[kHashSize] = {189, 218, 182, 24,  77,  122, 52,  109, 166, 160, 125,
+                                192, 130, 140, 241, 154, 105, 111, 76,  170, 54,  17,
+                                197, 31,  46,  20,  86,  90,  20,  180, 15,  217};
     auto service = IHash::getService(mode == PASSTHROUGH /* getStub */);
-    EXPECT_OK(service->getHashChain([&] (const auto &chain) {
-        EXPECT_EQ(chain[0].size(), 32u);
-        EXPECT_ARRAYEQ(ihash, chain[0], 32);
-        EXPECT_OK(manager->getHashChain([&] (const auto &managerChain) {
-            EXPECT_EQ(chain[chain.size() - 1].size(), managerChain[managerChain.size() - 1].size());
-            EXPECT_ARRAYEQ(chain[chain.size() - 1], managerChain[managerChain.size() - 1],
-                    chain[chain.size() - 1].size()) << "Hash for IBase doesn't match!";
-        }));
+    EXPECT_OK(service->getHashChain([&](const auto& chain) {
+        ASSERT_EQ(chain.size(), 2u);
+        EXPECT_EQ(chain[0].size(), kHashSize);
+        EXPECT_ARRAYEQ(ihash, chain[0], kHashSize);
+        EXPECT_EQ(chain[1].size(), kHashSize);
+        EXPECT_ARRAYEQ(ibase, chain[1], kHashSize);
+    }));
+    EXPECT_OK(manager->getHashChain([&](const auto& managerChain) {
+        EXPECT_EQ(managerChain[managerChain.size() - 1].size(), kHashSize);
+        EXPECT_ARRAYEQ(ibase, managerChain[managerChain.size() - 1], kHashSize)
+            << "Hash for IBase doesn't match!";
     }));
 }
 

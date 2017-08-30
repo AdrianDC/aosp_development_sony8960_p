@@ -559,8 +559,10 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
             continue;
         }
 
-        // hash not define, interface not frozen
+        // hash not defined, interface not frozen
         if (frozen.size() == 0) {
+            // This ensures that it can be detected.
+            Hash::clearHash(ast->getFilename());
             continue;
         }
 
