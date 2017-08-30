@@ -29,7 +29,7 @@ VectorType::VectorType() {
 }
 
 std::string VectorType::typeName() const {
-    return "vector" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
+    return "vector of " + mElementType->typeName();
 }
 
 bool VectorType::isCompatibleElementType(Type *elementType) const {
@@ -568,7 +568,7 @@ void VectorType::emitJavaFieldReaderWriter(
     VectorType::EmitJavaFieldReaderWriterForElementType(
             out,
             depth,
-            mElementType,
+            mElementType.get(),
             parcelName,
             blobName,
             fieldName,
