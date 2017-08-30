@@ -18,6 +18,9 @@
 
 #define REF_TYPE_H_
 
+#include <vector>
+
+#include "Reference.h"
 #include "Type.h"
 
 namespace android {
@@ -27,6 +30,8 @@ struct RefType : public TemplatedType {
 
     std::string typeName() const override;
     bool isCompatibleElementType(Type *elementType) const override;
+
+    std::vector<Reference<Type>> getStrongReferences() const override;
 
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;

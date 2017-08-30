@@ -31,6 +31,10 @@ std::string RefType::typeName() const {
     return "ref" + (mElementType == nullptr ? "" : (" of " + mElementType->typeName()));
 }
 
+std::vector<Reference<Type>> RefType::getStrongReferences() const {
+    return {};
+}
+
 std::string RefType::getVtsType() const {
     return "TYPE_REF";
 }
