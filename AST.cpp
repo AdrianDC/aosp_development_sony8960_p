@@ -89,6 +89,8 @@ status_t AST::postParse() {
     if (err != OK) return err;
     err = validate();
     if (err != OK) return err;
+    err = checkAcyclic();
+    if (err != OK) return err;
 
     // Make future packages not to call passes
     // for processed types and expressions
@@ -137,6 +139,12 @@ status_t AST::evaluate() {
 status_t AST::validate() const {
     std::unordered_set<const Type*> visited;
     return mRootScope.recursivePass(&Type::validate, &visited);
+}
+
+status_t AST::checkAcyclic() const {
+    std::unordered_set<const Type*> visited;
+    std::unordered_set<const Type*> stack;
+    return mRootScope.checkAcyclic(&visited, &stack).status;
 }
 
 bool AST::addImport(const char *import) {

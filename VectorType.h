@@ -18,6 +18,9 @@
 
 #define VECTOR_TYPE_H_
 
+#include <vector>
+
+#include "Reference.h"
 #include "Type.h"
 
 namespace android {
@@ -29,6 +32,8 @@ struct VectorType : public TemplatedType {
     bool isVectorOfBinders() const;
     std::string typeName() const override;
     bool isCompatibleElementType(Type *elementType) const override;
+
+    std::vector<Reference<Type>> getStrongReferences() const override;
 
     bool canCheckEquality() const override;
 

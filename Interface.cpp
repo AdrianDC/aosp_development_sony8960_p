@@ -484,6 +484,21 @@ std::vector<ConstantExpression*> Interface::getConstantExpressions() const {
     return ret;
 }
 
+std::vector<Reference<Type>> Interface::getStrongReferences() const {
+    // Interface is a special case as a reference:
+    // its definiton must be completed for extension but
+    // not necessary for other references.
+    // As interface declaration appears only in global scope and
+    // method declaration appears only in interface, we may assume
+    // that all references in method definitions are acyclic.
+
+    std::vector<Reference<Type>> ret;
+    if (superType() != nullptr) {
+        ret.push_back(mSuperType);
+    }
+    return ret;
+}
+
 status_t Interface::resolveInheritance() {
     size_t serial = FIRST_CALL_TRANSACTION;
     for (const auto* ancestor : superTypeChain()) {

@@ -17,6 +17,7 @@
 #include "Type.h"
 
 #include "ConstantExpression.h"
+#include "NamedType.h"
 #include "ScalarType.h"
 
 #include <hidl-util/Formatter.h>
@@ -104,6 +105,10 @@ std::vector<ConstantExpression*> Type::getConstantExpressions() const {
     return {};
 }
 
+std::vector<Reference<Type>> Type::getStrongReferences() const {
+    return getReferences();
+}
+
 status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
                              std::unordered_set<const Type*>* visited) {
     if (mIsPostParseCompleted) return OK;
@@ -157,6 +162,61 @@ status_t Type::resolveInheritance() {
 
 status_t Type::validate() const {
     return OK;
+}
+
+Type::CheckAcyclicStatus::CheckAcyclicStatus(status_t status, const Type* cycleEnd)
+    : status(status), cycleEnd(cycleEnd) {
+    CHECK(cycleEnd == nullptr || status != OK);
+}
+
+Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* visited,
+                                            std::unordered_set<const Type*>* stack) const {
+    if (stack->find(this) != stack->end()) {
+        std::cerr << "ERROR: Cyclic declaration:\n";
+        return CheckAcyclicStatus(UNKNOWN_ERROR, this);
+    }
+
+    if (visited->find(this) != visited->end()) return CheckAcyclicStatus(OK);
+    visited->insert(this);
+    stack->insert(this);
+
+    for (const Type* nextType : getDefinedTypes()) {
+        auto err = nextType->checkAcyclic(visited, stack);
+
+        if (err.status != OK) {
+            if (err.cycleEnd == nullptr) return err;
+
+            std::cerr << "  '" << typeName() << "'";
+            if (nextType->isNamedType()) {
+                std::cerr << " at " << static_cast<const NamedType*>(nextType)->location();
+            }
+            std::cerr << "\n";
+
+            if (err.cycleEnd == nextType) {
+                return CheckAcyclicStatus(err.status);
+            }
+            return err;
+        }
+    }
+
+    for (const Reference<Type>& nextType : getStrongReferences()) {
+        auto err = nextType->checkAcyclic(visited, stack);
+
+        if (err.status != OK) {
+            if (err.cycleEnd == nullptr) return err;
+
+            std::cerr << "  '" << nextType->typeName() << "' at " << nextType.location() << "\n";
+
+            if (err.cycleEnd == nextType) {
+                return CheckAcyclicStatus(err.status);
+            }
+            return err;
+        }
+    }
+
+    CHECK(stack->find(this) != stack->end());
+    stack->erase(this);
+    return CheckAcyclicStatus(OK);
 }
 
 const ScalarType *Type::resolveToScalarType() const {
