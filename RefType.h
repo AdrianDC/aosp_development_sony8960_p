@@ -28,7 +28,7 @@ namespace android {
 struct RefType : public TemplatedType {
     RefType(Scope* parent);
 
-    std::string typeName() const override;
+    std::string templatedTypeName() const override;
 
     bool isCompatibleElementType(const Type* elementType) const override;
 
