@@ -81,6 +81,10 @@ bool VectorType::canCheckEquality() const {
     return mElementType->canCheckEquality();
 }
 
+std::vector<Reference<Type>> VectorType::getStrongReferences() const {
+    return {};
+}
+
 std::string VectorType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {
     const std::string base =
