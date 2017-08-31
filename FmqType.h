@@ -27,7 +27,7 @@ struct FmqType : public TemplatedType {
 
     std::string fullName() const;
 
-    std::string typeName() const;
+    std::string templatedTypeName() const;
 
     std::string getCppType(
             StorageMode mode,
