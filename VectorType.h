@@ -31,7 +31,7 @@ struct VectorType : public TemplatedType {
     bool isVector() const override;
     bool isVectorOfBinders() const;
 
-    std::string typeName() const override;
+    std::string templatedTypeName() const override;
     bool isCompatibleElementType(const Type* elementType) const override;
 
     std::vector<const Reference<Type>*> getStrongReferences() const override;

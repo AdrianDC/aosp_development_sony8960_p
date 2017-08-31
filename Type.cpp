@@ -631,6 +631,10 @@ status_t Type::emitExportedHeader(
 
 TemplatedType::TemplatedType(Scope* parent) : Type(parent) {}
 
+std::string TemplatedType::typeName() const {
+    return templatedTypeName() + " of " + mElementType->typeName();
+}
+
 void TemplatedType::setElementType(const Reference<Type>& elementType) {
     // can only be set once.
     CHECK(mElementType.isEmptyReference());
