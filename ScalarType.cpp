@@ -20,9 +20,7 @@
 
 namespace android {
 
-ScalarType::ScalarType(Kind kind)
-    : mKind(kind) {
-}
+ScalarType::ScalarType(Kind kind, Scope* parent) : Type(parent), mKind(kind) {}
 
 const ScalarType *ScalarType::resolveToScalarType() const {
     return this;

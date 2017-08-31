@@ -19,6 +19,7 @@
 #include "ConstantExpression.h"
 #include "NamedType.h"
 #include "ScalarType.h"
+#include "Scope.h"
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
@@ -26,7 +27,7 @@
 
 namespace android {
 
-Type::Type() {}
+Type::Type(Scope* parent) : mParent(parent) {}
 
 Type::~Type() {}
 
@@ -278,6 +279,10 @@ bool Type::canCheckEquality() const {
 void Type::setPostParseCompleted() {
     CHECK(!mIsPostParseCompleted);
     mIsPostParseCompleted = true;
+}
+
+Scope* Type::parent() {
+    return mParent;
 }
 
 std::string Type::getCppType(StorageMode, bool) const {
@@ -625,7 +630,7 @@ status_t Type::emitExportedHeader(
 
 ////////////////////////////////////////
 
-TemplatedType::TemplatedType() {}
+TemplatedType::TemplatedType(Scope* parent) : Type(parent) {}
 
 void TemplatedType::setElementType(const Reference<Type>& elementType) {
     // can only be set once.

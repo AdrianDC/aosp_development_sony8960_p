@@ -33,9 +33,10 @@ struct ConstantExpression;
 struct Formatter;
 struct FQName;
 struct ScalarType;
+struct Scope;
 
 struct Type {
-    Type();
+    Type(Scope* parent);
     virtual ~Type();
 
     virtual bool isArray() const;
@@ -117,6 +118,8 @@ struct Type {
     // Marks that package proceeding is completed
     // Post parse passes must be proceeded during owner package parsing
     void setPostParseCompleted();
+
+    Scope* parent();
 
     enum StorageMode {
         StorageMode_Stack,
@@ -303,6 +306,7 @@ protected:
 
    private:
     bool mIsPostParseCompleted = false;
+    Scope* const mParent;
 
     DISALLOW_COPY_AND_ASSIGN(Type);
 };
@@ -324,7 +328,7 @@ struct TemplatedType : public Type {
     status_t emitVtsAttributeType(Formatter& out) const override;
 
    protected:
-    TemplatedType();
+    TemplatedType(Scope* parent);
     Reference<Type> mElementType;
 
    private:

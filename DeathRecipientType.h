@@ -23,7 +23,7 @@
 namespace android {
 
 struct DeathRecipientType : public Type {
-    DeathRecipientType();
+    DeathRecipientType(Scope* parent);
 
     std::string getCppType(
             StorageMode mode,
