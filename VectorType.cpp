@@ -81,7 +81,7 @@ bool VectorType::canCheckEquality() const {
     return mElementType->canCheckEquality();
 }
 
-std::vector<Reference<Type>> VectorType::getStrongReferences() const {
+std::vector<const Reference<Type>*> VectorType::getStrongReferences() const {
     return {};
 }
 

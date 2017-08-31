@@ -86,10 +86,10 @@ struct Interface : public Scope {
     std::string getJavaType(bool forInitializer) const override;
     std::string getVtsType() const override;
 
-    std::vector<Reference<Type>> getReferences() const override;
-    std::vector<Reference<Type>> getStrongReferences() const override;
+    std::vector<const Reference<Type>*> getReferences() const override;
+    std::vector<const Reference<Type>*> getStrongReferences() const override;
 
-    std::vector<ConstantExpression*> getConstantExpressions() const override;
+    std::vector<const ConstantExpression*> getConstantExpressions() const override;
 
     status_t resolveInheritance() override;
     status_t validate() const override;

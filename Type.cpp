@@ -20,8 +20,9 @@
 #include "NamedType.h"
 #include "ScalarType.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
+#include <hidl-util/Formatter.h>
+#include <algorithm>
 
 namespace android {
 
@@ -93,19 +94,51 @@ bool Type::isPointer() const {
     return false;
 }
 
-std::vector<Type*> Type::getDefinedTypes() const {
+std::vector<Type*> Type::getDefinedTypes() {
+    const auto& constRet = static_cast<const Type*>(this)->getDefinedTypes();
+    std::vector<Type*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* type) { return const_cast<Type*>(type); });
+    return ret;
+}
+
+std::vector<const Type*> Type::getDefinedTypes() const {
     return {};
 }
 
-std::vector<Reference<Type>> Type::getReferences() const {
+std::vector<Reference<Type>*> Type::getReferences() {
+    const auto& constRet = static_cast<const Type*>(this)->getReferences();
+    std::vector<Reference<Type>*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ref) { return const_cast<Reference<Type>*>(ref); });
+    return ret;
+}
+
+std::vector<const Reference<Type>*> Type::getReferences() const {
     return {};
 }
 
-std::vector<ConstantExpression*> Type::getConstantExpressions() const {
+std::vector<ConstantExpression*> Type::getConstantExpressions() {
+    const auto& constRet = static_cast<const Type*>(this)->getConstantExpressions();
+    std::vector<ConstantExpression*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<ConstantExpression*>(ce); });
+    return ret;
+}
+
+std::vector<const ConstantExpression*> Type::getConstantExpressions() const {
     return {};
 }
 
-std::vector<Reference<Type>> Type::getStrongReferences() const {
+std::vector<Reference<Type>*> Type::getStrongReferences() {
+    const auto& constRet = static_cast<const Type*>(this)->getStrongReferences();
+    std::vector<Reference<Type>*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ref) { return const_cast<Reference<Type>*>(ref); });
+    return ret;
+}
+
+std::vector<const Reference<Type>*> Type::getStrongReferences() const {
     return getReferences();
 }
 
@@ -124,8 +157,8 @@ status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
         if (err != OK) return err;
     }
 
-    for (const auto& nextType : getReferences()) {
-        err = nextType->recursivePass(func, visited);
+    for (auto* nextRef : getReferences()) {
+        err = (*nextRef)->recursivePass(func, visited);
         if (err != OK) return err;
     }
 
@@ -147,8 +180,8 @@ status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
         if (err != OK) return err;
     }
 
-    for (const auto& nextRef : getReferences()) {
-        const auto* nextType = nextRef.get();
+    for (const auto* nextRef : getReferences()) {
+        const auto* nextType = nextRef->get();
         err = nextType->recursivePass(func, visited);
         if (err != OK) return err;
     }
@@ -180,7 +213,7 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
     visited->insert(this);
     stack->insert(this);
 
-    for (const Type* nextType : getDefinedTypes()) {
+    for (const auto* nextType : getDefinedTypes()) {
         auto err = nextType->checkAcyclic(visited, stack);
 
         if (err.status != OK) {
@@ -199,13 +232,14 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
         }
     }
 
-    for (const Reference<Type>& nextType : getStrongReferences()) {
+    for (const auto* nextRef : getStrongReferences()) {
+        const auto* nextType = nextRef->get();
         auto err = nextType->checkAcyclic(visited, stack);
 
         if (err.status != OK) {
             if (err.cycleEnd == nullptr) return err;
 
-            std::cerr << "  '" << nextType->typeName() << "' at " << nextType.location() << "\n";
+            std::cerr << "  '" << nextType->typeName() << "' at " << nextRef->location() << "\n";
 
             if (err.cycleEnd == nextType) {
                 return CheckAcyclicStatus(err.status);
@@ -609,8 +643,8 @@ bool TemplatedType::isTemplatedType() const {
     return true;
 }
 
-std::vector<Reference<Type>> TemplatedType::getReferences() const {
-    return {mElementType};
+std::vector<const Reference<Type>*> TemplatedType::getReferences() const {
+    return {&mElementType};
 }
 
 status_t TemplatedType::validate() const {
