@@ -23,7 +23,7 @@
 
 namespace android {
 
-MemoryType::MemoryType() {}
+MemoryType::MemoryType(Scope* parent) : Type(parent) {}
 
 std::string MemoryType::getCppType(StorageMode mode,
                                    bool specifyNamespaces) const {

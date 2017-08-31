@@ -157,6 +157,7 @@ struct EnumValue : public LocalIdentifier {
 };
 
 struct BitFieldType : public TemplatedType {
+    BitFieldType(Scope* parent);
 
     std::string typeName() const override;
 

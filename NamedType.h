@@ -27,8 +27,6 @@
 
 namespace android {
 
-struct Scope;
-
 struct NamedType : public Type {
     NamedType(const char* localName, const Location& loc, Scope* parent);
 
@@ -54,13 +52,10 @@ struct NamedType : public Type {
             const std::string &streamName,
             const std::string &name) const override;
 
-    Scope* parent() const;
-
    private:
     const std::string mLocalName;
     FQName mFullName;
     const Location mLocation;
-    Scope* const mParent;
 
     DISALLOW_COPY_AND_ASSIGN(NamedType);
 };
