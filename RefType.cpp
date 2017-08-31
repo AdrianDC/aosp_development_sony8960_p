@@ -24,8 +24,7 @@
 
 namespace android {
 
-RefType::RefType() {
-}
+RefType::RefType(Scope* parent) : TemplatedType(parent) {}
 
 std::string RefType::typeName() const {
     return "ref of " + mElementType->typeName();

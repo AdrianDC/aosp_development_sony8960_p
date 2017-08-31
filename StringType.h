@@ -23,7 +23,7 @@
 namespace android {
 
 struct StringType : public Type {
-    StringType();
+    StringType(Scope* parent);
 
     bool isString() const override;
 

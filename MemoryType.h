@@ -23,7 +23,7 @@
 namespace android {
 
 struct MemoryType : public Type {
-    MemoryType();
+    MemoryType(Scope* parent);
 
     std::string typeName() const override;
 
