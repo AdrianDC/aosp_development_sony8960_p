@@ -66,9 +66,11 @@ struct Method {
     bool isHiddenFromJava() const;
     const std::vector<Annotation *> &annotations() const;
 
-    std::vector<Reference<Type>> getReferences() const;
+    std::vector<Reference<Type>*> getReferences();
+    std::vector<const Reference<Type>*> getReferences() const;
 
-    std::vector<ConstantExpression*> getConstantExpressions() const;
+    std::vector<ConstantExpression*> getConstantExpressions();
+    std::vector<const ConstantExpression*> getConstantExpressions() const;
 
     // Make a copy with the same name, args, results, oneway, annotations.
     // Implementations, serial are not copied.

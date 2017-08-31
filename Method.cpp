@@ -69,19 +69,31 @@ const std::vector<Annotation *> &Method::annotations() const {
     return *mAnnotations;
 }
 
-std::vector<Reference<Type>> Method::getReferences() const {
-    std::vector<Reference<Type>> ret;
-    for (const auto* arg : *mArgs) {
-        ret.push_back(*arg);
-    }
-    for (const auto* result : *mResults) {
-        ret.push_back(*result);
-    }
+std::vector<Reference<Type>*> Method::getReferences() {
+    const auto& constRet = static_cast<const Method*>(this)->getReferences();
+    std::vector<Reference<Type>*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ref) { return const_cast<Reference<Type>*>(ref); });
     return ret;
 }
 
-std::vector<ConstantExpression*> Method::getConstantExpressions() const {
-    std::vector<ConstantExpression*> ret;
+std::vector<const Reference<Type>*> Method::getReferences() const {
+    std::vector<const Reference<Type>*> ret;
+    ret.insert(ret.end(), mArgs->begin(), mArgs->end());
+    ret.insert(ret.end(), mResults->begin(), mResults->end());
+    return ret;
+}
+
+std::vector<ConstantExpression*> Method::getConstantExpressions() {
+    const auto& constRet = static_cast<const Method*>(this)->getConstantExpressions();
+    std::vector<ConstantExpression*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<ConstantExpression*>(ce); });
+    return ret;
+}
+
+std::vector<const ConstantExpression*> Method::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
     for (const auto* annotation : *mAnnotations) {
         const auto& retAnnotation = annotation->getConstantExpressions();
         ret.insert(ret.end(), retAnnotation.begin(), retAnnotation.end());
