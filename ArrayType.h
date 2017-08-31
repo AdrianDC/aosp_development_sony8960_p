@@ -36,7 +36,7 @@ struct ArrayType : public Type {
     bool isArray() const override;
     bool canCheckEquality() const override;
 
-    Type* getElementType() const;
+    const Type* getElementType() const;
 
     void prependDimension(ConstantExpression *size);
     void appendDimension(ConstantExpression *size);

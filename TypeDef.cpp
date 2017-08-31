@@ -30,7 +30,11 @@ const ScalarType *TypeDef::resolveToScalarType() const {
     return NULL;
 }
 
-Type* TypeDef::referencedType() const {
+Type* TypeDef::referencedType() {
+    return mReferencedType.get();
+}
+
+const Type* TypeDef::referencedType() const {
     return mReferencedType.get();
 }
 

@@ -314,11 +314,11 @@ protected:
 /* Base type for VectorType and RefType. */
 struct TemplatedType : public Type {
     void setElementType(const Reference<Type>& elementType);
-    Type* getElementType() const;
+    const Type* getElementType() const;
 
     bool isTemplatedType() const override;
 
-    virtual bool isCompatibleElementType(Type* elementType) const = 0;
+    virtual bool isCompatibleElementType(const Type* elementType) const = 0;
 
     std::vector<const Reference<Type>*> getReferences() const override;
 

@@ -159,7 +159,7 @@ bool FmqType::resultNeedsDeref() const {
     return true;
 }
 
-bool FmqType::isCompatibleElementType(Type *elementType) const {
+bool FmqType::isCompatibleElementType(const Type* elementType) const {
     return (!elementType->isInterface() && !elementType->needsEmbeddedReadWrite());
 }
 
