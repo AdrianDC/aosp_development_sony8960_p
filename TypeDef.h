@@ -39,6 +39,9 @@ struct TypeDef : public NamedType {
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
 
+    std::vector<const Reference<Type>*> getReferences() const override;
+    std::vector<const Reference<Type>*> getStrongReferences() const override;
+
     status_t emitTypeDeclarations(Formatter &out) const override;
 
    private:
