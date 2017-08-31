@@ -26,8 +26,8 @@ namespace android {
 FmqType::FmqType(const char* nsp, const char* name, Scope* parent)
     : TemplatedType(parent), mNamespace(nsp), mName(name) {}
 
-std::string FmqType::typeName() const {
-    return mName + " of " + mElementType->typeName();
+std::string FmqType::templatedTypeName() const {
+    return mName;
 }
 
 std::string FmqType::fullName() const {
