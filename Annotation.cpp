@@ -19,6 +19,7 @@
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
+#include <algorithm>
 #include <vector>
 
 namespace android {
@@ -29,7 +30,15 @@ const std::string& AnnotationParam::getName() const {
     return mName;
 }
 
-std::vector<ConstantExpression*> AnnotationParam::getConstantExpressions() const {
+std::vector<ConstantExpression*> AnnotationParam::getConstantExpressions() {
+    const auto& constRet = static_cast<const AnnotationParam*>(this)->getConstantExpressions();
+    std::vector<ConstantExpression*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<ConstantExpression*>(ce); });
+    return ret;
+}
+
+std::vector<const ConstantExpression*> AnnotationParam::getConstantExpressions() const {
     return {};
 }
 
@@ -95,8 +104,11 @@ std::string ConstantExpressionAnnotationParam::getSingleValue() const {
     return convertToString(mValues->at(0));
 }
 
-std::vector<ConstantExpression*> ConstantExpressionAnnotationParam::getConstantExpressions() const {
-    return *mValues;
+std::vector<const ConstantExpression*> ConstantExpressionAnnotationParam::getConstantExpressions()
+    const {
+    std::vector<const ConstantExpression*> ret;
+    ret.insert(ret.end(), mValues->begin(), mValues->end());
+    return ret;
 }
 
 Annotation::Annotation(const char* name, AnnotationParamVector* params)
@@ -120,8 +132,16 @@ const AnnotationParam *Annotation::getParam(const std::string &name) const {
     return nullptr;
 }
 
-std::vector<ConstantExpression*> Annotation::getConstantExpressions() const {
-    std::vector<ConstantExpression*> ret;
+std::vector<ConstantExpression*> Annotation::getConstantExpressions() {
+    const auto& constRet = static_cast<const Annotation*>(this)->getConstantExpressions();
+    std::vector<ConstantExpression*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<ConstantExpression*>(ce); });
+    return ret;
+}
+
+std::vector<const ConstantExpression*> Annotation::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
     for (const auto* param : *mParams) {
         const auto& retParam = param->getConstantExpressions();
         ret.insert(ret.end(), retParam.begin(), retParam.end());

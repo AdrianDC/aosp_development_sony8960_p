@@ -67,12 +67,14 @@ std::string ArrayType::typeName() const {
     return std::to_string(dimension()) + "d array of " + mElementType->typeName();
 }
 
-std::vector<Reference<Type>> ArrayType::getReferences() const {
-    return {mElementType};
+std::vector<const Reference<Type>*> ArrayType::getReferences() const {
+    return {&mElementType};
 }
 
-std::vector<ConstantExpression*> ArrayType::getConstantExpressions() const {
-    return mSizes;
+std::vector<const ConstantExpression*> ArrayType::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
+    ret.insert(ret.end(), mSizes.begin(), mSizes.end());
+    return ret;
 }
 
 status_t ArrayType::validate() const {

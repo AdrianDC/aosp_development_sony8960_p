@@ -460,11 +460,11 @@ bool Interface::addMethod(Method *method) {
     return true;
 }
 
-std::vector<Reference<Type>> Interface::getReferences() const {
-    std::vector<Reference<Type>> ret;
+std::vector<const Reference<Type>*> Interface::getReferences() const {
+    std::vector<const Reference<Type>*> ret;
 
     if (superType() != nullptr) {
-        ret.push_back(mSuperType);
+        ret.push_back(&mSuperType);
     }
 
     for (const auto* method : methods()) {
@@ -475,8 +475,8 @@ std::vector<Reference<Type>> Interface::getReferences() const {
     return ret;
 }
 
-std::vector<ConstantExpression*> Interface::getConstantExpressions() const {
-    std::vector<ConstantExpression*> ret;
+std::vector<const ConstantExpression*> Interface::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
     for (const auto* method : methods()) {
         const auto& retMethod = method->getConstantExpressions();
         ret.insert(ret.end(), retMethod.begin(), retMethod.end());
@@ -484,7 +484,7 @@ std::vector<ConstantExpression*> Interface::getConstantExpressions() const {
     return ret;
 }
 
-std::vector<Reference<Type>> Interface::getStrongReferences() const {
+std::vector<const Reference<Type>*> Interface::getStrongReferences() const {
     // Interface is a special case as a reference:
     // its definiton must be completed for extension but
     // not necessary for other references.
@@ -492,9 +492,9 @@ std::vector<Reference<Type>> Interface::getStrongReferences() const {
     // method declaration appears only in interface, we may assume
     // that all references in method definitions are acyclic.
 
-    std::vector<Reference<Type>> ret;
+    std::vector<const Reference<Type>*> ret;
     if (superType() != nullptr) {
-        ret.push_back(mSuperType);
+        ret.push_back(&mSuperType);
     }
     return ret;
 }
