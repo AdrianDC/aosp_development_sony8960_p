@@ -48,8 +48,6 @@ struct Reference {
        Referred type's field might be not resolved */
     bool isResolved() const { return mResolved != nullptr; }
 
-    operator T*() const { return get(); }
-
     T* operator->() const { return get(); }
 
     T* get() const {

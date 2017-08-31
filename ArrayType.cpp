@@ -56,7 +56,7 @@ bool ArrayType::canCheckEquality() const {
 }
 
 Type* ArrayType::getElementType() const {
-    return mElementType;
+    return mElementType.get();
 }
 
 std::string ArrayType::typeName() const {
