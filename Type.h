@@ -316,6 +316,9 @@ struct TemplatedType : public Type {
     void setElementType(const Reference<Type>& elementType);
     const Type* getElementType() const;
 
+    virtual std::string templatedTypeName() const = 0;
+    std::string typeName() const override;
+
     bool isTemplatedType() const override;
 
     virtual bool isCompatibleElementType(const Type* elementType) const = 0;

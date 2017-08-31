@@ -799,8 +799,8 @@ bool BitFieldType::isBitField() const {
     return true;
 }
 
-std::string BitFieldType::typeName() const {
-    return "mask of " + mElementType->typeName();
+std::string BitFieldType::templatedTypeName() const {
+    return "mask";
 }
 
 bool BitFieldType::isCompatibleElementType(const Type* elementType) const {

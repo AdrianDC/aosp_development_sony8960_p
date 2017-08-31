@@ -27,8 +27,8 @@ namespace android {
 
 VectorType::VectorType(Scope* parent) : TemplatedType(parent) {}
 
-std::string VectorType::typeName() const {
-    return "vector of " + mElementType->typeName();
+std::string VectorType::templatedTypeName() const {
+    return "vector";
 }
 
 bool VectorType::isCompatibleElementType(const Type* elementType) const {
