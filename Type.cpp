@@ -636,7 +636,7 @@ void TemplatedType::setElementType(const Reference<Type>& elementType) {
 }
 
 Type* TemplatedType::getElementType() const {
-    return mElementType;
+    return mElementType.get();
 }
 
 bool TemplatedType::isTemplatedType() const {
@@ -648,7 +648,7 @@ std::vector<const Reference<Type>*> TemplatedType::getReferences() const {
 }
 
 status_t TemplatedType::validate() const {
-    if (!isCompatibleElementType(mElementType)) {
+    if (!isCompatibleElementType(mElementType.get())) {
         std::cerr << "ERROR: " << typeName() /* contains element type */
                   << " is not supported at " << mElementType.location() << "\n";
         return UNKNOWN_ERROR;

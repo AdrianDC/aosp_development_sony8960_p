@@ -31,7 +31,7 @@ const ScalarType *TypeDef::resolveToScalarType() const {
 }
 
 Type* TypeDef::referencedType() const {
-    return mReferencedType;
+    return mReferencedType.get();
 }
 
 bool TypeDef::isInterface() const {
