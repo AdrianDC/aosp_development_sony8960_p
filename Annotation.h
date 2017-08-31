@@ -43,7 +43,8 @@ struct AnnotationParam {
     /* Returns value interpretted as a boolean */
     bool getSingleBool() const;
 
-    virtual std::vector<ConstantExpression*> getConstantExpressions() const;
+    std::vector<ConstantExpression*> getConstantExpressions();
+    virtual std::vector<const ConstantExpression*> getConstantExpressions() const;
 
    protected:
     const std::string mName;
@@ -68,7 +69,7 @@ struct ConstantExpressionAnnotationParam : AnnotationParam {
     std::vector<std::string> getValues() const override;
     std::string getSingleValue() const override;
 
-    std::vector<ConstantExpression*> getConstantExpressions() const override;
+    std::vector<const ConstantExpression*> getConstantExpressions() const override;
 
    private:
     std::vector<ConstantExpression*>* const mValues;
@@ -83,7 +84,8 @@ struct Annotation {
     const AnnotationParamVector &params() const;
     const AnnotationParam *getParam(const std::string &name) const;
 
-    std::vector<ConstantExpression*> getConstantExpressions() const;
+    std::vector<ConstantExpression*> getConstantExpressions();
+    std::vector<const ConstantExpression*> getConstantExpressions() const;
 
     void dump(Formatter &out) const;
 

@@ -60,8 +60,8 @@ struct EnumType : public Scope {
     // Return the type that corresponds to bitfield<T>.
     BitFieldType *getBitfieldType() const;
 
-    std::vector<Reference<Type>> getReferences() const override;
-    std::vector<ConstantExpression*> getConstantExpressions() const override;
+    std::vector<const Reference<Type>*> getReferences() const override;
+    std::vector<const ConstantExpression*> getConstantExpressions() const override;
 
     status_t resolveInheritance() override;
     status_t validate() const override;

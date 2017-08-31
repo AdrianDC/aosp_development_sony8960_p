@@ -68,12 +68,12 @@ status_t EnumType::resolveInheritance() {
     return Scope::resolveInheritance();
 }
 
-std::vector<Reference<Type>> EnumType::getReferences() const {
-    return {mStorageType};
+std::vector<const Reference<Type>*> EnumType::getReferences() const {
+    return {&mStorageType};
 }
 
-std::vector<ConstantExpression*> EnumType::getConstantExpressions() const {
-    std::vector<ConstantExpression*> ret;
+std::vector<const ConstantExpression*> EnumType::getConstantExpressions() const {
+    std::vector<const ConstantExpression*> ret;
     for (const auto* value : mValues) {
         ret.push_back(value->constExpr());
     }

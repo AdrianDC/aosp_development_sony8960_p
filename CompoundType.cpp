@@ -37,11 +37,9 @@ void CompoundType::setFields(std::vector<NamedReference<Type>*>* fields) {
     mFields = fields;
 }
 
-std::vector<Reference<Type>> CompoundType::getReferences() const {
-    std::vector<Reference<Type>> ret;
-    for (const auto* field : *mFields) {
-        ret.push_back(*field);
-    }
+std::vector<const Reference<Type>*> CompoundType::getReferences() const {
+    std::vector<const Reference<Type>*> ret;
+    ret.insert(ret.begin(), mFields->begin(), mFields->end());
     return ret;
 }
 
