@@ -55,6 +55,14 @@ bool TypeDef::isTypeDef() const {
     return true;
 }
 
+std::vector<const Reference<Type>*> TypeDef::getReferences() const {
+    return {&mReferencedType};
+}
+
+std::vector<const Reference<Type>*> TypeDef::getStrongReferences() const {
+    return {};
+}
+
 bool TypeDef::needsEmbeddedReadWrite() const {
     CHECK(!"Should not be here");
     return false;
