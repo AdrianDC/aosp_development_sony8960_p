@@ -30,7 +30,8 @@ struct TypeDef : public NamedType {
 
     std::string typeName() const override;
 
-    Type* referencedType() const;
+    Type* referencedType();
+    const Type* referencedType() const;
 
     bool isInterface() const override;
     bool isEnum() const override;

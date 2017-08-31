@@ -54,7 +54,7 @@ bool ArrayType::canCheckEquality() const {
     return mElementType->canCheckEquality();
 }
 
-Type* ArrayType::getElementType() const {
+const Type* ArrayType::getElementType() const {
     return mElementType.get();
 }
 
