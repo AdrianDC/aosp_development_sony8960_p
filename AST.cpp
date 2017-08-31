@@ -326,13 +326,7 @@ Type* AST::lookupTypeLocally(const FQName& fqName, Scope* scope) {
 
     for (; scope != nullptr; scope = scope->parent()) {
         Type* type = scope->lookupType(fqName);
-
         if (type != nullptr) {
-            // Resolve typeDefs to the target type.
-            while (type->isTypeDef()) {
-                type = static_cast<TypeDef *>(type)->referencedType();
-            }
-
             return type;
         }
     }
@@ -442,12 +436,6 @@ Type *AST::lookupTypeFromImports(const FQName &fqName) {
                   << fqName.string()
                   << "'.";
 #endif
-
-        // Resolve typeDefs to the target type.
-        while (resolvedType->isTypeDef()) {
-            resolvedType =
-                static_cast<TypeDef *>(resolvedType)->referencedType();
-        }
 
         returnedType = resolvedType;
 

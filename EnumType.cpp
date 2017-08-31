@@ -28,10 +28,11 @@ namespace android {
 
 EnumType::EnumType(const char* localName, const Location& location,
                    const Reference<Type>& storageType, Scope* parent)
-    : Scope(localName, location, parent), mValues(), mStorageType(storageType) {
-    BitFieldType* bitfieldType = new BitFieldType(parent);
-    bitfieldType->setElementType(Reference<Type>(this, Location()));
-    mBitfieldType.set(bitfieldType);
+    : Scope(localName, location, parent),
+      mValues(),
+      mStorageType(storageType),
+      mBitfieldType(new BitFieldType(parent)) {
+    mBitfieldType->setElementType(Reference<Type>(this, Location()));
 }
 
 const Type *EnumType::storageType() const {
@@ -172,7 +173,7 @@ std::string EnumType::getVtsType() const {
 BitFieldType::BitFieldType(Scope* parent) : TemplatedType(parent) {}
 
 const BitFieldType* EnumType::getBitfieldType() const {
-    return mBitfieldType.get();
+    return mBitfieldType;
 }
 
 LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
