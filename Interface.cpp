@@ -610,7 +610,7 @@ const Interface* Interface::superType() const {
         // that would be caught in validate
         return nullptr;
     }
-    return static_cast<Interface*>(mSuperType.get());
+    return static_cast<const Interface*>(mSuperType.get());
 }
 
 std::vector<const Interface *> Interface::typeChain() const {

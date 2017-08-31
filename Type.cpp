@@ -182,8 +182,7 @@ status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
     }
 
     for (const auto* nextRef : getReferences()) {
-        const auto* nextType = nextRef->get();
-        err = nextType->recursivePass(func, visited);
+        err = (*nextRef)->recursivePass(func, visited);
         if (err != OK) return err;
     }
 
@@ -640,7 +639,7 @@ void TemplatedType::setElementType(const Reference<Type>& elementType) {
     mElementType = elementType;
 }
 
-Type* TemplatedType::getElementType() const {
+const Type* TemplatedType::getElementType() const {
     return mElementType.get();
 }
 
