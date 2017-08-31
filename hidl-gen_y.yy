@@ -39,7 +39,7 @@
 
 using namespace android;
 
-extern int yylex(yy::parser::semantic_type*, yy::parser::location_type*, void*);
+extern int yylex(yy::parser::semantic_type*, yy::parser::location_type*, void*, Scope** const);
 
 void enterScope(AST* /* ast */, Scope** scope, Scope* container) {
     CHECK(container->parent() == (*scope));
@@ -206,6 +206,7 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
 %parse-param { android::AST* const ast }
 %parse-param { android::Scope** const scope }
 %lex-param { void* scanner }
+%lex-param { android::Scope** const scope }
 %pure-parser
 %glr-parser
 %skeleton "glr.cc"
@@ -1033,9 +1034,9 @@ array_type
           Reference<Type> type = *$1;
 
           if (type.isResolved() && type->isArray()) {
-              $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3);
+              $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3, *scope);
           } else {
-              $$ = new ArrayType(type, $3);
+              $$ = new ArrayType(type, $3, *scope);
           }
       }
     | array_type '[' const_expr ']'
