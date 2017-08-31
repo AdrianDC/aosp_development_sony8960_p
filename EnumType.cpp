@@ -171,7 +171,7 @@ std::string EnumType::getVtsType() const {
 
 BitFieldType::BitFieldType(Scope* parent) : TemplatedType(parent) {}
 
-BitFieldType* EnumType::getBitfieldType() const {
+const BitFieldType* EnumType::getBitfieldType() const {
     return mBitfieldType.get();
 }
 
@@ -803,7 +803,7 @@ std::string BitFieldType::typeName() const {
     return "mask of " + mElementType->typeName();
 }
 
-bool BitFieldType::isCompatibleElementType(Type* elementType) const {
+bool BitFieldType::isCompatibleElementType(const Type* elementType) const {
     return elementType->isEnum();
 }
 
@@ -845,7 +845,7 @@ status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
     out << "scalar_type: \""
         << mElementType->resolveToScalarType()->getVtsScalarType()
         << "\"\n";
-    out << "predefined_type: \"" << static_cast<NamedType*>(mElementType.get())->fullName()
+    out << "predefined_type: \"" << static_cast<const NamedType*>(mElementType.get())->fullName()
         << "\"\n";
     return OK;
 }
@@ -871,9 +871,9 @@ void BitFieldType::emitReaderWriter(
             true /* needsCast */);
 }
 
-EnumType* BitFieldType::getEnumType() const {
+const EnumType* BitFieldType::getEnumType() const {
     CHECK(mElementType->isEnum());
-    return static_cast<EnumType*>(mElementType.get());
+    return static_cast<const EnumType*>(mElementType.get());
 }
 
 // a bitfield maps to the underlying scalar type in C++, so operator<< is

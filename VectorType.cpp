@@ -31,7 +31,7 @@ std::string VectorType::typeName() const {
     return "vector of " + mElementType->typeName();
 }
 
-bool VectorType::isCompatibleElementType(Type *elementType) const {
+bool VectorType::isCompatibleElementType(const Type* elementType) const {
     if (elementType->isScalar()) {
         return true;
     }
@@ -44,8 +44,8 @@ bool VectorType::isCompatibleElementType(Type *elementType) const {
     if (elementType->isBitField()) {
         return true;
     }
-    if (elementType->isCompoundType()
-            && static_cast<CompoundType *>(elementType)->style() == CompoundType::STYLE_STRUCT) {
+    if (elementType->isCompoundType() &&
+        static_cast<const CompoundType*>(elementType)->style() == CompoundType::STYLE_STRUCT) {
         return true;
     }
     if (elementType->isInterface()) {
@@ -58,11 +58,11 @@ bool VectorType::isCompatibleElementType(Type *elementType) const {
         return true;
     }
     if (elementType->isTemplatedType()) {
-        Type *inner = static_cast<TemplatedType *>(elementType)->getElementType();
+        const Type* inner = static_cast<const TemplatedType*>(elementType)->getElementType();
         return this->isCompatibleElementType(inner) && !inner->isInterface();
     }
     if (elementType->isArray()) {
-        Type *inner = static_cast<ArrayType *>(elementType)->getElementType();
+        const Type* inner = static_cast<const ArrayType*>(elementType)->getElementType();
         return this->isCompatibleElementType(inner) && !inner->isInterface();
     }
     return false;
@@ -728,7 +728,7 @@ bool VectorType::isJavaCompatible() const {
     }
 
     if (mElementType->isArray()) {
-        return static_cast<ArrayType*>(mElementType.get())->countDimensions() == 1;
+        return static_cast<const ArrayType*>(mElementType.get())->countDimensions() == 1;
     }
 
     if (mElementType->isVector()) {
