@@ -23,19 +23,9 @@
 
 namespace android {
 
-ArrayType::ArrayType(ArrayType* srcArray, ConstantExpression* size, Scope* parent)
-    : Type(parent), mElementType(srcArray->mElementType), mSizes(srcArray->mSizes) {
-    prependDimension(size);
-}
-
 ArrayType::ArrayType(const Reference<Type>& elementType, ConstantExpression* size, Scope* parent)
-    : Type(parent), mElementType(elementType) {
+    : Type(parent), mElementType(elementType), mSizes{size} {
     CHECK(!elementType.isEmptyReference());
-    prependDimension(size);
-}
-
-void ArrayType::prependDimension(ConstantExpression *size) {
-    mSizes.insert(mSizes.begin(), size);
 }
 
 void ArrayType::appendDimension(ConstantExpression *size) {
@@ -76,7 +66,19 @@ std::vector<const ConstantExpression*> ArrayType::getConstantExpressions() const
     return ret;
 }
 
+status_t ArrayType::resolveInheritance() {
+    // Resolve for typedefs
+    while (mElementType->isArray()) {
+        ArrayType* innerArray = static_cast<ArrayType*>(mElementType.get());
+        mSizes.insert(mSizes.end(), innerArray->mSizes.begin(), innerArray->mSizes.end());
+        mElementType = innerArray->mElementType;
+    }
+    return Type::resolveInheritance();
+}
+
 status_t ArrayType::validate() const {
+    CHECK(!mElementType->isArray());
+
     if (mElementType->isBinder()) {
         std::cerr << "ERROR: Arrays of interface types are not supported"
                   << " at " << mElementType.location() << "\n";
