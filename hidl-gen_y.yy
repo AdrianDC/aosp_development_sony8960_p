@@ -1031,13 +1031,7 @@ array_type_base
 array_type
     : array_type_base '[' const_expr ']'
       {
-          Reference<Type> type = *$1;
-
-          if (type.isResolved() && type->isArray()) {
-              $$ = new ArrayType(static_cast<ArrayType*>(type.get()), $3, *scope);
-          } else {
-              $$ = new ArrayType(type, $3, *scope);
-          }
+          $$ = new ArrayType(*$1, $3, *scope);
       }
     | array_type '[' const_expr ']'
       {
