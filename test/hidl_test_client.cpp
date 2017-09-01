@@ -54,6 +54,7 @@
 #include <set>
 #include <sstream>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -475,6 +476,15 @@ public:
         ALOGI("Test setup complete");
     }
 };
+
+// Check array dimention order
+static_assert(std::is_same<IFoo::multidimArrayOne, hidl_array<int32_t, 5, 6, 7>>::value,
+              "hidl-gen output array dimention order is incorrect");
+static_assert(std::is_same<IFoo::multidimArrayTwo, hidl_array<int32_t, 8, 9, 10, 5, 6, 7>>::value,
+              "hidl-gen output array dimention order is incorrect");
+static_assert(
+    std::is_same<IFoo::multidimArrayThree, hidl_array<int32_t, 2, 3, 4, 8, 9, 10, 5, 6, 7>>::value,
+    "hidl-gen output array dimention order is incorrect");
 
 TEST_F(HidlTest, PreloadTest) {
     // in passthrough mode, this will already be opened

@@ -28,9 +28,6 @@ namespace android {
 struct ConstantExpression;
 
 struct ArrayType : public Type {
-    // Extends existing array by adding another dimension.
-    ArrayType(ArrayType* srcArray, ConstantExpression* size, Scope* parent);
-
     ArrayType(const Reference<Type>& elementType, ConstantExpression* size, Scope* parent);
 
     bool isArray() const override;
@@ -38,7 +35,6 @@ struct ArrayType : public Type {
 
     const Type* getElementType() const;
 
-    void prependDimension(ConstantExpression *size);
     void appendDimension(ConstantExpression *size);
     size_t countDimensions() const;
 
@@ -47,6 +43,9 @@ struct ArrayType : public Type {
     std::vector<const Reference<Type>*> getReferences() const override;
 
     std::vector<const ConstantExpression*> getConstantExpressions() const override;
+
+    // Extends existing array by adding another dimension.
+    status_t resolveInheritance() override;
 
     status_t validate() const override;
 
