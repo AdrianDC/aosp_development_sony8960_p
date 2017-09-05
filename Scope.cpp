@@ -143,7 +143,12 @@ status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
 }
 
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
-    return forEachType([&](Type *type) {
+    forEachType([&](Type* type) {
+        type->emitTypeForwardDeclaration(out);
+        return OK;
+    });
+
+    return forEachType([&](Type* type) {
         return type->emitTypeDeclarations(out);
     });
 }

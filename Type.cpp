@@ -544,6 +544,8 @@ status_t Type::emitTypeDeclarations(Formatter &) const {
     return OK;
 }
 
+void Type::emitTypeForwardDeclaration(Formatter&) const {}
+
 status_t Type::emitGlobalTypeDeclarations(Formatter &) const {
     return OK;
 }
