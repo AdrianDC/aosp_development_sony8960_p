@@ -263,6 +263,48 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
     return CheckAcyclicStatus(OK);
 }
 
+status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref) const {
+    const Location& refLoc = ref.location();
+    const Type* refType = ref.shallowGet();
+
+    // Not NamedTypes are avaiable everywhere.
+    // Only ArrayType and TemplatedType contain additionaly types in
+    // their reference (which is actually a part of type definition),
+    // so they are proceeded in this case.
+    //
+    // If we support named templated types one day, we will need to change
+    // this logic.
+    if (!refType->isNamedType()) {
+        for (const Reference<Type>* innerRef : refType->getReferences()) {
+            status_t err = checkForwardReferenceRestrictions(*innerRef) != OK;
+            if (err != OK) return err;
+        }
+        return OK;
+    }
+
+    const Location& typeLoc = static_cast<const NamedType*>(refType)->location();
+
+    // If referenced type is declared in another file or before reference,
+    // there is no forward reference here.
+    if (!Location::inSameFile(refLoc, typeLoc) ||
+        (!Location::intersect(refLoc, typeLoc) && typeLoc < refLoc)) {
+        return OK;
+    }
+
+    // Type must be declared somewhere in the current stack to make it
+    // available for forward referencing.
+    const Type* refTypeParent = refType->parent();
+    for (const Type* ancestor = this; ancestor != nullptr; ancestor = ancestor->parent()) {
+        if (ancestor == refTypeParent) return OK;
+    }
+
+    std::cerr << "ERROR: Forward reference of '" << refType->typeName() << "' at " << ref.location()
+              << " is not supported.\n"
+              << "C++ forward declaration doesn't support inner types.\n";
+
+    return UNKNOWN_ERROR;
+}
+
 const ScalarType *Type::resolveToScalarType() const {
     return NULL;
 }
@@ -291,6 +333,10 @@ void Type::setPostParseCompleted() {
 }
 
 Scope* Type::parent() {
+    return mParent;
+}
+
+const Scope* Type::parent() const {
     return mParent;
 }
 

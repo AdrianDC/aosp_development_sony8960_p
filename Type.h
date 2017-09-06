@@ -111,6 +111,10 @@ struct Type {
     CheckAcyclicStatus checkAcyclic(std::unordered_set<const Type*>* visited,
                                     std::unordered_set<const Type*>* stack) const;
 
+    // Checks following C++ restriction on forward declaration:
+    // inner struct could be forward declared only inside its parent.
+    status_t checkForwardReferenceRestrictions(const Reference<Type>& ref) const;
+
     virtual const ScalarType *resolveToScalarType() const;
 
     virtual std::string typeName() const = 0;
@@ -124,6 +128,7 @@ struct Type {
     void setPostParseCompleted();
 
     Scope* parent();
+    const Scope* parent() const;
 
     enum StorageMode {
         StorageMode_Stack,
