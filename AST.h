@@ -90,7 +90,11 @@ struct AST {
 
     // Recursive tree pass that ensures that type definitions and references
     // are acyclic.
-    status_t checkAcyclic() const;
+    status_t checkAcyclicTypes() const;
+
+    // Recursive tree pass that ensures that constant expressions
+    // are acyclic.
+    status_t checkAcyclicConstantExpressions() const;
 
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateCppHeaders(const std::string &outputPath) const;
