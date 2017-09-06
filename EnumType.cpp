@@ -265,6 +265,13 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
+void EnumType::emitTypeForwardDeclaration(Formatter& out) const {
+    const ScalarType* scalarType = mStorageType->resolveToScalarType();
+    const std::string storageType = scalarType->getCppStackType();
+
+    out << "enum class " << localName() << " : " << storageType << ";\n";
+}
+
 void EnumType::emitEnumBitwiseOperator(
         Formatter &out,
         bool lhsIsEnum,

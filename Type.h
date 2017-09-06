@@ -243,6 +243,11 @@ struct Type {
 
     virtual status_t emitTypeDeclarations(Formatter &out) const;
 
+    // Emit scope C++ forward declaration.
+    // There is no need to forward declare interfaces, as
+    // they are always declared in global scope in dedicated file.
+    virtual void emitTypeForwardDeclaration(Formatter& out) const;
+
     // Emit any declarations pertaining to this type that have to be
     // at global scope, i.e. enum class operators.
     virtual status_t emitGlobalTypeDeclarations(Formatter &out) const;
