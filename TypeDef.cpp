@@ -55,12 +55,21 @@ bool TypeDef::isTypeDef() const {
     return true;
 }
 
+const Type* TypeDef::resolve() const {
+    return mReferencedType.get();
+}
+
 std::vector<const Reference<Type>*> TypeDef::getReferences() const {
     return {&mReferencedType};
 }
 
 std::vector<const Reference<Type>*> TypeDef::getStrongReferences() const {
-    return {};
+    // Typedef definition can be cyclic only if
+    // it is referenced by another typedef
+    if (!mReferencedType.shallowGet()->isTypeDef()) {
+        return {};
+    }
+    return {&mReferencedType};
 }
 
 bool TypeDef::needsEmbeddedReadWrite() const {
