@@ -448,6 +448,18 @@ std::vector<ConstantExpression*> ConstantExpression::getConstantExpressions() {
     return ret;
 }
 
+std::vector<Reference<LocalIdentifier>*> ConstantExpression::getReferences() {
+    const auto& constRet = static_cast<const ConstantExpression*>(this)->getReferences();
+    std::vector<Reference<LocalIdentifier>*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ce) { return const_cast<Reference<LocalIdentifier>*>(ce); });
+    return ret;
+}
+
+std::vector<const Reference<LocalIdentifier>*> ConstantExpression::getReferences() const {
+    return {};
+}
+
 status_t ConstantExpression::recursivePass(const std::function<status_t(ConstantExpression*)>& func,
                                            std::unordered_set<const ConstantExpression*>* visited) {
     if (mIsPostParseCompleted) return OK;
@@ -456,6 +468,13 @@ status_t ConstantExpression::recursivePass(const std::function<status_t(Constant
     visited->insert(this);
 
     for (auto* nextCE : getConstantExpressions()) {
+        status_t err = nextCE->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
+    for (auto* nextRef : getReferences()) {
+        auto* nextCE = nextRef->shallowGet()->constExpr();
+        CHECK(nextCE != nullptr) << "Local identifier is not a constant expression";
         status_t err = nextCE->recursivePass(func, visited);
         if (err != OK) return err;
     }
@@ -481,11 +500,72 @@ status_t ConstantExpression::recursivePass(
         if (err != OK) return err;
     }
 
+    for (const auto* nextRef : getReferences()) {
+        const auto* nextCE = nextRef->shallowGet()->constExpr();
+        CHECK(nextCE != nullptr) << "Local identifier is not a constant expression";
+        status_t err = nextCE->recursivePass(func, visited);
+        if (err != OK) return err;
+    }
+
     // Unlike types, constant expressions need to be proceeded after dependencies
     status_t err = func(this);
     if (err != OK) return err;
 
     return OK;
+}
+
+ConstantExpression::CheckAcyclicStatus::CheckAcyclicStatus(status_t status,
+                                                           const ConstantExpression* cycleEnd)
+    : status(status), cycleEnd(cycleEnd) {
+    CHECK(cycleEnd == nullptr || status != OK);
+}
+
+ConstantExpression::CheckAcyclicStatus ConstantExpression::checkAcyclic(
+    std::unordered_set<const ConstantExpression*>* visited,
+    std::unordered_set<const ConstantExpression*>* stack) const {
+    if (stack->find(this) != stack->end()) {
+        std::cerr << "ERROR: Cyclic declaration:\n";
+        return CheckAcyclicStatus(UNKNOWN_ERROR, this);
+    }
+
+    if (visited->find(this) != visited->end()) return CheckAcyclicStatus(OK);
+    visited->insert(this);
+    stack->insert(this);
+
+    for (const auto* nextCE : getConstantExpressions()) {
+        auto err = nextCE->checkAcyclic(visited, stack);
+        if (err.status != OK) {
+            return err;
+        }
+    }
+
+    for (const auto* nextRef : getReferences()) {
+        const auto* nextCE = nextRef->shallowGet()->constExpr();
+        CHECK(nextCE != nullptr) << "Local identifier is not a constant expression";
+        auto err = nextCE->checkAcyclic(visited, stack);
+
+        if (err.status != OK) {
+            if (err.cycleEnd == nullptr) return err;
+
+            // Only ReferenceConstantExpression has references,
+            // mExpr is defined explicitly before evaluation
+
+            std::cerr << "  ";
+            if (!mTrivialDescription) {
+                std::cerr << "  '" << mExpr << "' ";
+            };
+            std::cerr << "at " << nextRef->location() << "\n";
+
+            if (err.cycleEnd == this) {
+                return CheckAcyclicStatus(err.status);
+            }
+            return err;
+        }
+    }
+
+    CHECK(stack->find(this) != stack->end());
+    stack->erase(this);
+    return CheckAcyclicStatus(OK);
 }
 
 void ConstantExpression::setPostParseCompleted() {
@@ -529,8 +609,12 @@ ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalId
 }
 
 std::vector<const ConstantExpression*> ReferenceConstantExpression::getConstantExpressions() const {
-    CHECK(mReference->constExpr() != nullptr);
-    return {mReference->constExpr()};
+    // Returns reference instead
+    return {};
+}
+
+std::vector<const Reference<LocalIdentifier>*> ReferenceConstantExpression::getReferences() const {
+    return {&mReference};
 }
 
 /*
