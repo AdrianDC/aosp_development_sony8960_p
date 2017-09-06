@@ -101,6 +101,9 @@ struct LocalIdentifier {
     virtual ~LocalIdentifier();
     virtual bool isEnumValue() const;
 
+    const LocalIdentifier* resolve() const;
+    LocalIdentifier* resolve();
+
     virtual ConstantExpression* constExpr() const;
 };
 

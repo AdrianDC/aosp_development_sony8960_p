@@ -126,7 +126,7 @@ struct EnumType : public Scope {
     Reference<Type> mStorageType;
     // TODO(b/64272670): Dot not store BitFieldType as it is not owned.
     // It is kept here to avoid const-cast (BitFieldType owns non-const EnumType).
-    Reference<BitFieldType> mBitfieldType;
+    BitFieldType* const mBitfieldType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };

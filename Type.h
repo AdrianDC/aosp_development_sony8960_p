@@ -56,6 +56,10 @@ struct Type {
     virtual bool isTypeDef() const;
     virtual bool isVector() const;
 
+    // Resolves the type by unwrapping typedefs
+    Type* resolve();
+    virtual const Type* resolve() const;
+
     // All types defined in this type.
     std::vector<Type*> getDefinedTypes();
     virtual std::vector<const Type*> getDefinedTypes() const;

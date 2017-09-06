@@ -95,6 +95,14 @@ bool Type::isPointer() const {
     return false;
 }
 
+Type* Type::resolve() {
+    return const_cast<Type*>(static_cast<const Type*>(this)->resolve());
+}
+
+const Type* Type::resolve() const {
+    return this;
+}
+
 std::vector<Type*> Type::getDefinedTypes() {
     const auto& constRet = static_cast<const Type*>(this)->getDefinedTypes();
     std::vector<Type*> ret(constRet.size());
@@ -159,7 +167,7 @@ status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
     }
 
     for (auto* nextRef : getReferences()) {
-        err = (*nextRef)->recursivePass(func, visited);
+        err = nextRef->shallowGet()->recursivePass(func, visited);
         if (err != OK) return err;
     }
 
@@ -182,7 +190,7 @@ status_t Type::recursivePass(const std::function<status_t(const Type*)>& func,
     }
 
     for (const auto* nextRef : getReferences()) {
-        err = (*nextRef)->recursivePass(func, visited);
+        err = nextRef->shallowGet()->recursivePass(func, visited);
         if (err != OK) return err;
     }
 
@@ -233,7 +241,7 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
     }
 
     for (const auto* nextRef : getStrongReferences()) {
-        const auto* nextType = nextRef->get();
+        const auto* nextType = nextRef->shallowGet();
         auto err = nextType->checkAcyclic(visited, stack);
 
         if (err.status != OK) {
