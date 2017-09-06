@@ -83,13 +83,20 @@ bool AST::containsInterfaces() const {
 }
 
 status_t AST::postParse() {
-    status_t err = resolveInheritance();
+    status_t err;
+    // checkAcyclicTypes is before resolveInheritance, as we
+    // need to have no cycle while getting parent class.
+    err = checkAcyclicTypes();
+    if (err != OK) return err;
+    err = resolveInheritance();
+    if (err != OK) return err;
+    // checkAcyclicConstantExpressions is after resolveInheritance,
+    // as resolveInheritance autofills enum values.
+    err = checkAcyclicConstantExpressions();
     if (err != OK) return err;
     err = evaluate();
     if (err != OK) return err;
     err = validate();
-    if (err != OK) return err;
-    err = checkAcyclic();
     if (err != OK) return err;
 
     // Make future packages not to call passes
@@ -141,10 +148,26 @@ status_t AST::validate() const {
     return mRootScope.recursivePass(&Type::validate, &visited);
 }
 
-status_t AST::checkAcyclic() const {
+status_t AST::checkAcyclicTypes() const {
     std::unordered_set<const Type*> visited;
     std::unordered_set<const Type*> stack;
     return mRootScope.checkAcyclic(&visited, &stack).status;
+}
+
+status_t AST::checkAcyclicConstantExpressions() const {
+    std::unordered_set<const Type*> visitedTypes;
+    std::unordered_set<const ConstantExpression*> visitedCE;
+    std::unordered_set<const ConstantExpression*> stack;
+    return mRootScope.recursivePass(
+        [&](const Type* type) -> status_t {
+            for (auto* ce : type->getConstantExpressions()) {
+                status_t err = ce->checkAcyclic(&visitedCE, &stack).status;
+                CHECK(err != OK || stack.empty());
+                if (err != OK) return err;
+            }
+            return OK;
+        },
+        &visitedTypes);
 }
 
 bool AST::addImport(const char *import) {
