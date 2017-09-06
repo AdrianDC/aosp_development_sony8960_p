@@ -235,6 +235,14 @@ bool LocalIdentifier::isEnumValue() const {
     return false;
 }
 
+const LocalIdentifier* LocalIdentifier::resolve() const {
+    return this;
+}
+
+LocalIdentifier* LocalIdentifier::resolve() {
+    return this;
+}
+
 ConstantExpression* LocalIdentifier::constExpr() const {
     return nullptr;
 }
