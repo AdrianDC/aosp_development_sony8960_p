@@ -78,6 +78,7 @@ cc_library_host_shared {
         "HandleType.cpp",
         "HidlTypeAssertion.cpp",
         "Interface.cpp",
+        "Location.cpp",
         "MemoryType.cpp",
         "Method.cpp",
         "NamedType.cpp",
