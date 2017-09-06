@@ -18,6 +18,6 @@ package tests.vendor@1.1;
 
 import tests.vendor@1.0::IVendor;
 
-interface IVendor extends IVendor {
+interface IVendor extends @1.0::IVendor {
     doAdditionalFunctionality();
 };
