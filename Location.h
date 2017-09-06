@@ -18,7 +18,7 @@
 #define LOCATION_H_
 
 #include <stdint.h>
-#include <iostream>
+#include <ostream>
 #include <string>
 
 // Mimics for yy::location and yy::position

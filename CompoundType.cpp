@@ -21,6 +21,7 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <iostream>
 #include <unordered_set>
 
 namespace android {
