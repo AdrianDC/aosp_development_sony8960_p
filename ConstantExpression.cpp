@@ -440,6 +440,10 @@ size_t ConstantExpression::castSizeT() const {
     return this->cast<size_t>();
 }
 
+bool ConstantExpression::isReferenceConstantExpression() const {
+    return false;
+}
+
 std::vector<ConstantExpression*> ConstantExpression::getConstantExpressions() {
     const auto& constRet = static_cast<const ConstantExpression*>(this)->getConstantExpressions();
     std::vector<ConstantExpression*> ret(constRet.size());
@@ -514,18 +518,24 @@ status_t ConstantExpression::recursivePass(
     return OK;
 }
 
-ConstantExpression::CheckAcyclicStatus::CheckAcyclicStatus(status_t status,
-                                                           const ConstantExpression* cycleEnd)
-    : status(status), cycleEnd(cycleEnd) {
+ConstantExpression::CheckAcyclicStatus::CheckAcyclicStatus(
+    status_t status, const ConstantExpression* cycleEnd,
+    const ReferenceConstantExpression* lastReference)
+    : status(status), cycleEnd(cycleEnd), lastReference(lastReference) {
     CHECK(cycleEnd == nullptr || status != OK);
+    CHECK((cycleEnd == nullptr) == (lastReference == nullptr));
 }
 
 ConstantExpression::CheckAcyclicStatus ConstantExpression::checkAcyclic(
     std::unordered_set<const ConstantExpression*>* visited,
     std::unordered_set<const ConstantExpression*>* stack) const {
     if (stack->find(this) != stack->end()) {
+        CHECK(isReferenceConstantExpression())
+            << "Only reference constant expression could be the cycle end";
+
         std::cerr << "ERROR: Cyclic declaration:\n";
-        return CheckAcyclicStatus(UNKNOWN_ERROR, this);
+        return CheckAcyclicStatus(UNKNOWN_ERROR, this,
+                                  static_cast<const ReferenceConstantExpression*>(this));
     }
 
     if (visited->find(this) != visited->end()) return CheckAcyclicStatus(OK);
@@ -548,18 +558,18 @@ ConstantExpression::CheckAcyclicStatus ConstantExpression::checkAcyclic(
             if (err.cycleEnd == nullptr) return err;
 
             // Only ReferenceConstantExpression has references,
-            // mExpr is defined explicitly before evaluation
+            CHECK(isReferenceConstantExpression())
+                << "Only reference constant expression could have refereneces";
 
-            std::cerr << "  ";
-            if (!mTrivialDescription) {
-                std::cerr << "  '" << mExpr << "' ";
-            };
-            std::cerr << "at " << nextRef->location() << "\n";
+            // mExpr is defined explicitly before evaluation
+            std::cerr << "  '" << err.lastReference->mExpr << "' in '" << mExpr << "' at "
+                      << nextRef->location() << "\n";
 
             if (err.cycleEnd == this) {
                 return CheckAcyclicStatus(err.status);
             }
-            return err;
+            return CheckAcyclicStatus(err.status, err.cycleEnd,
+                                      static_cast<const ReferenceConstantExpression*>(this));
         }
     }
 
@@ -606,6 +616,10 @@ ReferenceConstantExpression::ReferenceConstantExpression(const Reference<LocalId
     : mReference(value) {
     mExpr = expr;
     mTrivialDescription = mExpr.empty();
+}
+
+bool ReferenceConstantExpression::isReferenceConstantExpression() const {
+    return true;
 }
 
 std::vector<const ConstantExpression*> ReferenceConstantExpression::getConstantExpressions() const {
