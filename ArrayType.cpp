@@ -16,8 +16,9 @@
 
 #include "ArrayType.h"
 
-#include <hidl-util/Formatter.h>
 #include <android-base/logging.h>
+#include <hidl-util/Formatter.h>
+#include <iostream>
 
 #include "ConstantExpression.h"
 
