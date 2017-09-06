@@ -24,6 +24,7 @@
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
 #include <algorithm>
+#include <iostream>
 
 namespace android {
 

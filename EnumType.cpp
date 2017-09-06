@@ -18,6 +18,7 @@
 
 #include <hidl-util/Formatter.h>
 #include <inttypes.h>
+#include <iostream>
 #include <unordered_map>
 
 #include "Annotation.h"
