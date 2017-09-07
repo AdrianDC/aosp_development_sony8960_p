@@ -98,6 +98,8 @@ status_t AST::postParse() {
     if (err != OK) return err;
     err = validate();
     if (err != OK) return err;
+    err = checkForwardReferenceRestrictions();
+    if (err != OK) return err;
 
     // Make future packages not to call passes
     // for processed types and expressions
@@ -168,6 +170,19 @@ status_t AST::checkAcyclicConstantExpressions() const {
             return OK;
         },
         &visitedTypes);
+}
+
+status_t AST::checkForwardReferenceRestrictions() const {
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(
+        [](const Type* type) -> status_t {
+            for (const Reference<Type>* ref : type->getReferences()) {
+                status_t err = type->checkForwardReferenceRestrictions(*ref);
+                if (err != OK) return err;
+            }
+            return OK;
+        },
+        &visited);
 }
 
 bool AST::addImport(const char *import) {

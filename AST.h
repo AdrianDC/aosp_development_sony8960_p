@@ -96,6 +96,9 @@ struct AST {
     // are acyclic.
     status_t checkAcyclicConstantExpressions() const;
 
+    // Recursive tree pass that checks C++ forward declaration restrictions.
+    status_t checkForwardReferenceRestrictions() const;
+
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateCppHeaders(const std::string &outputPath) const;
     status_t generateCppSources(const std::string &outputPath) const;
