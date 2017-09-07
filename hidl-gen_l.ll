@@ -171,8 +171,10 @@ L?\"(\\.|[^\\"])*\"	{ yylval->str = strdup(yytext); return token::STRING_LITERAL
 {D}+\.{E}?{FS}?		{ yylval->str = strdup(yytext); return token::FLOAT; }
 {D}*\.{D}+{E}?{FS}?	{ yylval->str = strdup(yytext); return token::FLOAT; }
 
-[\n]		{ yylloc->lines(); }
-.			{ /* ignore bad characters */ }
+\n|\r\n     { yylloc->lines(); }
+[ \t\f\v]   { /* ignore all other whitespace */ }
+
+.           { yylval->str = strdup(yytext); return token::UNKNOWN; }
 
 %%
 

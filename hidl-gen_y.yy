@@ -231,6 +231,7 @@ bool isValidTypeName(const std::string& identifier, std::string *errorMsg) {
 %token<void> UNION "keyword `union`"
 %token<templatedType> TEMPLATED "templated type"
 %token<void> ONEWAY "keyword `oneway`"
+%token<str> UNKNOWN "unknown character"
 
 /* Operator precedence and associativity, as per
  * http://en.cppreference.com/w/cpp/language/operator_precedence */
