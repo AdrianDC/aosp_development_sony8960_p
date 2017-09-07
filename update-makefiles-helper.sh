@@ -65,6 +65,15 @@ function get_bp_dirs() {
 }
 
 ##
+# Returns directory path for a package
+# Usage: get_package_dir package_root_dir package_prefix package
+function get_package_dir() {
+  local package_dir=`echo $3 | cut -f1 -d@ | sed "s/$2\.//" | sed "s/\./\//g"`
+  local package_version=`echo $3 | cut -f2 -d@`
+  echo $1/$package_dir/$package_version
+}
+
+##
 # Helps manage the package root of a HAL directory.
 # Should be called from the android root directory.
 #
@@ -86,9 +95,11 @@ function do_makefiles_update() {
 
   for p in $packages; do
     echo "Updating $p";
+    local additional_options=
+    if [[ -f $(get_package_dir $current_dir $current_package $p)/.hidl_for_test ]]; then additional_options="-t"; fi
     hidl-gen -Lmakefile $root_arguments $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
-    hidl-gen -Landroidbp $root_arguments $p;
+    hidl-gen -Landroidbp $root_arguments $additional_options $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
   done
 
