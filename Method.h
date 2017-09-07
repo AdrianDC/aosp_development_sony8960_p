@@ -120,7 +120,7 @@ struct Method {
     MethodImpl mCppImpl;
     MethodImpl mJavaImpl;
 
-    const Location& mLocation;
+    const Location mLocation;
 
     DISALLOW_COPY_AND_ASSIGN(Method);
 };
