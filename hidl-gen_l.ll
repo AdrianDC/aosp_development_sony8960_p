@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-D			[0-9]
-L			[a-zA-Z_]
-H			[a-fA-F0-9]
-E			[Ee][+-]?{D}+
-FS			(f|F|l|L)
-IS			(u|U|l|L)*
+D                   [0-9]
+L                   [a-zA-Z_]
+H                   [a-fA-F0-9]
+E                   [Ee][+-]?{D}+
+FS                  (f|F|l|L)
+IS                  (u|U|l|L)*
 
-COMPONENT               {L}({L}|{D})*
-DOT                     [.]
-AT                      [@]
-VERSION                 {AT}{D}+{DOT}{D}+
-FQNAME                  ({COMPONENT}|{VERSION})(({DOT}|":"+){COMPONENT}|{VERSION})*
+COMPONENT           {L}({L}|{D})*
+DOT                 [.]
+AT                  [@]
+VERSION             {AT}{D}+{DOT}{D}+
+FQNAME              ({COMPONENT}|{VERSION})(({DOT}|":"+){COMPONENT}|{VERSION})*
 
 %{
 
@@ -83,98 +83,98 @@ using token = yy::parser::token;
 
 %%
 
-"/*"                 { BEGIN(COMMENT_STATE); }
-<COMMENT_STATE>"*/"  { BEGIN(INITIAL); }
-<COMMENT_STATE>[\n]  { yylloc->lines(); }
-<COMMENT_STATE>.     { }
+"/*"                { BEGIN(COMMENT_STATE); }
+<COMMENT_STATE>"*/" { BEGIN(INITIAL); }
+<COMMENT_STATE>[\n] { yylloc->lines(); }
+<COMMENT_STATE>.    { }
 
-"//"[^\r\n]*         { /* skip C++ style comment */ }
+"//"[^\r\n]*        { /* skip C++ style comment */ }
 
-"enum"			{ return token::ENUM; }
-"extends"		{ return token::EXTENDS; }
-"generates"		{ return token::GENERATES; }
-"import"		{ return token::IMPORT; }
-"interface"		{ return token::INTERFACE; }
-"package"		{ return token::PACKAGE; }
-"struct"		{ return token::STRUCT; }
-"typedef"		{ return token::TYPEDEF; }
-"union"			{ return token::UNION; }
-"bitfield"		{ yylval->templatedType = new BitFieldType(*scope); return token::TEMPLATED; }
-"vec"			{ yylval->templatedType = new VectorType(*scope); return token::TEMPLATED; }
-"ref"			{ yylval->templatedType = new RefType(*scope); return token::TEMPLATED; }
-"oneway"		{ return token::ONEWAY; }
+"enum"              { return token::ENUM; }
+"extends"           { return token::EXTENDS; }
+"generates"         { return token::GENERATES; }
+"import"            { return token::IMPORT; }
+"interface"         { return token::INTERFACE; }
+"package"           { return token::PACKAGE; }
+"struct"            { return token::STRUCT; }
+"typedef"           { return token::TYPEDEF; }
+"union"             { return token::UNION; }
+"bitfield"          { yylval->templatedType = new BitFieldType(*scope); return token::TEMPLATED; }
+"vec"               { yylval->templatedType = new VectorType(*scope); return token::TEMPLATED; }
+"ref"               { yylval->templatedType = new RefType(*scope); return token::TEMPLATED; }
+"oneway"            { return token::ONEWAY; }
 
-"bool"			{ SCALAR_TYPE(KIND_BOOL); }
-"int8_t"		{ SCALAR_TYPE(KIND_INT8); }
-"uint8_t"		{ SCALAR_TYPE(KIND_UINT8); }
-"int16_t"		{ SCALAR_TYPE(KIND_INT16); }
-"uint16_t"		{ SCALAR_TYPE(KIND_UINT16); }
-"int32_t"		{ SCALAR_TYPE(KIND_INT32); }
-"uint32_t"		{ SCALAR_TYPE(KIND_UINT32); }
-"int64_t"		{ SCALAR_TYPE(KIND_INT64); }
-"uint64_t"		{ SCALAR_TYPE(KIND_UINT64); }
-"float"			{ SCALAR_TYPE(KIND_FLOAT); }
-"double"		{ SCALAR_TYPE(KIND_DOUBLE); }
+"bool"              { SCALAR_TYPE(KIND_BOOL); }
+"int8_t"            { SCALAR_TYPE(KIND_INT8); }
+"uint8_t"           { SCALAR_TYPE(KIND_UINT8); }
+"int16_t"           { SCALAR_TYPE(KIND_INT16); }
+"uint16_t"          { SCALAR_TYPE(KIND_UINT16); }
+"int32_t"           { SCALAR_TYPE(KIND_INT32); }
+"uint32_t"          { SCALAR_TYPE(KIND_UINT32); }
+"int64_t"           { SCALAR_TYPE(KIND_INT64); }
+"uint64_t"          { SCALAR_TYPE(KIND_UINT64); }
+"float"             { SCALAR_TYPE(KIND_FLOAT); }
+"double"            { SCALAR_TYPE(KIND_DOUBLE); }
 
-"death_recipient"	{ yylval->type = new DeathRecipientType(*scope); return token::TYPE; }
-"handle"		{ yylval->type = new HandleType(*scope); return token::TYPE; }
-"memory"		{ yylval->type = new MemoryType(*scope); return token::TYPE; }
-"pointer"		{ yylval->type = new PointerType(*scope); return token::TYPE; }
-"string"		{ yylval->type = new StringType(*scope); return token::TYPE; }
+"death_recipient"   { yylval->type = new DeathRecipientType(*scope); return token::TYPE; }
+"handle"            { yylval->type = new HandleType(*scope); return token::TYPE; }
+"memory"            { yylval->type = new MemoryType(*scope); return token::TYPE; }
+"pointer"           { yylval->type = new PointerType(*scope); return token::TYPE; }
+"string"            { yylval->type = new StringType(*scope); return token::TYPE; }
 
-"fmq_sync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorSync", *scope); return token::TEMPLATED; }
-"fmq_unsync" { yylval->type = new FmqType("::android::hardware", "MQDescriptorUnsync", *scope); return token::TEMPLATED; }
+"fmq_sync"          { yylval->type = new FmqType("::android::hardware", "MQDescriptorSync", *scope); return token::TEMPLATED; }
+"fmq_unsync"        { yylval->type = new FmqType("::android::hardware", "MQDescriptorUnsync", *scope); return token::TEMPLATED; }
 
-"("			{ return('('); }
-")"			{ return(')'); }
-"<"			{ return('<'); }
-">"			{ return('>'); }
-"{"			{ return('{'); }
-"}"			{ return('}'); }
-"["			{ return('['); }
-"]"			{ return(']'); }
-":"			{ return(':'); }
-";"			{ return(';'); }
-","			{ return(','); }
-"."			{ return('.'); }
-"="			{ return('='); }
-"+"			{ return('+'); }
-"-"			{ return('-'); }
-"*"			{ return('*'); }
-"/"			{ return('/'); }
-"%"			{ return('%'); }
-"&"			{ return('&'); }
-"|"			{ return('|'); }
-"^"			{ return('^'); }
-"<<"			{ return(token::LSHIFT); }
-">>"			{ return(token::RSHIFT); }
-"&&"			{ return(token::LOGICAL_AND); }
-"||"			{ return(token::LOGICAL_OR);  }
-"!"			{ return('!'); }
-"~"			{ return('~'); }
-"<="			{ return(token::LEQ); }
-">="			{ return(token::GEQ); }
-"=="			{ return(token::EQUALITY); }
-"!="			{ return(token::NEQ); }
-"?"			{ return('?'); }
-"@"			{ return('@'); }
+"("                 { return('('); }
+")"                 { return(')'); }
+"<"                 { return('<'); }
+">"                 { return('>'); }
+"{"                 { return('{'); }
+"}"                 { return('}'); }
+"["                 { return('['); }
+"]"                 { return(']'); }
+":"                 { return(':'); }
+";"                 { return(';'); }
+","                 { return(','); }
+"."                 { return('.'); }
+"="                 { return('='); }
+"+"                 { return('+'); }
+"-"                 { return('-'); }
+"*"                 { return('*'); }
+"/"                 { return('/'); }
+"%"                 { return('%'); }
+"&"                 { return('&'); }
+"|"                 { return('|'); }
+"^"                 { return('^'); }
+"<<"                { return(token::LSHIFT); }
+">>"                { return(token::RSHIFT); }
+"&&"                { return(token::LOGICAL_AND); }
+"||"                { return(token::LOGICAL_OR);  }
+"!"                 { return('!'); }
+"~"                 { return('~'); }
+"<="                { return(token::LEQ); }
+">="                { return(token::GEQ); }
+"=="                { return(token::EQUALITY); }
+"!="                { return(token::NEQ); }
+"?"                 { return('?'); }
+"@"                 { return('@'); }
 
-{COMPONENT}                     { yylval->str = strdup(yytext); return token::IDENTIFIER; }
-{FQNAME}                        { yylval->str = strdup(yytext); return token::FQNAME; }
+{COMPONENT}         { yylval->str = strdup(yytext); return token::IDENTIFIER; }
+{FQNAME}            { yylval->str = strdup(yytext); return token::FQNAME; }
 
-0[xX]{H}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
-0{D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
-{D}+{IS}?		{ yylval->str = strdup(yytext); return token::INTEGER; }
-L?\"(\\.|[^\\"])*\"	{ yylval->str = strdup(yytext); return token::STRING_LITERAL; }
+0[xX]{H}+{IS}?      { yylval->str = strdup(yytext); return token::INTEGER; }
+0{D}+{IS}?          { yylval->str = strdup(yytext); return token::INTEGER; }
+{D}+{IS}?           { yylval->str = strdup(yytext); return token::INTEGER; }
+L?\"(\\.|[^\\"])*\" { yylval->str = strdup(yytext); return token::STRING_LITERAL; }
 
-{D}+{E}{FS}?		{ yylval->str = strdup(yytext); return token::FLOAT; }
-{D}+\.{E}?{FS}?		{ yylval->str = strdup(yytext); return token::FLOAT; }
-{D}*\.{D}+{E}?{FS}?	{ yylval->str = strdup(yytext); return token::FLOAT; }
+{D}+{E}{FS}?        { yylval->str = strdup(yytext); return token::FLOAT; }
+{D}+\.{E}?{FS}?     { yylval->str = strdup(yytext); return token::FLOAT; }
+{D}*\.{D}+{E}?{FS}? { yylval->str = strdup(yytext); return token::FLOAT; }
 
-\n|\r\n     { yylloc->lines(); }
-[ \t\f\v]   { /* ignore all other whitespace */ }
+\n|\r\n             { yylloc->lines(); }
+[ \t\f\v]           { /* ignore all other whitespace */ }
 
-.           { yylval->str = strdup(yytext); return token::UNKNOWN; }
+.                   { yylval->str = strdup(yytext); return token::UNKNOWN; }
 
 %%
 
