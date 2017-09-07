@@ -30,8 +30,8 @@ struct EnumValue;
 struct BitFieldType;
 
 struct EnumType : public Scope {
-    EnumType(const char* localName, const Location& location, const Reference<Type>& storageType,
-             Scope* parent);
+    EnumType(const char* localName, const FQName& fullName, const Location& location,
+             const Reference<Type>& storageType, Scope* parent);
 
     const Type *storageType() const;
     const std::vector<EnumValue *> &values() const;

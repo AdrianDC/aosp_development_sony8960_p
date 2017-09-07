@@ -27,9 +27,9 @@
 
 namespace android {
 
-EnumType::EnumType(const char* localName, const Location& location,
+EnumType::EnumType(const char* localName, const FQName& fullName, const Location& location,
                    const Reference<Type>& storageType, Scope* parent)
-    : Scope(localName, location, parent),
+    : Scope(localName, fullName, location, parent),
       mValues(),
       mStorageType(storageType),
       mBitfieldType(new BitFieldType(parent)) {

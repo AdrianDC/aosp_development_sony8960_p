@@ -675,15 +675,11 @@ interface_declaration
           }
 
           Interface* iface = new Interface(
-              $2, convertYYLoc(@2), *scope, *superType);
+              $2, ast->makeFullName($2, *scope), convertYYLoc(@2), *scope, *superType);
 
           // Register interface immediately so it can be referenced inside
           // definition.
-          std::string errorMsg;
-          if (!ast->addScopedType(iface, &errorMsg, *scope)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
-              YYERROR;
-          }
+          ast->addScopedType(iface, *scope);
 
           enterScope(ast, scope, iface);
       }
@@ -706,14 +702,9 @@ typedef_declaration
           // The reason we wrap the given type in a TypeDef is simply to suppress
           // emitting any type definitions later on, since this is just an alias
           // to a type defined elsewhere.
-          TypeDef* typeDef = new TypeDef($3, convertYYLoc(@2), *scope, *$2);
-
-          std::string errorMsg;
-          if (!ast->addScopedType(typeDef, &errorMsg, *scope)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @3 << "\n";
-              YYERROR;
-          }
-
+          TypeDef* typeDef = new TypeDef(
+              $3, ast->makeFullName($3, *scope), convertYYLoc(@2), *scope, *$2);
+          ast->addScopedType(typeDef, *scope);
           $$ = typeDef;
       }
     ;
@@ -854,7 +845,8 @@ struct_or_union_keyword
 named_struct_or_union_declaration
     : struct_or_union_keyword valid_type_name
       {
-          CompoundType *container = new CompoundType($1, $2, convertYYLoc(@2), *scope);
+          CompoundType *container = new CompoundType(
+              $1, $2, ast->makeFullName($2, *scope), convertYYLoc(@2), *scope);
           enterScope(ast, scope, container);
       }
       struct_or_union_body
@@ -864,13 +856,7 @@ named_struct_or_union_declaration
           container->setFields($4);
 
           leaveScope(ast, scope);
-
-          std::string errorMsg;
-          if (!ast->addScopedType(container, &errorMsg, *scope)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
-              YYERROR;
-          }
-
+          ast->addScopedType(container, *scope);
           $$ = container;
       }
     ;
@@ -950,21 +936,17 @@ opt_comma
 named_enum_declaration
     : ENUM valid_type_name enum_storage_type
       {
-          enterScope(ast, scope, new EnumType($2, convertYYLoc(@2), *$3, *scope));
+          EnumType* enumType = new EnumType(
+              $2, ast->makeFullName($2, *scope), convertYYLoc(@2), *$3, *scope);
+          enterScope(ast, scope, enumType);
       }
       enum_declaration_body
       {
           CHECK((*scope)->isEnum());
+          EnumType* enumType = static_cast<EnumType*>(*scope);
 
-          EnumType *enumType = static_cast<EnumType *>(*scope);
           leaveScope(ast, scope);
-
-          std::string errorMsg;
-          if (!ast->addScopedType(enumType, &errorMsg, *scope)) {
-              std::cerr << "ERROR: " << errorMsg << " at " << @2 << "\n";
-              YYERROR;
-          }
-
+          ast->addScopedType(enumType, *scope);
           $$ = enumType;
       }
     ;

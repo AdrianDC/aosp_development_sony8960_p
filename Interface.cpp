@@ -69,9 +69,9 @@ enum {
     LAST_HIDL_TRANSACTION   = 0x0fffffff,
 };
 
-Interface::Interface(const char* localName, const Location& location, Scope* parent,
-                     const Reference<Type>& superType)
-    : Scope(localName, location, parent),
+Interface::Interface(const char* localName, const FQName& fullName, const Location& location,
+                     Scope* parent, const Reference<Type>& superType)
+    : Scope(localName, fullName, location, parent),
       mSuperType(superType),
       mIsJavaCompatibleInProgress(false) {}
 
