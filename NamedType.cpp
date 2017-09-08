@@ -18,15 +18,12 @@
 
 namespace android {
 
-NamedType::NamedType(const char* localName, const Location& loc, Scope* parent)
-    : Type(parent), mLocalName(localName), mLocation(loc) {}
+NamedType::NamedType(const char* localName, const FQName& fullName, const Location& loc,
+                     Scope* parent)
+    : Type(parent), mLocalName(localName), mFullName(fullName), mLocation(loc) {}
 
 bool NamedType::isNamedType() const {
     return true;
-}
-
-void NamedType::setFullName(const FQName &fullName) {
-    mFullName = fullName;
 }
 
 const FQName &NamedType::fqName() const {

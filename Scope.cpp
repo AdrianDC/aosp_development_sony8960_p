@@ -22,32 +22,30 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <iostream>
 #include <vector>
 
 namespace android {
 
-Scope::Scope(const char* localName, const Location& location, Scope* parent)
-    : NamedType(localName, location, parent) {}
+Scope::Scope(const char* localName, const FQName& fullName, const Location& location, Scope* parent)
+    : NamedType(localName, fullName, location, parent) {}
 Scope::~Scope(){}
 
-bool Scope::addType(NamedType *type, std::string *errorMsg) {
-    const std::string &localName = type->localName();
-
-    auto it = mTypeIndexByName.find(localName);
-
-    if (it != mTypeIndexByName.end()) {
-        *errorMsg = "A type named '";
-        (*errorMsg) += localName;
-        (*errorMsg) += "' is already declared in the  current scope.";
-
-        return false;
-    }
-
+void Scope::addType(NamedType* type) {
     size_t index = mTypes.size();
     mTypes.push_back(type);
-    mTypeIndexByName[localName] = index;
+    mTypeIndexByName[type->localName()] = index;
+}
 
-    return true;
+status_t Scope::validateUniqueNames() const {
+    for (const auto* type : mTypes) {
+        if (mTypes[mTypeIndexByName.at(type->localName())] != type) {
+            std::cerr << "ERROR: A type named '" << type->localName()
+                      << "' is already declared in the scope at " << type->location() << "\n";
+            return UNKNOWN_ERROR;
+        }
+    }
+    return OK;
 }
 
 NamedType *Scope::lookupType(const FQName &fqName) const {
@@ -218,8 +216,9 @@ void Scope::appendToExportedTypesVector(
 
 ////////////////////////////////////////
 
-RootScope::RootScope(const char* localName, const Location& location, Scope* parent)
-    : Scope(localName, location, parent) {}
+RootScope::RootScope(const char* localName, const FQName& fullName, const Location& location,
+                     Scope* parent)
+    : Scope(localName, fullName, location, parent) {}
 RootScope::~RootScope() {}
 
 std::string RootScope::typeName() const {
