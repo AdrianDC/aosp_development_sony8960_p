@@ -21,9 +21,9 @@
 
 namespace android {
 
-TypeDef::TypeDef(const char* localName, const Location& location, Scope* parent,
-                 const Reference<Type>& type)
-    : NamedType(localName, location, parent), mReferencedType(type) {}
+TypeDef::TypeDef(const char* localName, const FQName& fullName, const Location& location,
+                 Scope* parent, const Reference<Type>& type)
+    : NamedType(localName, fullName, location, parent), mReferencedType(type) {}
 
 const ScalarType *TypeDef::resolveToScalarType() const {
     CHECK(!"Should not be here");

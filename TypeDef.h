@@ -23,7 +23,7 @@
 namespace android {
 
 struct TypeDef : public NamedType {
-    TypeDef(const char* localName, const Location& location, Scope* parent,
+    TypeDef(const char* localName, const FQName& fullName, const Location& location, Scope* parent,
             const Reference<Type>& type);
 
     const ScalarType *resolveToScalarType() const override;

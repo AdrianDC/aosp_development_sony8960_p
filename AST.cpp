@@ -38,7 +38,7 @@ namespace android {
 AST::AST(const Coordinator* coordinator, const std::string& path)
     : mCoordinator(coordinator),
       mPath(path),
-      mRootScope("(root scope)", Location::startOf(path), nullptr /* parent */) {}
+      mRootScope("(root scope)", FQName(), Location::startOf(path), nullptr /* parent */) {}
 
 Scope* AST::getRootScope() {
     return &mRootScope;
@@ -84,6 +84,11 @@ bool AST::containsInterfaces() const {
 
 status_t AST::postParse() {
     status_t err;
+    // validateDefinedTypesUniqueNames is the first call,
+    // as other errors could appear because user meant
+    // different type than we assumed.
+    err = validateDefinedTypesUniqueNames();
+    if (err != OK) return err;
     // checkAcyclicTypes is before resolveInheritance, as we
     // need to have no cycle while getting parent class.
     err = checkAcyclicTypes();
@@ -131,6 +136,19 @@ status_t AST::constantExpressionRecursivePass(
             return OK;
         },
         &visitedTypes);
+}
+
+status_t AST::validateDefinedTypesUniqueNames() const {
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(
+        [&](const Type* type) -> status_t {
+            // We only want to validate type definition names in this place.
+            if (type->isScope()) {
+                return static_cast<const Scope*>(type)->validateUniqueNames();
+            }
+            return OK;
+        },
+        &visited);
 }
 
 status_t AST::resolveInheritance() {
@@ -278,13 +296,8 @@ void AST::addImportedAST(AST *ast) {
     mImportedASTs.insert(ast);
 }
 
-bool AST::addScopedType(NamedType* type, std::string* errorMsg, Scope* scope) {
-    bool success = scope->addType(type, errorMsg);
-    if (!success) {
-        return false;
-    }
-
-    std::vector<std::string> pathComponents{{type->localName()}};
+FQName AST::makeFullName(const char* localName, Scope* scope) const {
+    std::vector<std::string> pathComponents{{localName}};
     for (; scope != &mRootScope; scope = scope->parent()) {
         pathComponents.push_back(scope->localName());
     }
@@ -292,12 +305,12 @@ bool AST::addScopedType(NamedType* type, std::string* errorMsg, Scope* scope) {
     std::reverse(pathComponents.begin(), pathComponents.end());
     std::string path = StringHelper::JoinStrings(pathComponents, ".");
 
-    FQName fqName(mPackage.package(), mPackage.version(), path);
-    type->setFullName(fqName);
+    return FQName(mPackage.package(), mPackage.version(), path);
+}
 
-    mDefinedTypesByFullName[fqName] = type;
-
-    return true;
+void AST::addScopedType(NamedType* type, Scope* scope) {
+    scope->addType(type);
+    mDefinedTypesByFullName[type->fqName()] = type;
 }
 
 EnumValue* AST::lookupEnumValue(const FQName& fqName, std::string* errorMsg, Scope* scope) {
