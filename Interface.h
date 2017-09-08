@@ -29,8 +29,8 @@ struct Method;
 struct InterfaceAndMethod;
 
 struct Interface : public Scope {
-    Interface(const char* localName, const Location& location, Scope* parent,
-              const Reference<Type>& superType);
+    Interface(const char* localName, const FQName& fullName, const Location& location,
+              Scope* parent, const Reference<Type>& superType);
 
     bool addMethod(Method *method);
     bool addAllReservedMethods();

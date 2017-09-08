@@ -54,8 +54,10 @@ struct AST {
     bool isInterface() const;
     bool containsInterfaces() const;
 
-    // Returns true iff successful.
-    bool addScopedType(NamedType* type, std::string* errorMsg, Scope* scope);
+    // Adds package, version and scope stack to local name
+    FQName makeFullName(const char* localName, Scope* scope) const;
+
+    void addScopedType(NamedType* type, Scope* scope);
 
     const std::string &getFilename() const;
 
@@ -76,6 +78,10 @@ struct AST {
     // Recursive pass on constant expression tree
     status_t constantExpressionRecursivePass(
         const std::function<status_t(ConstantExpression*)>& func);
+
+    // Recursive tree pass that validates that all defined types
+    // have unique names in their scopes.
+    status_t validateDefinedTypesUniqueNames() const;
 
     // Recursive tree pass that completes type declarations
     // that depend on super types
