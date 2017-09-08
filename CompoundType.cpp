@@ -91,12 +91,12 @@ bool CompoundType::isCompoundType() const {
     return true;
 }
 
-bool CompoundType::canCheckEquality() const {
+bool CompoundType::deepCanCheckEquality(std::unordered_set<const Type*>* visited) const {
     if (mStyle == STYLE_UNION) {
         return false;
     }
-    for (const auto &field : *mFields) {
-        if (!field->type().canCheckEquality()) {
+    for (const auto* field : *mFields) {
+        if (!field->get()->canCheckEquality(visited)) {
             return false;
         }
     }
@@ -988,18 +988,18 @@ bool CompoundType::needsEmbeddedReadWrite() const {
     return false;
 }
 
-bool CompoundType::needsResolveReferences() const {
+bool CompoundType::deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const {
     if (mStyle != STYLE_STRUCT) {
         return false;
     }
 
     for (const auto &field : *mFields) {
-        if (field->type().needsResolveReferences()) {
+        if (field->type().needsResolveReferences(visited)) {
             return true;
         }
     }
 
-    return false;
+    return Scope::deepNeedsResolveReferences(visited);
 }
 
 bool CompoundType::resultNeedsDeref() const {
@@ -1066,32 +1066,28 @@ status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
     return OK;
 }
 
-bool CompoundType::isJavaCompatible() const {
-    if (mStyle != STYLE_STRUCT || !Scope::isJavaCompatible()) {
+bool CompoundType::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
+    if (mStyle != STYLE_STRUCT) {
         return false;
     }
 
-    for (const auto &field : *mFields) {
-        if (!field->type().isJavaCompatible()) {
+    for (const auto* field : *mFields) {
+        if (!field->get()->isJavaCompatible(visited)) {
             return false;
         }
     }
 
-    return true;
+    return Scope::deepIsJavaCompatible(visited);
 }
 
-bool CompoundType::containsPointer() const {
-    if (Scope::containsPointer()) {
-        return true;
-    }
-
-    for (const auto &field : *mFields) {
-        if (field->type().containsPointer()) {
+bool CompoundType::deepContainsPointer(std::unordered_set<const Type*>* visited) const {
+    for (const auto* field : *mFields) {
+        if (field->get()->containsPointer(visited)) {
             return true;
         }
     }
 
-    return false;
+    return Scope::deepContainsPointer(visited);
 }
 
 void CompoundType::getAlignmentAndSize(size_t *align, size_t *size) const {

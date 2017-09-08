@@ -31,7 +31,7 @@ struct ArrayType : public Type {
     ArrayType(const Reference<Type>& elementType, ConstantExpression* size, Scope* parent);
 
     bool isArray() const override;
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     const Type* getElementType() const;
 
@@ -109,7 +109,7 @@ struct ArrayType : public Type {
             const std::string &name) const override;
 
     bool needsEmbeddedReadWrite() const override;
-    bool needsResolveReferences() const override;
+    bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const override;
     bool resultNeedsDeref() const override;
 
     void emitJavaReaderWriter(
@@ -132,8 +132,8 @@ struct ArrayType : public Type {
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 
-    bool isJavaCompatible() const override;
-    bool containsPointer() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
+    bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
