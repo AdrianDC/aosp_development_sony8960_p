@@ -32,10 +32,12 @@ struct Interface;
 struct LocalIdentifier;
 
 struct Scope : public NamedType {
-    Scope(const char* localName, const Location& location, Scope* parent);
+    Scope(const char* localName, const FQName& fullName, const Location& location, Scope* parent);
     virtual ~Scope();
 
-    bool addType(NamedType *type, std::string *errorMsg);
+    void addType(NamedType* type);
+
+    status_t validateUniqueNames() const;
 
     // lookup a type given an FQName.
     // Assume fqName.package(), fqName.version(), fqName.valueName() is empty.
@@ -88,7 +90,8 @@ private:
 };
 
 struct RootScope : public Scope {
-    RootScope(const char* localName, const Location& location, Scope* parent);
+    RootScope(const char* localName, const FQName& fullName, const Location& location,
+              Scope* parent);
     virtual ~RootScope();
 
     virtual status_t validate() const override;
