@@ -36,10 +36,23 @@ genrule {
          "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
          "    test.interface_extends_only_interface@1.0  >/dev/null 2>&1)" +
          "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.interface_no_using_reserved_method_names@1.0  >/dev/null 2>&1)" +
+         "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.interface_unique_method_names@1.0  >/dev/null 2>&1)" +
+         "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.interface_unique_method_names_inheritance@1.0  >/dev/null 2>&1)" +
+         "&&" +
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
     srcs: [
+        "interface_no_using_reserved_method_names/1.0/IFoo.hal",
         "interface_semicolon/1.0/IFoo.hal",
+        "interface_unique_method_names/1.0/IFoo.hal",
+        "interface_unique_method_names_inheritance/1.0/IFoo.hal",
+        "interface_unique_method_names_inheritance/1.0/IBar.hal",
         "method_ends_in_semicolon/1.0/IFoo.hal",
         "no_data_outside_interface/1.0/IFoo.hal",
         "no_interface_in_types/1.0/IFoo.hal",
