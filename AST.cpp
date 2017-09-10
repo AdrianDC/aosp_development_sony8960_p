@@ -194,8 +194,14 @@ status_t AST::checkForwardReferenceRestrictions() const {
     std::unordered_set<const Type*> visited;
     return mRootScope.recursivePass(
         [](const Type* type) -> status_t {
+            for (const Reference<Type>* ref : type->getStrongReferences()) {
+                status_t err =
+                    type->checkForwardReferenceRestrictions(*ref, true /* isStrongRef */);
+                if (err != OK) return err;
+            }
             for (const Reference<Type>* ref : type->getReferences()) {
-                status_t err = type->checkForwardReferenceRestrictions(*ref);
+                status_t err =
+                    type->checkForwardReferenceRestrictions(*ref, false /* isStrongRef */);
                 if (err != OK) return err;
             }
             return OK;
