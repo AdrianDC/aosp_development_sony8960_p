@@ -70,6 +70,9 @@ struct Method {
     std::vector<Reference<Type>*> getReferences();
     std::vector<const Reference<Type>*> getReferences() const;
 
+    std::vector<Reference<Type>*> getStrongReferences();
+    std::vector<const Reference<Type>*> getStrongReferences() const;
+
     std::vector<ConstantExpression*> getConstantExpressions();
     std::vector<const ConstantExpression*> getConstantExpressions() const;
 

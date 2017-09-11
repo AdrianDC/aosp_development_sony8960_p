@@ -121,6 +121,8 @@ struct Interface : public Scope {
 
     bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
 
+    bool isNeverStrongReference() const override;
+
    private:
     Reference<Type> mSuperType;
 

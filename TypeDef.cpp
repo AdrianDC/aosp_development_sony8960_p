@@ -63,15 +63,6 @@ std::vector<const Reference<Type>*> TypeDef::getReferences() const {
     return {&mReferencedType};
 }
 
-std::vector<const Reference<Type>*> TypeDef::getStrongReferences() const {
-    // Typedef definition can be cyclic only if
-    // it is referenced by another typedef
-    if (!mReferencedType.shallowGet()->isTypeDef()) {
-        return {};
-    }
-    return {&mReferencedType};
-}
-
 bool TypeDef::needsEmbeddedReadWrite() const {
     CHECK(!"Should not be here");
     return false;
