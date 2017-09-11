@@ -4,6 +4,9 @@ genrule {
         "hidl-gen",
     ],
     cmd: "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
+         "    test.bad_character@1.0  >/dev/null 2>&1)" +
+         "&&" +
+         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
          "    test.interface_semicolon@1.0  >/dev/null 2>&1)" +
          "&&" +
          "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
@@ -51,6 +54,11 @@ genrule {
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
     srcs: [
+        "bad_character/1.0/IFoo.hal",
+        "enum_unique_field_names/1.0/IFoo.hal",
+        "enum_unique_field_names_extends/1.0/IFoo.hal",
+        "interface_extends_only_interface/1.0/IFoo.hal",
+        "interface_extends_only_interface/1.0/types.hal",
         "interface_no_using_reserved_method_names/1.0/IFoo.hal",
         "interface_semicolon/1.0/IFoo.hal",
         "interface_unique_method_names/1.0/IFoo.hal",
@@ -64,6 +72,7 @@ genrule {
         "same_name_interface/1.0/IFoo.hal",
         "same_package_name/1.0/IFoo.hal",
         "scope_unique_type_names/1.0/IFoo.hal",
+        "struct_unique_field_names/1.0/IFoo.hal",
     ],
 }
 
