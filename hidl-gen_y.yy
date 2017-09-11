@@ -834,7 +834,11 @@ typed_vars
       }
     ;
 
-typed_var : type valid_identifier { $$ = new NamedReference<Type>($2, *$1); }
+typed_var
+    : type valid_identifier
+      {
+          $$ = new NamedReference<Type>($2, *$1, convertYYLoc(@2));
+      }
     ;
 
 
@@ -892,7 +896,7 @@ field_declaration
                         << @2 << "\n";
               YYERROR;
           }
-          $$ = new NamedReference<Type>($2, *$1);
+          $$ = new NamedReference<Type>($2, *$1, convertYYLoc(@2));
       }
     | annotated_compound_declaration ';'
       {
