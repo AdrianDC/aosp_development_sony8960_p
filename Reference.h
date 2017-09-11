@@ -44,6 +44,10 @@ struct Reference {
     Reference(const Reference<OtherT>& ref)
         : mResolved(ref.mResolved), mFqName(ref.mFqName), mLocation(ref.mLocation) {}
 
+    template <class OtherT>
+    Reference(const Reference<OtherT>& ref, const Location& location)
+        : mResolved(ref.mResolved), mFqName(ref.mFqName), mLocation(location) {}
+
     /* Returns true iff referred type is resolved
        Referred type's field might be not resolved */
     bool isResolved() const { return mResolved != nullptr; }
@@ -100,7 +104,8 @@ struct Reference {
     T* mResolved = nullptr;
     /* Reference name for lookup */
     FQName mFqName;
-    /* Reference location is mainly used for printing errors */
+    /* Reference location is mainly used for printing errors
+       and handling forward reference restrictions */
     Location mLocation;
 
     bool hasLookupFqName() const {
@@ -116,8 +121,8 @@ struct Reference {
 
 template <class T>
 struct NamedReference : public Reference<T> {
-    NamedReference(const std::string& name, const Reference<T>& reference)
-        : Reference<T>(reference), mName(name) {}
+    NamedReference(const std::string& name, const Reference<T>& reference, const Location& location)
+        : Reference<T>(reference, location), mName(name) {}
 
     const std::string& name() const { return mName; }
 
