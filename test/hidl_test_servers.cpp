@@ -20,19 +20,7 @@
 
 #include <android-base/logging.h>
 
-#include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/baz/1.0/IBaz.h>
-#include <android/hardware/tests/foo/1.0/BnHwSimple.h>
-#include <android/hardware/tests/foo/1.0/BpHwSimple.h>
-#include <android/hardware/tests/foo/1.0/BsSimple.h>
-#include <android/hardware/tests/hash/1.0/IHash.h>
-#include <android/hardware/tests/inheritance/1.0/IChild.h>
-#include <android/hardware/tests/inheritance/1.0/IFetcher.h>
-#include <android/hardware/tests/inheritance/1.0/IParent.h>
-#include <android/hardware/tests/memory/1.0/IMemoryTest.h>
-#include <android/hardware/tests/multithread/1.0/IMultithread.h>
-#include <android/hardware/tests/pointer/1.0/IGraph.h>
-#include <android/hardware/tests/pointer/1.0/IPointer.h>
 
 #include <hidl/LegacySupport.h>
 
@@ -45,16 +33,7 @@
 #include <utility>
 #include <vector>
 
-using ::android::hardware::tests::bar::V1_0::IBar;
 using ::android::hardware::tests::baz::V1_0::IBaz;
-using ::android::hardware::tests::hash::V1_0::IHash;
-using ::android::hardware::tests::inheritance::V1_0::IFetcher;
-using ::android::hardware::tests::inheritance::V1_0::IParent;
-using ::android::hardware::tests::inheritance::V1_0::IChild;
-using ::android::hardware::tests::pointer::V1_0::IGraph;
-using ::android::hardware::tests::pointer::V1_0::IPointer;
-using ::android::hardware::tests::memory::V1_0::IMemoryTest;
-using ::android::hardware::tests::multithread::V1_0::IMultithread;
 
 using ::android::hardware::defaultPassthroughServiceImplementation;
 using ::android::hardware::IPCThreadState;
