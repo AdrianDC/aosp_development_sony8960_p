@@ -230,7 +230,7 @@ void RefType::emitResolveReferencesEmbedded(
     out << "}\n\n";
 }
 
-bool RefType::needsResolveReferences() const {
+bool RefType::deepNeedsResolveReferences(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 
@@ -242,11 +242,11 @@ bool RefType::resultNeedsDeref() const {
     return false;
 }
 
-bool RefType::isJavaCompatible() const {
+bool RefType::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 
-bool RefType::containsPointer() const {
+bool RefType::deepContainsPointer(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 

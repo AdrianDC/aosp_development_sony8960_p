@@ -28,7 +28,7 @@ bool StringType::isString() const {
     return true;
 }
 
-bool StringType::canCheckEquality() const {
+bool StringType::deepCanCheckEquality(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 

@@ -71,13 +71,13 @@ struct RefType : public TemplatedType {
             const std::string &offsetText) const override;
 
     bool needsEmbeddedReadWrite() const override;
-    bool needsResolveReferences() const override;
+    bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const override;
     bool resultNeedsDeref() const override;
 
-    bool isJavaCompatible() const override;
-    bool containsPointer() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
+    bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
- private:
+   private:
     DISALLOW_COPY_AND_ASSIGN(RefType);
 };
 

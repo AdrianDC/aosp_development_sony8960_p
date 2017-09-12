@@ -63,11 +63,11 @@ bool PointerType::resultNeedsDeref() const {
     return false;
 }
 
-bool PointerType::isJavaCompatible() const {
+bool PointerType::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 
-bool PointerType::containsPointer() const {
+bool PointerType::deepContainsPointer(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 

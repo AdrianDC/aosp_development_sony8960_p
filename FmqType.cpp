@@ -137,7 +137,7 @@ void FmqType::emitReaderWriterEmbedded(
             mNamespace);
 }
 
-bool FmqType::isJavaCompatible() const {
+bool FmqType::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 

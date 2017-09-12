@@ -238,18 +238,18 @@ void Method::dumpAnnotations(Formatter &out) const {
     out << "\n";
 }
 
-bool Method::isJavaCompatible() const {
+bool Method::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
     if (isHiddenFromJava()) {
         return true;
     }
 
     if (!std::all_of(mArgs->begin(), mArgs->end(),
-                     [](const auto* arg) { return (*arg)->isJavaCompatible(); })) {
+                     [&](const auto* arg) { return (*arg)->isJavaCompatible(visited); })) {
         return false;
     }
 
     if (!std::all_of(mResults->begin(), mResults->end(),
-                     [](const auto* arg) { return (*arg)->isJavaCompatible(); })) {
+                     [&](const auto* arg) { return (*arg)->isJavaCompatible(visited); })) {
         return false;
     }
 
