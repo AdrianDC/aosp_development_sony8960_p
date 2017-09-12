@@ -121,7 +121,10 @@ struct Type {
 
     bool isValidEnumStorageType() const;
     virtual bool isElidableType() const;
+
     virtual bool canCheckEquality() const;
+    bool canCheckEquality(std::unordered_set<const Type*>* visited) const;
+    virtual bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const;
 
     // Marks that package proceeding is completed
     // Post parse passes must be proceeded during owner package parsing
@@ -267,8 +270,11 @@ struct Type {
             Formatter &out, bool atTopLevel) const;
 
     virtual bool needsEmbeddedReadWrite() const;
-    virtual bool needsResolveReferences() const;
     virtual bool resultNeedsDeref() const;
+
+    bool needsResolveReferences() const;
+    bool needsResolveReferences(std::unordered_set<const Type*>* visited) const;
+    virtual bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const;
 
     // Generates type declaration for vts proto file.
     // TODO (b/30844146): make it a pure virtual method.
@@ -278,8 +284,15 @@ struct Type {
     virtual status_t emitVtsAttributeType(Formatter &out) const;
 
     // Returns true iff this type is supported through the Java backend.
-    virtual bool isJavaCompatible() const;
-    virtual bool containsPointer() const;
+    bool isJavaCompatible() const;
+    bool isJavaCompatible(std::unordered_set<const Type*>* visited) const;
+    virtual bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const;
+    // Returns true iff type contains pointer
+    // (excluding methods and inner types).
+    bool containsPointer() const;
+    bool containsPointer(std::unordered_set<const Type*>* visited) const;
+    virtual bool deepContainsPointer(std::unordered_set<const Type*>* visited) const;
+
     virtual void getAlignmentAndSize(size_t *align, size_t *size) const;
 
     virtual void appendToExportedTypesVector(

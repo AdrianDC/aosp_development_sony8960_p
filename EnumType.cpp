@@ -146,7 +146,7 @@ bool EnumType::isEnum() const {
     return true;
 }
 
-bool EnumType::canCheckEquality() const {
+bool EnumType::deepCanCheckEquality(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 
@@ -845,8 +845,8 @@ bool BitFieldType::isElidableType() const {
     return resolveToScalarType()->isElidableType();
 }
 
-bool BitFieldType::canCheckEquality() const {
-    return resolveToScalarType()->canCheckEquality();
+bool BitFieldType::deepCanCheckEquality(std::unordered_set<const Type*>* visited) const {
+    return resolveToScalarType()->canCheckEquality(visited);
 }
 
 status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {

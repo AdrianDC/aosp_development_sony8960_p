@@ -324,6 +324,20 @@ bool Type::isElidableType() const {
 }
 
 bool Type::canCheckEquality() const {
+    std::unordered_set<const Type*> visited;
+    return canCheckEquality(&visited);
+}
+
+bool Type::canCheckEquality(std::unordered_set<const Type*>* visited) const {
+    // See isJavaCompatible for similar structure.
+    if (visited->find(this) != visited->end()) {
+        return true;
+    }
+    visited->insert(this);
+    return deepCanCheckEquality(visited);
+}
+
+bool Type::deepCanCheckEquality(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 
@@ -612,11 +626,25 @@ bool Type::needsEmbeddedReadWrite() const {
     return false;
 }
 
-bool Type::needsResolveReferences() const {
+bool Type::resultNeedsDeref() const {
     return false;
 }
 
-bool Type::resultNeedsDeref() const {
+bool Type::needsResolveReferences() const {
+    std::unordered_set<const Type*> visited;
+    return needsResolveReferences(&visited);
+}
+
+bool Type::needsResolveReferences(std::unordered_set<const Type*>* visited) const {
+    // See isJavaCompatible for similar structure.
+    if (visited->find(this) != visited->end()) {
+        return false;
+    }
+    visited->insert(this);
+    return deepNeedsResolveReferences(visited);
+}
+
+bool Type::deepNeedsResolveReferences(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 
@@ -664,16 +692,50 @@ status_t Type::emitVtsAttributeType(Formatter &out) const {
 }
 
 bool Type::isJavaCompatible() const {
+    std::unordered_set<const Type*> visited;
+    return isJavaCompatible(&visited);
+}
+
+bool Type::containsPointer() const {
+    std::unordered_set<const Type*> visited;
+    return containsPointer(&visited);
+}
+
+bool Type::isJavaCompatible(std::unordered_set<const Type*>* visited) const {
+    // We need to find al least one path from requested vertex
+    // to not java compatible.
+    // That means that if we have already visited some vertex,
+    // there is no need to determine whether it is java compatible
+    // (and we can assume that it is java compatible),
+    // as if not, the information about that would appear in the
+    // requested vertex through another path.
+    if (visited->find(this) != visited->end()) {
+        return true;
+    }
+    visited->insert(this);
+    return deepIsJavaCompatible(visited);
+}
+
+bool Type::containsPointer(std::unordered_set<const Type*>* visited) const {
+    // See isJavaCompatible for similar structure.
+    if (visited->find(this) != visited->end()) {
+        return false;
+    }
+    visited->insert(this);
+    return deepContainsPointer(visited);
+}
+
+bool Type::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return true;
+}
+
+bool Type::deepContainsPointer(std::unordered_set<const Type*>* /* visited */) const {
+    return false;
 }
 
 void Type::getAlignmentAndSize(
         size_t * /* align */, size_t * /* size */) const {
     CHECK(!"Should not be here.");
-}
-
-bool Type::containsPointer() const {
-    return false;
 }
 
 void Type::appendToExportedTypesVector(

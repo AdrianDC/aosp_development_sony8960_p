@@ -119,15 +119,13 @@ struct Interface : public Scope {
 
     bool hasOnewayMethods() const;
 
-    bool isJavaCompatible() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
 
    private:
     Reference<Type> mSuperType;
 
     std::vector<Method*> mUserMethods;
     std::vector<Method*> mReservedMethods;
-
-    mutable bool mIsJavaCompatibleInProgress;
 
     bool fillPingMethod(Method* method) const;
     bool fillDescriptorChainMethod(Method* method) const;
