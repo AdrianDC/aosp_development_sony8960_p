@@ -25,6 +25,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "Location.h"
@@ -102,7 +103,7 @@ struct Method {
 
     void dumpAnnotations(Formatter &out) const;
 
-    bool isJavaCompatible() const;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const;
 
     const Location& location() const;
 

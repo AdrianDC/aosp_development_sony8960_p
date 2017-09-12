@@ -36,7 +36,7 @@ struct VectorType : public TemplatedType {
 
     std::vector<const Reference<Type>*> getStrongReferences() const override;
 
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     std::string getCppType(
             StorageMode mode,
@@ -121,11 +121,11 @@ struct VectorType : public TemplatedType {
             bool isReader);
 
     bool needsEmbeddedReadWrite() const override;
-    bool needsResolveReferences() const override;
+    bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const override;
     bool resultNeedsDeref() const override;
 
-    bool isJavaCompatible() const override;
-    bool containsPointer() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
+    bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
     static void getAlignmentAndSizeStatic(size_t *align, size_t *size);

@@ -71,9 +71,7 @@ enum {
 
 Interface::Interface(const char* localName, const FQName& fullName, const Location& location,
                      Scope* parent, const Reference<Type>& superType)
-    : Scope(localName, fullName, location, parent),
-      mSuperType(superType),
-      mIsJavaCompatibleInProgress(false) {}
+    : Scope(localName, fullName, location, parent), mSuperType(superType) {}
 
 std::string Interface::typeName() const {
     return "interface " + localName();
@@ -970,38 +968,18 @@ bool Interface::hasOnewayMethods() const {
     return false;
 }
 
-bool Interface::isJavaCompatible() const {
-    if (mIsJavaCompatibleInProgress) {
-        // We're currently trying to determine if this Interface is
-        // java-compatible and something is referencing this interface through
-        // one of its methods. Assume we'll ultimately succeed, if we were wrong
-        // the original invocation of Interface::isJavaCompatible() will then
-        // return the correct "false" result.
-        return true;
-    }
-
-    if (superType() != nullptr && !superType()->isJavaCompatible()) {
-        mIsJavaCompatibleInProgress = false;
+bool Interface::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
+    if (superType() != nullptr && !superType()->isJavaCompatible(visited)) {
         return false;
     }
 
-    mIsJavaCompatibleInProgress = true;
-
-    if (!Scope::isJavaCompatible()) {
-        mIsJavaCompatibleInProgress = false;
-        return false;
-    }
-
-    for (const auto &method : methods()) {
-        if (!method->isJavaCompatible()) {
-            mIsJavaCompatibleInProgress = false;
+    for (const auto* method : methods()) {
+        if (!method->deepIsJavaCompatible(visited)) {
             return false;
         }
     }
 
-    mIsJavaCompatibleInProgress = false;
-
-    return true;
+    return Scope::isJavaCompatible(visited);
 }
 
 }  // namespace android

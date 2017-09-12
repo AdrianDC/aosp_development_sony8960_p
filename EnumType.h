@@ -44,7 +44,7 @@ struct EnumType : public Scope {
 
     std::string typeName() const override;
     bool isEnum() const override;
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     std::string getCppType(StorageMode mode,
                            bool specifyNamespaces) const override;
@@ -168,7 +168,7 @@ struct BitFieldType : public TemplatedType {
 
     bool isElidableType() const override;
 
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     const ScalarType *resolveToScalarType() const override;
 

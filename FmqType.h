@@ -54,7 +54,7 @@ struct FmqType : public TemplatedType {
             const std::string &parentName,
             const std::string &offsetText) const override;
 
-    bool isJavaCompatible() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 

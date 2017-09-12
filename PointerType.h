@@ -48,8 +48,8 @@ struct PointerType : public Type {
     bool needsEmbeddedReadWrite() const override;
     bool resultNeedsDeref() const override;
 
-    bool isJavaCompatible() const override;
-    bool containsPointer() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
+    bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
 };
