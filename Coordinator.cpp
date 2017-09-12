@@ -460,6 +460,14 @@ status_t Coordinator::getPackageInterfaceFiles(
 
     struct dirent *ent;
     while ((ent = readdir(dir)) != NULL) {
+        if (ent->d_type == DT_UNKNOWN) {
+            struct stat statbuf;
+            stat(ent->d_name, &statbuf);
+            if (S_ISREG(statbuf.st_mode)) {
+                ent->d_type = DT_REG;
+            }
+        }
+
         if (ent->d_type != DT_REG) {
             continue;
         }
