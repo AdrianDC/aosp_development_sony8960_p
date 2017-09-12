@@ -58,7 +58,7 @@ struct HandleType : public Type {
 
     bool needsEmbeddedReadWrite() const override;
 
-    bool isJavaCompatible() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
 
     bool useNameInEmitReaderWriterEmbedded(bool isReader) const override;
 

@@ -39,7 +39,7 @@ bool ScalarType::isElidableType() const {
     return true;
 }
 
-bool ScalarType::canCheckEquality() const {
+bool ScalarType::deepCanCheckEquality(std::unordered_set<const Type*>* /* visited */) const {
     return true;
 }
 

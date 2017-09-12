@@ -157,7 +157,7 @@ bool HandleType::needsEmbeddedReadWrite() const {
     return true;
 }
 
-bool HandleType::isJavaCompatible() const {
+bool HandleType::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 

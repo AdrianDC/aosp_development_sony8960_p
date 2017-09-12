@@ -186,24 +186,13 @@ status_t Scope::emitVtsTypeDeclarations(Formatter &out) const {
     });
 }
 
-bool Scope::isJavaCompatible() const {
+bool Scope::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
     for (const auto &type : mTypes) {
-        if (!type->isJavaCompatible()) {
+        if (!type->isJavaCompatible(visited)) {
             return false;
         }
     }
-
-    return true;
-}
-
-bool Scope::containsPointer() const {
-    for (const auto &type : mTypes) {
-        if (type->containsPointer()) {
-            return true;
-        }
-    }
-
-    return false;
+    return Type::deepIsJavaCompatible(visited);
 }
 
 void Scope::appendToExportedTypesVector(

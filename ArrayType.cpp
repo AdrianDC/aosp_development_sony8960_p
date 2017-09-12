@@ -41,8 +41,8 @@ bool ArrayType::isArray() const {
     return true;
 }
 
-bool ArrayType::canCheckEquality() const {
-    return mElementType->canCheckEquality();
+bool ArrayType::deepCanCheckEquality(std::unordered_set<const Type*>* visited) const {
+    return mElementType->canCheckEquality(visited);
 }
 
 const Type* ArrayType::getElementType() const {
@@ -374,8 +374,11 @@ bool ArrayType::needsEmbeddedReadWrite() const {
     return mElementType->needsEmbeddedReadWrite();
 }
 
-bool ArrayType::needsResolveReferences() const {
-    return mElementType->needsResolveReferences();
+bool ArrayType::deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const {
+    if (mElementType->needsResolveReferences(visited)) {
+        return true;
+    }
+    return Type::deepNeedsResolveReferences(visited);
 }
 
 bool ArrayType::resultNeedsDeref() const {
@@ -543,12 +546,18 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-bool ArrayType::isJavaCompatible() const {
-    return mElementType->isJavaCompatible();
+bool ArrayType::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
+    if (!mElementType->isJavaCompatible(visited)) {
+        return false;
+    }
+    return Type::deepIsJavaCompatible(visited);
 }
 
-bool ArrayType::containsPointer() const {
-    return mElementType->containsPointer();
+bool ArrayType::deepContainsPointer(std::unordered_set<const Type*>* visited) const {
+    if (mElementType->containsPointer(visited)) {
+        return true;
+    }
+    return Type::deepContainsPointer(visited);
 }
 
 void ArrayType::getAlignmentAndSize(size_t *align, size_t *size) const {

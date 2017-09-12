@@ -40,7 +40,7 @@ struct CompoundType : public Scope {
 
     bool isCompoundType() const override;
 
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     std::string typeName() const override;
 
@@ -128,14 +128,14 @@ struct CompoundType : public Scope {
             Formatter &out, bool atTopLevel) const override;
 
     bool needsEmbeddedReadWrite() const override;
-    bool needsResolveReferences() const override;
+    bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const override;
     bool resultNeedsDeref() const override;
 
     status_t emitVtsTypeDeclarations(Formatter &out) const override;
     status_t emitVtsAttributeType(Formatter &out) const override;
 
-    bool isJavaCompatible() const override;
-    bool containsPointer() const override;
+    bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
+    bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const;
 

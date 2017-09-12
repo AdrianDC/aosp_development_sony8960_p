@@ -145,7 +145,7 @@ bool MemoryType::isMemory() const {
     return true;
 }
 
-bool MemoryType::isJavaCompatible() const {
+bool MemoryType::deepIsJavaCompatible(std::unordered_set<const Type*>* /* visited */) const {
     return false;
 }
 

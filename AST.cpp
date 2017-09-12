@@ -591,18 +591,7 @@ void AST::getAllImportedNames(std::set<FQName> *allImportNames) const {
 }
 
 bool AST::isJavaCompatible() const {
-    if (!AST::isInterface()) {
-        for (const auto* type : mRootScope.getSubTypes()) {
-            if (!type->isJavaCompatible()) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    const Interface* iface = mRootScope.getInterface();
-    return iface->isJavaCompatible();
+    return mRootScope.isJavaCompatible();
 }
 
 void AST::appendToExportedTypesVector(

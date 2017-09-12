@@ -76,8 +76,8 @@ bool VectorType::isVectorOfBinders() const {
     return mElementType->isBinder();
 }
 
-bool VectorType::canCheckEquality() const {
-    return mElementType->canCheckEquality();
+bool VectorType::deepCanCheckEquality(std::unordered_set<const Type*>* visited) const {
+    return mElementType->canCheckEquality(visited);
 }
 
 std::vector<const Reference<Type>*> VectorType::getStrongReferences() const {
@@ -714,16 +714,19 @@ bool VectorType::needsEmbeddedReadWrite() const {
     return true;
 }
 
-bool VectorType::needsResolveReferences() const {
-    return mElementType->needsResolveReferences();
+bool VectorType::deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const {
+    if (mElementType->needsResolveReferences(visited)) {
+        return true;
+    }
+    return TemplatedType::deepNeedsResolveReferences(visited);
 }
 
 bool VectorType::resultNeedsDeref() const {
     return !isVectorOfBinders();
 }
 
-bool VectorType::isJavaCompatible() const {
-    if (!mElementType->isJavaCompatible()) {
+bool VectorType::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
+    if (!mElementType->isJavaCompatible(visited)) {
         return false;
     }
 
@@ -739,11 +742,14 @@ bool VectorType::isJavaCompatible() const {
         return false;
     }
 
-    return true;
+    return TemplatedType::deepIsJavaCompatible(visited);
 }
 
-bool VectorType::containsPointer() const {
-    return mElementType->containsPointer();
+bool VectorType::deepContainsPointer(std::unordered_set<const Type*>* visited) const {
+    if (mElementType->containsPointer(visited)) {
+        return true;
+    }
+    return TemplatedType::deepContainsPointer(visited);
 }
 
 // All hidl_vec<T> have the same size.

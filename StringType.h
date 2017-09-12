@@ -27,7 +27,7 @@ struct StringType : public Type {
 
     bool isString() const override;
 
-    bool canCheckEquality() const override;
+    bool deepCanCheckEquality(std::unordered_set<const Type*>* visited) const override;
 
     std::string typeName() const override;
 

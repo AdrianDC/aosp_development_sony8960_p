@@ -74,10 +74,6 @@ bool DeathRecipientType::resultNeedsDeref() const {
     return true;
 }
 
-bool DeathRecipientType::isJavaCompatible() const {
-    return true;
-}
-
 void DeathRecipientType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *align = *size = 0; // this object should only be used in passthrough mode
 }
