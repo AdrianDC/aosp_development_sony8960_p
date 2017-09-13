@@ -12,7 +12,6 @@ genrule {
         "interface_extends_only_interface/1.0/IFoo.hal",
         "interface_extends_only_interface/1.0/types.hal",
         "cpp_forward_decl_restriction/1.0/types.hal",
-        "cpp_forward_ref_incomplete_restriction/1.0/types.hal",
         "interface_no_using_reserved_method_names/1.0/IFoo.hal",
         "interface_semicolon/1.0/IFoo.hal",
         "interface_unique_method_names/1.0/IFoo.hal",

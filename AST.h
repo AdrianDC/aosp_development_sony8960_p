@@ -105,8 +105,8 @@ struct AST {
     status_t validate() const;
 
     // Recursive tree pass that ensures that type definitions and references
-    // are acyclic.
-    status_t checkAcyclicTypes() const;
+    // are acyclic and reorderes type definitions in reversed topological order.
+    status_t topologicalReorder();
 
     // Recursive tree pass that ensures that constant expressions
     // are acyclic.
