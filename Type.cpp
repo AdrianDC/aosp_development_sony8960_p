@@ -149,7 +149,13 @@ std::vector<Reference<Type>*> Type::getStrongReferences() {
 }
 
 std::vector<const Reference<Type>*> Type::getStrongReferences() const {
-    return getReferences();
+    std::vector<const Reference<Type>*> ret;
+    for (const auto* ref : getReferences()) {
+        if (!ref->shallowGet()->isNeverStrongReference()) {
+            ret.push_back(ref);
+        }
+    }
+    return ret;
 }
 
 status_t Type::recursivePass(const std::function<status_t(Type*)>& func,
@@ -306,7 +312,8 @@ status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref,
     // like pointers, vectors, interfaces.
     if (isStrongRef) {
         // Enum storage type and bitfield element type do not appear in output code.
-        if (isEnum() || isBitField()) return OK;
+        // Typedef does not require complete declaration.
+        if (isEnum() || isBitField() || isTypeDef()) return OK;
 
         std::cerr << "ERROR: Forward reference of '" << refType->typeName() << "' at "
                   << ref.location() << " is not supported.\n"
@@ -768,6 +775,10 @@ void Type::appendToExportedTypesVector(
 status_t Type::emitExportedHeader(
         Formatter & /* out */, bool /* forJava */) const {
     return OK;
+}
+
+bool Type::isNeverStrongReference() const {
+    return false;
 }
 
 ////////////////////////////////////////
