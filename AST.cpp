@@ -84,9 +84,13 @@ bool AST::containsInterfaces() const {
 
 status_t AST::postParse() {
     status_t err;
-    // validateDefinedTypesUniqueNames is the first call,
-    // as other errors could appear because user meant
-    // different type than we assumed.
+
+    // lookupTypes is the first pass.
+    err = lookupTypes();
+    if (err != OK) return err;
+    // validateDefinedTypesUniqueNames is the first call
+    // after lookup, as other errors could appear because
+    // user meant different type than we assumed.
     err = validateDefinedTypesUniqueNames();
     if (err != OK) return err;
     // checkAcyclicTypes is before resolveInheritance, as we
@@ -94,6 +98,8 @@ status_t AST::postParse() {
     err = checkAcyclicTypes();
     if (err != OK) return err;
     err = resolveInheritance();
+    if (err != OK) return err;
+    err = lookupLocalIdentifiers();
     if (err != OK) return err;
     // checkAcyclicConstantExpressions is after resolveInheritance,
     // as resolveInheritance autofills enum values.
@@ -108,10 +114,12 @@ status_t AST::postParse() {
 
     // Make future packages not to call passes
     // for processed types and expressions
-    constantExpressionRecursivePass([](ConstantExpression* ce) {
-        ce->setPostParseCompleted();
-        return OK;
-    });
+    constantExpressionRecursivePass(
+        [](ConstantExpression* ce) {
+            ce->setPostParseCompleted();
+            return OK;
+        },
+        true /* processBeforeDependencies */);
     std::unordered_set<const Type*> visited;
     mRootScope.recursivePass(
         [](Type* type) {
@@ -124,15 +132,68 @@ status_t AST::postParse() {
 }
 
 status_t AST::constantExpressionRecursivePass(
-    const std::function<status_t(ConstantExpression*)>& func) {
+    const std::function<status_t(ConstantExpression*)>& func, bool processBeforeDependencies) {
     std::unordered_set<const Type*> visitedTypes;
     std::unordered_set<const ConstantExpression*> visitedCE;
     return mRootScope.recursivePass(
         [&](Type* type) -> status_t {
             for (auto* ce : type->getConstantExpressions()) {
-                status_t err = ce->recursivePass(func, &visitedCE);
+                status_t err = ce->recursivePass(func, &visitedCE, processBeforeDependencies);
                 if (err != OK) return err;
             }
+            return OK;
+        },
+        &visitedTypes);
+}
+
+status_t AST::lookupTypes() {
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(
+        [&](Type* type) -> status_t {
+            Scope* scope = type->isScope() ? static_cast<Scope*>(type) : type->parent();
+
+            for (auto* nextRef : type->getReferences()) {
+                if (nextRef->isResolved()) continue;
+
+                Type* nextType = lookupType(nextRef->getLookupFqName(), scope);
+                if (nextType == nullptr) {
+                    std::cerr << "ERROR: Failed to lookup type '"
+                              << nextRef->getLookupFqName().string() << "' at "
+                              << nextRef->location() << "\n";
+                    return UNKNOWN_ERROR;
+                }
+                nextRef->set(nextType);
+            }
+
+            return OK;
+        },
+        &visited);
+}
+
+status_t AST::lookupLocalIdentifiers() {
+    std::unordered_set<const Type*> visitedTypes;
+    std::unordered_set<const ConstantExpression*> visitedCE;
+
+    return mRootScope.recursivePass(
+        [&](Type* type) -> status_t {
+            Scope* scope = type->isScope() ? static_cast<Scope*>(type) : type->parent();
+
+            for (auto* ce : type->getConstantExpressions()) {
+                status_t err = ce->recursivePass(
+                    [&](ConstantExpression* ce) {
+                        for (auto* nextRef : ce->getReferences()) {
+                            if (nextRef->isResolved()) continue;
+
+                            LocalIdentifier* iden = lookupLocalIdentifier(*nextRef, scope);
+                            if (iden == nullptr) return UNKNOWN_ERROR;
+                            nextRef->set(iden);
+                        }
+                        return OK;
+                    },
+                    &visitedCE, true /* processBeforeDependencies */);
+                if (err != OK) return err;
+            }
+
             return OK;
         },
         &visitedTypes);
@@ -157,10 +218,12 @@ status_t AST::resolveInheritance() {
 }
 
 status_t AST::evaluate() {
-    return constantExpressionRecursivePass([](ConstantExpression* ce) {
-        ce->evaluate();
-        return OK;
-    });
+    return constantExpressionRecursivePass(
+        [](ConstantExpression* ce) {
+            ce->evaluate();
+            return OK;
+        },
+        false /* processBeforeDependencies */);
 }
 
 status_t AST::validate() const {
@@ -317,6 +380,28 @@ FQName AST::makeFullName(const char* localName, Scope* scope) const {
 void AST::addScopedType(NamedType* type, Scope* scope) {
     scope->addType(type);
     mDefinedTypesByFullName[type->fqName()] = type;
+}
+
+LocalIdentifier* AST::lookupLocalIdentifier(const Reference<LocalIdentifier>& ref, Scope* scope) {
+    const FQName& fqName = ref.getLookupFqName();
+
+    if (fqName.isIdentifier()) {
+        LocalIdentifier* iden = scope->lookupIdentifier(fqName.name());
+        if (iden == nullptr) {
+            std::cerr << "ERROR: identifier " << fqName.string() << " could not be found at "
+                      << ref.location() << "\n";
+            return nullptr;
+        }
+        return iden;
+    } else {
+        std::string errorMsg;
+        EnumValue* enumValue = lookupEnumValue(fqName, &errorMsg, scope);
+        if (enumValue == nullptr) {
+            std::cerr << "ERROR: " << errorMsg << " at " << ref.location() << "\n";
+            return nullptr;
+        }
+        return enumValue;
+    }
 }
 
 EnumValue* AST::lookupEnumValue(const FQName& fqName, std::string* errorMsg, Scope* scope) {
