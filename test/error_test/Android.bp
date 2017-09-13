@@ -1,83 +1,8 @@
 genrule {
     name: "hidl_error_test_gen",
-    tools: [
-        "hidl-gen",
-    ],
-    cmd: "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.bad_character@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.interface_semicolon@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.method_ends_in_semicolon@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_data_outside_interface@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_interface_in_types@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_two_interfaces@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.same_name_interface@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.same_package_name@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.struct_unique_field_names@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.enum_unique_field_names@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.enum_unique_field_names_extends@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.interface_extends_only_interface@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.interface_no_using_reserved_method_names@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.interface_unique_method_names@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.interface_unique_method_names_inheritance@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.scope_unique_type_names@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_declaration_1@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_declaration_2@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_declaration_3@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_declaration_4@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_expressions_1@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_expressions_2@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.no_cyclic_expressions_3@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.cpp_forward_decl_restriction@1.0  >/dev/null 2>&1)" +
-         "&&" +
-         "!($(location hidl-gen) -L check -r test:system/tools/hidl/test/error_test" +
-         "    test.cpp_forward_ref_incomplete_restriction@1.0  >/dev/null 2>&1)" +
-         "&&" +
+    tools: ["hidl-gen"],
+    tool_files: ["hidl_error_test.sh"],
+    cmd: "$(location hidl_error_test.sh) $(location hidl-gen) &&" +
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
     srcs: [
