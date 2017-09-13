@@ -664,10 +664,6 @@ interface_declaration
           Interface* iface = new Interface(
               $2, ast->makeFullName($2, *scope), convertYYLoc(@2), *scope, *superType);
 
-          // Register interface immediately so it can be referenced inside
-          // definition.
-          ast->addScopedType(iface, *scope);
-
           enterScope(ast, scope, iface);
       }
       '{' interface_declarations '}'
@@ -678,7 +674,7 @@ interface_declaration
           CHECK(iface->addAllReservedMethods());
 
           leaveScope(ast, scope);
-
+          ast->addScopedType(iface, *scope);
           $$ = iface;
       }
     ;
