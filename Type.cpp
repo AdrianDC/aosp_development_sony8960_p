@@ -263,21 +263,32 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
     return CheckAcyclicStatus(OK);
 }
 
-status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref) const {
+status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref,
+                                                 bool isStrongRef) const {
     const Location& refLoc = ref.location();
     const Type* refType = ref.shallowGet();
 
+    if (isStrongRef) {
+        for (const Reference<Type>* innerRef : refType->getStrongReferences()) {
+            status_t err = checkForwardReferenceRestrictions(*innerRef, true /* isStrongRef */);
+            if (err != OK) return err;
+        }
+    }
+
     // Not NamedTypes are avaiable everywhere.
-    // Only ArrayType and TemplatedType contain additionaly types in
+    // Only ArrayType and TemplatedType contain additional types in
     // their reference (which is actually a part of type definition),
     // so they are proceeded in this case.
     //
     // If we support named templated types one day, we will need to change
     // this logic.
     if (!refType->isNamedType()) {
-        for (const Reference<Type>* innerRef : refType->getReferences()) {
-            status_t err = checkForwardReferenceRestrictions(*innerRef) != OK;
-            if (err != OK) return err;
+        if (!isStrongRef) {
+            for (const Reference<Type>* innerRef : refType->getReferences()) {
+                status_t err =
+                    checkForwardReferenceRestrictions(*innerRef, false /* isStrongRef */);
+                if (err != OK) return err;
+            }
         }
         return OK;
     }
@@ -289,6 +300,18 @@ status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref) con
     if (!Location::inSameFile(refLoc, typeLoc) ||
         (!Location::intersect(refLoc, typeLoc) && typeLoc < refLoc)) {
         return OK;
+    }
+
+    // C++ restricts references to incomplete types but "not strong" references
+    // like pointers, vectors, interfaces.
+    if (isStrongRef) {
+        // Enum storage type and bitfield element type do not appear in output code.
+        if (isEnum() || isBitField()) return OK;
+
+        std::cerr << "ERROR: Forward reference of '" << refType->typeName() << "' at "
+                  << ref.location() << " is not supported.\n"
+                  << "C++ requires complete declaration for this reference.\n";
+        return UNKNOWN_ERROR;
     }
 
     // Type must be declared somewhere in the current stack to make it
