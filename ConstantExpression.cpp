@@ -466,55 +466,67 @@ std::vector<const Reference<LocalIdentifier>*> ConstantExpression::getReferences
 }
 
 status_t ConstantExpression::recursivePass(const std::function<status_t(ConstantExpression*)>& func,
-                                           std::unordered_set<const ConstantExpression*>* visited) {
+                                           std::unordered_set<const ConstantExpression*>* visited,
+                                           bool processBeforeDependencies) {
     if (mIsPostParseCompleted) return OK;
 
     if (visited->find(this) != visited->end()) return OK;
     visited->insert(this);
 
+    if (processBeforeDependencies) {
+        status_t err = func(this);
+        if (err != OK) return err;
+    }
+
     for (auto* nextCE : getConstantExpressions()) {
-        status_t err = nextCE->recursivePass(func, visited);
+        status_t err = nextCE->recursivePass(func, visited, processBeforeDependencies);
         if (err != OK) return err;
     }
 
     for (auto* nextRef : getReferences()) {
         auto* nextCE = nextRef->shallowGet()->constExpr();
         CHECK(nextCE != nullptr) << "Local identifier is not a constant expression";
-        status_t err = nextCE->recursivePass(func, visited);
+        status_t err = nextCE->recursivePass(func, visited, processBeforeDependencies);
         if (err != OK) return err;
     }
 
-    // Unlike types, constant expressions need to be proceeded after dependencies
-    status_t err = func(this);
-    if (err != OK) return err;
+    if (!processBeforeDependencies) {
+        status_t err = func(this);
+        if (err != OK) return err;
+    }
 
     return OK;
 }
 
 status_t ConstantExpression::recursivePass(
     const std::function<status_t(const ConstantExpression*)>& func,
-    std::unordered_set<const ConstantExpression*>* visited) const {
-
+    std::unordered_set<const ConstantExpression*>* visited, bool processBeforeDependencies) const {
     if (mIsPostParseCompleted) return OK;
 
     if (visited->find(this) != visited->end()) return OK;
     visited->insert(this);
 
+    if (processBeforeDependencies) {
+        status_t err = func(this);
+        if (err != OK) return err;
+    }
+
     for (const auto* nextCE : getConstantExpressions()) {
-        status_t err = nextCE->recursivePass(func, visited);
+        status_t err = nextCE->recursivePass(func, visited, processBeforeDependencies);
         if (err != OK) return err;
     }
 
     for (const auto* nextRef : getReferences()) {
         const auto* nextCE = nextRef->shallowGet()->constExpr();
         CHECK(nextCE != nullptr) << "Local identifier is not a constant expression";
-        status_t err = nextCE->recursivePass(func, visited);
+        status_t err = nextCE->recursivePass(func, visited, processBeforeDependencies);
         if (err != OK) return err;
     }
 
-    // Unlike types, constant expressions need to be proceeded after dependencies
-    status_t err = func(this);
-    if (err != OK) return err;
+    if (!processBeforeDependencies) {
+        status_t err = func(this);
+        if (err != OK) return err;
+    }
 
     return OK;
 }

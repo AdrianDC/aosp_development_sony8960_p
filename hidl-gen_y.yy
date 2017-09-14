@@ -488,17 +488,6 @@ fqtype
     : fqname
       {
           $$ = new Reference<Type>(*$1, convertYYLoc(@1));
-
-          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
-          if (type == nullptr) {
-              std::cerr << "ERROR: Failed to lookup type '" << $1->string() << "' at "
-                        << @1
-                        << "\n";
-
-              YYERROR;
-          }
-
-          $$->set(type);
       }
     | TYPE
       {
@@ -655,9 +644,6 @@ interface_declaration
 
               if (superType == nullptr) {
                   superType = new Reference<Type>(gIBaseFqName, convertYYLoc(@$));
-                  Type* type = ast->lookupType(superType->getLookupFqName(), *scope);
-                  CHECK(type != nullptr && type->isInterface());
-                  superType->set(type);
               }
           }
 
@@ -721,27 +707,8 @@ const_expr
               YYERROR;
           }
 
-          if($1->isIdentifier()) {
-              std::string identifier = $1->name();
-              LocalIdentifier *iden = (*scope)->lookupIdentifier(identifier);
-              if(!iden) {
-                  std::cerr << "ERROR: identifier " << $1->string()
-                            << " could not be found at " << @1 << ".\n";
-                  YYERROR;
-              }
-              $$ = new ReferenceConstantExpression(
-                  Reference<LocalIdentifier>(iden, convertYYLoc(@1)), $1->string());
-          } else {
-              std::string errorMsg;
-              EnumValue* v = ast->lookupEnumValue(*$1, &errorMsg, *scope);
-              if(v == nullptr) {
-                  std::cerr << "ERROR: " << errorMsg << " at " << @1 << ".\n";
-                  YYERROR;
-              }
-
-              $$ = new ReferenceConstantExpression(
-                  Reference<LocalIdentifier>(v, convertYYLoc(@1)), $1->string());
-          }
+          $$ = new ReferenceConstantExpression(
+              Reference<LocalIdentifier>(*$1, convertYYLoc(@1)), $1->string());
       }
     | const_expr '?' const_expr ':' const_expr
       {
@@ -1038,15 +1005,6 @@ type
       {
           // "interface" is a synonym of android.hidl.base@1.0::IBase
           $$ = new Reference<Type>(gIBaseFqName, convertYYLoc(@1));
-          Type* type = ast->lookupType($$->getLookupFqName(), *scope);
-          if (type == nullptr) {
-              std::cerr << "ERROR: Cannot find "
-                        << gIBaseFqName.string()
-                        << " at " << @1 << "\n";
-
-              YYERROR;
-          }
-          $$->set(type);
       }
     ;
 
