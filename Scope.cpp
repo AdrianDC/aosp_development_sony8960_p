@@ -22,6 +22,7 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -128,6 +129,21 @@ std::vector<const ConstantExpression*> Scope::getConstantExpressions() const {
     return ret;
 }
 
+void Scope::topologicalReorder(const std::unordered_map<const Type*, size_t>& reversedOrder) {
+    auto less = [&](const Type* lhs, const Type* rhs) {
+        return reversedOrder.at(lhs) < reversedOrder.at(rhs);
+    };
+
+    if (std::is_sorted(mTypes.begin(), mTypes.end(), less)) return;
+
+    mTypeOrderChanged = true;
+    std::sort(mTypes.begin(), mTypes.end(), less);
+
+    for (size_t i = 0; i != mTypes.size(); ++i) {
+        mTypeIndexByName.at(mTypes[i]->localName()) = i;
+    }
+}
+
 status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
     for (size_t i = 0; i < mTypes.size(); ++i) {
         status_t err = func(mTypes[i]);
@@ -146,6 +162,9 @@ status_t Scope::emitTypeDeclarations(Formatter &out) const {
         return OK;
     });
 
+    if (mTypeOrderChanged) {
+        out << "// Order of inner types was changed for forward reference support.\n\n";
+    }
     return forEachType([&](Type* type) {
         return type->emitTypeDeclarations(out);
     });
@@ -165,6 +184,9 @@ status_t Scope::emitGlobalHwDeclarations(Formatter &out) const {
 
 status_t Scope::emitJavaTypeDeclarations(
         Formatter &out, bool atTopLevel) const {
+    if (mTypeOrderChanged) {
+        out << "// Order of inner types was changed for forward reference support.\n\n";
+    }
     return forEachType([&](Type *type) {
         return type->emitJavaTypeDeclarations(out, atTopLevel);
     });

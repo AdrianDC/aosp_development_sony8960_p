@@ -22,6 +22,7 @@
 #include <utils/Errors.h>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -105,15 +106,15 @@ struct Type {
     };
 
     // Recursive tree pass that ensures that type definitions and references
-    // are acyclic.
+    // are acyclic and builds reversed topological order of the types.
     // If some cases allow using of incomplete types, these cases are to be
     // declared in Type::getStrongReferences.
-    CheckAcyclicStatus checkAcyclic(std::unordered_set<const Type*>* visited,
-                                    std::unordered_set<const Type*>* stack) const;
+    CheckAcyclicStatus topologicalOrder(std::unordered_map<const Type*, size_t>* reversedOrder,
+                                        std::unordered_set<const Type*>* stack) const;
 
     // Checks following C++ restriction on forward declaration:
     // inner struct could be forward declared only inside its parent.
-    status_t checkForwardReferenceRestrictions(const Reference<Type>& ref, bool isStrongRef) const;
+    status_t checkForwardReferenceRestrictions(const Reference<Type>& ref) const;
 
     virtual const ScalarType *resolveToScalarType() const;
 

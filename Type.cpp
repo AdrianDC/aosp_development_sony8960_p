@@ -217,19 +217,19 @@ Type::CheckAcyclicStatus::CheckAcyclicStatus(status_t status, const Type* cycleE
     CHECK(cycleEnd == nullptr || status != OK);
 }
 
-Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* visited,
-                                            std::unordered_set<const Type*>* stack) const {
+Type::CheckAcyclicStatus Type::topologicalOrder(
+    std::unordered_map<const Type*, size_t>* reversedOrder,
+    std::unordered_set<const Type*>* stack) const {
     if (stack->find(this) != stack->end()) {
         std::cerr << "ERROR: Cyclic declaration:\n";
         return CheckAcyclicStatus(UNKNOWN_ERROR, this);
     }
 
-    if (visited->find(this) != visited->end()) return CheckAcyclicStatus(OK);
-    visited->insert(this);
+    if (reversedOrder->find(this) != reversedOrder->end()) return CheckAcyclicStatus(OK);
     stack->insert(this);
 
     for (const auto* nextType : getDefinedTypes()) {
-        auto err = nextType->checkAcyclic(visited, stack);
+        auto err = nextType->topologicalOrder(reversedOrder, stack);
 
         if (err.status != OK) {
             if (err.cycleEnd == nullptr) return err;
@@ -249,7 +249,7 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
 
     for (const auto* nextRef : getStrongReferences()) {
         const auto* nextType = nextRef->shallowGet();
-        auto err = nextType->checkAcyclic(visited, stack);
+        auto err = nextType->topologicalOrder(reversedOrder, stack);
 
         if (err.status != OK) {
             if (err.cycleEnd == nullptr) return err;
@@ -266,20 +266,19 @@ Type::CheckAcyclicStatus Type::checkAcyclic(std::unordered_set<const Type*>* vis
 
     CHECK(stack->find(this) != stack->end());
     stack->erase(this);
+
+    CHECK(reversedOrder->find(this) == reversedOrder->end());
+    // Do not call insert and size in one statement to not rely on
+    // evaluation order.
+    size_t index = reversedOrder->size();
+    reversedOrder->insert({this, index});
+
     return CheckAcyclicStatus(OK);
 }
 
-status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref,
-                                                 bool isStrongRef) const {
+status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref) const {
     const Location& refLoc = ref.location();
     const Type* refType = ref.shallowGet();
-
-    if (isStrongRef) {
-        for (const Reference<Type>* innerRef : refType->getStrongReferences()) {
-            status_t err = checkForwardReferenceRestrictions(*innerRef, true /* isStrongRef */);
-            if (err != OK) return err;
-        }
-    }
 
     // Not NamedTypes are avaiable everywhere.
     // Only ArrayType and TemplatedType contain additional types in
@@ -289,12 +288,9 @@ status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref,
     // If we support named templated types one day, we will need to change
     // this logic.
     if (!refType->isNamedType()) {
-        if (!isStrongRef) {
-            for (const Reference<Type>* innerRef : refType->getReferences()) {
-                status_t err =
-                    checkForwardReferenceRestrictions(*innerRef, false /* isStrongRef */);
-                if (err != OK) return err;
-            }
+        for (const Reference<Type>* innerRef : refType->getReferences()) {
+            status_t err = checkForwardReferenceRestrictions(*innerRef);
+            if (err != OK) return err;
         }
         return OK;
     }
@@ -306,19 +302,6 @@ status_t Type::checkForwardReferenceRestrictions(const Reference<Type>& ref,
     if (!Location::inSameFile(refLoc, typeLoc) ||
         (!Location::intersect(refLoc, typeLoc) && typeLoc < refLoc)) {
         return OK;
-    }
-
-    // C++ restricts references to incomplete types but "not strong" references
-    // like pointers, vectors, interfaces.
-    if (isStrongRef) {
-        // Enum storage type and bitfield element type do not appear in output code.
-        // Typedef does not require complete declaration.
-        if (isEnum() || isBitField() || isTypeDef()) return OK;
-
-        std::cerr << "ERROR: Forward reference of '" << refType->typeName() << "' at "
-                  << ref.location() << " is not supported.\n"
-                  << "C++ requires complete declaration for this reference.\n";
-        return UNKNOWN_ERROR;
     }
 
     // Type must be declared somewhere in the current stack to make it
