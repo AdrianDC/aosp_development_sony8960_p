@@ -300,7 +300,9 @@ struct Type {
 
     virtual status_t emitExportedHeader(Formatter &out, bool forJava) const;
 
-protected:
+    virtual bool isNeverStrongReference() const;
+
+   protected:
     void handleError(Formatter &out, ErrorMode mode) const;
 
     void emitReaderWriterEmbeddedForTypeName(

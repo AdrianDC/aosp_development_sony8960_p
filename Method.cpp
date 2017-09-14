@@ -84,6 +84,24 @@ std::vector<const Reference<Type>*> Method::getReferences() const {
     return ret;
 }
 
+std::vector<Reference<Type>*> Method::getStrongReferences() {
+    const auto& constRet = static_cast<const Method*>(this)->getStrongReferences();
+    std::vector<Reference<Type>*> ret(constRet.size());
+    std::transform(constRet.begin(), constRet.end(), ret.begin(),
+                   [](const auto* ref) { return const_cast<Reference<Type>*>(ref); });
+    return ret;
+}
+
+std::vector<const Reference<Type>*> Method::getStrongReferences() const {
+    std::vector<const Reference<Type>*> ret;
+    for (const auto* ref : getReferences()) {
+        if (!ref->shallowGet()->isNeverStrongReference()) {
+            ret.push_back(ref);
+        }
+    }
+    return ret;
+}
+
 std::vector<ConstantExpression*> Method::getConstantExpressions() {
     const auto& constRet = static_cast<const Method*>(this)->getConstantExpressions();
     std::vector<ConstantExpression*> ret(constRet.size());
