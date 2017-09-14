@@ -486,14 +486,17 @@ std::vector<const Reference<Type>*> Interface::getStrongReferences() const {
     // Interface is a special case as a reference:
     // its definiton must be completed for extension but
     // not necessary for other references.
-    // As interface declaration appears only in global scope and
-    // method declaration appears only in interface, we may assume
-    // that all references in method definitions are acyclic.
 
     std::vector<const Reference<Type>*> ret;
     if (superType() != nullptr) {
         ret.push_back(&mSuperType);
     }
+
+    for (const auto* method : methods()) {
+        const auto& references = method->getStrongReferences();
+        ret.insert(ret.end(), references.begin(), references.end());
+    }
+
     return ret;
 }
 
@@ -980,6 +983,10 @@ bool Interface::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) c
     }
 
     return Scope::isJavaCompatible(visited);
+}
+
+bool Interface::isNeverStrongReference() const {
+    return true;
 }
 
 }  // namespace android
