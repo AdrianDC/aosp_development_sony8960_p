@@ -498,6 +498,14 @@ static_assert(
     std::is_same<IFoo::multidimArrayThree, hidl_array<int32_t, 2, 3, 4, 8, 9, 10, 5, 6, 7>>::value,
     "hidl-gen output array dimention order is incorrect");
 
+// Check correct type in ambiguous case
+static_assert(std::is_same<decltype(IFoo::S1::foo), IFoo::InnerTestStruct>::value,
+              "hidl-gen wrong (inner) type in output");
+static_assert(!std::is_same<decltype(IFoo::S1::foo), IFoo::S1::InnerTestStruct>::value,
+              "hidl-gen wrong (inner) type in output");
+static_assert((int32_t) decltype(IFoo::S2::foo)::VALUE == 0,
+              "hidl-gen wrong (inner) type in output");
+
 TEST_F(HidlTest, PreloadTest) {
     // in passthrough mode, this will already be opened
     if (mode == BINDERIZED) {
@@ -563,10 +571,11 @@ TEST_F(HidlTest, EnumToStringTest) {
     EXPECT_EQ(toString(static_cast<IFoo::BitField>(IFoo::BitField::V0 | IFoo::BitField::V2)), "0x5"s)
             << "Invalid enum isn't stringified correctly.";
     // dump bitfields
-    EXPECT_EQ(toString<IFoo::BitField>(0 | IFoo::BitField::V0), "V0 (0x1)"s);
-    EXPECT_EQ(toString<IFoo::BitField>(0 | IFoo::BitField::V0 | IFoo::BitField::V2), "V0 | V2 (0x5)"s);
-    EXPECT_EQ(toString<IFoo::BitField>(0xF), "V0 | V1 | V2 | V3 | VALL (0xf)"s);
-    EXPECT_EQ(toString<IFoo::BitField>(0xFF), "V0 | V1 | V2 | V3 | VALL | 0xf0 (0xff)"s);
+    EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0 | IFoo::BitField::V0), "V0 (0x1)"s);
+    EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0 | IFoo::BitField::V0 | IFoo::BitField::V2),
+              "V0 | V2 (0x5)"s);
+    EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0xF), "V0 | V1 | V2 | V3 | VALL (0xf)"s);
+    EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0xFF), "V0 | V1 | V2 | V3 | VALL | 0xf0 (0xff)"s);
 }
 
 TEST_F(HidlTest, PingTest) {

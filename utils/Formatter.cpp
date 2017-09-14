@@ -185,24 +185,6 @@ void Formatter::setNamespace(const std::string &space) {
 }
 
 void Formatter::output(const std::string &text) const {
-    const size_t spaceLength = mSpace.size();
-    if (spaceLength > 0) {
-        // Remove all occurences of "mSpace" and output the filtered result.
-        size_t matchPos = text.find(mSpace);
-        if (matchPos != std::string::npos) {
-            std::string newText = text.substr(0, matchPos);
-            size_t startPos = matchPos + spaceLength;
-            while ((matchPos = text.find(mSpace, startPos))
-                    != std::string::npos) {
-                newText.append(text.substr(startPos, matchPos - startPos));
-                startPos = matchPos + spaceLength;
-            }
-            newText.append(text.substr(startPos));
-            fprintf(mFile, "%s", newText.c_str());
-            return;
-        }
-    }
-
     fprintf(mFile, "%s", text.c_str());
 }
 
