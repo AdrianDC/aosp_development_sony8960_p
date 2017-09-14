@@ -21,6 +21,7 @@
 #include "NamedType.h"
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace android {
@@ -60,6 +61,8 @@ struct Scope : public NamedType {
 
     std::vector<const ConstantExpression*> getConstantExpressions() const override;
 
+    void topologicalReorder(const std::unordered_map<const Type*, size_t>& reversedOrder);
+
     status_t emitTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalTypeDeclarations(Formatter &out) const override;
     status_t emitGlobalHwDeclarations(Formatter &out) const override;
@@ -78,10 +81,12 @@ struct Scope : public NamedType {
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const override;
 
-private:
+   private:
     std::vector<NamedType *> mTypes;
     std::map<std::string, size_t> mTypeIndexByName;
     std::vector<Annotation*> mAnnotations;
+
+    bool mTypeOrderChanged = false;
 
     status_t forEachType(const std::function<status_t(Type*)>& func) const;
 
