@@ -461,7 +461,7 @@ bool Interface::addMethod(Method *method) {
 std::vector<const Reference<Type>*> Interface::getReferences() const {
     std::vector<const Reference<Type>*> ret;
 
-    if (superType() != nullptr) {
+    if (!isIBase()) {
         ret.push_back(&mSuperType);
     }
 
@@ -488,7 +488,7 @@ std::vector<const Reference<Type>*> Interface::getStrongReferences() const {
     // not necessary for other references.
 
     std::vector<const Reference<Type>*> ret;
-    if (superType() != nullptr) {
+    if (!isIBase()) {
         ret.push_back(&mSuperType);
     }
 

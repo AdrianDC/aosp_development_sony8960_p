@@ -61,6 +61,10 @@ struct AST {
 
     const std::string &getFilename() const;
 
+    // Look up local identifier.
+    // It could be plain identifier or enum value as described by lookupEnumValue.
+    LocalIdentifier* lookupLocalIdentifier(const Reference<LocalIdentifier>& ref, Scope* scope);
+
     // Look up an enum value by "FQName:valueName".
     EnumValue* lookupEnumValue(const FQName& fqName, std::string* errorMsg, Scope* scope);
 
@@ -77,7 +81,13 @@ struct AST {
 
     // Recursive pass on constant expression tree
     status_t constantExpressionRecursivePass(
-        const std::function<status_t(ConstantExpression*)>& func);
+        const std::function<status_t(ConstantExpression*)>& func, bool processBeforeDependencies);
+
+    // Recursive tree pass that looks up all referenced types
+    status_t lookupTypes();
+
+    // Recursive tree pass that looks up all referenced local identifiers
+    status_t lookupLocalIdentifiers();
 
     // Recursive tree pass that validates that all defined types
     // have unique names in their scopes.

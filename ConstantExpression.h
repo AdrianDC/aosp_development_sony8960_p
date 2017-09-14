@@ -54,9 +54,11 @@ struct ConstantExpression {
     // Makes sure to visit each node only once
     // Used to provide lookup and lazy evaluation
     status_t recursivePass(const std::function<status_t(ConstantExpression*)>& func,
-                           std::unordered_set<const ConstantExpression*>* visited);
+                           std::unordered_set<const ConstantExpression*>* visited,
+                           bool processBeforeDependencies);
     status_t recursivePass(const std::function<status_t(const ConstantExpression*)>& func,
-                           std::unordered_set<const ConstantExpression*>* visited) const;
+                           std::unordered_set<const ConstantExpression*>* visited,
+                           bool processBeforeDependencies) const;
 
     // Evaluates current constant expression
     // Doesn't call recursive evaluation, so must be called after dependencies
