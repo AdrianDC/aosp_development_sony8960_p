@@ -557,7 +557,7 @@ status_t Interface::validateUniqueNames() const {
             } else {
                 // Defined in super not IBase
                 std::cerr << "ERROR: Redefinition of method '" << method->name()
-                          << "'' defined in interface '" << definedInType->fullName() << "'";
+                          << "' defined in interface '" << definedInType->fullName() << "'";
             }
             std::cerr << " at " << method->location() << "\n";
             return UNKNOWN_ERROR;
