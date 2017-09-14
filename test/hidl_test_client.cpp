@@ -13,8 +13,8 @@
 
 #include <android/hidl/token/1.0/ITokenManager.h>
 
-#include <android/hardware/tests/bar/1.0/BpHwBar.h>
 #include <android/hardware/tests/bar/1.0/BnHwBar.h>
+#include <android/hardware/tests/bar/1.0/BpHwBar.h>
 #include <android/hardware/tests/bar/1.0/IBar.h>
 #include <android/hardware/tests/bar/1.0/IComplicated.h>
 #include <android/hardware/tests/bar/1.0/IImportRules.h>
@@ -32,6 +32,7 @@
 #include <android/hardware/tests/multithread/1.0/IMultithread.h>
 #include <android/hardware/tests/pointer/1.0/IGraph.h>
 #include <android/hardware/tests/pointer/1.0/IPointer.h>
+#include <android/hardware/tests/trie/1.0/ITrie.h>
 
 #include <gtest/gtest.h>
 #if GTEST_IS_THREADSAFE
@@ -51,10 +52,12 @@
 #include <fstream>
 #include <future>
 #include <mutex>
+#include <random>
 #include <set>
 #include <sstream>
 #include <thread>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -103,6 +106,8 @@ using ::android::hardware::tests::pointer::V1_0::IGraph;
 using ::android::hardware::tests::pointer::V1_0::IPointer;
 using ::android::hardware::tests::memory::V1_0::IMemoryTest;
 using ::android::hardware::tests::multithread::V1_0::IMultithread;
+using ::android::hardware::tests::trie::V1_0::ITrie;
+using ::android::hardware::tests::trie::V1_0::TrieNode;
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
@@ -374,6 +379,7 @@ public:
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
     sp<IMultithread> multithreadInterface;
+    sp<ITrie> trieInterface;
     TestMode mode;
     bool enableDelayMeasurementTests;
     HidlEnvironment(TestMode mode, bool enableDelayMeasurementTests) :
@@ -435,6 +441,10 @@ public:
             IMultithread::getService("multithread", mode == PASSTHROUGH /* getStub */);
         ASSERT_NE(multithreadInterface, nullptr);
         ASSERT_EQ(multithreadInterface->isRemote(), mode == BINDERIZED);
+
+        trieInterface = ITrie::getService("trie", mode == PASSTHROUGH /* getStub */);
+        ASSERT_NE(trieInterface, nullptr);
+        ASSERT_EQ(trieInterface->isRemote(), mode == BINDERIZED);
     }
 
     virtual void SetUp() {
@@ -457,6 +467,7 @@ public:
     sp<IGraph> graphInterface;
     sp<IPointer> pointerInterface;
     sp<IPointer> validationPointerInterface;
+    sp<ITrie> trieInterface;
     TestMode mode = TestMode::PASSTHROUGH;
 
     virtual void SetUp() override {
@@ -472,6 +483,7 @@ public:
         graphInterface = gHidlEnvironment->graphInterface;
         pointerInterface = gHidlEnvironment->pointerInterface;
         validationPointerInterface = gHidlEnvironment->validationPointerInterface;
+        trieInterface = gHidlEnvironment->trieInterface;
         mode = gHidlEnvironment->mode;
         ALOGI("Test setup complete");
     }
@@ -1684,6 +1696,73 @@ TEST_F(HidlTest, InvalidTransactionTest) {
     EXPECT_EQ(status, ::android::UNKNOWN_TRANSACTION);
     // Try another call, to make sure nothing is messed up
     EXPECT_OK(bar->thisIsNew());
+}
+
+TEST_F(HidlTest, TrieSimpleTest) {
+    trieInterface->newTrie([&](const TrieNode& trie) {
+        trieInterface->addStrings(trie, {"a", "ba"}, [&](const TrieNode& trie) {
+            trieInterface->containsStrings(
+                trie, {"", "a", "b", "ab", "ba", "c"}, [](const hidl_vec<bool>& response) {
+                    EXPECT_EQ(response,
+                              std::vector<bool>({false, true, false, false, true, false}));
+                });
+
+            trieInterface->addStrings(trie, {"", "ab", "bab"}, [&](const TrieNode& trie) {
+                trieInterface->containsStrings(
+                    trie, {"", "a", "b", "ab", "ba", "c"}, [](const hidl_vec<bool>& response) {
+                        EXPECT_EQ(response,
+                                  std::vector<bool>({true, true, false, true, true, false}));
+                    });
+            });
+        });
+    });
+}
+
+struct RandomString {
+    std::string next() {
+        std::string ret(lengthDist(rng), 0);
+        std::generate(ret.begin(), ret.end(), [&]() { return charDist(rng); });
+        return ret;
+    }
+
+    RandomString() : rng(std::random_device{}()), lengthDist(5, 10), charDist('a', 'a' + 10) {}
+
+   private:
+    std::default_random_engine rng;
+    std::uniform_int_distribution<> lengthDist;
+    std::uniform_int_distribution<> charDist;
+};
+
+TEST_F(HidlTest, TrieStressTest) {
+    const size_t REQUEST_NUM = 1000;
+    RandomString stringGenerator;
+
+    trieInterface->newTrie([&](const TrieNode& trie) {
+        std::vector<std::string> strings(REQUEST_NUM);
+        for (auto& str : strings) {
+            str = stringGenerator.next();
+        }
+
+        trieInterface->addStrings(
+            trie, hidl_vec<hidl_string>(strings.begin(), strings.end()), [&](const TrieNode& trie) {
+                std::unordered_set<std::string> addedStrings(strings.begin(), strings.end());
+
+                for (size_t i = 0; i != REQUEST_NUM; ++i) {
+                    strings.push_back(stringGenerator.next());
+                }
+                std::random_shuffle(strings.begin(), strings.end());
+
+                std::vector<bool> trueResponse(strings.size());
+                std::transform(strings.begin(), strings.end(), trueResponse.begin(),
+                               [&](const std::string& str) {
+                                   return addedStrings.find(str) != addedStrings.end();
+                               });
+
+                trieInterface->containsStrings(
+                    trie, hidl_vec<hidl_string>(strings.begin(), strings.end()),
+                    [&](const hidl_vec<bool>& response) { EXPECT_EQ(response, trueResponse); });
+            });
+    });
 }
 
 class HidlMultithreadTest : public ::testing::Test {
