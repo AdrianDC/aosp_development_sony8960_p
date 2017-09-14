@@ -93,9 +93,9 @@ status_t AST::postParse() {
     // user meant different type than we assumed.
     err = validateDefinedTypesUniqueNames();
     if (err != OK) return err;
-    // checkAcyclicTypes is before resolveInheritance, as we
+    // topologicalReorder is before resolveInheritance, as we
     // need to have no cycle while getting parent class.
-    err = checkAcyclicTypes();
+    err = topologicalReorder();
     if (err != OK) return err;
     err = resolveInheritance();
     if (err != OK) return err;
@@ -231,10 +231,22 @@ status_t AST::validate() const {
     return mRootScope.recursivePass(&Type::validate, &visited);
 }
 
-status_t AST::checkAcyclicTypes() const {
-    std::unordered_set<const Type*> visited;
+status_t AST::topologicalReorder() {
+    std::unordered_map<const Type*, size_t> reversedOrder;
     std::unordered_set<const Type*> stack;
-    return mRootScope.checkAcyclic(&visited, &stack).status;
+    status_t err = mRootScope.topologicalOrder(&reversedOrder, &stack).status;
+    if (err != OK) return err;
+
+    std::unordered_set<const Type*> visited;
+    mRootScope.recursivePass(
+        [&](Type* type) {
+            if (type->isScope()) {
+                static_cast<Scope*>(type)->topologicalReorder(reversedOrder);
+            }
+            return OK;
+        },
+        &visited);
+    return OK;
 }
 
 status_t AST::checkAcyclicConstantExpressions() const {
@@ -257,14 +269,8 @@ status_t AST::checkForwardReferenceRestrictions() const {
     std::unordered_set<const Type*> visited;
     return mRootScope.recursivePass(
         [](const Type* type) -> status_t {
-            for (const Reference<Type>* ref : type->getStrongReferences()) {
-                status_t err =
-                    type->checkForwardReferenceRestrictions(*ref, true /* isStrongRef */);
-                if (err != OK) return err;
-            }
             for (const Reference<Type>* ref : type->getReferences()) {
-                status_t err =
-                    type->checkForwardReferenceRestrictions(*ref, false /* isStrongRef */);
+                status_t err = type->checkForwardReferenceRestrictions(*ref);
                 if (err != OK) return err;
             }
             return OK;
