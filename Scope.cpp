@@ -157,10 +157,14 @@ status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
 }
 
 status_t Scope::emitTypeDeclarations(Formatter &out) const {
+    if (mTypes.empty()) return OK;
+
+    out << "// Forward declaration for forward reference support:\n";
     forEachType([&](Type* type) {
         type->emitTypeForwardDeclaration(out);
         return OK;
     });
+    out << "\n";
 
     if (mTypeOrderChanged) {
         out << "// Order of inner types was changed for forward reference support.\n\n";
