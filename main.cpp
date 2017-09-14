@@ -54,8 +54,6 @@ struct OutputHandler {
     GenerationFunction generate;
 };
 
-static bool generateForTest = false;
-
 static status_t generateSourcesForFile(
         const FQName &fqName,
         const char *,
@@ -742,11 +740,7 @@ static void generateAndroidBpLibSection(
         const std::set<FQName> &importedPackagesHierarchy) {
 
     // C++ library definition
-    if (!generateForTest) {
-        out << "cc_library {\n";
-    } else {
-        out << "cc_test_library {\n";
-    }
+    out << "cc_library {\n";
     out.indent();
     out << "name: \"" << libraryName << (generateVendor ? "_vendor" : "") << "\",\n"
         << "defaults: [\"hidl-module-defaults\"],\n"
@@ -1314,8 +1308,7 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-t] "
-            "fqname+\n",
+            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ fqname+\n",
             me);
 
     fprintf(stderr, "         -h: Prints this menu.\n");
@@ -1326,7 +1319,6 @@ static void usage(const char *me) {
     fprintf(stderr, "         -o <output path>: Location to output files.\n");
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
-    fprintf(stderr, "         -t: generate build scripts (Android.bp) for tests.\n");
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
@@ -1349,7 +1341,7 @@ int main(int argc, char **argv) {
     }
 
     int res;
-    while ((res = getopt(argc, argv, "hp:o:r:L:t")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:r:L:")) >= 0) {
         switch (res) {
             case 'p':
             {
@@ -1402,11 +1394,6 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            case 't': {
-                generateForTest = true;
-                break;
-            }
-
             case '?':
             case 'h':
             default:
@@ -1421,11 +1408,6 @@ int main(int argc, char **argv) {
     if (outputFormat == nullptr) {
         fprintf(stderr,
             "ERROR: no -L option provided.\n");
-        exit(1);
-    }
-
-    if (generateForTest && outputFormat->name() != "androidbp") {
-        fprintf(stderr, "ERROR: -t option is for -Landroidbp only.\n");
         exit(1);
     }
 
