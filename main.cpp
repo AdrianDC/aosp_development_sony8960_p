@@ -102,10 +102,10 @@ static status_t generateSourcesForFile(
         return ast->generateCppImpl(outputDir);
     }
     if (lang == "c++-impl-headers") {
-        return ast->generateStubImplHeader(outputDir);
+        return ast->generateCppImplHeader(outputDir);
     }
     if (lang == "c++-impl-sources") {
-        return ast->generateStubImplSource(outputDir);
+        return ast->generateCppImplSource(outputDir);
     }
     if (lang == "java") {
         return ast->generateJava(outputDir, limitToType);

@@ -34,10 +34,10 @@
 namespace android {
 
 status_t AST::generateCppImpl(const std::string &outputPath) const {
-    status_t err = generateStubImplHeader(outputPath);
+    status_t err = generateCppImplHeader(outputPath);
 
     if (err == OK) {
-        err = generateStubImplSource(outputPath);
+        err = generateCppImplSource(outputPath);
     }
 
     return err;
@@ -80,7 +80,7 @@ status_t AST::generateStubImplMethod(Formatter &out,
     return OK;
 }
 
-status_t AST::generateStubImplHeader(const std::string &outputPath) const {
+status_t AST::generateCppImplHeader(const std::string& outputPath) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -167,7 +167,7 @@ status_t AST::generateStubImplHeader(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateStubImplSource(const std::string &outputPath) const {
+status_t AST::generateCppImplSource(const std::string& outputPath) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
