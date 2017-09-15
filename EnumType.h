@@ -57,6 +57,10 @@ struct EnumType : public Scope {
 
     std::string getVtsType() const override;
 
+    std::string getBitfieldCppType(StorageMode mode, bool specifyNamespaces = true) const;
+    std::string getBitfieldJavaType(bool forInitializer = false) const;
+    std::string getBitfieldJavaWrapperType() const;
+
     // Return the type that corresponds to bitfield<T>.
     const BitFieldType* getBitfieldType() const;
 
@@ -125,9 +129,6 @@ struct EnumType : public Scope {
 
     std::vector<EnumValue *> mValues;
     Reference<Type> mStorageType;
-    // TODO(b/64272670): Dot not store BitFieldType as it is not owned.
-    // It is kept here to avoid const-cast (BitFieldType owns non-const EnumType).
-    BitFieldType* const mBitfieldType;
 
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };
@@ -161,6 +162,8 @@ struct BitFieldType : public TemplatedType {
     BitFieldType(Scope* parent);
 
     std::string templatedTypeName() const override;
+
+    const EnumType* getElementEnumType() const;
 
     bool isBitField() const override;
 
