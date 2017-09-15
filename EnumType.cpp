@@ -29,12 +29,7 @@ namespace android {
 
 EnumType::EnumType(const char* localName, const FQName& fullName, const Location& location,
                    const Reference<Type>& storageType, Scope* parent)
-    : Scope(localName, fullName, location, parent),
-      mValues(),
-      mStorageType(storageType),
-      mBitfieldType(new BitFieldType(parent)) {
-    mBitfieldType->setElementType(Reference<Type>(this, Location()));
-}
+    : Scope(localName, fullName, location, parent), mValues(), mStorageType(storageType) {}
 
 const Type *EnumType::storageType() const {
     return mStorageType.get();
@@ -171,10 +166,16 @@ std::string EnumType::getVtsType() const {
     return "TYPE_ENUM";
 }
 
-BitFieldType::BitFieldType(Scope* parent) : TemplatedType(parent) {}
+std::string EnumType::getBitfieldCppType(StorageMode mode, bool specifyNamespaces) const {
+    return resolveToScalarType()->getCppType(mode, specifyNamespaces);
+}
 
-const BitFieldType* EnumType::getBitfieldType() const {
-    return mBitfieldType;
+std::string EnumType::getBitfieldJavaType(bool forInitializer) const {
+    return resolveToScalarType()->getJavaType(forInitializer);
+}
+
+std::string EnumType::getBitfieldJavaWrapperType() const {
+    return resolveToScalarType()->getJavaWrapperType();
 }
 
 LocalIdentifier *EnumType::lookupIdentifier(const std::string &name) const {
@@ -378,7 +379,7 @@ status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* pre
         // include toHexString for scalar types
         out << "using ::android::hardware::details::toHexString;\n"
             << "std::string os;\n"
-            << getBitfieldType()->getCppStackType() << " flipped = 0;\n"
+            << getBitfieldCppType(StorageMode_Stack) << " flipped = 0;\n"
             << "bool first = true;\n";
         for (EnumValue *value : values()) {
             std::string valueName = fullName() + "::" + value->name();
@@ -479,8 +480,8 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
         out << ";\n";
     }).endl();
 
-    auto bitfieldType = getBitfieldType()->getJavaType(false /* forInitializer */);
-    auto bitfieldWrapperType = getBitfieldType()->getJavaWrapperType();
+    auto bitfieldType = getBitfieldJavaType(false /* forInitializer */);
+    auto bitfieldWrapperType = getBitfieldJavaWrapperType();
     out << "\n"
         << "public static final String dumpBitfield("
         << bitfieldType << " o) ";
@@ -804,8 +805,15 @@ const Location& EnumValue::location() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+BitFieldType::BitFieldType(Scope* parent) : TemplatedType(parent) {}
+
 bool BitFieldType::isBitField() const {
     return true;
+}
+
+const EnumType* BitFieldType::getElementEnumType() const {
+    CHECK(mElementType.get() != nullptr && mElementType->isEnum());
+    return static_cast<const EnumType*>(mElementType.get());
 }
 
 std::string BitFieldType::templatedTypeName() const {
@@ -822,11 +830,11 @@ const ScalarType *BitFieldType::resolveToScalarType() const {
 
 std::string BitFieldType::getCppType(StorageMode mode,
                                  bool specifyNamespaces) const {
-    return resolveToScalarType()->getCppType(mode, specifyNamespaces);
+    return getElementEnumType()->getBitfieldCppType(mode, specifyNamespaces);
 }
 
 std::string BitFieldType::getJavaType(bool forInitializer) const {
-    return resolveToScalarType()->getJavaType(forInitializer);
+    return getElementEnumType()->getBitfieldJavaType(forInitializer);
 }
 
 std::string BitFieldType::getJavaSuffix() const {
@@ -834,7 +842,7 @@ std::string BitFieldType::getJavaSuffix() const {
 }
 
 std::string BitFieldType::getJavaWrapperType() const {
-    return resolveToScalarType()->getJavaWrapperType();
+    return getElementEnumType()->getBitfieldJavaWrapperType();
 }
 
 std::string BitFieldType::getVtsType() const {
