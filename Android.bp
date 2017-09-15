@@ -115,6 +115,7 @@ cc_library_host_shared {
     srcs: [
         "Coordinator.cpp",
         "generateCpp.cpp",
+        "generateCppAdapter.cpp",
         "generateCppImpl.cpp",
         "generateJava.cpp",
         "generateVts.cpp",
