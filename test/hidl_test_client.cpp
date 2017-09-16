@@ -941,7 +941,7 @@ TEST_F(HidlTest, FailedBatchSharedMemory) {
         EXPECT_FALSE(success);
         EXPECT_EQ(0u, v.size());
     }));
-    EXPECT_OK(ashmemAllocator->batchAllocate(1_GB, 1024, [&](bool success, const auto& v) {
+    EXPECT_OK(ashmemAllocator->batchAllocate(1_GB, 1024 * 512, [&](bool success, const auto& v) {
         EXPECT_FALSE(success);
         EXPECT_EQ(0u, v.size());
     }));
