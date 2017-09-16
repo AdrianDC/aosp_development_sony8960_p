@@ -454,14 +454,12 @@ Type* AST::lookupType(const FQName& fqName, Scope* scope) {
         }
     }
 
-    if (!fqName.isFullyQualified()) {
-        status_t status = lookupAutofilledType(fqName, &returnedType);
-        if (status != OK) {
-            return nullptr;
-        }
-        if (returnedType != nullptr) {
-            return returnedType;
-        }
+    status_t status = lookupAutofilledType(fqName, &returnedType);
+    if (status != OK) {
+        return nullptr;
+    }
+    if (returnedType != nullptr) {
+        return returnedType;
     }
 
     return lookupTypeFromImports(fqName);
@@ -484,7 +482,7 @@ Type* AST::lookupTypeLocally(const FQName& fqName, Scope* scope) {
 
 // Rule 1: auto-fill with current package
 status_t AST::lookupAutofilledType(const FQName &fqName, Type **returnedType) {
-    CHECK(!fqName.isFullyQualified() && !fqName.name().empty() && fqName.valueName().empty());
+    CHECK(!fqName.name().empty() && fqName.valueName().empty());
 
     FQName autofilled = fqName;
     autofilled.applyDefaults(mPackage.package(), mPackage.version());
@@ -493,7 +491,7 @@ status_t AST::lookupAutofilledType(const FQName &fqName, Type **returnedType) {
     // in import.
     Type *local = findDefinedType(autofilled, &matchingName);
     CHECK(local == nullptr || autofilled == matchingName);
-    Type* fromImport = lookupType(autofilled, nullptr /* scope */);
+    Type* fromImport = lookupTypeFromImports(autofilled);
 
     if (local != nullptr && fromImport != nullptr && local != fromImport) {
         // Something bad happen; two types have the same FQName.
