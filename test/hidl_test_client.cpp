@@ -292,6 +292,11 @@ struct MyImportRules : public ::android::hardware::tests::bar::V1_0::IImportRule
         return Void();
     }
 
+    Return<void> rule0b1(
+            const ::android::hardware::tests::bar::V1_0::IImportRules::Outer&) override {
+        return Void();
+    }
+
     Return<void> rule0c(const ::android::hardware::tests::foo::V1_0::Outer&) override {
         return Void();
     }
