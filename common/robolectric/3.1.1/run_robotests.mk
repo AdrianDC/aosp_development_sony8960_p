@@ -40,6 +40,11 @@ my_robolectric_script_path := $(call my-dir)
 my_robolectric_path := $(my_robolectric_script_path)/lib
 # Explicitly define the jars and their classpath ordering.
 my_robolectric_jars := \
+    $(my_robolectric_script_path)/../android-all/android-all-4.1.2_r1-robolectric-0.jar \
+    $(my_robolectric_script_path)/../android-all/android-all-4.2.2_r1.2-robolectric-0.jar \
+    $(my_robolectric_script_path)/../android-all/android-all-4.3_r2-robolectric-0.jar \
+    $(my_robolectric_script_path)/../android-all/android-all-4.4_r1-robolectric-1.jar \
+    $(my_robolectric_script_path)/../android-all/android-all-5.0.0_r2-robolectric-1.jar \
     $(my_robolectric_script_path)/../android-all/android-all-6.0.0_r1-robolectric-0.jar \
     $(my_robolectric_path)/accessibility-test-framework-2.1.jar \
     $(my_robolectric_path)/ant-1.8.0.jar \
