@@ -40,13 +40,8 @@ my_robolectric_script_path := $(call my-dir)
 my_robolectric_path := $(my_robolectric_script_path)/lib
 # Explicitly define the jars and their classpath ordering.
 my_robolectric_jars := \
+    $(my_robolectric_script_path)/../android-all/android-all-6.0.0_r1-robolectric-0.jar \
     $(my_robolectric_path)/accessibility-test-framework-2.1.jar \
-    $(my_robolectric_path)/android-all-4.1.2_r1-robolectric-0.jar \
-    $(my_robolectric_path)/android-all-4.2.2_r1.2-robolectric-0.jar \
-    $(my_robolectric_path)/android-all-4.3_r2-robolectric-0.jar \
-    $(my_robolectric_path)/android-all-4.4_r1-robolectric-1.jar \
-    $(my_robolectric_path)/android-all-5.0.0_r2-robolectric-1.jar \
-    $(my_robolectric_path)/android-all-6.0.0_r1-robolectric-0.jar \
     $(my_robolectric_path)/ant-1.8.0.jar \
     $(my_robolectric_path)/ant-launcher-1.8.0.jar \
     $(my_robolectric_path)/asm-5.0.1.jar \
@@ -197,6 +192,28 @@ my_jars := $(my_robolectric_jars) \
 
 # Run tests.
 my_target := $(LOCAL_BUILT_MODULE)
+
+android_all_lib_path := $(my_robolectric_script_path)/../android-all
+my_robolectric_path := $(intermediates.COMMON)/android-all
+
+android_all_jars := $(call find-files-in-subdirs,$(android_all_lib_path),*.jar,.)
+copy_android_all_jars := $(foreach j,$(android_all_jars),\
+    $(android_all_lib_path)/$(j):$(my_robolectric_path)/$(j))
+$(my_robolectric_path): $(call copy-many-files,$(copy_android_all_jars))
+
+shadow_jars := \
+    shadows-core-v16-3.1.1.jar \
+    shadows-core-v17-3.1.1.jar \
+    shadows-core-v18-3.1.1.jar \
+    shadows-core-v19-3.1.1.jar \
+    shadows-core-v21-3.1.1.jar \
+    shadows-core-v22-3.1.1.jar \
+    shadows-core-v23-3.1.1.jar
+copy_shadow_jars := $(foreach j,$(shadow_jars),\
+    $(my_robolectric_script_path)/lib/$(j):$(my_robolectric_path)/$(j))
+$(my_robolectric_path): $(call copy-many-files,$(copy_shadow_jars))
+
+$(my_target): $(my_robolectric_path)
 
 # Setting the DEBUG_ROBOLECTRIC environment variable will print additional logging from
 # Robolectric and also make it wait for a debugger to be connected.
