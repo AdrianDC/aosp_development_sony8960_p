@@ -118,9 +118,10 @@ struct AST {
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateCppHeaders(const std::string &outputPath) const;
     status_t generateCppSources(const std::string &outputPath) const;
+
     status_t generateCppImpl(const std::string &outputPath) const;
-    status_t generateStubImplHeader(const std::string& outputPath) const;
-    status_t generateStubImplSource(const std::string& outputPath) const;
+    status_t generateCppImplHeader(const std::string& outputPath) const;
+    status_t generateCppImplSource(const std::string& outputPath) const;
 
     status_t generateJava(
             const std::string &outputPath,
