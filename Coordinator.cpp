@@ -240,44 +240,24 @@ std::string Coordinator::getPackageRootOption(const FQName &fqName) const {
 std::string Coordinator::getPackagePath(
         const FQName &fqName, bool relative, bool sanitized) const {
 
-    auto it = findPackageRoot(fqName);
-    auto prefix = *it;
-    auto root = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
+    const auto it = findPackageRoot(fqName);
+    const std::string prefix = *it;
 
-    // Make sure the prefix ends on a '.' and the root path on a '/'
-    if ((*--prefix.end()) != '.') {
-        prefix += '.';
-    }
+    // Given FQName of "android.hardware.nfc.test@1.0::IFoo" and a prefix
+    // "android.hardware", the suffix is "nfc".
+    const std::string suffix = StringHelper::LTrim(fqName.package().substr(prefix.length()), ".");
+    std::vector<std::string> suffixComponents;
+    StringHelper::SplitString(suffix, '.', &suffixComponents);
 
-    if ((*--root.end()) != '/') {
-        root += '/';
-    }
-
-    // Given FQName of "android.hardware.nfc@1.0::IFoo" and a prefix
-    // "android.hardware.", the suffix is "nfc@1.0::IFoo".
-    const std::string packageSuffix = fqName.package().substr(prefix.length());
-
-    std::string packagePath;
+    std::vector<std::string> components;
     if (!relative) {
-        packagePath = root;
+        const std::string rootPath = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
+        components.push_back(rootPath);
     }
+    components.insert(components.end(), suffixComponents.begin(), suffixComponents.end());
+    components.push_back(sanitized ? fqName.sanitizedVersion() : fqName.version());
 
-    size_t startPos = 0;
-    size_t dotPos;
-    while ((dotPos = packageSuffix.find('.', startPos)) != std::string::npos) {
-        packagePath.append(packageSuffix.substr(startPos, dotPos - startPos));
-        packagePath.append("/");
-
-        startPos = dotPos + 1;
-    }
-    CHECK_LT(startPos, packageSuffix.length());
-    packagePath.append(packageSuffix.substr(startPos));
-    packagePath.append("/");
-
-    packagePath.append(sanitized ? fqName.sanitizedVersion() : fqName.version());
-    packagePath.append("/");
-
-    return packagePath;
+    return StringHelper::JoinStrings(components, "/") + "/";
 }
 
 status_t Coordinator::getPackageInterfaceFiles(

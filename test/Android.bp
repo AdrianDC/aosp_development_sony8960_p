@@ -3,6 +3,7 @@ subdirs = [
     "hash_test",
     "impl_test",
     "java_test",
+    "utils_test",
     "vendor/1.0",
     "vendor/1.1",
     "version_test",
