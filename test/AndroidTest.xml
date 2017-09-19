@@ -43,6 +43,8 @@
         <option name="push" value="DATA/lib64/android.hardware.tests.memory@1.0.so->/data/local/tmp/system/lib64/android.hardware.tests.memory@1.0.so" />
         <option name="push" value="DATA/lib/android.hardware.tests.multithread@1.0.so->/data/local/tmp/system/lib/android.hardware.tests.multithread@1.0.so" />
         <option name="push" value="DATA/lib64/android.hardware.tests.multithread@1.0.so->/data/local/tmp/system/lib64/android.hardware.tests.multithread@1.0.so" />
+        <option name="push" value="DATA/lib/android.hardware.tests.trie@1.0.so->/data/local/tmp/system/lib/android.hardware.tests.trie@1.0.so" />
+        <option name="push" value="DATA/lib64/android.hardware.tests.trie@1.0.so->/data/local/tmp/system/lib64/android.hardware.tests.trie@1.0.so" />
         <option name="push" value="DATA/lib/hw/android.hardware.tests.foo@1.0-impl.so->/data/local/tmp/system/lib/hw/android.hardware.tests.foo@1.0-impl.so" />
         <option name="push" value="DATA/lib64/hw/android.hardware.tests.foo@1.0-impl.so->/data/local/tmp/system/lib64/hw/android.hardware.tests.foo@1.0-impl.so" />
         <option name="push" value="DATA/lib/hw/android.hardware.tests.bar@1.0-impl.so->/data/local/tmp/system/lib/hw/android.hardware.tests.bar@1.0-impl.so" />
@@ -59,6 +61,8 @@
         <option name="push" value="DATA/lib64/hw/android.hardware.tests.memory@1.0-impl.so->/data/local/tmp/system/lib64/hw/android.hardware.tests.memory@1.0-impl.so" />
         <option name="push" value="DATA/lib/hw/android.hardware.tests.multithread@1.0-impl.so->/data/local/tmp/system/lib/hw/android.hardware.tests.multithread@1.0-impl.so" />
         <option name="push" value="DATA/lib64/hw/android.hardware.tests.multithread@1.0-impl.so->/data/local/tmp/system/lib64/hw/android.hardware.tests.multithread@1.0-impl.so" />
+        <option name="push" value="DATA/lib/hw/android.hardware.tests.trie@1.0-impl.so->/data/local/tmp/system/lib/hw/android.hardware.tests.trie@1.0-impl.so" />
+        <option name="push" value="DATA/lib64/hw/android.hardware.tests.trie@1.0-impl.so->/data/local/tmp/system/lib64/hw/android.hardware.tests.trie@1.0-impl.so" />
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer" />
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
