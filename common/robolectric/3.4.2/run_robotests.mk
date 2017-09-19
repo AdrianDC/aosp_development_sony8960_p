@@ -42,8 +42,7 @@ my_robolectric_script_path := $(call my-dir)
 include $(my_robolectric_script_path)/classpath_jars.mk
 my_robolectric_jars := \
     $(addprefix $(my_robolectric_script_path)/,$(my_robolectric_runtime_deps)) \
-    $(call intermediates-dir-for,JAVA_LIBRARIES,junit,,COMMON)/classes.jar \
-    $(my_robolectric_script_path)/../android-all/android-all-o-preview-4-robolectric-0.jar
+    $(call intermediates-dir-for,JAVA_LIBRARIES,junit,,COMMON)/classes.jar
 
 my_collect_target := $(LOCAL_MODULE)-coverage
 my_report_target := $(LOCAL_MODULE)-jacoco
