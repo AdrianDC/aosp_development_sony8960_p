@@ -1317,17 +1317,19 @@ extern "C" const char *__asan_default_options() {
 }
 
 int main(int argc, char **argv) {
-    std::string outputPath;
-    std::string rootPath;
-    std::vector<std::string> packageRootPaths;
-    std::vector<std::string> packageRoots;
-
     const char *me = argv[0];
-    OutputHandler *outputFormat = nullptr;
-
     if (argc == 1) {
         usage(me);
         exit(1);
+    }
+
+    OutputHandler *outputFormat = nullptr;
+    Coordinator coordinator;
+    std::string outputPath;
+
+    const char *ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
+    if (ANDROID_BUILD_TOP != nullptr) {
+        coordinator.setRootPath(ANDROID_BUILD_TOP);
     }
 
     int res;
@@ -1335,7 +1337,7 @@ int main(int argc, char **argv) {
         switch (res) {
             case 'p':
             {
-                rootPath = optarg;
+                coordinator.setRootPath(optarg);
                 break;
             }
 
@@ -1354,10 +1356,16 @@ int main(int argc, char **argv) {
                     exit(1);
                 }
 
-                auto package = val.substr(0, index);
+                auto root = val.substr(0, index);
                 auto path = val.substr(index + 1);
-                packageRootPaths.push_back(path);
-                packageRoots.push_back(package);
+
+                std::string error;
+                status_t err = coordinator.addPackagePath(root, path, &error);
+                if (err != OK) {
+                    fprintf(stderr, "%s\n", error.c_str());
+                    exit(1);
+                }
+
                 break;
             }
 
@@ -1420,20 +1428,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    if (rootPath.empty()) {
-        const char *ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
-
-        if (ANDROID_BUILD_TOP != nullptr) {
-            rootPath = ANDROID_BUILD_TOP;
-        }
-
-        // else default to pwd
-    }
-
-    if (!rootPath.empty() && !StringHelper::EndsWith(rootPath, "/")) {
-        rootPath += "/";
-    }
-
     // Valid options are now in argv[0] .. argv[argc - 1].
 
     switch (outputFormat->mOutputMode) {
@@ -1455,7 +1449,7 @@ int main(int argc, char **argv) {
         case OutputHandler::NEEDS_SRC:
         {
             if (outputPath.empty()) {
-                outputPath = rootPath;
+                outputPath = coordinator.getRootPath();
             }
             if (outputPath.back() != '/') {
                 outputPath += "/";
@@ -1469,7 +1463,6 @@ int main(int argc, char **argv) {
             break;
     }
 
-    Coordinator coordinator(packageRootPaths, packageRoots, rootPath);
     coordinator.addDefaultPackagePath("android.hardware", "hardware/interfaces");
     coordinator.addDefaultPackagePath("android.hidl", "system/libhidl/transport");
     coordinator.addDefaultPackagePath("android.frameworks", "frameworks/hardware/interfaces");
