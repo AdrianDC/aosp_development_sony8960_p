@@ -69,7 +69,7 @@ status_t Coordinator::addPackagePath(const std::string& root, const std::string&
         }
     }
 
-    mPackageRoots.push_back({path, package});
+    mPackageRoots.push_back({StringHelper::RTrimAll(path, "/"), package});
     return OK;
 }
 void Coordinator::addDefaultPackagePath(const std::string& root, const std::string& path) {
