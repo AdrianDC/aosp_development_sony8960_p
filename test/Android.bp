@@ -2,6 +2,7 @@ subdirs = [
     "error_test",
     "hash_test",
     "hidl_test",
+    "host_test",
     "impl_test",
     "java_test",
     "utils_test",
