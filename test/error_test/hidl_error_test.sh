@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
-    echo "hidl_errr_test.sh hidl-gen_path"
+    echo "usage: hidl_error_test.sh hidl-gen_path"
     exit 1
 fi
 
