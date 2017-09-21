@@ -170,20 +170,23 @@ bool ConstantExpression::isEvaluated() const {
     return mIsEvaluated;
 }
 
-LiteralConstantExpression::LiteralConstantExpression(ScalarType::Kind kind, uint64_t value) {
+LiteralConstantExpression::LiteralConstantExpression(
+    ScalarType::Kind kind, uint64_t value, const std::string& expr) {
+
+    CHECK(!expr.empty());
     CHECK(isSupported(kind));
     mTrivialDescription = true;
-    mExpr = std::to_string(value);
+    mExpr = expr;
     mValueKind = kind;
     mValue = value;
     mIsEvaluated = true;
 }
 
-LiteralConstantExpression::LiteralConstantExpression(const std::string& value) {
+LiteralConstantExpression::LiteralConstantExpression(ScalarType::Kind kind, uint64_t value)
+  : LiteralConstantExpression(kind, value, std::to_string(value)) {}
+
+LiteralConstantExpression* LiteralConstantExpression::tryParse(const std::string& value) {
     CHECK(!value.empty());
-    mIsEvaluated = true;
-    mTrivialDescription = true;
-    mExpr = value;
 
     bool isLong = false, isUnsigned = false;
     bool isHex = (value[0] == '0' && value.length() > 1 && (value[1] == 'x' || value[1] == 'X'));
@@ -197,39 +200,50 @@ LiteralConstantExpression::LiteralConstantExpression(const std::string& value) {
     }
     std::string newVal(value.begin(), rbegin.base());
     CHECK(!newVal.empty());
-    bool parseOK = base::ParseUint(newVal, &mValue);
-    CHECK(parseOK) << "Could not parse as integer: " << value;
+
+    uint64_t rawValue = 0;
+
+    bool parseOK = base::ParseUint(newVal, &rawValue);
+    if (!parseOK) {
+        return nullptr;
+    }
+
+    ScalarType::Kind kind;
 
     // guess literal type.
     if(isLong) {
         if(isUnsigned) // ul
-            mValueKind = SK(UINT64);
+            kind = SK(UINT64);
         else // l
-            mValueKind = SK(INT64);
+            kind = SK(INT64);
     } else { // no l suffix
         if(isUnsigned) { // u
-            if(mValue <= UINT32_MAX)
-                mValueKind = SK(UINT32);
+            if(rawValue <= UINT32_MAX)
+                kind = SK(UINT32);
             else
-                mValueKind = SK(UINT64);
+                kind = SK(UINT64);
         } else { // no suffix
             if(isHex) {
-                if(mValue <= INT32_MAX) // mValue always >= 0
-                    mValueKind = SK(INT32);
-                else if(mValue <= UINT32_MAX)
-                    mValueKind = SK(UINT32);
-                else if(mValue <= INT64_MAX) // mValue always >= 0
-                    mValueKind = SK(INT64);
-                else if(mValue <= UINT64_MAX)
-                    mValueKind = SK(UINT64);
-            } else {
-                if(mValue <= INT32_MAX) // mValue always >= 0
-                    mValueKind = SK(INT32);
+                if(rawValue <= INT32_MAX) // rawValue always >= 0
+                    kind = SK(INT32);
+                else if(rawValue <= UINT32_MAX)
+                    kind = SK(UINT32);
+                else if(rawValue <= INT64_MAX) // rawValue always >= 0
+                    kind = SK(INT64);
+                else if(rawValue <= UINT64_MAX)
+                    kind = SK(UINT64);
                 else
-                    mValueKind = SK(INT64);
+                    return nullptr;
+            } else {
+                if(rawValue <= INT32_MAX) // rawValue always >= 0
+                    kind = SK(INT32);
+                else
+                    kind = SK(INT64);
             }
         }
     }
+
+    return new LiteralConstantExpression(kind, rawValue, value);
 }
 
 void LiteralConstantExpression::evaluate() {

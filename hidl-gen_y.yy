@@ -693,7 +693,15 @@ typedef_declaration
     ;
 
 const_expr
-    : INTEGER                   { $$ = new LiteralConstantExpression($1); }
+    : INTEGER                   {
+          $$ = LiteralConstantExpression::tryParse($1);
+
+          if ($$ == nullptr) {
+              std::cerr << "ERROR: Could not parse literal: "
+                        << $1 << " at " << @1 << ".\n";
+              YYERROR;
+          }
+      }
     | fqname
       {
           if(!$1->isValidValueName()) {
