@@ -42,25 +42,38 @@ static bool existdir(const char *name) {
 
 namespace android {
 
-Coordinator::Coordinator(
-        const std::vector<std::string> &packageRootPaths,
-        const std::vector<std::string> &packageRoots,
-        const std::string &rootPath)
-    : mPackageRootPaths(packageRootPaths),
-      mPackageRoots(packageRoots),
-      mRootPath(rootPath) {
-    // empty
+const std::string &Coordinator::getRootPath() const {
+    return mRootPath;
 }
 
-Coordinator::~Coordinator() {
-    // empty
-}
+void Coordinator::setRootPath(const std::string &rootPath) {
+    mRootPath = rootPath;
 
-void Coordinator::addDefaultPackagePath(const std::string& root, const std::string& path) {
-    if (std::find(mPackageRoots.begin(), mPackageRoots.end(), root) == mPackageRoots.end()) {
-        mPackageRoots.push_back(root);
-        mPackageRootPaths.push_back(path);
+    if (!mRootPath.empty() && !StringHelper::EndsWith(mRootPath, "/")) {
+        mRootPath += "/";
     }
+}
+
+status_t Coordinator::addPackagePath(const std::string& root, const std::string& path, std::string* error) {
+    FQName package = FQName(root, "0.0", "");
+    for (const PackageRoot &packageRoot : mPackageRoots) {
+        if (packageRoot.root.inPackage(root) || package.inPackage(packageRoot.root.package())) {
+            if (error != nullptr) {
+                *error = "ERROR: conflicting package roots " +
+                         packageRoot.root.package() +
+                         " and " +
+                         root;
+            }
+
+            return UNKNOWN_ERROR;
+        }
+    }
+
+    mPackageRoots.push_back({StringHelper::RTrimAll(path, "/"), package});
+    return OK;
+}
+void Coordinator::addDefaultPackagePath(const std::string& root, const std::string& path) {
+    addPackagePath(root, path, nullptr /* error */);
 }
 
 AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
@@ -183,8 +196,7 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
     return ast;
 }
 
-std::vector<std::string>::const_iterator
-Coordinator::findPackageRoot(const FQName &fqName) const {
+const Coordinator::PackageRoot &Coordinator::findPackageRoot(const FQName &fqName) const {
     CHECK(!fqName.package().empty());
 
     // Find the right package prefix and path for this FQName.  For
@@ -194,23 +206,23 @@ Coordinator::findPackageRoot(const FQName &fqName) const {
     // prefix "android.hardware" and the package root
     // "hardware/interfaces".
 
-    auto it = mPackageRoots.begin();
     auto ret = mPackageRoots.end();
-    for (; it != mPackageRoots.end(); it++) {
-        if (!fqName.inPackage(*it)) {
+    for (auto it = mPackageRoots.begin(); it != mPackageRoots.end(); it++) {
+        if (!fqName.inPackage(it->root.package())) {
             continue;
         }
 
         CHECK(ret == mPackageRoots.end())
-            << "Multiple package roots found for " << fqName.string()
-            << " (" << *it << " and " << *ret << ")";
+            << "Multiple package roots found for "<< fqName.string()
+            << " (" << it->root.package() << " and "
+            << ret->root.package() << ")";
 
         ret = it;
     }
     CHECK(ret != mPackageRoots.end())
         << "Unable to find package root for " << fqName.string();
 
-    return ret;
+    return *ret;
 }
 
 std::string Coordinator::makeAbsolute(const std::string& path) const {
@@ -218,19 +230,15 @@ std::string Coordinator::makeAbsolute(const std::string& path) const {
         return path;
     }
 
-    return StringHelper::RTrim(mRootPath, "/") + "/" + path;
+    return mRootPath + path;
 }
 
 std::string Coordinator::getPackageRoot(const FQName &fqName) const {
-    auto it = findPackageRoot(fqName);
-    auto prefix = *it;
-    return prefix;
+    return findPackageRoot(fqName).root.package();
 }
 
 std::string Coordinator::getPackageRootPath(const FQName &fqName) const {
-    auto it = findPackageRoot(fqName);
-    auto root = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
-    return root;
+    return findPackageRoot(fqName).path;
 }
 
 std::string Coordinator::getPackageRootOption(const FQName &fqName) const {
@@ -238,21 +246,20 @@ std::string Coordinator::getPackageRootOption(const FQName &fqName) const {
 }
 
 std::string Coordinator::getPackagePath(
-        const FQName &fqName, bool relative, bool sanitized) const {
+        const FQName& fqName, bool relative, bool sanitized) const {
 
-    const auto it = findPackageRoot(fqName);
-    const std::string prefix = *it;
+    const PackageRoot& packageRoot = findPackageRoot(fqName);
 
     // Given FQName of "android.hardware.nfc.test@1.0::IFoo" and a prefix
     // "android.hardware", the suffix is "nfc.test".
-    const std::string suffix = StringHelper::LTrim(fqName.package(), prefix + ".");
+    const std::string suffix = StringHelper::LTrim(
+        fqName.package(), packageRoot.root.package() + ".");
     std::vector<std::string> suffixComponents;
     StringHelper::SplitString(suffix, '.', &suffixComponents);
 
     std::vector<std::string> components;
     if (!relative) {
-        const std::string rootPath = mPackageRootPaths[std::distance(mPackageRoots.begin(), it)];
-        components.push_back(rootPath);
+        components.push_back(packageRoot.path);
     }
     components.insert(components.end(), suffixComponents.begin(), suffixComponents.end());
     components.push_back(sanitized ? fqName.sanitizedVersion() : fqName.version());
