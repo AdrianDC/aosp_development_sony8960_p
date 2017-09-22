@@ -6,7 +6,7 @@ if [ $# -ne 1 ]; then
 fi
 
 readonly HIDL_GEN_PATH=$1
-readonly HIDL_ERROR_TEST_DIR='system/tools/hidl/test/error_test'
+readonly HIDL_ERROR_TEST_DIR="$ANDROID_BUILD_TOP/system/tools/hidl/test/error_test"
 
 for dir in $(ls -d $HIDL_ERROR_TEST_DIR/*/); do
   package=$(basename $dir)
