@@ -29,7 +29,6 @@
 #include <string>
 #include <algorithm>
 #include <stdlib.h>
-#include <sys/dir.h>
 #include <sys/stat.h>
 
 namespace android {
