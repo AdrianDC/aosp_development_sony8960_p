@@ -6,6 +6,8 @@ genrule {
          "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     out: ["TODO_b_37575883.cpp"],
     srcs: [
+        "hidl_error_test.sh",
+
         "bad_character/1.0/IFoo.hal",
         "bad_character/1.0/required_error",
         "cpp_forward_decl_restriction/1.0/required_error",
