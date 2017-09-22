@@ -98,6 +98,11 @@ cc_library_host_shared {
         "libhidl-gen-hash",
         "libhidl-gen-utils",
     ],
+    export_shared_lib_headers: [
+        "libbase",
+        "libhidl-gen-utils",
+    ],
+    export_include_dirs: ["."], // for tests
 }
 
 //
@@ -124,6 +129,11 @@ cc_library_host_shared {
         "libhidl-gen-hash",
         "libhidl-gen-utils",
     ],
+    export_shared_lib_headers: [
+        "libbase",
+        "libhidl-gen-utils",
+    ],
+    export_include_dirs: ["."], // for tests
 }
 
 //

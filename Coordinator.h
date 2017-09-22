@@ -19,6 +19,7 @@
 #define COORDINATOR_H_
 
 #include <android-base/macros.h>
+#include <hidl-util/FQName.h>
 #include <map>
 #include <set>
 #include <string>
@@ -28,18 +29,17 @@
 namespace android {
 
 struct AST;
-struct FQName;
 struct Type;
 
 struct Coordinator {
-    Coordinator(
-            const std::vector<std::string> &packageRootPaths,
-            const std::vector<std::string> &packageRoots,
-            const std::string &rootPath);
+    Coordinator() {};
 
-    ~Coordinator();
+    const std::string &getRootPath() const;
+    void setRootPath(const std::string &rootPath);
 
     // adds path only if it doesn't exist
+    status_t addPackagePath(const std::string& root, const std::string& path, std::string* error);
+    // adds path if it hasn't already been added
     void addDefaultPackagePath(const std::string& root, const std::string& path);
 
     enum class Enforce {
@@ -105,14 +105,12 @@ struct Coordinator {
     static bool MakeParentHierarchy(const std::string &path);
 
 private:
-    // A list of top-level directories (mPackageRootPaths)
-    // corresponding to a list of package roots (mPackageRoots). For
-    // example, if mPackageRootPaths[0] == "hardware/interfaces" and
-    // mPackageRoots[0] == "android.hardware" this means that all
-    // packages starting with "android.hardware" will be looked up in
-    // "hardware/interfaces".
-    std::vector<std::string> mPackageRootPaths;
-    std::vector<std::string> mPackageRoots;
+    // indicates that packages in "android.hardware" will be looked up in hardware/interfaces
+    struct PackageRoot {
+        std::string path; // e.x. hardware/interfaces
+        FQName root; // e.x. android.hardware@0.0
+    };
+    std::vector<PackageRoot> mPackageRoots;
 
     std::string mRootPath;
 
@@ -122,8 +120,7 @@ private:
     // cache to enforceRestrictionsOnPackage().
     mutable std::set<FQName> mPackagesEnforced;
 
-    std::vector<std::string>::const_iterator findPackageRoot(
-            const FQName &fqName) const;
+    const PackageRoot &findPackageRoot(const FQName &fqName) const;
 
     // Returns the given path if it is absolute, otherwise it returns
     // the path relative to mRootPath

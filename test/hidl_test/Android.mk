@@ -39,5 +39,3 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := VtsHidlUnitTests
 VTS_CONFIG_SRC_DIR := system/tools/hidl/tests
 -include test/vts/tools/build/Android.host_config.mk
-
-include $(call all-makefiles-under,$(LOCAL_PATH))
