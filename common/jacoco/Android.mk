@@ -19,12 +19,11 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_IS_HOST_MODULE := true
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
         jvm-jacoco-core:lib/org.jacoco.core-$(my_jacoco_version).jar \
         jvm-jacoco-report:lib/org.jacoco.report-$(my_jacoco_version).jar \
         jvm-jacoco-asm:lib/asm-debug-all-5.0.1.jar
 
-include $(BUILD_MULTI_PREBUILT)
+include $(BUILD_HOST_PREBUILT)
 
 my_jacoco_version :=
