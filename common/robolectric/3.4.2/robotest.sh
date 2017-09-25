@@ -34,6 +34,9 @@ function validate_vars() {
   validate_var 'PRIVATE_TARGET_MESSAGE'
   validate_var 'PRIVATE_TESTS'
   validate_var 'PRIVATE_TIMEOUT'
+
+  validate_var 'XML_OUTPUT_FILE'
+  validate_var 'TEST_WORKSPACE'
 }
 
 # Remove leading and trailing spaces around the given argument.
@@ -60,7 +63,7 @@ function junit() {
     -Drobolectric.offline=true
     -Drobolectric.logging=stdout
     -cp "$classpath"
-    org.junit.runner.JUnitCore
+    com.android.junitxml.JUnitXmlRunner
   )
   echo "${command[@]}" "$@"
   "${command[@]}" "$@"
