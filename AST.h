@@ -123,6 +123,10 @@ struct AST {
     status_t generateCppImplHeader(const std::string& outputPath) const;
     status_t generateCppImplSource(const std::string& outputPath) const;
 
+    status_t generateCppAdapter(const std::string& outputPath) const;
+    status_t generateCppAdapterHeader(const std::string& outputPath) const;
+    status_t generateCppAdapterSource(const std::string& outputPath) const;
+
     status_t generateJava(
             const std::string &outputPath,
             const std::string &limitToType) const;
@@ -167,6 +171,9 @@ struct AST {
 
     Scope* getRootScope();
 
+    static void generateCppPackageInclude(Formatter& out, const FQName& package,
+                                          const std::string& klass);
+
    private:
     const Coordinator *mCoordinator;
     std::string mPath;
@@ -209,11 +216,6 @@ struct AST {
     void getPackageAndVersionComponents(
             std::vector<std::string> *components, bool cpp_compatible) const;
 
-    static void generateCppPackageInclude(
-            Formatter &out,
-            const FQName &package,
-            const std::string &klass);
-
     std::string makeHeaderGuard(const std::string &baseName,
                                 bool indicateGenerated = true) const;
     void enterLeaveNamespace(Formatter &out, bool enter) const;
@@ -252,6 +254,7 @@ struct AST {
                                        const std::string &className,
                                        const Method *method,
                                        const Interface *superInterface) const;
+    void generateAdapterMethod(Formatter& out, const Method* method) const;
 
     void generateFetchSymbol(Formatter &out, const std::string &ifaceName) const;
 
