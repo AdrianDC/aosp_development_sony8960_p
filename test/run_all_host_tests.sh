@@ -27,7 +27,7 @@ function run() {
     done
 
     echo
-    echo ===== SUMMARY =====
+    echo ===== ALL HOST TESTS SUMMARY =====
     echo
     if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
         for failed in ${FAILED_TESTS[@]}; do
