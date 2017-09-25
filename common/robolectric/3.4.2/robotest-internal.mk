@@ -8,8 +8,8 @@
 # fail.
 
 # Files in which to store the output and return value of the tests.
-my_target_output := $(basename $(my_target))-output.txt
-my_target_retval := $(basename $(my_target))-retval.txt
+my_target_output := $(intermediates)/$(my_filename_stem)-output.txt
+my_target_retval := $(intermediates)/$(my_filename_stem)-retval.txt
 
 # We should always re-run the tests, even if nothing has changed.
 .PHONY: $(my_target_output) $(my_target_retval)
@@ -91,3 +91,4 @@ $(call dist-for-goals, $(my_target), \
 # Clean up local variables.
 my_target_output :=
 my_target_retval :=
+my_filename_stem :=

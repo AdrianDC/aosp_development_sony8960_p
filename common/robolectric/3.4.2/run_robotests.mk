@@ -42,49 +42,25 @@ my_robolectric_script_path := $(call my-dir)
 include $(my_robolectric_script_path)/classpath_jars.mk
 my_robolectric_jars := \
     $(addprefix $(my_robolectric_script_path)/,$(my_robolectric_runtime_deps)) \
-    $(call intermediates-dir-for,JAVA_LIBRARIES,junit,,COMMON)/classes.jar
+    $(call java-lib-files,junit)
 
 my_collect_target := $(LOCAL_MODULE)-coverage
 my_report_target := $(LOCAL_MODULE)-jacoco
 # Whether or not to ignore the result of running the robotests.
 # LOCAL_ROBOTEST_FAILURE_FATAL will take precedence over ROBOTEST_FAILURE_FATAL,
 # if present.
-ifneq ($(strip $(LOCAL_ROBOTEST_FAILURE_FATAL)),)
-    ifeq ($(strip $(LOCAL_ROBOTEST_FAILURE_FATAL)),true)
-        my_failure_fatal := true
-    else
-        my_failure_fatal := false
-    endif
-else
-    ifeq ($(strip $(ROBOTEST_FAILURE_FATAL)),true)
-        my_failure_fatal := true
-    else
-        my_failure_fatal := false
-    endif
-endif
+my_failure_fatal := $(if $(LOCAL_ROBOTEST_FAILURE_FATAL)$(ROBOTEST_FAILURE_FATAL),true,false)
 # The timeout for the command. A value of '0' means no timeout. The default is
 # 10 minutes.
-ifneq ($(strip $(LOCAL_ROBOTEST_TIMEOUT)),)
-    my_timeout := $(LOCAL_ROBOTEST_TIMEOUT)
-else
-    my_timeout := 600
-endif
+my_timeout := $(if $(LOCAL_ROBOTEST_TIMEOUT),$(LOCAL_ROBOTEST_TIMEOUT),600)
 # Command to filter the list of test classes.
-ifeq ($(strip $(ROBOTEST_FILTER)),)
-    # If not specified, defaults to including all the tests.
-    my_test_filter_command := cat
-else
-    my_test_filter_command := grep -E "$(ROBOTEST_FILTER)"
-endif
+# If not specified, defaults to including all the tests.
+my_test_filter_command := $(if $(ROBOTEST_FILTER),grep -E "$(ROBOTEST_FILTER)",cat)
 
 # The directory containing the sources.
-ifeq ($(strip $(LOCAL_INSTRUMENT_SOURCE_DIRS)),)
-    # If not specified, defaults to the src and java directories in the parent
-    # directory.
-    my_instrument_source_dirs := $(dir $(LOCAL_PATH))/src $(dir $(LOCAL_PATH))/java
-else
-    my_instrument_source_dirs := $(LOCAL_INSTRUMENT_SOURCE_DIRS)
-endif
+my_instrument_source_dirs := $(if $(LOCAL_INSTRUMENT_SOURCE_DIRS),\
+    $(LOCAL_INSTRUMENT_SOURCE_DIRS),\
+    $(dir $(LOCAL_PATH))src $(dir $(LOCAL_PATH))java)
 
 ##########################
 # Used by base_rules.mk. #
@@ -135,6 +111,7 @@ my_jars := \
 
 # Run tests.
 my_target := $(LOCAL_BUILT_MODULE)
+my_filename_stem := test
 
 android_all_lib_path := $(my_robolectric_script_path)/../android-all
 my_robolectric_path := $(intermediates.COMMON)/android-all
@@ -171,43 +148,39 @@ my_java_args :=
 my_target :=
 
 # Target for running robolectric tests using jacoco
-my_target := $(my_collect_target)
-my_jacoco_dir := \
-    prebuilts/misc/common/jacoco
+my_target := $(LOCAL_BUILT_MODULE)-coverage
+my_filename_stem := coverage
+$(my_collect_target): $(my_target)
+$(my_target): $(call java-lib-files,jvm-jacoco-agent,true) $(my_robolectric_path)
 
-my_coverage_dir := $(dir $(LOCAL_BUILT_MODULE))/coverage/
+my_coverage_dir := $(intermediates)/coverage
 my_coverage_file := $(my_coverage_dir)/jacoco.exec
 
 # List of packages to exclude jacoco from running
 my_jacoco_excludes := \
     org.robolectric.*:org.mockito.*:org.junit.*:org.objectweb.*:com.thoughtworks.xstream.*
 # The Jacoco agent JAR.
-my_jacoco_agent_jar := \
-    $(my_jacoco_dir)/lib/jacocoagent.jar
-my_coverage_java_args := \
+my_jacoco_agent_jar := $(call java-lib-files,jvm-jacoco-agent,true)
+my_java_args := \
     -javaagent:$(my_jacoco_agent_jar)=destfile=$(my_coverage_file),excludes=$(my_jacoco_excludes)
-my_java_args := $(my_coverage_java_args)
 include $(my_robolectric_script_path)/robotest-internal.mk
 # Clear temporary variables
-my_coverage_java_args :=
 my_failure_fatal :=
 my_jacoco_agent_jar :=
-my_jacoco_dir :=
 my_jacoco_excludes :=
 my_java_args :=
 my_robolectric_jars :=
-my_robolectric_path :=
 my_target :=
 my_tests :=
+my_filename_stem :=
 
 # Target for generating code coverage reports using jacoco.exec
-my_target := $(my_report_target)
+my_target := $(LOCAL_BUILT_MODULE)-jacoco
+$(my_report_target): $(my_target)
+
 # The JAR file containing the report generation tool.
-my_coverage_report_class := \
-    com.google.android.jacoco.reporter.ReportGenerator
-my_coverage_report_jar := \
-    $(call intermediates-dir-for, \
-        JAVA_LIBRARIES, jvm-jacoco-reporter,host)/javalib.jar
+my_coverage_report_class := com.google.android.jacoco.reporter.ReportGenerator
+my_coverage_report_jar := $(call java-lib-files,jvm-jacoco-reporter,true)
 my_coverage_srcs_jars := $(my_srcs_jars)
 my_coverage_report_dist_file := $(my_report_target)-html.zip
 
@@ -221,6 +194,7 @@ my_coverage_report_dist_file :=
 my_coverage_report_jar :=
 my_coverage_srcs_jars :=
 my_robolectric_script_path :=
+my_robolectric_path :=
 my_srcs_jars :=
 my_target :=
 
@@ -228,3 +202,4 @@ my_target :=
 LOCAL_ROBOTEST_FAILURE_FATAL :=
 LOCAL_ROBOTEST_TIMEOUT :=
 LOCAL_ROBOTEST_FILES :=
+LOCAL_INSTRUMENT_SOURCE_DIRS :=

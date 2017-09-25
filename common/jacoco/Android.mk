@@ -20,9 +20,10 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
+        jvm-jacoco-agent:lib/jacocoagent.jar \
+        jvm-jacoco-asm:lib/asm-debug-all-5.0.1.jar \
         jvm-jacoco-core:lib/org.jacoco.core-$(my_jacoco_version).jar \
-        jvm-jacoco-report:lib/org.jacoco.report-$(my_jacoco_version).jar \
-        jvm-jacoco-asm:lib/asm-debug-all-5.0.1.jar
+        jvm-jacoco-report:lib/org.jacoco.report-$(my_jacoco_version).jar
 
 include $(BUILD_HOST_PREBUILT)
 
