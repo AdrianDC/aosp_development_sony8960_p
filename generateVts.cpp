@@ -57,20 +57,12 @@ status_t AST::generateVts(const std::string &outputPath) const {
     std::string baseName = AST::getBaseName();
     const Interface *iface = AST::getInterface();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(baseName);
-    path.append(".vts");
+    Formatter out = mCoordinator->getFormatter(
+        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, baseName + ".vts");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     out << "component_class: HAL_HIDL\n";
     out << "component_type_version: " << mPackage.version()

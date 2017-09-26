@@ -89,18 +89,12 @@ status_t AST::generateCppImplHeader(const std::string& outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
-    std::string path = outputPath;
-    path.append(baseName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage, Coordinator::Location::DIRECT,
+                                               baseName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(baseName, false /* indicateGenerated */);
 
@@ -176,18 +170,12 @@ status_t AST::generateCppImplSource(const std::string& outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
-    std::string path = outputPath;
-    path.append(baseName);
-    path.append(".cpp");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage, Coordinator::Location::DIRECT,
+                                               baseName + ".cpp");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     out << "#include \"" << baseName << ".h\"\n\n";
 
