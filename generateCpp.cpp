@@ -402,20 +402,12 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     const Interface *iface = getInterface();
     std::string ifaceName = iface ? iface->localName() : "types";
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(ifaceName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, ifaceName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(ifaceName);
 
@@ -568,18 +560,12 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
     const Interface *iface = getInterface();
     std::string klassName = iface ? iface->getHwName() : "hwtypes";
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(klassName + ".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(klassName);
 
@@ -836,20 +822,12 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string klassName = iface->getStubName();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(klassName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(klassName);
 
@@ -969,20 +947,12 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string proxyName = iface->getProxyName();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(proxyName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, proxyName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(proxyName);
 
@@ -1074,25 +1044,14 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
     std::string baseName = getBaseName();
     const Interface *iface = getInterface();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(baseName);
+    const std::string klassName = baseName + (baseName == "types" ? "" : "All");
 
-    if (baseName != "types") {
-        path.append("All");
+    Formatter out = mCoordinator->getFormatter(
+        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
+
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    path.append(".cpp");
-
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
-    }
-
-    Formatter out(file);
 
     out << "#define LOG_TAG \""
         << mPackage.string() << "::" << baseName
@@ -1987,20 +1946,12 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 
     bool supportOneway = iface->hasOnewayMethods();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(klassName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(klassName);
 

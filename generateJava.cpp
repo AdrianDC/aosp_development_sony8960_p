@@ -58,21 +58,12 @@ status_t AST::generateJavaTypes(
             continue;
         }
 
-        std::string path = outputPath;
-        path.append(mCoordinator->convertPackageRootToPath(mPackage));
-        path.append(mCoordinator->getPackagePath(mPackage, true /* relative */,
-                true /* sanitized */));
-        path.append(typeName);
-        path.append(".java");
+        Formatter out = mCoordinator->getFormatter(
+            outputPath, mPackage, Coordinator::Location::GEN_SANITIZED, typeName + ".java");
 
-        CHECK(Coordinator::MakeParentHierarchy(path)) << path;
-        FILE *file = fopen(path.c_str(), "w");
-
-        if (file == NULL) {
-            return -errno;
+        if (!out.isValid()) {
+            return UNKNOWN_ERROR;
         }
-
-        Formatter out(file);
 
         std::vector<std::string> packageComponents;
         getPackageAndVersionComponents(
@@ -115,21 +106,12 @@ status_t AST::generateJava(
 
     const std::string baseName = iface->getBaseName();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */,
-            true /* sanitized */));
-    path.append(ifaceName);
-    path.append(".java");
+    Formatter out = mCoordinator->getFormatter(
+        outputPath, mPackage, Coordinator::Location::GEN_SANITIZED, ifaceName + ".java");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE *file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     std::vector<std::string> packageComponents;
     getPackageAndVersionComponents(
