@@ -18,7 +18,11 @@
 
 #include <assert.h>
 
+#include <android-base/logging.h>
+
 namespace android {
+
+Formatter::Formatter() : mFile(NULL /* invalid */), mIndentDepth(0), mAtStartOfLine(true) {}
 
 Formatter::Formatter(FILE *file)
     : mFile(file == NULL ? stdout : file),
@@ -184,7 +188,13 @@ void Formatter::setNamespace(const std::string &space) {
     mSpace = space;
 }
 
+bool Formatter::isValid() const {
+    return mFile != nullptr;
+}
+
 void Formatter::output(const std::string &text) const {
+    CHECK(isValid());
+
     fprintf(mFile, "%s", text.c_str());
 }
 
