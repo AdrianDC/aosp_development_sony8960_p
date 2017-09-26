@@ -252,8 +252,9 @@ std::string Coordinator::getPackagePath(
 
     // Given FQName of "android.hardware.nfc.test@1.0::IFoo" and a prefix
     // "android.hardware", the suffix is "nfc.test".
-    const std::string suffix = StringHelper::LTrim(
-        fqName.package(), packageRoot.root.package() + ".");
+    std::string suffix = StringHelper::LTrim(fqName.package(), packageRoot.root.package());
+    suffix = StringHelper::LTrim(suffix, ".");
+
     std::vector<std::string> suffixComponents;
     StringHelper::SplitString(suffix, '.', &suffixComponents);
 
