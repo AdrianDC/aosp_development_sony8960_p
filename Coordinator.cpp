@@ -54,6 +54,10 @@ void Coordinator::setRootPath(const std::string &rootPath) {
     }
 }
 
+void Coordinator::setVerbose(bool verbose) {
+    mVerbose = verbose;
+}
+
 status_t Coordinator::addPackagePath(const std::string& root, const std::string& path, std::string* error) {
     FQName package = FQName(root, "0.0", "");
     for (const PackageRoot &packageRoot : mPackageRoots) {
@@ -79,6 +83,8 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
 Formatter Coordinator::getFormatter(const std::string& outputPath, const FQName& fqName,
                                     Location location, const std::string& fileName) const {
     std::string filepath = getFilepath(outputPath, fqName, location, fileName);
+
+    onFileAccess(filepath, "w");
 
     if (!Coordinator::MakeParentHierarchy(filepath)) {
         fprintf(stderr, "ERROR: could not make directories for %s.\n", filepath.c_str());
@@ -119,6 +125,16 @@ std::string Coordinator::getFilepath(const std::string& outputPath, const FQName
     path.append(fileName);
     return path;
 }
+
+void Coordinator::onFileAccess(const std::string& path, const std::string& mode) const {
+    if (!mVerbose) {
+        return;
+    }
+
+    fprintf(stderr,
+            "VERBOSE: file access %s %s\n", path.c_str(), mode.c_str());
+}
+
 
 AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
                         Enforce enforcement) const {
@@ -162,6 +178,7 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
         ast->addImportedAST(typesAST);
     }
 
+    onFileAccess(ast->getFilename(), "r");
     if (parseFile(ast) != OK || ast->postParse() != OK) {
         delete ast;
         ast = nullptr;
