@@ -5,6 +5,7 @@ function run() {
 
     local COMPILE_TIME_TESTS=(\
         hidl_error_test \
+        hidl_export_test \
         hidl_hash_test \
         hidl_impl_test)
 
