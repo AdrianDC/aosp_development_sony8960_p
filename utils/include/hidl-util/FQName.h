@@ -110,6 +110,11 @@ struct FQName {
 
     // Must be called on an interface
     // android.hardware.foo@1.0::IBar
+    // -> ABar
+    std::string getInterfaceAdapterName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
     // -> IBar
     std::string getInterfaceName() const;
 
@@ -137,6 +142,11 @@ struct FQName {
     // android.hardware.foo@1.0::IBar
     // -> android.hardware.foo@1.0::BpBar
     FQName getInterfaceProxyFqName() const;
+
+    // Must be called on an interface
+    // android.hardware.foo@1.0::IBar
+    // -> android.hardware.foo@1.0::ABar
+    FQName getInterfaceAdapterFqName() const;
 
     // Must be called on an interface
     // android.hardware.foo@1.0::IBar
