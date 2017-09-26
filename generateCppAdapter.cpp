@@ -51,20 +51,12 @@ status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
 
     const std::string klassName = getInterface()->getAdapterName();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(klassName);
-    path.append(".h");
+    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
+                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE* file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     const std::string guard = makeHeaderGuard(klassName, true /* indicateGenerated */);
 
@@ -115,20 +107,12 @@ status_t AST::generateCppAdapterSource(const std::string& outputPath) const {
 
     const std::string klassName = getInterface()->getAdapterName();
 
-    std::string path = outputPath;
-    path.append(mCoordinator->convertPackageRootToPath(mPackage));
-    path.append(mCoordinator->getPackagePath(mPackage, true /* relative */));
-    path.append(klassName);
-    path.append(".cpp");
+    Formatter out = mCoordinator->getFormatter(
+        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
 
-    CHECK(Coordinator::MakeParentHierarchy(path));
-    FILE* file = fopen(path.c_str(), "w");
-
-    if (file == NULL) {
-        return -errno;
+    if (!out.isValid()) {
+        return UNKNOWN_ERROR;
     }
-
-    Formatter out(file);
 
     out << "#include <hidladapter/HidlBinderAdapter.h>\n";
 
