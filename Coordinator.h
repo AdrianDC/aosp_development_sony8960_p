@@ -38,6 +38,8 @@ struct Coordinator {
     const std::string &getRootPath() const;
     void setRootPath(const std::string &rootPath);
 
+    void setVerbose(bool value);
+
     // adds path only if it doesn't exist
     status_t addPackagePath(const std::string& root, const std::string& path, std::string* error);
     // adds path if it hasn't already been added
@@ -55,6 +57,9 @@ struct Coordinator {
 
     Formatter getFormatter(const std::string& outputPath, const FQName& fqName, Location location,
                            const std::string& fileName) const;
+
+    // must be called before file access
+    void onFileAccess(const std::string& path, const std::string& mode) const;
 
     enum class Enforce {
         FULL,     // default
@@ -127,6 +132,8 @@ private:
     std::vector<PackageRoot> mPackageRoots;
 
     std::string mRootPath;
+
+    bool mVerbose;
 
     // cache to parse().
     mutable std::map<FQName, AST *> mCache;

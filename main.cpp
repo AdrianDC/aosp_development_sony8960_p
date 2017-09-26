@@ -1522,7 +1522,7 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-t] "
+            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-t] [-v]"
             "fqname+\n",
             me);
 
@@ -1535,6 +1535,7 @@ static void usage(const char *me) {
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
     fprintf(stderr, "         -t: generate build scripts (Android.bp) for tests.\n");
+    fprintf(stderr, "         -v: verbose output (locations of touched files).\n");
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
@@ -1559,11 +1560,17 @@ int main(int argc, char **argv) {
     }
 
     int res;
-    while ((res = getopt(argc, argv, "hp:o:r:L:t")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:r:L:tv")) >= 0) {
         switch (res) {
             case 'p':
             {
                 coordinator.setRootPath(optarg);
+                break;
+            }
+
+            case 'v':
+            {
+                coordinator.setVerbose(true);
                 break;
             }
 
