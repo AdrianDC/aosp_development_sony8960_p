@@ -110,6 +110,15 @@ static status_t generateSourcesForFile(
     if (lang == "c++-impl-sources") {
         return ast->generateCppImplSource(outputDir);
     }
+    if (lang == "c++-adapter") {
+        return ast->generateCppAdapter(outputDir);
+    }
+    if (lang == "c++-adapter-headers") {
+        return ast->generateCppAdapterHeader(outputDir);
+    }
+    if (lang == "c++-adapter-sources") {
+        return ast->generateCppAdapterSource(outputDir);
+    }
     if (lang == "java") {
         return ast->generateJava(outputDir, limitToType);
     }
@@ -719,14 +728,22 @@ static void generateAndroidBpDependencyList(
     }
 }
 
+enum class LibraryLocation {
+    // NONE,
+    VENDOR,
+    VENDOR_AVAILABLE,
+    VNDK,
+};
+
 static void generateAndroidBpLibSection(
         Formatter &out,
         bool generateVendor,
+        LibraryLocation libraryLocation,
         const FQName &packageFQName,
         const std::string &libraryName,
         const std::string &genSourceName,
         const std::string &genHeaderName,
-        const std::set<FQName> &importedPackagesHierarchy) {
+        std::function<void(void)> generateDependencies) {
 
     // C++ library definition
     out << "cc_library {\n";
@@ -737,20 +754,31 @@ static void generateAndroidBpLibSection(
         << "generated_headers: [\"" << genHeaderName << "\"],\n"
         << "export_generated_headers: [\"" << genHeaderName << "\"],\n";
 
-    if (generateVendor) {
+    switch (libraryLocation) {
+    case LibraryLocation::VENDOR: {
         out << "vendor: true,\n";
-    } else {
-        out << "vendor_available: true,\n";
-        if (!generateForTest) {
-            out << "vndk: ";
-            out.block([&]() {
-                out << "enabled: true,\n";
-                if (isSystemProcessSupportedPackage(packageFQName)) {
-                    out << "support_system_process: true,\n";
-                }
-            }) << ",\n";
-        }
+        break;
     }
+    case LibraryLocation::VENDOR_AVAILABLE: {
+        out << "vendor_available: true,\n";
+        break;
+    }
+    case LibraryLocation::VNDK: {
+        out << "vendor_available: true,\n";
+        out << "vndk: ";
+        out.block([&]() {
+            out << "enabled: true,\n";
+            if (isSystemProcessSupportedPackage(packageFQName)) {
+                out << "support_system_process: true,\n";
+            }
+        }) << ",\n";
+        break;
+    }
+    default: {
+        CHECK(false) << "Invalid library type specified in " << __func__;
+    }
+    }
+
     out << "shared_libs: [\n";
 
     out.indent();
@@ -760,7 +788,7 @@ static void generateAndroidBpLibSection(
         << "\"liblog\",\n"
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
-    generateAndroidBpDependencyList(out, importedPackagesHierarchy, generateVendor);
+    generateDependencies();
     out.unindent();
 
     out << "],\n";
@@ -771,12 +799,83 @@ static void generateAndroidBpLibSection(
         << "\"libhidltransport\",\n"
         << "\"libhwbinder\",\n"
         << "\"libutils\",\n";
-    generateAndroidBpDependencyList(out, importedPackagesHierarchy, generateVendor);
+    generateDependencies();
     out.unindent();
     out << "],\n";
     out.unindent();
 
     out << "}\n";
+}
+
+static status_t generateAdapterMainSource(
+        const FQName & packageFQName,
+        const char* /* hidl_gen */,
+        Coordinator* coordinator,
+        const std::string &outputPath) {
+    const std::string path = outputPath + "main.cpp";
+    CHECK(Coordinator::MakeParentHierarchy(path));
+    FILE *file = fopen(path.c_str(), "w");
+    if (file == NULL) {
+        return -errno;
+    }
+    Formatter out(file);
+
+    std::vector<FQName> packageInterfaces;
+    status_t err =
+        coordinator->appendPackageInterfacesToVector(packageFQName,
+                                                     &packageInterfaces);
+    if (err != OK) {
+        return err;
+    }
+
+    out << "#include <hidladapter/HidlBinderAdapter.h>\n";
+
+    for (auto &interface : packageInterfaces) {
+        if (interface.name() == "types") {
+            continue;
+        }
+        AST::generateCppPackageInclude(out, interface, interface.getInterfaceAdapterName());
+    }
+
+    out << "int main(int argc, char** argv) ";
+    out.block([&] {
+        out << "return ::android::hardware::adapterMain<\n";
+        out.indent();
+        for (auto &interface : packageInterfaces) {
+            if (interface.name() == "types") {
+                continue;
+            }
+            out << interface.getInterfaceAdapterFqName().cppName();
+
+            if (&interface != &packageInterfaces.back()) {
+                out << ",\n";
+            }
+        }
+        out << ">(\"" << packageFQName.string() << "\", argc, argv);\n";
+        out.unindent();
+    }).endl();
+    return OK;
+}
+
+static status_t isTypesOnlyPackage(const FQName &package, Coordinator *coordinator, bool *result) {
+    std::vector<FQName> packageInterfaces;
+
+    status_t err =
+        coordinator->appendPackageInterfacesToVector(package,
+                                                     &packageInterfaces);
+
+    if (err != OK) {
+        *result = false;
+        return err;
+    }
+
+    bool hasInterface = std::any_of(
+        packageInterfaces.begin(),
+        packageInterfaces.end(),
+        [](const FQName& fqName) { return fqName.name() != "types"; });
+
+    *result = !hasInterface;
+    return OK;
 }
 
 static status_t generateAndroidBpForPackage(
@@ -905,11 +1004,14 @@ static status_t generateAndroidBpForPackage(
         generateAndroidBpLibSection(
             out,
             false /* generateVendor */,
+            (generateForTest ? LibraryLocation::VENDOR_AVAILABLE : LibraryLocation::VNDK),
             packageFQName,
             libraryName,
             genSourceName,
             genHeaderName,
-            importedPackagesHierarchy);
+            [&]() {
+                generateAndroidBpDependencyList(out, importedPackagesHierarchy, false /* generateVendor */);
+            });
 
         // TODO(b/35813011): make all libraries vendor_available
         // Explicitly create '_vendor' copies of libraries so that
@@ -929,13 +1031,130 @@ static status_t generateAndroidBpForPackage(
             generateAndroidBpLibSection(
                 out,
                 true /* generateVendor */,
+                LibraryLocation::VENDOR,
                 packageFQName,
                 libraryName,
                 genSourceName,
                 genHeaderName,
-                importedPackagesHierarchy);
+                [&]() {
+                    generateAndroidBpDependencyList(out, importedPackagesHierarchy, true /* generateVendor */);
+                });
         }
     }
+
+    bool isTypesOnly;
+    err = isTypesOnlyPackage(packageFQName, coordinator, &isTypesOnly);
+    if (err != OK) return err;
+
+    if (isTypesOnly) {
+        return OK;
+    }
+
+    const std::string adapterName = libraryName + "-adapter";
+    const std::string genAdapterName = adapterName + "_genc++";
+    const std::string adapterHelperName = adapterName + "-helper";
+    const std::string genAdapterSourcesName = adapterHelperName + "_genc++";
+    const std::string genAdapterHeadersName = adapterHelperName + "_genc++_headers";
+
+    std::set<FQName> adapterPackages = importedPackagesHierarchy;
+    adapterPackages.insert(packageFQName);
+
+    out.endl();
+    generateAndroidBpGenSection(
+            out,
+            packageFQName,
+            hidl_gen,
+            coordinator,
+            halFilegroupName,
+            genAdapterSourcesName,
+            "c++-adapter-sources",
+            packageInterfaces,
+            adapterPackages,
+            [&pathPrefix](Formatter &out, const FQName &fqName) {
+                if (fqName.name() != "types") {
+                    out << "\"" << pathPrefix << fqName.getInterfaceAdapterName() << ".cpp\",\n";
+                }
+            });
+    generateAndroidBpGenSection(
+            out,
+            packageFQName,
+            hidl_gen,
+            coordinator,
+            halFilegroupName,
+            genAdapterHeadersName,
+            "c++-adapter-headers",
+            packageInterfaces,
+            adapterPackages,
+            [&pathPrefix](Formatter &out, const FQName &fqName) {
+                if (fqName.name() != "types") {
+                    out << "\"" << pathPrefix << fqName.getInterfaceAdapterName() << ".h\",\n";
+                }
+            });
+
+    out.endl();
+
+    generateAndroidBpLibSection(
+        out,
+        false /* generateVendor */,
+        LibraryLocation::VENDOR_AVAILABLE,
+        packageFQName,
+        adapterHelperName,
+        genAdapterSourcesName,
+        genAdapterHeadersName,
+        [&]() {
+            out << "\"libhidladapter\",\n";
+            generateAndroidBpDependencyList(out, adapterPackages, false /* generateVendor */);
+            for (const auto &importedPackage : importedPackagesHierarchy) {
+                if (importedPackage == packageFQName) {
+                    continue;
+                }
+
+                bool isTypesOnly;
+                err = isTypesOnlyPackage(importedPackage, coordinator, &isTypesOnly);
+                if (err != OK) {
+                    return;
+                }
+                if (isTypesOnly) {
+                    continue;
+                }
+
+                out << "\""
+                    << makeLibraryName(importedPackage)
+                    << "-adapter-helper"
+                    << "\",\n";
+            }
+        });
+    if (err != OK) return err;
+
+    out.endl();
+
+    out << "genrule {\n";
+    out.indent();
+    out << "name: \"" << genAdapterName << "\",\n";
+    out << "tools: [\"" << hidl_gen << "\"],\n";
+    out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)" << " -Lc++-adapter-main ";
+    generatePackagePathsSection(out, coordinator, packageFQName, adapterPackages);
+    out << packageFQName.string() << "\",\n";
+    out << "out: [\"main.cpp\"]";
+    out.unindent();
+    out << "}\n\n";
+
+    out << "cc_test {\n";
+    out.indent();
+    out << "name: \"" << adapterName << "\",\n";
+    out << "shared_libs: [\n";
+    out.indent();
+    out << "\"libhidladapter\",\n";
+    out << "\"libhidlbase\",\n";
+    out << "\"libhidltransport\",\n";
+    out << "\"libutils\",\n";
+    generateAndroidBpDependencyList(out, adapterPackages, false);
+    out << "\"" << adapterHelperName << "\",\n";
+    out.unindent();
+    out << "],\n";
+    out << "generated_sources: [\"" << genAdapterName << "\"],\n";
+    out.unindent();
+    out << "}\n";
 
     return OK;
 }
@@ -1216,14 +1435,12 @@ static std::vector<OutputHandler> formats = {
      validateForSource,
      generationFunctionForFileOrPackage("c++")
     },
-
     {"c++-headers",
      "(internal) Generates C++ headers for interface files for talking to HIDL interfaces.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-headers")
     },
-
     {"c++-sources",
      "(internal) Generates C++ sources for interface files for talking to HIDL interfaces.",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
@@ -1255,6 +1472,31 @@ static std::vector<OutputHandler> formats = {
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-impl-sources")
+    },
+
+    {"c++-adapter",
+     "Takes a x.(y+n) interface and mocks an x.y interface.",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-adapter")
+    },
+    {"c++-adapter-headers",
+     "c++-adapter but headers only",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-adapter-headers")
+    },
+    {"c++-adapter-sources",
+     "c++-adapter but sources only",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateForSource,
+     generationFunctionForFileOrPackage("c++-adapter-sources")
+    },
+    {"c++-adapter-main",
+     "c++-adapter but sources only",
+     OutputHandler::NEEDS_DIR /* mOutputMode */,
+     validateIsPackage,
+     generateAdapterMainSource,
     },
 
     {"java",
