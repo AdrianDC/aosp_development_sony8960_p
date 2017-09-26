@@ -1,5 +1,6 @@
 subdirs = [
     "error_test",
+    "export_test",
     "hash_test",
     "hidl_test",
     "host_test",
