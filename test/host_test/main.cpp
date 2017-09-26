@@ -18,8 +18,9 @@
 
 #include <gtest/gtest.h>
 
-#include <Coordinator.h>
 #include <ConstantExpression.h>
+#include <Coordinator.h>
+#include <hidl-util/FQName.h>
 
 namespace android {
 
@@ -45,6 +46,27 @@ TEST_F(HidlGenHostTest, CoordinatorTest) {
 
     EXPECT_EQ("foo/1.0/", coordinator.getPackagePath(FQName("a.b.foo@1.0"), true /* relative */));
     EXPECT_EQ("foo/bar/1.0/", coordinator.getPackagePath(FQName("a.c.foo.bar@1.0::IFoo"), true /* relative */));
+}
+
+TEST_F(HidlGenHostTest, CoordinatorFilepathTest) {
+    using Location = Coordinator::Location;
+
+    Coordinator coordinator;
+
+    std::string error;
+    EXPECT_EQ(OK, coordinator.addPackagePath("a.b", "a1/b1", &error));
+    EXPECT_TRUE(error.empty());
+
+    const static FQName kName = FQName("a.b.c@1.2");
+    const static std::string kOutputPath = "foo/";
+
+    EXPECT_EQ("foo/x.y", coordinator.getFilepath(kOutputPath, kName, Location::DIRECT, "x.y"));
+    EXPECT_EQ("foo/a1/b1/c/1.2/x.y",
+              coordinator.getFilepath(kOutputPath, kName, Location::PACKAGE_ROOT, "x.y"));
+    EXPECT_EQ("foo/a/b/c/1.2/x.y",
+              coordinator.getFilepath(kOutputPath, kName, Location::GEN_OUTPUT, "x.y"));
+    EXPECT_EQ("foo/a/b/c/V1_2/x.y",
+              coordinator.getFilepath(kOutputPath, kName, Location::GEN_SANITIZED, "x.y"));
 }
 
 TEST_F(HidlGenHostTest, LocationTest) {
