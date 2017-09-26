@@ -88,3 +88,86 @@ cc_library {
         "tests.vendor@1.0_vendor",
     ],
 }
+
+genrule {
+    name: "tests.vendor@1.1-adapter-helper_genc++",
+    tools: ["hidl-gen"],
+    cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-sources -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.1",
+    srcs: [
+        ":tests.vendor@1.1_hal",
+    ],
+    out: [
+        "tests/vendor/1.1/AVendor.cpp",
+    ],
+}
+
+genrule {
+    name: "tests.vendor@1.1-adapter-helper_genc++_headers",
+    tools: ["hidl-gen"],
+    cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-headers -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.1",
+    srcs: [
+        ":tests.vendor@1.1_hal",
+    ],
+    out: [
+        "tests/vendor/1.1/AVendor.h",
+    ],
+}
+
+
+cc_library {
+    name: "tests.vendor@1.1-adapter-helper",
+    defaults: ["hidl-module-defaults"],
+    generated_sources: ["tests.vendor@1.1-adapter-helper_genc++"],
+    generated_headers: ["tests.vendor@1.1-adapter-helper_genc++_headers"],
+    export_generated_headers: ["tests.vendor@1.1-adapter-helper_genc++_headers"],
+    vendor_available: true,
+    shared_libs: [
+        "libhidlbase",
+        "libhidltransport",
+        "libhwbinder",
+        "liblog",
+        "libutils",
+        "libcutils",
+        "libhidladapter",
+        "android.hardware.tests.baz@1.0",
+        "tests.vendor@1.0",
+        "tests.vendor@1.1",
+        "android.hardware.tests.baz@1.0-adapter-helper",
+        "android.hidl.base@1.0-adapter-helper",
+        "tests.vendor@1.0-adapter-helper",
+    ],
+    export_shared_lib_headers: [
+        "libhidlbase",
+        "libhidltransport",
+        "libhwbinder",
+        "libutils",
+        "libhidladapter",
+        "android.hardware.tests.baz@1.0",
+        "tests.vendor@1.0",
+        "tests.vendor@1.1",
+        "android.hardware.tests.baz@1.0-adapter-helper",
+        "android.hidl.base@1.0-adapter-helper",
+        "tests.vendor@1.0-adapter-helper",
+    ],
+}
+
+genrule {
+    name: "tests.vendor@1.1-adapter_genc++",
+    tools: ["hidl-gen"],
+    cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-main -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.1",
+    out: ["main.cpp"]}
+
+cc_test {
+    name: "tests.vendor@1.1-adapter",
+    shared_libs: [
+        "libhidladapter",
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "android.hardware.tests.baz@1.0",
+        "tests.vendor@1.0",
+        "tests.vendor@1.1",
+        "tests.vendor@1.1-adapter-helper",
+    ],
+    generated_sources: ["tests.vendor@1.1-adapter_genc++"],
+}
