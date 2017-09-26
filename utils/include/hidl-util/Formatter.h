@@ -30,9 +30,11 @@ namespace android {
 // The other is with chain calls and lambda functions
 //     out.sIf("good", [&] { out("blah").endl()("blah").endl(); }).endl();
 struct Formatter {
+    static Formatter invalid() { return Formatter(); }
 
     // Assumes ownership of file. Directed to stdout if file == NULL.
-    Formatter(FILE *file = NULL);
+    Formatter(FILE* file);
+    Formatter(Formatter&&) = default;
     ~Formatter();
 
     void indent(size_t level = 1);
@@ -138,8 +140,13 @@ struct Formatter {
     // Remove the line prefix.
     void unsetLinePrefix();
 
-private:
-    FILE *mFile;
+    bool isValid() const;
+
+   private:
+    // Creates an invalid formatter object.
+    Formatter();
+
+    FILE* mFile;  // invalid if nullptr
     size_t mIndentDepth;
     bool mAtStartOfLine;
 
