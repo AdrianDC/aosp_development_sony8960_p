@@ -76,6 +76,50 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
     addPackagePath(root, path, nullptr /* error */);
 }
 
+Formatter Coordinator::getFormatter(const std::string& outputPath, const FQName& fqName,
+                                    Location location, const std::string& fileName) const {
+    std::string filepath = getFilepath(outputPath, fqName, location, fileName);
+
+    if (!Coordinator::MakeParentHierarchy(filepath)) {
+        fprintf(stderr, "ERROR: could not make directories for %s.\n", filepath.c_str());
+        return Formatter::invalid();
+    }
+
+    FILE* file = fopen(filepath.c_str(), "w");
+
+    if (file == nullptr) {
+        fprintf(stderr, "ERROR: could not open file %s: %d\n", filepath.c_str(), errno);
+        return Formatter::invalid();
+    }
+
+    return Formatter(file);
+}
+
+std::string Coordinator::getFilepath(const std::string& outputPath, const FQName& fqName,
+                                     Location location, const std::string& fileName) const {
+    std::string path = outputPath;
+
+    switch (location) {
+        case Location::DIRECT: { /* nothing */
+        } break;
+        case Location::PACKAGE_ROOT: {
+            path.append(getPackagePath(fqName, false /* relative */));
+        } break;
+        case Location::GEN_OUTPUT: {
+            path.append(convertPackageRootToPath(fqName));
+            path.append(getPackagePath(fqName, true /* relative */, false /* sanitized */));
+        } break;
+        case Location::GEN_SANITIZED: {
+            path.append(convertPackageRootToPath(fqName));
+            path.append(getPackagePath(fqName, true /* relative */, true /* sanitized */));
+        } break;
+        default: { CHECK(false) << "Invalid location: " << static_cast<size_t>(location); }
+    }
+
+    path.append(fileName);
+    return path;
+}
+
 AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
                         Enforce enforcement) const {
     CHECK(fqName.isFullyQualified());
