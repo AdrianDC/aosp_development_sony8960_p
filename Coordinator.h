@@ -121,9 +121,9 @@ struct Coordinator {
     status_t enforceRestrictionsOnPackage(const FQName& fqName,
                                           Enforce enforcement = Enforce::FULL) const;
 
+private:
     static bool MakeParentHierarchy(const std::string &path);
 
-private:
     // indicates that packages in "android.hardware" will be looked up in hardware/interfaces
     struct PackageRoot {
         std::string path; // e.x. hardware/interfaces
