@@ -151,7 +151,8 @@ genrule {
     name: "tests.vendor@1.0-adapter_genc++",
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-main -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.0",
-    out: ["main.cpp"]}
+    out: ["main.cpp"]
+}
 
 cc_test {
     name: "tests.vendor@1.0-adapter",
