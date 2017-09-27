@@ -1122,7 +1122,7 @@ static status_t generateAndroidBpForPackage(
     out << "cmd: \"$(location " << hidl_gen << ") -o $(genDir)" << " -Lc++-adapter-main ";
     generatePackagePathsSection(out, coordinator, packageFQName, adapterPackages);
     out << packageFQName.string() << "\",\n";
-    out << "out: [\"main.cpp\"]";
+    out << "out: [\"main.cpp\"]\n";
     out.unindent();
     out << "}\n\n";
 
