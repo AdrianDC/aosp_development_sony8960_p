@@ -62,33 +62,6 @@ cc_library {
     ],
 }
 
-cc_library {
-    name: "tests.vendor@1.1_vendor",
-    defaults: ["hidl-module-defaults"],
-    generated_sources: ["tests.vendor@1.1_genc++"],
-    generated_headers: ["tests.vendor@1.1_genc++_headers"],
-    export_generated_headers: ["tests.vendor@1.1_genc++_headers"],
-    vendor: true,
-    shared_libs: [
-        "libhidlbase",
-        "libhidltransport",
-        "libhwbinder",
-        "liblog",
-        "libutils",
-        "libcutils",
-        "android.hardware.tests.baz@1.0",
-        "tests.vendor@1.0_vendor",
-    ],
-    export_shared_lib_headers: [
-        "libhidlbase",
-        "libhidltransport",
-        "libhwbinder",
-        "libutils",
-        "android.hardware.tests.baz@1.0",
-        "tests.vendor@1.0_vendor",
-    ],
-}
-
 genrule {
     name: "tests.vendor@1.1-adapter-helper_genc++",
     tools: ["hidl-gen"],
