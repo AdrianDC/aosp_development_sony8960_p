@@ -707,17 +707,13 @@ static void generateAndroidBpGenSection(
 
 static void generateAndroidBpDependencyList(
         Formatter &out,
-        const std::set<FQName> &importedPackagesHierarchy,
-        bool generateVendor) {
+        const std::set<FQName> &importedPackagesHierarchy) {
     for (const auto &importedPackage : importedPackagesHierarchy) {
         if (isHidlTransportPackage(importedPackage)) {
             continue;
         }
 
         out << "\"" << makeLibraryName(importedPackage);
-        if (generateVendor && !isSystemPackage(importedPackage)) {
-            out << "_vendor";
-        }
         out << "\",\n";
     }
 }
@@ -731,7 +727,6 @@ enum class LibraryLocation {
 
 static void generateAndroidBpLibSection(
         Formatter &out,
-        bool generateVendor,
         LibraryLocation libraryLocation,
         const FQName &packageFQName,
         const std::string &libraryName,
@@ -742,7 +737,7 @@ static void generateAndroidBpLibSection(
     // C++ library definition
     out << "cc_library {\n";
     out.indent();
-    out << "name: \"" << libraryName << (generateVendor ? "_vendor" : "") << "\",\n"
+    out << "name: \"" << libraryName << "\",\n"
         << "defaults: [\"hidl-module-defaults\"],\n"
         << "generated_sources: [\"" << genSourceName << "\"],\n"
         << "generated_headers: [\"" << genHeaderName << "\"],\n"
@@ -783,6 +778,7 @@ static void generateAndroidBpLibSection(
         << "\"libutils\",\n"
         << "\"libcutils\",\n";
     generateDependencies();
+
     out.unindent();
 
     out << "],\n";
@@ -988,45 +984,18 @@ static status_t generateAndroidBpForPackage(
     if (isHidlTransportPackage(packageFQName)) {
         out << "// " << packageFQName.string() << " is exported from libhidltransport\n";
     } else {
+        bool isVndk = !generateForTest && isSystemPackage(packageFQName);
+
         generateAndroidBpLibSection(
             out,
-            false /* generateVendor */,
-            (generateForTest ? LibraryLocation::VENDOR_AVAILABLE : LibraryLocation::VNDK),
+            (isVndk ? LibraryLocation::VNDK : LibraryLocation::VENDOR_AVAILABLE),
             packageFQName,
             libraryName,
             genSourceName,
             genHeaderName,
             [&]() {
-                generateAndroidBpDependencyList(out, importedPackagesHierarchy, false /* generateVendor */);
+                generateAndroidBpDependencyList(out, importedPackagesHierarchy);
             });
-
-        // TODO(b/35813011): make all libraries vendor_available
-        // Explicitly create '_vendor' copies of libraries so that
-        // vendor code can link against the extensions. When this is
-        // used, framework code should link against vendor.awesome.foo@1.0
-        // and code on the vendor image should link against
-        // vendor.awesome.foo@1.0_vendor. For libraries with the below extensions,
-        // they will be available even on the generic system image.
-        // Because of this, they should always be referenced without the
-        // '_vendor' name suffix.
-        if (!isSystemPackage(packageFQName)) {
-
-            // Note, not using cc_defaults here since it's already not used and
-            // because generating this libraries will be removed when the VNDK
-            // is enabled (done by the build system itself).
-            out.endl();
-            generateAndroidBpLibSection(
-                out,
-                true /* generateVendor */,
-                LibraryLocation::VENDOR,
-                packageFQName,
-                libraryName,
-                genSourceName,
-                genHeaderName,
-                [&]() {
-                    generateAndroidBpDependencyList(out, importedPackagesHierarchy, true /* generateVendor */);
-                });
-        }
     }
 
     bool isTypesOnly;
@@ -1082,7 +1051,6 @@ static status_t generateAndroidBpForPackage(
 
     generateAndroidBpLibSection(
         out,
-        false /* generateVendor */,
         LibraryLocation::VENDOR_AVAILABLE,
         packageFQName,
         adapterHelperName,
@@ -1090,7 +1058,7 @@ static status_t generateAndroidBpForPackage(
         genAdapterHeadersName,
         [&]() {
             out << "\"libhidladapter\",\n";
-            generateAndroidBpDependencyList(out, adapterPackages, false /* generateVendor */);
+            generateAndroidBpDependencyList(out, adapterPackages);
             for (const auto &importedPackage : importedPackagesHierarchy) {
                 if (importedPackage == packageFQName) {
                     continue;
@@ -1135,7 +1103,7 @@ static status_t generateAndroidBpForPackage(
     out << "\"libhidlbase\",\n";
     out << "\"libhidltransport\",\n";
     out << "\"libutils\",\n";
-    generateAndroidBpDependencyList(out, adapterPackages, false);
+    generateAndroidBpDependencyList(out, adapterPackages);
     out << "\"" << adapterHelperName << "\",\n";
     out.unindent();
     out << "],\n";
