@@ -1354,7 +1354,7 @@ std::string realpath(const std::string &path) {
     char result[PATH_MAX];
 
     if (!realpath(path.c_str(), result)) {
-        return path;
+        return "";
     }
 
     return result;
