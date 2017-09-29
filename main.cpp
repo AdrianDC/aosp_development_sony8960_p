@@ -18,16 +18,13 @@
 #include "Coordinator.h"
 #include "Scope.h"
 
-#include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
-
-#include <limits.h>
+#include <android-base/logging.h>
 #include <set>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -1350,16 +1347,6 @@ static status_t generateHashOutput(const FQName &fqName,
     return OK;
 }
 
-std::string realpath(const std::string &path) {
-    char result[PATH_MAX];
-
-    if (!realpath(path.c_str(), result)) {
-        return "";
-    }
-
-    return result;
-}
-
 static std::vector<OutputHandler> formats = {
     {"check",
      "Parses the interface to see if valid but doesn't write any files.",
@@ -1557,9 +1544,8 @@ int main(int argc, char **argv) {
                     exit(1);
                 }
 
-                // bash won't expand '.' or '~' inside package root
-                const std::string root = val.substr(0, index);
-                const std::string path = realpath(val.substr(index + 1));
+                auto root = val.substr(0, index);
+                auto path = val.substr(index + 1);
 
                 std::string error;
                 status_t err = coordinator.addPackagePath(root, path, &error);
