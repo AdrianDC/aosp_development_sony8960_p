@@ -73,7 +73,7 @@ status_t Coordinator::addPackagePath(const std::string& root, const std::string&
         }
     }
 
-    mPackageRoots.push_back({StringHelper::RTrimAll(path, "/"), package});
+    mPackageRoots.push_back({path, package});
     return OK;
 }
 void Coordinator::addDefaultPackagePath(const std::string& root, const std::string& path) {
@@ -321,7 +321,7 @@ std::string Coordinator::getPackagePath(
 
     std::vector<std::string> components;
     if (!relative) {
-        components.push_back(packageRoot.path);
+        components.push_back(StringHelper::RTrimAll(packageRoot.path, "/"));
     }
     components.insert(components.end(), suffixComponents.begin(), suffixComponents.end());
     components.push_back(sanitized ? fqName.sanitizedVersion() : fqName.version());
