@@ -33,7 +33,7 @@ struct Formatter {
     static Formatter invalid() { return Formatter(); }
 
     // Assumes ownership of file. Directed to stdout if file == NULL.
-    Formatter(FILE* file);
+    Formatter(FILE* file, size_t spacesPerIndent = 4);
     Formatter(Formatter&&) = default;
     ~Formatter();
 
@@ -148,6 +148,7 @@ struct Formatter {
 
     FILE* mFile;  // invalid if nullptr
     size_t mIndentDepth;
+    size_t mSpacesPerIndent;
     bool mAtStartOfLine;
 
     std::string mSpace;
