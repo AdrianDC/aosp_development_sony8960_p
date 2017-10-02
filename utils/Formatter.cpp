@@ -24,11 +24,11 @@ namespace android {
 
 Formatter::Formatter() : mFile(NULL /* invalid */), mIndentDepth(0), mAtStartOfLine(true) {}
 
-Formatter::Formatter(FILE *file)
+Formatter::Formatter(FILE* file, size_t spacesPerIndent)
     : mFile(file == NULL ? stdout : file),
       mIndentDepth(0),
-      mAtStartOfLine(true) {
-}
+      mSpacesPerIndent(spacesPerIndent),
+      mAtStartOfLine(true) {}
 
 Formatter::~Formatter() {
     if (mFile != stdout) {
@@ -124,7 +124,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
         if (pos == std::string::npos) {
             if (mAtStartOfLine) {
                 fprintf(mFile, "%s", mLinePrefix.c_str());
-                fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(mSpacesPerIndent * mIndentDepth), "");
                 mAtStartOfLine = false;
             }
 
@@ -138,7 +138,7 @@ Formatter &Formatter::operator<<(const std::string &out) {
         } else if (pos > start) {
             if (mAtStartOfLine) {
                 fprintf(mFile, "%s", mLinePrefix.c_str());
-                fprintf(mFile, "%*s", (int)(4 * mIndentDepth), "");
+                fprintf(mFile, "%*s", (int)(mSpacesPerIndent * mIndentDepth), "");
             }
 
             output(out.substr(start, pos - start + 1));
