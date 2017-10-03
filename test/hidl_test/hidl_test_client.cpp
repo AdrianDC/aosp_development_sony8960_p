@@ -584,28 +584,28 @@ TEST_F(HidlTest, ServiceListTest) {
     }));
 }
 
-// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceListByInterfaceTest) {
-    if (mode == BINDERIZED) {
-        EXPECT_OK(manager->listByInterface(IParent::descriptor,
-            [](const hidl_vec<hidl_string> &registered) {
-                std::set<std::string> registeredSet;
-
-                for (size_t i = 0; i < registered.size(); i++) {
-                    registeredSet.insert(registered[i]);
-                }
-
-                std::set<std::string> activeSet = {
-                    "parent", "child"
-                };
-                std::set<std::string> difference;
-                std::set_difference(activeSet.begin(), activeSet.end(),
-                                    registeredSet.begin(), registeredSet.end(),
-                                    std::inserter(difference, difference.begin()));
-
-                EXPECT_EQ(difference.size(), 0u) << "service(s) not registered " << to_string(difference);
-            }));
+    if (mode != BINDERIZED) {
+        // passthrough service manager does not know about services
+        return;
     }
+
+    EXPECT_OK(
+        manager->listByInterface(IParent::descriptor, [](const hidl_vec<hidl_string>& registered) {
+            std::set<std::string> registeredSet;
+
+            for (size_t i = 0; i < registered.size(); i++) {
+                registeredSet.insert(registered[i]);
+            }
+
+            std::set<std::string> activeSet = {"parent", "child"};
+            std::set<std::string> difference;
+            std::set_difference(activeSet.begin(), activeSet.end(), registeredSet.begin(),
+                                registeredSet.end(), std::inserter(difference, difference.begin()));
+
+            EXPECT_EQ(difference.size(), 0u)
+                << "service(s) not registered " << to_string(difference);
+        }));
 }
 
 TEST_F(HidlTest, SubInterfaceServiceRegistrationTest) {
@@ -635,113 +635,92 @@ TEST_F(HidlTest, SubInterfaceServiceRegistrationTest) {
     EXPECT_TRUE(interfacesEqual(child, IParent::getService(kOtherName)));
 }
 
-// passthrough TODO(b/31959402)
-TEST_F(HidlTest, ServiceParentTest) {
-    if (mode == BINDERIZED) {
-        sp<IParent> parent = IParent::getService("child");
-
-        EXPECT_NE(parent, nullptr);
-    }
-}
-
-// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceNotificationTest) {
-    if (mode == BINDERIZED) {
-        ServiceNotification *notification = new ServiceNotification();
-
-        std::string instanceName = "test-instance";
-        EXPECT_TRUE(IParent::registerForNotifications(instanceName, notification));
-
-        EXPECT_EQ(::android::OK, (new SimpleChild())->registerAsService(instanceName));
-        EXPECT_EQ(::android::OK, (new SimpleParent())->registerAsService(instanceName));
-
-        std::unique_lock<std::mutex> lock(notification->mutex);
-
-        notification->condition.wait_for(
-                lock,
-                std::chrono::milliseconds(2),
-                [&notification]() {
-                   return notification->getRegistrations().size() >= 2;
-                });
-
-        std::vector<std::string> registrations = notification->getRegistrations();
-
-        EXPECT_EQ(registrations.size(), 2u);
-
-        EXPECT_EQ(to_string(registrations.data(), registrations.size()),
-                  std::string("['") + IParent::descriptor + "/" + instanceName +
-                             "', '" + IParent::descriptor + "/" + instanceName + "']");
+    if (mode != BINDERIZED) {
+        // service notifications aren't supported in passthrough mode
+        return;
     }
+
+    ServiceNotification* notification = new ServiceNotification();
+
+    std::string instanceName = "test-instance";
+    EXPECT_TRUE(IParent::registerForNotifications(instanceName, notification));
+
+    EXPECT_EQ(::android::OK, (new SimpleChild())->registerAsService(instanceName));
+    EXPECT_EQ(::android::OK, (new SimpleParent())->registerAsService(instanceName));
+
+    std::unique_lock<std::mutex> lock(notification->mutex);
+
+    notification->condition.wait_for(lock, std::chrono::milliseconds(2), [&notification]() {
+        return notification->getRegistrations().size() >= 2;
+    });
+
+    std::vector<std::string> registrations = notification->getRegistrations();
+
+    EXPECT_EQ(registrations.size(), 2u);
+
+    EXPECT_EQ(to_string(registrations.data(), registrations.size()),
+              std::string("['") + IParent::descriptor + "/" + instanceName + "', '" +
+                  IParent::descriptor + "/" + instanceName + "']");
 }
 
 TEST_F(HidlTest, ServiceUnregisterTest) {
-    if (mode == BINDERIZED) {
-        const std::string instance = "some-instance-name";
+    const std::string instance = "some-instance-name";
 
-        sp<ServiceNotification> sNotification = new ServiceNotification();
+    sp<ServiceNotification> sNotification = new ServiceNotification();
 
-        // unregister all
-        EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
-        EXPECT_TRUE(manager->unregisterForNotifications("", "", sNotification));
+    // unregister all
+    EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
+    EXPECT_TRUE(manager->unregisterForNotifications("", "", sNotification));
 
-        // unregister all with instance name
-        EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
-        EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor,
-            "", sNotification));
+    // unregister all with instance name
+    EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
+    EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor, "", sNotification));
 
-        // unregister package listener
-        EXPECT_TRUE(IParent::registerForNotifications("", sNotification));
-        EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor,
-            "", sNotification));
+    // unregister package listener
+    EXPECT_TRUE(IParent::registerForNotifications("", sNotification));
+    EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor, "", sNotification));
 
-        // unregister listener for specific service and name
-        EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
-        EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor,
-            instance, sNotification));
+    // unregister listener for specific service and name
+    EXPECT_TRUE(IParent::registerForNotifications(instance, sNotification));
+    EXPECT_TRUE(manager->unregisterForNotifications(IParent::descriptor, instance, sNotification));
 
-        EXPECT_FALSE(manager->unregisterForNotifications("", "", sNotification));
+    EXPECT_FALSE(manager->unregisterForNotifications("", "", sNotification));
 
-        // TODO(b/32837397): remote destructor is lazy
-        // wp<ServiceNotification> wNotification = sNotification;
-        // sNotification = nullptr;
-        // EXPECT_EQ(nullptr, wNotification.promote().get());
-    }
+    // TODO(b/32837397): remote destructor is lazy
+    // wp<ServiceNotification> wNotification = sNotification;
+    // sNotification = nullptr;
+    // EXPECT_EQ(nullptr, wNotification.promote().get());
 }
 
-// passthrough TODO(b/31959402)
 TEST_F(HidlTest, ServiceAllNotificationTest) {
-    if (mode == BINDERIZED) {
-        ServiceNotification *notification = new ServiceNotification();
+    ServiceNotification* notification = new ServiceNotification();
 
-        std::string instanceOne = "test-instance-one";
-        std::string instanceTwo = "test-instance-two";
-        EXPECT_TRUE(ISimple::registerForNotifications("", notification));
+    std::string instanceOne = "test-instance-one";
+    std::string instanceTwo = "test-instance-two";
+    EXPECT_TRUE(ISimple::registerForNotifications("", notification));
 
-        Simple* instanceA = new Simple(1);
-        EXPECT_EQ(::android::OK, instanceA->registerAsService(instanceOne));
-        Simple* instanceB = new Simple(2);
-        EXPECT_EQ(::android::OK, instanceB->registerAsService(instanceTwo));
+    Simple* instanceA = new Simple(1);
+    EXPECT_EQ(::android::OK, instanceA->registerAsService(instanceOne));
+    Simple* instanceB = new Simple(2);
+    EXPECT_EQ(::android::OK, instanceB->registerAsService(instanceTwo));
 
-        std::unique_lock<std::mutex> lock(notification->mutex);
+    std::unique_lock<std::mutex> lock(notification->mutex);
 
-        notification->condition.wait_for(
-                lock,
-                std::chrono::milliseconds(2),
-                [&notification]() {
-                   return notification->getRegistrations().size() >= 2;
-                });
+    notification->condition.wait_for(lock, std::chrono::milliseconds(2), [&notification]() {
+        return notification->getRegistrations().size() >= 2;
+    });
 
-        std::vector<std::string> registrations = notification->getRegistrations();
-        std::sort(registrations.begin(), registrations.end());
+    std::vector<std::string> registrations = notification->getRegistrations();
+    std::sort(registrations.begin(), registrations.end());
 
-        EXPECT_EQ(registrations.size(), 2u);
+    EXPECT_EQ(registrations.size(), 2u);
 
-        std::string descriptor = ISimple::descriptor;
+    std::string descriptor = ISimple::descriptor;
 
-        EXPECT_EQ(to_string(registrations.data(), registrations.size()),
-                  "['" + descriptor + "/" + instanceOne + "', '"
-                       + descriptor + "/" + instanceTwo + "']");
-    }
+    EXPECT_EQ(
+        to_string(registrations.data(), registrations.size()),
+        "['" + descriptor + "/" + instanceOne + "', '" + descriptor + "/" + instanceTwo + "']");
 }
 
 TEST_F(HidlTest, TestToken) {
