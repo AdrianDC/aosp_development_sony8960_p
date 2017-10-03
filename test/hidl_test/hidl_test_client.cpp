@@ -855,21 +855,6 @@ TEST_F(HidlTest, BatchSharedMemory) {
     }
 }
 
-inline uint64_t operator""_GB(unsigned long long num) {
-    return num * 1024 * 1024 * 1024;
-}
-
-TEST_F(HidlTest, FailedBatchSharedMemory) {
-    EXPECT_OK(ashmemAllocator->batchAllocate(1024, UINT64_MAX, [&](bool success, const auto& v) {
-        EXPECT_FALSE(success);
-        EXPECT_EQ(0u, v.size());
-    }));
-    EXPECT_OK(ashmemAllocator->batchAllocate(1_GB, 1024 * 512, [&](bool success, const auto& v) {
-        EXPECT_FALSE(success);
-        EXPECT_EQ(0u, v.size());
-    }));
-}
-
 TEST_F(HidlTest, NullSharedMemory) {
     hidl_memory memory{};
 
