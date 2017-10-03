@@ -92,19 +92,8 @@ struct Coordinator {
     // return "android.hardware".
     std::string getPackageRoot(const FQName &fqName) const;
 
-    // Given package-root paths of ["hardware/interfaces",
-    // "vendor/<something>/interfaces"], package roots of
-    // ["android.hardware", "vendor.<something>.hardware"], and a
-    // FQName of "android.hardware.nfc@1.0::INfc, then getPackageRootPath()
-    // will return "hardware/interfaces".
-    std::string getPackageRootPath(const FQName &fqName) const;
-
     // return getPackageRoot + ":" + getPackageRootPath
     std::string getPackageRootOption(const FQName &fqName) const;
-
-    // Given an FQName of "android.hardware.nfc@1.0::INfc", return
-    // "android/hardware/".
-    std::string convertPackageRootToPath(const FQName &fqName) const;
 
     status_t getPackageInterfaceFiles(
             const FQName &package,
@@ -129,10 +118,22 @@ private:
         std::string path; // e.x. hardware/interfaces
         FQName root; // e.x. android.hardware@0.0
     };
+
+    const PackageRoot& findPackageRoot(const FQName& fqName) const;
+
+    // Given package-root paths of ["hardware/interfaces",
+    // "vendor/<something>/interfaces"], package roots of
+    // ["android.hardware", "vendor.<something>.hardware"], and a
+    // FQName of "android.hardware.nfc@1.0::INfc, then getPackageRootPath()
+    // will return "hardware/interfaces".
+    std::string getPackageRootPath(const FQName& fqName) const;
+
+    // Given an FQName of "android.hardware.nfc@1.0::INfc", return
+    // "android/hardware/".
+    std::string convertPackageRootToPath(const FQName& fqName) const;
+
     std::vector<PackageRoot> mPackageRoots;
-
     std::string mRootPath;
-
     bool mVerbose;
 
     // cache to parse().
@@ -140,8 +141,6 @@ private:
 
     // cache to enforceRestrictionsOnPackage().
     mutable std::set<FQName> mPackagesEnforced;
-
-    const PackageRoot &findPackageRoot(const FQName &fqName) const;
 
     // Returns the given path if it is absolute, otherwise it returns
     // the path relative to mRootPath
