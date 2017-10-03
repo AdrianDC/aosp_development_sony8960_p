@@ -723,6 +723,28 @@ TEST_F(HidlTest, ServiceAllNotificationTest) {
         "['" + descriptor + "/" + instanceOne + "', '" + descriptor + "/" + instanceTwo + "']");
 }
 
+TEST_F(HidlTest, InterfacesEqualTest) {
+    using android::hardware::interfacesEqual;
+
+    sp<IParent> service1 = IParent::getService("child", mode == PASSTHROUGH /* getStub */);
+    sp<IParent> service2 = service1;
+
+    // Passthrough services are reinstantiated whenever getService is called.
+    if (mode == BINDERIZED) {
+        service2 = IParent::getService("child");
+    }
+
+    EXPECT_NE(nullptr, service1.get());
+    EXPECT_NE(nullptr, service2.get());
+    EXPECT_TRUE(interfacesEqual(service1, service2));
+
+    sp<IChild> child = IChild::castFrom(service1);
+    EXPECT_NE(nullptr, child.get());  // it is actually a child
+
+    EXPECT_TRUE(interfacesEqual(service1, child));
+    EXPECT_TRUE(interfacesEqual(service2, child));
+}
+
 TEST_F(HidlTest, TestToken) {
     using android::hardware::interfacesEqual;
 

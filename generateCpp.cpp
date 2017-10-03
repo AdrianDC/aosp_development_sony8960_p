@@ -335,7 +335,8 @@ static void implementGetService(Formatter &out,
                     out.sIf("baseInterface != nullptr", [&]() {
                         out << "iface = " << interfaceName << "::castFrom(baseInterface);\n";
                         out.sIf("!getStub || trebleTestingOverride", [&] () {
-                            out << "iface = new " << fqName.getInterfacePassthroughName() << "(iface);\n";
+                            // TODO(b/33754152): make sure this object doesn't get re-wrapped later.
+                            out << "iface = ::android::hardware::details::wrapPassthrough(iface);\n";
                         }).endl();
                     }).endl();
                 }).endl();
@@ -625,11 +626,9 @@ static void wrapPassthroughArg(Formatter& out, const NamedReference<Type>* arg,
     out.sIf(name + " != nullptr && !" + name + "->isRemote()", [&] {
         out << wrappedName
             << " = "
-            << iface.fqName().cppName()
-            << "::castFrom(::android::hardware::details::wrapPassthrough<"
-            << iface.fqName().cppName()
-            << ">("
-            << name << "));\n";
+            << "::android::hardware::details::wrapPassthrough("
+            << name
+            << ");\n";
         out.sIf(wrappedName + " == nullptr", [&] {
             // Fatal error. Happens when the BsFoo class is not found in the binary
             // or any dynamic libraries.
