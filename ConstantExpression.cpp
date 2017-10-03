@@ -59,7 +59,6 @@
 namespace android {
 
 static inline bool isSupported(ScalarType::Kind kind) {
-    // TODO(b/64358435) move isSupported to EnumValue
     return SK(BOOL) == kind || ScalarType(kind, nullptr /* parent */).isValidEnumStorageType();
 }
 
