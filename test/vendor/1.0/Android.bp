@@ -131,6 +131,7 @@ genrule {
 
 cc_test {
     name: "tests.vendor@1.0-adapter",
+    defaults: ["hidl-module-defaults"],
     shared_libs: [
         "libhidladapter",
         "libhidlbase",
