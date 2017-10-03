@@ -53,7 +53,7 @@ struct Coordinator {
     };
 
     std::string getFilepath(const std::string& outputPath, const FQName& fqName, Location location,
-                            const std::string& fileName) const;
+                            const std::string& fileName = "") const;
 
     Formatter getFormatter(const std::string& outputPath, const FQName& fqName, Location location,
                            const std::string& fileName) const;
