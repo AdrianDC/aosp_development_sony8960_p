@@ -52,6 +52,8 @@ cc_test {
     srcs: ["hidl_test_servers.cpp"],
     gtest: false,
 
+    cflags: ["-Wall", "-Werror"],
+
     shared_libs: [
         "libbase",
         "libhidlbase",
