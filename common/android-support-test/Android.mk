@@ -119,7 +119,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-web
 LOCAL_MODULE_TAGS := optional
 LOCAL_SDK_VERSION := 15
-LOCAL_STATIC_JAVA_LIBRARIES := espresso-core android-support-annotations tagsoup-android
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core android-support-annotations tagsoup
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
