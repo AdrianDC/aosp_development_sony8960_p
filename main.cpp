@@ -651,6 +651,7 @@ bool isSystemProcessSupportedPackage(const FQName& fqName) {
     return fqName.string() == "android.hardware.graphics.allocator@2.0" ||
            fqName.string() == "android.hardware.graphics.common@1.0" ||
            fqName.string() == "android.hardware.graphics.mapper@2.0" ||
+           fqName.string() == "android.hardware.graphics.mapper@2.1" ||
            fqName.string() == "android.hardware.renderscript@1.0" ||
            fqName.string() == "android.hidl.memory@1.0";
 }
