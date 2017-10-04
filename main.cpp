@@ -1035,6 +1035,7 @@ static status_t generateAndroidBpAdapterLibsForPackage(
     out << "cc_test {\n";
     out.indent();
     out << "name: \"" << adapterName << "\",\n";
+    out << "defaults: [\"hidl-module-defaults\"],\n";
     out << "shared_libs: [\n";
     out.indent();
     out << "\"libhidladapter\",\n";
