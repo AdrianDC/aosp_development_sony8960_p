@@ -39,6 +39,16 @@ const std::vector<EnumValue *> &EnumType::values() const {
     return mValues;
 }
 
+void EnumType::forEachValueFromRoot(const std::function<void(EnumValue*)> f) const {
+    std::vector<const EnumType*> chain = typeChain();
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        const auto& type = *it;
+        for (EnumValue* v : type->values()) {
+            f(v);
+        }
+    }
+}
+
 void EnumType::addValue(EnumValue* value) {
     CHECK(value != nullptr);
     mValues.push_back(value);
@@ -381,7 +391,8 @@ status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* pre
             << "std::string os;\n"
             << getBitfieldCppType(StorageMode_Stack) << " flipped = 0;\n"
             << "bool first = true;\n";
-        for (EnumValue *value : values()) {
+
+        forEachValueFromRoot([&](EnumValue* value) {
             std::string valueName = fullName() + "::" + value->name();
             out.sIf("(o & " + valueName + ")" +
                     " == static_cast<" + scalarType->getCppStackType() +
@@ -391,7 +402,7 @@ status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* pre
                     << "first = false;\n"
                     << "flipped |= " << valueName << ";\n";
             }).endl();
-        }
+        });
         // put remaining bits
         out.sIf("o != flipped", [&] {
             out << "os += (first ? \"\" : \" | \");\n";
@@ -410,11 +421,13 @@ status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* pre
 
     out.block([&] {
         out << "using ::android::hardware::details::toHexString;\n";
-        for (EnumValue *value : values()) {
+
+        forEachValueFromRoot([&](EnumValue* value) {
             out.sIf("o == " + fullName() + "::" + value->name(), [&] {
                 out << "return \"" << value->name() << "\";\n";
             }).endl();
-        }
+        });
+
         out << "std::string os;\n";
         scalarType->emitHexDump(out, "os",
             "static_cast<" + scalarType->getCppStackType() + ">(o)");
@@ -470,11 +483,11 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
     out << "public static final String toString("
         << typeName << " o) ";
     out.block([&] {
-        for (EnumValue *value : values()) {
+        forEachValueFromRoot([&](EnumValue* value) {
             out.sIf("o == " + value->name(), [&] {
                 out << "return \"" << value->name() << "\";\n";
             }).endl();
-        }
+        });
         out << "return \"0x\" + ";
         scalarType->emitConvertToJavaHexString(out, "o");
         out << ";\n";
@@ -488,16 +501,16 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
     out.block([&] {
         out << "java.util.ArrayList<String> list = new java.util.ArrayList<>();\n";
         out << bitfieldType << " flipped = 0;\n";
-        for (EnumValue *value : values()) {
+        forEachValueFromRoot([&](EnumValue* value) {
             if (value->constExpr()->castSizeT() == 0) {
                 out << "list.add(\"" << value->name() << "\"); // " << value->name() << " == 0\n";
-                continue;
+                return;  // continue to next value
             }
             out.sIf("(o & " + value->name() + ") == " + value->name(), [&] {
                 out << "list.add(\"" << value->name() << "\");\n";
                 out << "flipped |= " << value->name() << ";\n";
             }).endl();
-        }
+        });
         // put remaining bits
         out.sIf("o != flipped", [&] {
             out << "list.add(\"0x\" + ";

@@ -37,6 +37,8 @@ struct EnumType : public Scope {
     const std::vector<EnumValue *> &values() const;
     void addValue(EnumValue *value);
 
+    void forEachValueFromRoot(const std::function<void(EnumValue*)> f) const;
+
     LocalIdentifier *lookupIdentifier(const std::string &name) const override;
 
     bool isElidableType() const override;
