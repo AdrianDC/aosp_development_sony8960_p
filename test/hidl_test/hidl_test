@@ -1,28 +1,14 @@
 source /data/nativetest64/hidl_test_helper &&
 
-function run_hidl_test() {
-    local RUN_MODE=$1
-    if [ "${RUN_MODE}" == "-mVTS" ]; then
-       run_all_tests \
-           "/data/local/tmp/32/hidl_test_servers/hidl_test_servers" \
-           "/data/local/tmp/64/hidl_test_servers/hidl_test_servers" \
-           "/data/local/tmp/32/hidl_test_client/hidl_test_client" \
-           "/data/local/tmp/64/hidl_test_client/hidl_test_client" \
-           "hidl_test" \
-           "-x/data/local/tmp/system/lib" \
-           "-y/data/local/tmp/system/lib64"
-    else
-       chmod a+x /data/nativetest/hidl_test_servers/hidl_test_servers &&
-       chmod a+x /data/nativetest64/hidl_test_servers/hidl_test_servers &&
-       chmod a+x /data/nativetest/hidl_test_client/hidl_test_client &&
-       chmod a+x /data/nativetest64/hidl_test_client/hidl_test_client &&
-       run_all_tests \
-           "/data/nativetest/hidl_test_servers/hidl_test_servers" \
-           "/data/nativetest64/hidl_test_servers/hidl_test_servers" \
-           "/data/nativetest/hidl_test_client/hidl_test_client" \
-           "/data/nativetest64/hidl_test_client/hidl_test_client" \
-           "hidl_test"
-    fi
-}
+chmod a+x /data/nativetest/hidl_test_servers/hidl_test_servers &&
+chmod a+x /data/nativetest64/hidl_test_servers/hidl_test_servers &&
+chmod a+x /data/nativetest/hidl_test_client/hidl_test_client &&
+chmod a+x /data/nativetest64/hidl_test_client/hidl_test_client &&
 
-run_hidl_test $@
+run_all_tests \
+    "/data/nativetest/hidl_test_servers/hidl_test_servers" \
+    "/data/nativetest64/hidl_test_servers/hidl_test_servers" \
+    "/data/nativetest/hidl_test_client/hidl_test_client" \
+    "/data/nativetest64/hidl_test_client/hidl_test_client" \
+    "hidl_test" \
+    "$@"
