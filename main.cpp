@@ -1360,6 +1360,7 @@ static status_t generateHashOutput(const FQName &fqName,
     return OK;
 }
 
+// clang-format off
 static std::vector<OutputHandler> formats = {
     {"check",
      "Parses the interface to see if valid but doesn't write any files.",
@@ -1487,6 +1488,7 @@ static std::vector<OutputHandler> formats = {
      generateHashOutput,
     },
 };
+// clang-format on
 
 static void usage(const char *me) {
     fprintf(stderr,
