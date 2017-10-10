@@ -4,7 +4,7 @@ set -e
 
 printusage() {
     echo "Usage: ./download-libs.sh <robolectric-version> " >&2
-    echo "    -f <old-version-to-copy-from>" >&2
+    echo "    -f <old-directory-to-copy-from>" >&2
     exit 1
 }
 
