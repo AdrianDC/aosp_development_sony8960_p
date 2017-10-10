@@ -1240,19 +1240,19 @@ static std::vector<OutputHandler> formats = {
      generationFunctionForFileOrPackage("c++-adapter")
     },
     {"c++-adapter-headers",
-     "c++-adapter but headers only",
+     "c++-adapter but helper headers only",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-adapter-headers")
     },
     {"c++-adapter-sources",
-     "c++-adapter but sources only",
+     "c++-adapter but helper sources only",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateForSource,
      generationFunctionForFileOrPackage("c++-adapter-sources")
     },
     {"c++-adapter-main",
-     "c++-adapter but sources only",
+     "c++-adapter but the adapter binary source only",
      OutputHandler::NEEDS_DIR /* mOutputMode */,
      validateIsPackage,
      generateAdapterMainSource,
