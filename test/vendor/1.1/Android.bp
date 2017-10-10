@@ -63,6 +63,34 @@ cc_library {
 }
 
 genrule {
+    name: "tests.vendor-V1.1-java_gen_java",
+    tools: ["hidl-gen"],
+    cmd: "$(location hidl-gen) -o $(genDir) -Ljava -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.1",
+    srcs: [
+        ":tests.vendor@1.1_hal",
+    ],
+    out: [
+        "tests/vendor/V1_1/IVendor.java",
+    ],
+}
+
+java_library {
+    name: "tests.vendor-V1.1-java",
+    no_framework_libs: true,
+    defaults: ["hidl-java-module-defaults"],
+    srcs: [":tests.vendor-V1.1-java_gen_java"],
+    libs: [
+        "hwbinder",
+        "android.hardware.tests.baz-V1.0-java",
+        "android.hidl.base-V1.0-java",
+        "tests.vendor-V1.0-java",
+    ]
+}
+
+// This package does not export any types. Not creating java constants export.
+
+
+genrule {
     name: "tests.vendor@1.1-adapter-helper_genc++",
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-sources -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport -rtests:system/tools/hidl/test/ tests.vendor@1.1",
@@ -85,7 +113,6 @@ genrule {
         "tests/vendor/1.1/AVendor.h",
     ],
 }
-
 
 cc_library {
     name: "tests.vendor@1.1-adapter-helper",
