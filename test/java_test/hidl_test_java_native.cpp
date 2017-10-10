@@ -22,7 +22,7 @@
 #include <android/hardware/tests/baz/1.0/IBaz.h>
 
 #include <hidl/LegacySupport.h>
-
+#include <hidl/ServiceManagement.h>
 #include <gtest/gtest.h>
 
 #include <hidl/HidlTransportSupport.h>
@@ -77,9 +77,13 @@ struct HidlTest : public ::testing::Test {
     void SetUp() override {
         using namespace ::android::hardware;
 
+        ::android::hardware::details::waitForHwService(
+                IBaz::descriptor, "baz");
+
         baz = IBaz::getService("baz");
 
         CHECK(baz != NULL);
+        CHECK(baz->isRemote());
     }
 
     void TearDown() override {
