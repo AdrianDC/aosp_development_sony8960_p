@@ -427,6 +427,20 @@ std::string Coordinator::convertPackageRootToPath(const FQName &fqName) const {
     return packageRoot; // now converted to a path
 }
 
+status_t Coordinator::isTypesOnlyPackage(const FQName& package, bool* result) const {
+    std::vector<FQName> packageInterfaces;
+
+    status_t err = appendPackageInterfacesToVector(package, &packageInterfaces);
+
+    if (err != OK) {
+        *result = false;
+        return err;
+    }
+
+    *result = packageInterfaces.size() == 1 && packageInterfaces[0].name() == "types";
+    return OK;
+}
+
 status_t Coordinator::enforceRestrictionsOnPackage(const FQName& fqName,
                                                    Enforce enforcement) const {
     CHECK(enforcement == Enforce::FULL || enforcement == Enforce::NO_HASH ||
@@ -503,7 +517,15 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         return UNKNOWN_ERROR;
     }
 
-    status_t err;
+    bool prevIsTypesOnly;
+    status_t err = isTypesOnlyPackage(prevPackage, &prevIsTypesOnly);
+    if (err != OK) return err;
+
+    if (prevIsTypesOnly) {
+        // A types only package can be extended in any way.
+        return OK;
+    }
+
     std::vector<FQName> packageInterfaces;
     err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
     if (err != OK) {

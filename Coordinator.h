@@ -103,6 +103,8 @@ struct Coordinator {
             const FQName &package,
             std::vector<FQName> *packageInterfaces) const;
 
+    status_t isTypesOnlyPackage(const FQName& package, bool* result) const;
+
     // Enforce a set of restrictions on a set of packages. These include:
     //    - minor version upgrades
     // "packages" contains names like "android.hardware.nfc@1.1".
