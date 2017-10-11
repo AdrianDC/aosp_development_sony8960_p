@@ -189,6 +189,7 @@ static std::string makeJavaLibraryName(const FQName &packageFQName) {
     out = packageFQName.package();
     out += "-V";
     out += packageFQName.version();
+    out += "-java";
     return out;
 }
 
@@ -211,135 +212,6 @@ static void generatePackagePathsSection(
         if (forMakefiles) {
             out << "\\\n";
         }
-    }
-}
-
-static void generateMakefileSectionForType(
-        Formatter &out,
-        Coordinator *coordinator,
-        const FQName &packageFQName,
-        const FQName &fqName,
-        const std::set<FQName> &importedPackages,
-        const char *typeName) {
-    out << "\n"
-        << "\n#"
-        << "\n# Build " << fqName.name() << ".hal";
-
-    if (typeName != nullptr) {
-        out << " (" << typeName << ")";
-    }
-
-    out << "\n#"
-        << "\nGEN := $(intermediates)/"
-        << coordinator->getFilepath("", packageFQName, Coordinator::Location::GEN_SANITIZED);
-
-    if (typeName == nullptr) {
-        out << fqName.name() << ".java";
-    } else {
-        out << typeName << ".java";
-    }
-
-    out << "\n$(GEN): $(HIDL)";
-    out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
-    out << "\n$(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/"
-        << fqName.name() << ".hal";
-
-    {
-        AST *ast = coordinator->parse(fqName);
-        CHECK(ast != nullptr);
-        const std::set<FQName>& refs = ast->getImportedNames();
-        for (const auto& depFQName : refs) {
-            // If the package of depFQName is the same as this fqName's package,
-            // then add it explicitly as a .hal dependency within the same
-            // package.
-            if (fqName.package() == depFQName.package() &&
-                fqName.version() == depFQName.version()) {
-                    // PRIVATE_DEPS is not actually being used in the
-                    // auto-generated file, but is necessary if the build rule
-                    // ever needs to use the dependency information, since the
-                    // built-in Make variables are not supported in the Android
-                    // build system.
-                    out << "\n$(GEN): PRIVATE_DEPS += $(LOCAL_PATH)/"
-                        << depFQName.name() << ".hal";
-                    // This is the actual dependency.
-                    out << "\n$(GEN): $(LOCAL_PATH)/"
-                        << depFQName.name() << ".hal";
-            }
-        }
-    }
-
-    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
-        << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
-    out.indent();
-    out.indent();
-    out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava \\\n";
-
-    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages, true /* forJava */);
-
-    out << packageFQName.string()
-        << "::"
-        << fqName.name();
-
-    if (typeName != nullptr) {
-        out << "." << typeName;
-    }
-
-    out << "\n";
-
-    out.unindent();
-    out.unindent();
-
-    out << "\n$(GEN): $(LOCAL_PATH)/" << fqName.name() << ".hal";
-    out << "\n\t$(transform-generated-source)";
-    out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
-}
-
-static void generateMakefileSection(
-        Formatter &out,
-        Coordinator *coordinator,
-        const FQName &packageFQName,
-        const std::vector<FQName> &packageInterfaces,
-        const std::set<FQName> &importedPackages,
-        AST *typesAST) {
-    for (const auto &fqName : packageInterfaces) {
-        if (fqName.name() == "types") {
-            CHECK(typesAST != nullptr);
-
-            Scope* rootScope = typesAST->getRootScope();
-
-            std::vector<NamedType *> subTypes = rootScope->getSubTypes();
-            std::sort(
-                    subTypes.begin(),
-                    subTypes.end(),
-                    [](const NamedType *a, const NamedType *b) -> bool {
-                        return a->fqName() < b->fqName();
-                    });
-
-            for (const auto &type : subTypes) {
-                if (type->isTypeDef()) {
-                    continue;
-                }
-
-                generateMakefileSectionForType(
-                        out,
-                        coordinator,
-                        packageFQName,
-                        fqName,
-                        importedPackages,
-                        type->localName().c_str());
-            }
-
-            continue;
-        }
-
-        generateMakefileSectionForType(
-                out,
-                coordinator,
-                packageFQName,
-                fqName,
-                importedPackages,
-                nullptr /* typeName */);
     }
 }
 
@@ -428,195 +300,6 @@ static bool packageNeedsJavaCode(
     }
 
     return false;
-}
-
-static void generateMakefileSectionForJavaConstants(
-        Formatter &out,
-        Coordinator *coordinator,
-        const FQName &packageFQName,
-        const std::vector<FQName> &packageInterfaces,
-        const std::set<FQName> &importedPackages) {
-    out << "\n#"
-        << "\nGEN := $(intermediates)/"
-        << coordinator->getFilepath("", packageFQName, Coordinator::Location::GEN_SANITIZED,
-                                    "Constants.java");
-
-    out << "\n$(GEN): $(HIDL)\n";
-    for (const auto &iface : packageInterfaces) {
-        out << "$(GEN): $(LOCAL_PATH)/" << iface.name() << ".hal\n";
-    }
-    out << "\n$(GEN): PRIVATE_HIDL := $(HIDL)";
-    out << "\n$(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)"
-        << "\n$(GEN): PRIVATE_CUSTOM_TOOL = \\";
-    out.indent();
-    out.indent();
-    out << "\n$(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \\"
-        << "\n-Ljava-constants \\\n";
-
-    generatePackagePathsSection(out, coordinator, packageFQName, importedPackages, true /* forJava */);
-
-    out << packageFQName.string();
-    out << "\n";
-
-    out.unindent();
-    out.unindent();
-
-    out << "\n$(GEN):";
-    out << "\n\t$(transform-generated-source)";
-    out << "\nLOCAL_GENERATED_SOURCES += $(GEN)";
-}
-
-static status_t generateMakefileForPackage(
-        const FQName &packageFQName,
-        const char *hidl_gen,
-        Coordinator *coordinator,
-        const std::string &outputPath) {
-
-    CHECK(packageFQName.isValid() &&
-          !packageFQName.isFullyQualified() &&
-          packageFQName.name().empty());
-
-    std::vector<FQName> packageInterfaces;
-
-    status_t err =
-        coordinator->appendPackageInterfacesToVector(packageFQName,
-                                                     &packageInterfaces);
-
-    if (err != OK) {
-        return err;
-    }
-
-    std::set<FQName> importedPackages;
-    AST *typesAST = nullptr;
-    std::vector<const Type *> exportedTypes;
-
-    for (const auto &fqName : packageInterfaces) {
-        AST *ast = coordinator->parse(fqName);
-
-        if (ast == NULL) {
-            fprintf(stderr,
-                    "ERROR: Could not parse %s. Aborting.\n",
-                    fqName.string().c_str());
-
-            return UNKNOWN_ERROR;
-        }
-
-        if (fqName.name() == "types") {
-            typesAST = ast;
-        }
-
-        ast->getImportedPackagesHierarchy(&importedPackages);
-        ast->appendToExportedTypesVector(&exportedTypes);
-    }
-
-    bool packageIsJavaCompatible;
-    err = isPackageJavaCompatible(
-            packageFQName, coordinator, &packageIsJavaCompatible);
-
-    if (err != OK) {
-        return err;
-    }
-
-    bool haveJavaConstants = !exportedTypes.empty();
-
-    if (!packageIsJavaCompatible && !haveJavaConstants) {
-        // TODO(b/33420795)
-        fprintf(stderr,
-                "WARNING: %s is not java compatible. No java makefile created.\n",
-                packageFQName.string().c_str());
-        return OK;
-    }
-
-    if (!packageNeedsJavaCode(packageInterfaces, typesAST)) {
-        return OK;
-    }
-
-    Formatter out = coordinator->getFormatter(outputPath, packageFQName,
-                                              Coordinator::Location::PACKAGE_ROOT, "Android.mk");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
-
-    const std::string libraryName = makeJavaLibraryName(packageFQName);
-
-    out << "# This file is autogenerated by hidl-gen. Do not edit manually.\n\n";
-    out << "LOCAL_PATH := $(call my-dir)\n";
-
-    if (packageIsJavaCompatible) {
-        out << "\n"
-            << "########################################"
-            << "########################################\n\n";
-
-        out << "include $(CLEAR_VARS)\n"
-            << "LOCAL_MODULE := "
-            << libraryName
-            << "-java"
-            << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
-            << "intermediates := $(call local-generated-sources-dir, COMMON)"
-            << "\n\n"
-            << "HIDL := $(HOST_OUT_EXECUTABLES)/"
-            << hidl_gen
-            << "$(HOST_EXECUTABLE_SUFFIX)";
-
-        if (!importedPackages.empty()) {
-            out << "\n\nLOCAL_JAVA_LIBRARIES := \\";
-
-            out.indent();
-            for (const auto &importedPackage : importedPackages) {
-                out << "\n"
-                    << makeJavaLibraryName(importedPackage)
-                    << "-java"
-                    << " \\";
-            }
-
-            out << "\n";
-            out.unindent();
-        }
-        out << "\nLOCAL_NO_STANDARD_LIBRARIES := true";
-        out << "\nLOCAL_JAVA_LIBRARIES += core-oj hwbinder";
-
-        generateMakefileSection(
-                out,
-                coordinator,
-                packageFQName,
-                packageInterfaces,
-                importedPackages,
-                typesAST);
-
-        out << "\ninclude $(BUILD_JAVA_LIBRARY)\n\n";
-    }
-
-    if (haveJavaConstants) {
-        out << "\n"
-            << "########################################"
-            << "########################################\n\n";
-
-        out << "include $(CLEAR_VARS)\n"
-            << "LOCAL_MODULE := "
-            << libraryName
-            << "-java-constants"
-            << "\nLOCAL_MODULE_CLASS := JAVA_LIBRARIES\n\n"
-            << "intermediates := $(call local-generated-sources-dir, COMMON)"
-            << "\n\n"
-            << "HIDL := $(HOST_OUT_EXECUTABLES)/"
-            << hidl_gen
-            << "$(HOST_EXECUTABLE_SUFFIX)";
-
-        generateMakefileSectionForJavaConstants(
-                out, coordinator, packageFQName, packageInterfaces, importedPackages);
-
-        out << "\n# Avoid dependency cycle of framework.jar -> this-library "
-            << "-> framework.jar\n"
-            << "LOCAL_NO_STANDARD_LIBRARIES := true\n"
-            << "LOCAL_JAVA_LIBRARIES := core-oj\n\n"
-            << "include $(BUILD_STATIC_JAVA_LIBRARY)\n\n";
-    }
-
-    out << "\n\n"
-        << "include $(call all-makefiles-under,$(LOCAL_PATH))\n";
-
-    return OK;
 }
 
 bool validateIsPackage(
@@ -724,7 +407,7 @@ enum class LibraryLocation {
     VNDK,
 };
 
-static void generateAndroidBpLibSection(
+static void generateAndroidBpCppLibSection(
         Formatter &out,
         LibraryLocation libraryLocation,
         const FQName &packageFQName,
@@ -924,7 +607,7 @@ static void generateAndroidBpDefinitionLibsForPackage(
     } else {
         bool isVndk = !generateForTest && isSystemPackage(packageFQName);
 
-        generateAndroidBpLibSection(
+        generateAndroidBpCppLibSection(
             out,
             (isVndk ? LibraryLocation::VNDK : LibraryLocation::VENDOR_AVAILABLE),
             packageFQName,
@@ -935,6 +618,119 @@ static void generateAndroidBpDefinitionLibsForPackage(
                 generateAndroidBpDependencyList(out, importedPackagesHierarchy);
             });
     }
+
+    out.endl();
+}
+
+static void generateAndroidBpJavaLibsForPackage(
+    Formatter& out, const FQName& packageFQName, const char* hidl_gen, Coordinator* coordinator,
+    const std::vector<FQName>& packageInterfaces,
+    const std::set<FQName>& importedPackagesHierarchy, AST *typesAST) {
+
+    const std::string libraryName = makeJavaLibraryName(packageFQName);
+    const std::string halFilegroupName = makeHalFilegroupName(packageFQName);
+    const std::string genJavaName = libraryName + "_gen_java";
+
+    const std::string pathPrefix = coordinator->getFilepath("" /* outputPath */, packageFQName,
+                                                            Coordinator::Location::GEN_SANITIZED);
+
+    generateAndroidBpGenSection(
+            out,
+            packageFQName,
+            hidl_gen,
+            coordinator,
+            halFilegroupName,
+            genJavaName,
+            "java",
+            packageInterfaces,
+            importedPackagesHierarchy,
+            [&pathPrefix, &typesAST](Formatter &out, const FQName &fqName) {
+                if (fqName.name() != "types") {
+                    out << "\"" << pathPrefix << fqName.name() << ".java\",\n";
+                    return;
+                }
+
+                CHECK(typesAST != nullptr);
+
+                std::vector<NamedType *> subTypes = typesAST->getRootScope()->getSubTypes();
+                std::sort(
+                        subTypes.begin(),
+                        subTypes.end(),
+                        [](const NamedType *a, const NamedType *b) -> bool {
+                            return a->fqName() < b->fqName();
+                        });
+
+                for (const auto &type : subTypes) {
+                    if (type->isTypeDef()) {
+                        continue;
+                    }
+
+                    out << "\"" << pathPrefix << type->localName() << ".java\",\n";
+                }
+            });
+
+    out << "java_library {\n";
+    out.indent([&] {
+        out << "name: \"" << libraryName << "\",\n";
+        out << "no_framework_libs: true,\n";
+        out << "defaults: [\"hidl-java-module-defaults\"],\n";
+        out << "srcs: [\":" << genJavaName << "\"],\n";
+        out << "libs: [\n";
+        out.indent([&] {
+            out << "\"hwbinder\",\n";
+            for (const auto &importedPackage : importedPackagesHierarchy) {
+                out << "\"" << makeJavaLibraryName(importedPackage) << "\",\n";
+            }
+        });
+        out << "]\n";
+    });
+    out << "}\n\n";
+}
+
+static void generateAndroidBpJavaExportsForPackage(
+    Formatter& out, const FQName& packageFQName, const char* hidl_gen, Coordinator* coordinator,
+    const std::vector<FQName>& packageInterfaces,
+    const std::set<FQName>& importedPackagesHierarchy,
+    const std::vector<const Type *>& exportedTypes) {
+
+    const std::string libraryName = makeJavaLibraryName(packageFQName);
+    const std::string halFilegroupName = makeHalFilegroupName(packageFQName);
+    const std::string genJavaName = libraryName + "_gen_java";
+
+    CHECK(!exportedTypes.empty());
+
+    const std::string pathPrefix = coordinator->getFilepath("" /* outputPath */, packageFQName,
+                                                            Coordinator::Location::GEN_SANITIZED);
+
+    const std::string constantsLibraryName = libraryName + "-constants";
+    const std::string genConstantsName = constantsLibraryName + "_gen_java";
+
+    generateAndroidBpGenSection(
+            out,
+            packageFQName,
+            hidl_gen,
+            coordinator,
+            halFilegroupName,
+            genConstantsName,
+            "java-constants",
+            packageInterfaces,
+            importedPackagesHierarchy,
+            [&pathPrefix](Formatter &out, const FQName &/* fqName */) {
+                static bool once = false;
+                if (!once) {
+                    out << "\"" << pathPrefix << "Constants.java\",\n";
+                    once = true;
+                }
+            });
+
+    out << "java_library {\n";
+    out.indent();
+    out << "name: \"" << constantsLibraryName << "\",\n";
+    out << "no_framework_libs: true,\n";
+    out << "defaults: [\"hidl-java-module-defaults\"],\n";
+    out << "srcs: [\":" << genConstantsName << "\"],\n";
+    out.unindent();
+    out << "}\n";
 }
 
 static status_t generateAndroidBpAdapterLibsForPackage(
@@ -985,10 +781,8 @@ static status_t generateAndroidBpAdapterLibsForPackage(
                 }
             });
 
-    out.endl();
-
     status_t err = OK;
-    generateAndroidBpLibSection(
+    generateAndroidBpCppLibSection(
         out,
         LibraryLocation::VENDOR_AVAILABLE,
         packageFQName,
@@ -1069,6 +863,7 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     }
 
     std::set<FQName> importedPackagesHierarchy;
+    std::vector<const Type *> exportedTypes;
     AST* typesAST = nullptr;
 
     for (const auto& fqName : packageInterfaces) {
@@ -1085,7 +880,16 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
         }
 
         ast->getImportedPackagesHierarchy(&importedPackagesHierarchy);
+        ast->appendToExportedTypesVector(&exportedTypes);
     }
+
+    bool isTypesOnly;
+    err = isTypesOnlyPackage(packageFQName, coordinator, &isTypesOnly);
+    if (err != OK) return err;
+
+    bool isJavaCompatible;
+    err = isPackageJavaCompatible(packageFQName, coordinator, &isJavaCompatible);
+    if (err != OK) return err;
 
     Formatter out = coordinator->getFormatter(outputPath, packageFQName,
                                               Coordinator::Location::PACKAGE_ROOT, "Android.bp");
@@ -1111,14 +915,29 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     generateAndroidBpDefinitionLibsForPackage(out, packageFQName, hidl_gen, coordinator,
                                               packageInterfaces, importedPackagesHierarchy);
 
-    bool isTypesOnly;
-    err = isTypesOnlyPackage(packageFQName, coordinator, &isTypesOnly);
-    if (err != OK) return err;
+    if (packageNeedsJavaCode(packageInterfaces, typesAST)) {
+        if (isJavaCompatible) {
+            generateAndroidBpJavaLibsForPackage(out, packageFQName, hidl_gen, coordinator,
+                                            packageInterfaces, importedPackagesHierarchy, typesAST);
+        } else {
+            out << "// This package is not java compatible. Not creating java target.\n\n";
+        }
+
+        if (!exportedTypes.empty()) {
+            generateAndroidBpJavaExportsForPackage(out, packageFQName, hidl_gen, coordinator, packageInterfaces, importedPackagesHierarchy, exportedTypes);
+        } else {
+            out << "// This package does not export any types. Not creating java constants export.\n\n";
+        }
+    } else {
+        out << "// This package has nothing to generate Java code.\n\n";
+    }
 
     if (!isTypesOnly) {
         err = generateAndroidBpAdapterLibsForPackage(out, packageFQName, hidl_gen, coordinator,
                                                      packageInterfaces, importedPackagesHierarchy);
         if (err != OK) return err;
+    } else {
+        out << "// This package has no interfaces. Not creating versioning adapter.\n";
     }
 
     return OK;
@@ -1461,14 +1280,17 @@ static std::vector<OutputHandler> formats = {
     },
 
     {"makefile",
-     "(internal) Generates makefiles for -Ljava and -Ljava-constants.",
+     "(removed) Used to generate makefiles for -Ljava and -Ljava-constants.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
-     validateIsPackage,
-     generateMakefileForPackage,
+     [](const FQName &, const std::string &) {
+        fprintf(stderr, "ERROR: makefile output is not supported. Use -Landroidbp for all build file generation.\n");
+        return false;
+     },
+     nullptr,
     },
 
     {"androidbp",
-     "(internal) Generates Soong bp files for -Lc++-headers and -Lc++-sources.",
+     "(internal) Generates Soong bp files for -Lc++-headers, -Lc++-sources, -Ljava, -Ljava-constants, and -Lc++-adapter.",
      OutputHandler::NEEDS_SRC /* mOutputMode */,
      validateIsPackage,
      generateAndroidBpForPackage,
