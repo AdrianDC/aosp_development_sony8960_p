@@ -45,6 +45,11 @@ cc_defaults {
     },
 }
 
+// This configuration is inherited by all hidl-gen-java modules
+java_defaults {
+    name: "hidl-java-module-defaults",
+}
+
 //
 // libhidl-gen-hash
 //
