@@ -528,27 +528,6 @@ static status_t generateAdapterMainSource(
     return OK;
 }
 
-static status_t isTypesOnlyPackage(const FQName &package, Coordinator *coordinator, bool *result) {
-    std::vector<FQName> packageInterfaces;
-
-    status_t err =
-        coordinator->appendPackageInterfacesToVector(package,
-                                                     &packageInterfaces);
-
-    if (err != OK) {
-        *result = false;
-        return err;
-    }
-
-    bool hasInterface = std::any_of(
-        packageInterfaces.begin(),
-        packageInterfaces.end(),
-        [](const FQName& fqName) { return fqName.name() != "types"; });
-
-    *result = !hasInterface;
-    return OK;
-}
-
 static void generateAndroidBpDefinitionLibsForPackage(
     Formatter& out, const FQName& packageFQName, const char* hidl_gen, Coordinator* coordinator,
     const std::vector<FQName>& packageInterfaces,
@@ -798,7 +777,7 @@ static status_t generateAndroidBpAdapterLibsForPackage(
                 }
 
                 bool isTypesOnly;
-                err = isTypesOnlyPackage(importedPackage, coordinator, &isTypesOnly);
+                err = coordinator->isTypesOnlyPackage(importedPackage, &isTypesOnly);
                 if (err != OK) {
                     return;
                 }
@@ -884,7 +863,7 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     }
 
     bool isTypesOnly;
-    err = isTypesOnlyPackage(packageFQName, coordinator, &isTypesOnly);
+    err = coordinator->isTypesOnlyPackage(packageFQName, &isTypesOnly);
     if (err != OK) return err;
 
     bool isJavaCompatible;
