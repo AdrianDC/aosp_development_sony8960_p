@@ -278,6 +278,10 @@ static status_t isPackageJavaCompatible(
 
 static bool packageNeedsJavaCode(
         const std::vector<FQName> &packageInterfaces, AST *typesAST) {
+    if (packageInterfaces.size() == 0) {
+        return false;
+    }
+
     // If there is more than just a types.hal file to this package we'll
     // definitely need to generate Java code.
     if (packageInterfaces.size() > 1
