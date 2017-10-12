@@ -428,7 +428,8 @@ public:
     }
 };
 
-TEST_F(HidlTest, PreloadTest) {
+// does not work with linker configurations since libs are statically included
+TEST_F(HidlTest, DISABLED_PreloadTest) {
     // in passthrough mode, this will already be opened
     if (mode == BINDERIZED) {
         using android::hardware::preloadPassthroughService;
