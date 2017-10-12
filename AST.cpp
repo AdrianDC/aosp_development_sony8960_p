@@ -284,8 +284,6 @@ bool AST::addImport(const char *import) {
 
     fqName.applyDefaults(mPackage.package(), mPackage.version());
 
-    // LOG(INFO) << "importing " << fqName.string();
-
     if (fqName.name().empty()) {
         // import a package
         std::vector<FQName> packageInterfaces;
@@ -575,14 +573,6 @@ Type *AST::lookupTypeFromImports(const FQName &fqName) {
     }
 
     if (resolvedType) {
-#if 0
-        LOG(INFO) << "found '"
-                  << resolvedName.string()
-                  << "' after looking for '"
-                  << fqName.string()
-                  << "'.";
-#endif
-
         returnedType = resolvedType;
 
         // If the resolved type is not an interface, we need to determine

@@ -2007,7 +2007,7 @@ void AST::generateCppAtraceCall(Formatter &out,
         }
         default:
         {
-            LOG(FATAL) << "Unsupported instrumentation event: " << event;
+            CHECK(false) << "Unsupported instrumentation event: " << event;
         }
     }
 }
@@ -2089,7 +2089,7 @@ void AST::generateCppInstrumentationCall(
         }
         default:
         {
-            LOG(FATAL) << "Unsupported instrumentation event: " << event;
+            CHECK(false) << "Unsupported instrumentation event: " << event;
         }
     }
 

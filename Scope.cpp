@@ -42,7 +42,7 @@ status_t Scope::validateUniqueNames() const {
     for (const auto* type : mTypes) {
         if (mTypes[mTypeIndexByName.at(type->localName())] != type) {
             std::cerr << "ERROR: A type named '" << type->localName()
-                      << "' is already declared in the scope at " << type->location() << "\n";
+                      << "' is already declared in the scope at " << type->location() << std::endl;
             return UNKNOWN_ERROR;
         }
     }
@@ -52,7 +52,7 @@ status_t Scope::validateUniqueNames() const {
 NamedType *Scope::lookupType(const FQName &fqName) const {
     CHECK(fqName.package().empty() && fqName.version().empty());
     if (!fqName.valueName().empty()) {
-        LOG(WARNING) << fqName.string() << " does not refer to a type.";
+        std::cerr << "ERROR: " << fqName.string() << " does not refer to a type." << std::endl;
         return nullptr;
     }
     std::vector<std::string> names = fqName.names();
