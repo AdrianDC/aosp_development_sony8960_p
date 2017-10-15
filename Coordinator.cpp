@@ -25,6 +25,7 @@
 #include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
 #include <hidl-util/StringHelper.h>
+#include <iostream>
 
 #include "AST.h"
 #include "Interface.h"
@@ -399,14 +400,10 @@ status_t Coordinator::appendPackageInterfacesToVector(
                 package.package() + package.atVersion() + "::" + fileName);
 
         if (!subFQName.isValid()) {
-            LOG(WARNING)
-                << "Whole-package import encountered invalid filename '"
-                << fileName
-                << "' in package "
-                << package.package()
-                << package.atVersion();
+            std::cerr << "ERROR: Whole-package import encountered invalid filename '" << fileName
+                      << "' in package " << package.package() << package.atVersion() << std::endl;
 
-            continue;
+            return UNKNOWN_ERROR;
         }
 
         packageInterfaces->push_back(subFQName);
@@ -449,8 +446,8 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName& fqName,
     // need fqName to be something like android.hardware.foo@1.0.
     // name and valueName is ignored.
     if (fqName.package().empty() || fqName.version().empty()) {
-        LOG(ERROR) << "Cannot enforce restrictions on package " << fqName.string()
-                   << ": package or version is missing.";
+        std::cerr << "ERROR: Cannot enforce restrictions on package " << fqName.string()
+                  << ": package or version is missing." << std::endl;
         return BAD_VALUE;
     }
 
@@ -486,8 +483,8 @@ status_t Coordinator::enforceRestrictionsOnPackage(const FQName& fqName,
 
 status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) const {
     if(!currentPackage.hasVersion()) {
-        LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
-                   << ": missing version.";
+        std::cerr << "ERROR: Cannot enforce minor version uprevs for " << currentPackage.string()
+                  << ": missing version." << std::endl;
         return UNKNOWN_ERROR;
     }
 
@@ -511,9 +508,10 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
     }
 
     if (prevPackage != currentPackage.downRev()) {
-        LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
-                   << ": Found package " << prevPackage.string() << " but missing "
-                   << currentPackage.downRev().string() << "; you cannot skip a minor version.";
+        std::cerr << "ERROR: Cannot enforce minor version uprevs for " << currentPackage.string()
+                  << ": Found package " << prevPackage.string() << " but missing "
+                  << currentPackage.downRev().string() << "; you cannot skip a minor version."
+                  << std::endl;
         return UNKNOWN_ERROR;
     }
 
@@ -545,13 +543,14 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         }
         if (iface == nullptr) {
             if (currentAST == nullptr) {
-                LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
-                             << " because it could not be found or parsed"
-                             << " or " << currentPackage.string()
-                             << " doesn't pass all requirements.";
+                std::cerr << "WARNING: Skipping " << currentFQName.string()
+                          << " because it could not be found or parsed"
+                          << " or " << currentPackage.string() << " doesn't pass all requirements."
+                          << std::endl;
             } else {
-                LOG(WARNING) << "Warning: Skipping " << currentFQName.string()
-                             << " because the file might contain more than one interface.";
+                std::cerr << "WARNING: Skipping " << currentFQName.string()
+                          << " because the file might contain more than one interface."
+                          << std::endl;
             }
             continue;
         }
@@ -578,10 +577,11 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
         bool lastFQNameExists = lastAST != nullptr && lastAST->getInterface() != nullptr;
 
         if (iface->superType()->fqName() != lastFQName && lastFQNameExists) {
-            LOG(ERROR) << "Cannot enforce minor version uprevs for " << currentPackage.string()
-                       << ": " << iface->fqName().string() << " extends "
-                       << iface->superType()->fqName().string()
-                       << ", which is not allowed. It must extend " << lastFQName.string();
+            std::cerr << "ERROR: Cannot enforce minor version uprevs for "
+                      << currentPackage.string() << ": " << iface->fqName().string() << " extends "
+                      << iface->superType()->fqName().string()
+                      << ", which is not allowed. It must extend " << lastFQName.string()
+                      << std::endl;
             return UNKNOWN_ERROR;
         }
 
@@ -590,14 +590,18 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
             extendedInterface = true;
         }
 
-        LOG(VERBOSE) << "enforceMinorVersionUprevs: " << currentFQName.string() << " passes.";
+        if (mVerbose) {
+            std::cout << "VERBOSE: EnforceMinorVersionUprevs: " << currentFQName.string()
+                      << " passes." << std::endl;
+        }
     }
 
     if (!extendedInterface) {
         // No interface extends the interface with the same name in @x.(y-1).
-        LOG(ERROR) << currentPackage.string() << " doesn't pass minor version uprev requirement. "
-                   << "Requires at least one interface to extend an interface with the same name "
-                   << "from " << prevPackage.string() << ".";
+        std::cerr << "ERROR: " << currentPackage.string()
+                  << " doesn't pass minor version uprev requirement. "
+                  << "Requires at least one interface to extend an interface with the same name "
+                  << "from " << prevPackage.string() << "." << std::endl;
         return UNKNOWN_ERROR;
     }
 
@@ -625,7 +629,7 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
         std::vector<std::string> frozen = Hash::lookupHash(hashPath, currentFQName.string(), &error);
 
         if (error.size() > 0) {
-            LOG(ERROR) << error;
+            std::cerr << "ERROR: " << error << std::endl;
             err = UNKNOWN_ERROR;
             continue;
         }
@@ -640,9 +644,9 @@ status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
         std::string currentHash = Hash::getHash(ast->getFilename()).hexString();
 
         if(std::find(frozen.begin(), frozen.end(), currentHash) == frozen.end()) {
-            LOG(ERROR) << currentFQName.string() << " has hash " << currentHash
-                       << " which does not match hash on record. This interface has "
-                       << "been frozen. Do not change it!";
+            std::cerr << "ERROR: " << currentFQName.string() << " has hash " << currentHash
+                      << " which does not match hash on record. This interface has "
+                      << "been frozen. Do not change it!" << std::endl;
             err = UNKNOWN_ERROR;
             continue;
         }
