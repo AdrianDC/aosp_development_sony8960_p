@@ -17,6 +17,7 @@ function run() {
     local SCRIPT_TESTS=(\
         hidl_test\
         hidl_test_java\
+        fmq_test\
     )
 
     $ANDROID_BUILD_TOP/build/soong/soong_ui.bash --make-mode -j \
