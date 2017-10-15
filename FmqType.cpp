@@ -168,9 +168,9 @@ std::string FmqType::getVtsType() const {
         return "TYPE_FMQ_SYNC";
     } else if (mName == "MQDescriptorUnsync") {
         return "TYPE_FMQ_UNSYNC";
-    } else {
-        LOG(ERROR) << "Invalid fmq type name.\n";
     }
+
+    CHECK(false) << "Invalid FmqType.";
     return "";
 }
 
