@@ -87,8 +87,7 @@ ScalarType::Kind usualArithmeticConversion(ScalarType::Kind lft,
 
     // Although there is such rule to return "the unsigned counterpart of
     // the signed operand", it should not reach here in our HIDL grammar.
-    LOG(FATAL) << "Could not do usual arithmetic conversion for type "
-               << lft << "and" << rgt;
+    CHECK(false) << "Could not do usual arithmetic conversion for type " << lft << "and" << rgt;
     switch(signedRank) {
         case SK(INT8):  return SK(UINT8);
         case SK(INT16): return SK(UINT16);

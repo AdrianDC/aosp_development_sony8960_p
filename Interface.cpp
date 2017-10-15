@@ -444,8 +444,8 @@ static std::map<std::string, Method *> gAllReservedMethods;
 bool Interface::addMethod(Method *method) {
     if (isIBase()) {
         if (!gAllReservedMethods.emplace(method->name(), method).second) {
-            LOG(ERROR) << "ERROR: hidl-gen encountered duplicated reserved method "
-                       << method->name();
+            std::cerr << "ERROR: hidl-gen encountered duplicated reserved method " << method->name()
+                      << std::endl;
             return false;
         }
         // will add it in addAllReservedMethods
@@ -510,7 +510,7 @@ status_t Interface::resolveInheritance() {
         if (serial > LAST_CALL_TRANSACTION) {
             std::cerr << "ERROR: More than " << LAST_CALL_TRANSACTION
                       << " methods (including super and reserved) are not allowed at " << location()
-                      << "\n";
+                      << std::endl;
             return UNKNOWN_ERROR;
         }
 
@@ -525,7 +525,8 @@ status_t Interface::validate() const {
     CHECK(isIBase() == mSuperType.isEmptyReference());
 
     if (!isIBase() && !mSuperType->isInterface()) {
-        std::cerr << "ERROR: You can only extend interfaces at " << mSuperType.location() << "\n";
+        std::cerr << "ERROR: You can only extend interfaces at " << mSuperType.location()
+                  << std::endl;
         return UNKNOWN_ERROR;
     }
 
@@ -559,7 +560,7 @@ status_t Interface::validateUniqueNames() const {
                 std::cerr << "ERROR: Redefinition of method '" << method->name()
                           << "' defined in interface '" << definedInType->fullName() << "'";
             }
-            std::cerr << " at " << method->location() << "\n";
+            std::cerr << " at " << method->location() << std::endl;
             return UNKNOWN_ERROR;
         }
 
@@ -586,15 +587,14 @@ bool Interface::addAllReservedMethods() {
             || fillDebugMethod(method);
 
         if (!fillSuccess) {
-            LOG(ERROR) << "ERROR: hidl-gen does not recognize a reserved method "
-                       << method->name();
+            std::cerr << "ERROR: hidl-gen does not recognize a reserved method " << method->name()
+                      << std::endl;
             return false;
         }
         if (!reservedMethodsById.emplace(method->getSerialId(), method).second) {
-            LOG(ERROR) << "ERROR: hidl-gen uses duplicated serial id for "
-                       << method->name() << " and "
-                       << reservedMethodsById[method->getSerialId()]->name()
-                       << ", serialId = " << method->getSerialId();
+            std::cerr << "ERROR: hidl-gen uses duplicated serial id for " << method->name()
+                      << " and " << reservedMethodsById[method->getSerialId()]->name()
+                      << ", serialId = " << method->getSerialId() << std::endl;
             return false;
         }
     }
@@ -937,10 +937,11 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
                     }
                 }
             } else {
-                std::cerr << "Unrecognized annotation '"
-                          << name << "' for method: " << method->name()
+                std::cerr << "ERROR: Unrecognized annotation '" << name
+                          << "' for method: " << method->name()
                           << ". A VTS annotation should be one of: "
-                          << "entry, exit, callflow. \n";
+                          << "entry, exit, callflow." << std::endl;
+                return UNKNOWN_ERROR;
             }
             out.unindent();
             out << "}\n";
