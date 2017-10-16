@@ -58,9 +58,10 @@ my_timeout := $(if $(LOCAL_ROBOTEST_TIMEOUT),$(LOCAL_ROBOTEST_TIMEOUT),600)
 my_test_filter_command := $(if $(ROBOTEST_FILTER),grep -E "$(ROBOTEST_FILTER)",cat)
 
 # The directory containing the sources.
+my_instrument_makefile_dir := $(dir $(ALL_MODULES.$(LOCAL_TEST_PACKAGE).MAKEFILE))
 my_instrument_source_dirs := $(if $(LOCAL_INSTRUMENT_SOURCE_DIRS),\
     $(LOCAL_INSTRUMENT_SOURCE_DIRS),\
-    $(dir $(LOCAL_PATH))src $(dir $(LOCAL_PATH))java)
+    $(my_instrument_makefile_dir)src $(my_instrument_makefile_dir)java)
 
 ##########################
 # Used by base_rules.mk. #
