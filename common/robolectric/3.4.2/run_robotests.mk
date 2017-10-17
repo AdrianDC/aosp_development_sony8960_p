@@ -106,6 +106,7 @@ my_srcs_jars := \
 my_jars := \
     $(my_robolectric_jars) \
     prebuilts/sdk/$(LOCAL_SDK_VERSION)/android.jar \
+    $(call java-lib-files,junitxml) \
     $(my_srcs_jars)
 
 
