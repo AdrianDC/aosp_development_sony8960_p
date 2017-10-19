@@ -39,9 +39,6 @@ cc_defaults {
         debuggable: {
             cflags: ["-D__ANDROID_DEBUGGABLE__"]
         },
-        treble: {
-            cflags: ["-D__ANDROID_TREBLE__"]
-        },
     },
 }
 
