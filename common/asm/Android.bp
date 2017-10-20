@@ -33,22 +33,22 @@ java_import_host {
 }
 
 java_import_host {
-    name: "asm-6.0_BETA",
-    jars: ["asm-6.0_BETA.jar"],
+    name: "asm-6.0",
+    jars: ["asm-6.0.jar"],
 }
 
 java_import_host {
-    name: "asm-analysis-6.0_BETA",
-    jars: ["asm-analysis-6.0_BETA.jar"],
+    name: "asm-analysis-6.0",
+    jars: ["asm-analysis-6.0.jar"],
 }
 
 java_import_host {
-    name: "asm-commons-6.0_BETA",
-    jars: ["asm-commons-6.0_BETA.jar"],
+    name: "asm-commons-6.0",
+    jars: ["asm-commons-6.0.jar"],
 }
 
 java_import_host {
-    name: "asm-tree-6.0_BETA",
-    jars: ["asm-tree-6.0_BETA.jar"],
+    name: "asm-tree-6.0",
+    jars: ["asm-tree-6.0.jar"],
 }
 
