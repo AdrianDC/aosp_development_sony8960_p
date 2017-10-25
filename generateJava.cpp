@@ -84,38 +84,6 @@ status_t AST::generateJavaTypes(
     return OK;
 }
 
-void emitGetService(
-        Formatter& out,
-        const std::string& ifaceName,
-        const std::string& fqName,
-        bool isTry) {
-    const std::string functionName = isTry ? "tryGetService" : "getService";
-
-    out << "public static "
-        << ifaceName
-        << " "
-        << functionName
-        <<"(String serviceName) throws android.os.RemoteException ";
-    out.block([&] {
-        out << "return "
-            << ifaceName
-            << ".asInterface(android.os.HwBinder.getService(\""
-            << fqName
-            << "\", serviceName, "
-            << (isTry ? "true" : "false")
-            << "));\n";
-    }).endl().endl();
-
-    out << "public static "
-        << ifaceName
-        << " "
-        << functionName
-        << "() throws android.os.RemoteException ";
-    out.block([&] {
-        out << "return " << functionName << "(\"default\");\n";
-    }).endl().endl();
-}
-
 status_t AST::generateJava(
         const std::string &outputPath, const std::string &limitToType) const {
     if (!isJavaCompatible()) {
@@ -237,8 +205,37 @@ status_t AST::generateJava(
 
     out << "@Override\npublic android.os.IHwBinder asBinder();\n\n";
 
-    emitGetService(out, ifaceName, iface->fqName().string(), true /* isTry */);
-    emitGetService(out, ifaceName, iface->fqName().string(), false /* isTry */);
+    out << "public static "
+        << ifaceName
+        << " getService(String serviceName) throws android.os.RemoteException {\n";
+
+    out.indent();
+
+    out << "return "
+        << ifaceName
+        << ".asInterface(android.os.HwBinder.getService(\""
+        << iface->fqName().string()
+        << "\",serviceName));\n";
+
+    out.unindent();
+
+    out << "}\n\n";
+
+    out << "public static "
+        << ifaceName
+        << " getService() throws android.os.RemoteException {\n";
+
+    out.indent();
+
+    out << "return "
+        << ifaceName
+        << ".asInterface(android.os.HwBinder.getService(\""
+        << iface->fqName().string()
+        << "\",\"default\"));\n";
+
+    out.unindent();
+
+    out << "}\n\n";
 
     status_t err = emitJavaTypeDeclarations(out);
 
