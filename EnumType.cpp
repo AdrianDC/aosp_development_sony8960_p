@@ -397,23 +397,6 @@ void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
     emitBitFieldBitwiseAssignmentOperator(out, "|");
     emitBitFieldBitwiseAssignmentOperator(out, "&");
 
-    // TODO(b/65200821): remove these ifndefs
-    out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
-        // toString for bitfields, equivalent to dumpBitfield in Java
-        out << "template<typename>\n"
-            << "std::string toString("
-            << resolveToScalarType()->getCppArgumentType()
-            << " o);\n";
-        out << "template<>\n"
-            << "std::string toString<" << getCppStackType() << ">("
-            << resolveToScalarType()->getCppArgumentType()
-            << " o);\n\n";
-
-        // toString for enum itself
-        out << "std::string toString("
-            << getCppArgumentType()
-            << " o);\n\n";
-    out << "#else\n";
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
@@ -461,67 +444,6 @@ void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
                 out << "return \"" << value->name() << "\";\n";
             }).endl();
         });
-        out << "std::string os;\n";
-        scalarType->emitHexDump(out, "os",
-            "static_cast<" + scalarType->getCppStackType() + ">(o)");
-        out << "return os;\n";
-    }).endl().endl();
-    out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
-}
-
-void EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* prefix */) const {
-    // TODO(b/65200821): remove toString from .cpp once all prebuilts are rebuilt
-
-    const ScalarType *scalarType = mStorageType->resolveToScalarType();
-    CHECK(scalarType != NULL);
-
-    out << "template<>\n"
-        << "std::string toString<" << getCppStackType() << ">("
-        << scalarType->getCppArgumentType()
-        << " o) ";
-    out.block([&] {
-        // include toHexString for scalar types
-        out << "using ::android::hardware::details::toHexString;\n"
-            << "std::string os;\n"
-            << getBitfieldCppType(StorageMode_Stack) << " flipped = 0;\n"
-            << "bool first = true;\n";
-
-        forEachValueFromRoot([&](EnumValue* value) {
-            std::string valueName = fullName() + "::" + value->name();
-            out.sIf("(o & " + valueName + ")" +
-                    " == static_cast<" + scalarType->getCppStackType() +
-                    ">(" + valueName + ")", [&] {
-                out << "os += (first ? \"\" : \" | \");\n"
-                    << "os += \"" << value->name() << "\";\n"
-                    << "first = false;\n"
-                    << "flipped |= " << valueName << ";\n";
-            }).endl();
-        });
-        // put remaining bits
-        out.sIf("o != flipped", [&] {
-            out << "os += (first ? \"\" : \" | \");\n";
-            scalarType->emitHexDump(out, "os", "o & (~flipped)");
-        });
-        out << "os += \" (\";\n";
-        scalarType->emitHexDump(out, "os", "o");
-        out << "os += \")\";\n";
-
-        out << "return os;\n";
-    }).endl().endl();
-
-    out << "std::string toString("
-        << getCppArgumentType()
-        << " o) ";
-
-    out.block([&] {
-        out << "using ::android::hardware::details::toHexString;\n";
-
-        forEachValueFromRoot([&](EnumValue* value) {
-            out.sIf("o == " + fullName() + "::" + value->name(), [&] {
-                out << "return \"" << value->name() << "\";\n";
-            }).endl();
-        });
-
         out << "std::string os;\n";
         scalarType->emitHexDump(out, "os",
             "static_cast<" + scalarType->getCppStackType() + ">(o)");

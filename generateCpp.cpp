@@ -777,9 +777,6 @@ void AST::generateCppSource(Formatter& out) const {
         << mPackage.string() << "::" << baseName
         << "\"\n\n";
 
-    // TODO(b/65200821): remove define
-    out << "#define REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
-
     out << "#include <android/log.h>\n";
     out << "#include <cutils/trace.h>\n";
     out << "#include <hidl/HidlTransportSupport.h>\n\n";

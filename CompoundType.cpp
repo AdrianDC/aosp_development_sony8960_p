@@ -460,19 +460,6 @@ void CompoundType::emitTypeForwardDeclaration(Formatter& out) const {
 void CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
     Scope::emitPackageTypeDeclarations(out);
 
-    // TODO(b/65200821): remove these ifdefs
-    out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
-    out << "std::string toString("
-        << getCppArgumentType()
-        << ");\n\n";
-    if (canCheckEquality()) {
-        out << "bool operator==("
-            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
-
-        out << "bool operator!=("
-            << getCppArgumentType() << ", " << getCppArgumentType() << ");\n\n";
-    }
-    out << "#else\n";
     out << "static inline std::string toString("
         << getCppArgumentType()
         << (mFields->empty() ? "" : " o")
@@ -517,7 +504,6 @@ void CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
     } else {
         out << "// operator== and operator!= are not generated for " << localName() << "\n\n";
     }
-    out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
 }
 
 void CompoundType::emitPackageHwDeclarations(Formatter& out) const {
@@ -573,53 +559,6 @@ void CompoundType::emitTypeDefinitions(Formatter& out, const std::string& prefix
     if (needsResolveReferences()) {
         emitResolveReferenceDef(out, prefix, true /* isReader */);
         emitResolveReferenceDef(out, prefix, false /* isReader */);
-    }
-
-    // TODO(b/65200821): remove toString + operator== from .cpp once all prebuilts are rebuilt
-
-    out << "std::string toString("
-        << getCppArgumentType()
-        << (mFields->empty() ? "" : " o")
-        << ") ";
-
-    out.block([&] {
-        // include toString for scalar types
-        out << "using ::android::hardware::toString;\n"
-            << "std::string os;\n";
-        out << "os += \"{\";\n";
-
-        for (const NamedReference<Type>* field : *mFields) {
-            out << "os += \"";
-            if (field != *(mFields->begin())) {
-                out << ", ";
-            }
-            out << "." << field->name() << " = \";\n";
-            field->type().emitDump(out, "os", "o." + field->name());
-        }
-
-        out << "os += \"}\"; return os;\n";
-    }).endl().endl();
-
-    if (canCheckEquality()) {
-        out << "bool operator==("
-            << getCppArgumentType() << " " << (mFields->empty() ? "/* lhs */" : "lhs") << ", "
-            << getCppArgumentType() << " " << (mFields->empty() ? "/* rhs */" : "rhs") << ") ";
-        out.block([&] {
-            for (const auto &field : *mFields) {
-                out.sIf("lhs." + field->name() + " != rhs." + field->name(), [&] {
-                    out << "return false;\n";
-                }).endl();
-            }
-            out << "return true;\n";
-        }).endl().endl();
-
-        out << "bool operator!=("
-            << getCppArgumentType() << " lhs," << getCppArgumentType() << " rhs)";
-        out.block([&] {
-            out << "return !(lhs == rhs);\n";
-        }).endl().endl();
-    } else {
-        out << "// operator== and operator!= are not generated for " << localName() << "\n";
     }
 }
 
