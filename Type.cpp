@@ -28,6 +28,9 @@
 
 namespace android {
 
+// TODO(b/65200821): remove
+std::string gCurrentCompileName;
+
 Type::Type(Scope* parent) : mParent(parent) {}
 
 Type::~Type() {}
