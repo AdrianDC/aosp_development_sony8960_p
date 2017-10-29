@@ -45,6 +45,12 @@ cc_defaults {
 // This configuration is inherited by all hidl-gen-java modules
 java_defaults {
     name: "hidl-java-module-defaults",
+    // TODO(b/68433855): allow HIDL java to build in the PDK
+    product_variables: {
+        pdk: {
+            enabled: false,
+        },
+    },
 }
 
 //
