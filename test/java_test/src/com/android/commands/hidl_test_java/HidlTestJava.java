@@ -638,6 +638,94 @@ public final class HidlTestJava {
             }
         }
 
+        {
+            // TestArrays
+            IBase.LotsOfPrimitiveArrays in = new IBase.LotsOfPrimitiveArrays();
+
+            for (int i = 0; i < 128; ++i) {
+                in.byte1[i] = (byte)i;
+                in.boolean1[i] = (i & 4) != 0;
+                in.double1[i] = i;
+            }
+
+            int m = 0;
+            for (int i = 0; i < 8; ++i) {
+                for (int j = 0; j < 128; ++j, ++m) {
+                    in.byte2[i][j] = (byte)m;
+                    in.boolean2[i][j] = (m & 4) != 0;
+                    in.double2[i][j] = m;
+                }
+            }
+
+            m = 0;
+            for (int i = 0; i < 8; ++i) {
+                for (int j = 0; j < 16; ++j) {
+                    for (int k = 0; k < 128; ++k, ++m) {
+                        in.byte3[i][j][k] = (byte)m;
+                        in.boolean3[i][j][k] = (m & 4) != 0;
+                        in.double3[i][j][k] = m;
+                    }
+                }
+            }
+
+            IBase.LotsOfPrimitiveArrays out = proxy.testArrays(in);
+            ExpectTrue(in.equals(out));
+        }
+
+        {
+            // testByteVecs
+
+            ArrayList<byte[]> in = new ArrayList<byte[]>();
+
+            int k = 0;
+            for (int i = 0; i < in.size(); ++i) {
+                byte[] elem = new byte[128];
+                for (int j = 0; j < 128; ++j, ++k) {
+                    elem[j] = (byte)k;
+                }
+                in.add(elem);
+            }
+
+            ArrayList<byte[]> out = proxy.testByteVecs(in);
+            ExpectTrue(in.equals(out));
+        }
+
+        {
+            // testBooleanVecs
+
+            ArrayList<boolean[]> in = new ArrayList<boolean[]>();
+
+            int k = 0;
+            for (int i = 0; i < in.size(); ++i) {
+                boolean[] elem = new boolean[128];
+                for (int j = 0; j < 128; ++j, ++k) {
+                    elem[j] = (k & 4) != 0;
+                }
+                in.add(elem);
+            }
+
+            ArrayList<boolean[]> out = proxy.testBooleanVecs(in);
+            ExpectTrue(in.equals(out));
+        }
+
+        {
+            // testDoubleVecs
+
+            ArrayList<double[]> in = new ArrayList<double[]>();
+
+            int k = 0;
+            for (int i = 0; i < in.size(); ++i) {
+                double[] elem = new double[128];
+                for (int j = 0; j < 128; ++j, ++k) {
+                    elem[j] = k;
+                }
+                in.add(elem);
+            }
+
+            ArrayList<double[]> out = proxy.testDoubleVecs(in);
+            ExpectTrue(in.equals(out));
+        }
+
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process
         HidlDeathRecipient recipient1 = new HidlDeathRecipient();
@@ -823,6 +911,22 @@ public final class HidlTestJava {
                 takeAMaskCallback cb) {
             cb.onValues(bf, (byte)(bf | first),
                     (byte)(second.value & bf), (byte)((bf | bf) & third));
+        }
+
+        public LotsOfPrimitiveArrays testArrays(LotsOfPrimitiveArrays in) {
+            return in;
+        }
+
+        public ArrayList<byte[]> testByteVecs(ArrayList<byte[]> in) {
+            return in;
+        }
+
+        public ArrayList<boolean[]> testBooleanVecs(ArrayList<boolean[]> in) {
+            return in;
+        }
+
+        public ArrayList<double[]> testDoubleVecs(ArrayList<double[]> in) {
+            return in;
         }
 
         public byte returnABitField() {
