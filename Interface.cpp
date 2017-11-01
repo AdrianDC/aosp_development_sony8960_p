@@ -822,9 +822,24 @@ status_t Interface::emitGlobalTypeDeclarations(Formatter &out) const {
     if (status != OK) {
         return status;
     }
+
+    // TODO(b/65200821): remove these ifndefs
+    out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
     out << "std::string toString("
         << getCppArgumentType()
         << ");\n";
+    out << "#else\n";
+    out << "static inline std::string toString(" << getCppArgumentType() << " o) ";
+
+    out.block([&] {
+        out << "std::string os = \"[class or subclass of \";\n"
+            << "os += " << fullName() << "::descriptor;\n"
+            << "os += \"]\";\n"
+            << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
+            << "return os;\n";
+    }).endl().endl();
+    out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
+
     return OK;
 }
 
@@ -835,6 +850,7 @@ status_t Interface::emitTypeDefinitions(Formatter& out, const std::string& prefi
         return err;
     }
 
+    // TODO(b/65200821): remove toString from .cpp once all prebuilts are rebuilt
     out << "std::string toString("
         << getCppArgumentType()
         << " o) ";

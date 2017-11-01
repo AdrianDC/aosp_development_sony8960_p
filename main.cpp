@@ -1479,6 +1479,9 @@ int main(int argc, char **argv) {
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
 
+        // TODO(b/65200821): remove
+        gCurrentCompileName = "_" + StringHelper::Uppercase(fqName.tokenName());
+
         if (!fqName.isValid()) {
             fprintf(stderr,
                     "ERROR: Invalid fully-qualified name.\n");
