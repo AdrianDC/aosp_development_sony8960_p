@@ -460,8 +460,16 @@ void ArrayType::emitJavaFieldReaderWriter(
     std::string offsetName = "_hidl_array_offset_" + std::to_string(depth);
     out << "long " << offsetName << " = " << offset << ";\n";
 
+    const bool isPrimitiveArray = mElementType->isScalar();
+
+    /* If the element type corresponds to a Java primitive type we can optimize
+       the innermost loop by copying a linear range of memory instead of doing
+       a per-element copy. As a result the outer nested loop does not include
+       the final dimension. */
+    const size_t loopDimensions = mSizes.size() - (isPrimitiveArray ? 1 : 0);
+
     std::string indexString;
-    for (size_t dim = 0; dim < mSizes.size(); ++dim) {
+    for (size_t dim = 0; dim < loopDimensions; ++dim) {
         std::string iteratorName =
             "_hidl_index_" + std::to_string(depth) + "_" + std::to_string(dim);
 
@@ -491,21 +499,57 @@ void ArrayType::emitJavaFieldReaderWriter(
             << "();\n";
     }
 
-    mElementType->emitJavaFieldReaderWriter(
-            out,
-            depth + 1,
-            parcelName,
-            blobName,
-            fieldName + indexString,
-            offsetName,
-            isReader);
+    if (!isPrimitiveArray) {
+        mElementType->emitJavaFieldReaderWriter(
+                out,
+                depth + 1,
+                parcelName,
+                blobName,
+                fieldName + indexString,
+                offsetName,
+                isReader);
 
-    size_t elementAlign, elementSize;
-    mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+        size_t elementAlign, elementSize;
+        mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
 
-    out << offsetName << " += " << std::to_string(elementSize) << ";\n";
+        out << offsetName << " += " << std::to_string(elementSize) << ";\n";
+    } else {
+        if (isReader) {
+            out << blobName
+                << ".copyTo"
+                << mElementType->getJavaSuffix()
+                << "Array("
+                << offsetName
+                << ", "
+                << fieldName
+                << indexString
+                << ", "
+                << mSizes.back()->javaValue()
+                << " /* size */);\n";
+        } else {
+            out << blobName
+                << ".put"
+                << mElementType->getJavaSuffix()
+                << "Array("
+                << offsetName
+                << ", "
+                << fieldName
+                << indexString
+                << ");\n";
+        }
 
-    for (size_t dim = 0; dim < mSizes.size(); ++dim) {
+        size_t elementAlign, elementSize;
+        mElementType->getAlignmentAndSize(&elementAlign, &elementSize);
+
+        out << offsetName
+            << " += "
+            << mSizes.back()->javaValue()
+            << " * "
+            << elementSize
+            << ";\n";
+    }
+
+    for (size_t dim = 0; dim < loopDimensions; ++dim) {
         out.unindent();
         out << "}\n";
     }
