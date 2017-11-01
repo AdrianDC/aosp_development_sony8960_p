@@ -30,6 +30,10 @@
 
 namespace android {
 
+// TODO(b/65200821): remove
+// HACK because no no type can depend or see AST
+extern std::string gCurrentCompileName;
+
 struct ConstantExpression;
 struct Formatter;
 struct FQName;
