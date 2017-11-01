@@ -259,6 +259,14 @@ public final class HidlTestJava {
             ExpectTrue(quuxProxy == null);
         }
 
+        {
+            // Test waiting API
+            IBase baseProxyA = IBaz.getService("baz", true /* retry */);
+            ExpectTrue(baseProxyA != null);
+            IBase baseProxyB = IBaz.getService("baz", false /* retry */);
+            ExpectTrue(baseProxyB != null);
+        }
+
         IBaz proxy = IBaz.getService("baz");
         proxy.someBaseMethod();
 
