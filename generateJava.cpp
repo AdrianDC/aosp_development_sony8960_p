@@ -333,6 +333,18 @@ status_t AST::generateJava(
             << ifaceName << ".kInterfaceName + \"]@Proxy\";\n";
     }).endl().endl();
 
+    // Equals when internal binder object is equal (even if the interface Proxy object
+    // itself is different). This is similar to interfacesEqual in C++.
+    out << "@Override\npublic final boolean equals(java.lang.Object other) ";
+    out.block([&] {
+        out << "return android.os.HidlSupport.interfacesEqual(this, other);\n";
+    }).endl().endl();
+
+    out << "@Override\npublic final int hashCode() ";
+    out.block([&] {
+        out << "return this.asBinder().hashCode();\n";
+    }).endl().endl();
+
     const Interface *prevInterface = nullptr;
     for (const auto &tuple : iface->allMethodsFromRoot()) {
         const Method *method = tuple.method();
@@ -475,6 +487,8 @@ status_t AST::generateJava(
 
     out << "@Override\npublic android.os.IHwBinder asBinder() {\n";
     out.indent();
+    // If we change this behavior in the future and asBinder does not return "this",
+    // equals and hashCode should also be overridden.
     out << "return this;\n";
     out.unindent();
     out << "}\n\n";
