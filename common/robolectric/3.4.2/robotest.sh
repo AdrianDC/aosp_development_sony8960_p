@@ -88,7 +88,7 @@ function runtests() {
   fi
 }
 
-# Run the robolectric tests with retries for flaky tests.
+# Run the robolectric tests
 function run() {
   test $# = 0 || fatal "Too many arguments"
 
