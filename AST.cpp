@@ -111,6 +111,8 @@ status_t AST::postParse() {
     if (err != OK) return err;
     err = checkForwardReferenceRestrictions();
     if (err != OK) return err;
+    err = gatherReferencedTypes();
+    if (err != OK) return err;
 
     // Make future packages not to call passes
     // for processed types and expressions
@@ -153,7 +155,9 @@ status_t AST::lookupTypes() {
             Scope* scope = type->isScope() ? static_cast<Scope*>(type) : type->parent();
 
             for (auto* nextRef : type->getReferences()) {
-                if (nextRef->isResolved()) continue;
+                if (nextRef->isResolved()) {
+                    continue;
+                }
 
                 Type* nextType = lookupType(nextRef->getLookupFqName(), scope);
                 if (nextType == nullptr) {
@@ -163,6 +167,23 @@ status_t AST::lookupTypes() {
                     return UNKNOWN_ERROR;
                 }
                 nextRef->set(nextType);
+            }
+
+            return OK;
+        },
+        &visited);
+}
+
+status_t AST::gatherReferencedTypes() {
+    std::unordered_set<const Type*> visited;
+    return mRootScope.recursivePass(
+        [&](Type* type) -> status_t {
+            for (auto* nextRef : type->getReferences()) {
+                const Type *targetType = nextRef->get();
+                if (targetType->isNamedType()) {
+                    mReferencedTypeNames.insert(
+                            static_cast<const NamedType *>(targetType)->fqName());
+                }
             }
 
             return OK;
@@ -697,6 +718,26 @@ std::string AST::getBaseName() const {
     const Interface* iface = mRootScope.getInterface();
 
     return iface ? iface->getBaseName() : "types";
+}
+
+void AST::addDefinedTypes(std::set<FQName> *definedTypes) const {
+    std::for_each(
+            mDefinedTypesByFullName.begin(),
+            mDefinedTypesByFullName.end(),
+            [definedTypes](const auto &elem) {
+                if (!elem.second->isTypeDef()) {
+                    definedTypes->insert(elem.first);
+                }
+            });
+}
+
+void AST::addReferencedTypes(std::set<FQName> *referencedTypes) const {
+    std::for_each(
+            mReferencedTypeNames.begin(),
+            mReferencedTypeNames.end(),
+            [referencedTypes](const auto &fqName) {
+                referencedTypes->insert(fqName);
+            });
 }
 
 }  // namespace android;
