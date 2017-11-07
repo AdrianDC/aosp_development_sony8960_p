@@ -24,6 +24,7 @@ LOCAL_SRC_FILES := hidl_test_java
 LOCAL_REQUIRED_MODULES :=                       \
     hidl_test_java_lib                          \
     hidl_test_java_native                       \
+    hidl_test_java_native_32                    \
     android.hidl.base-V1.0-java                 \
     android.hidl.manager-V1.0-java              \
     android.hardware.tests.baz-V1.0-java
