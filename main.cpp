@@ -18,11 +18,12 @@
 #include "Coordinator.h"
 #include "Scope.h"
 
+#include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
-#include <android-base/logging.h>
+#include <iostream>
 #include <set>
 #include <stdio.h>
 #include <string>
@@ -126,6 +127,49 @@ static status_t generateSourcesForFile(
     return UNKNOWN_ERROR;
 }
 
+static status_t dumpDefinedButUnreferencedTypeNames(
+        const std::vector<FQName> &packageInterfaces,
+        Coordinator *coordinator) {
+    std::set<FQName> packageDefinedTypes;
+    std::set<FQName> packageReferencedTypes;
+    for (const auto &fqName : packageInterfaces) {
+        AST *ast = coordinator->parse(fqName);
+        if (!ast) {
+            std::cerr
+                << "ERROR: Could not parse " << fqName.string() << ". Aborting."
+                << std::endl;
+
+            return UNKNOWN_ERROR;
+        }
+
+        ast->addDefinedTypes(&packageDefinedTypes);
+        ast->addReferencedTypes(&packageReferencedTypes);
+    }
+
+#if 0
+    for (const auto &fqName : packageDefinedTypes) {
+        std::cout << "DEFINED: " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : packageReferencedTypes) {
+        std::cout << "REFERENCED: " << fqName.string() << std::endl;
+    }
+#endif
+
+    for (const auto &fqName : packageReferencedTypes) {
+        packageDefinedTypes.erase(fqName);
+    }
+
+    for (const auto &fqName : packageDefinedTypes) {
+        std::cerr
+            << "VERBOSE: DEFINED-BUT-NOT-REFERENCED "
+            << fqName.string()
+            << std::endl;
+    }
+
+    return OK;
+}
+
 static status_t generateSourcesForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
@@ -144,6 +188,15 @@ static status_t generateSourcesForPackage(
 
     if (err != OK) {
         return err;
+    }
+
+    if (coordinator->isVerbose()) {
+        err = dumpDefinedButUnreferencedTypeNames(
+                packageInterfaces, coordinator);
+
+        if (err != OK) {
+            return err;
+        }
     }
 
     for (const auto &fqName : packageInterfaces) {

@@ -115,6 +115,8 @@ struct AST {
     // Recursive tree pass that checks C++ forward declaration restrictions.
     status_t checkForwardReferenceRestrictions() const;
 
+    status_t gatherReferencedTypes();
+
     status_t generateCpp(const std::string &outputPath) const;
     status_t generateCppHeaders(const std::string &outputPath) const;
     status_t generateCppSources(const std::string &outputPath) const;
@@ -174,6 +176,9 @@ struct AST {
     static void generateCppPackageInclude(Formatter& out, const FQName& package,
                                           const std::string& klass);
 
+    void addDefinedTypes(std::set<FQName> *definedTypes) const;
+    void addReferencedTypes(std::set<FQName> *referencedTypes) const;
+
    private:
     const Coordinator *mCoordinator;
     std::string mPath;
@@ -200,6 +205,8 @@ struct AST {
 
     // used by the parser.
     size_t mSyntaxErrors = 0;
+
+    std::set<FQName> mReferencedTypeNames;
 
     // Helper functions for lookupType.
     Type* lookupTypeLocally(const FQName& fqName, Scope* scope);

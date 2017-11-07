@@ -39,6 +39,7 @@ struct Coordinator {
     void setRootPath(const std::string &rootPath);
 
     void setVerbose(bool value);
+    bool isVerbose() const;
 
     // adds path only if it doesn't exist
     status_t addPackagePath(const std::string& root, const std::string& path, std::string* error);

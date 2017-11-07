@@ -59,6 +59,10 @@ void Coordinator::setVerbose(bool verbose) {
     mVerbose = verbose;
 }
 
+bool Coordinator::isVerbose() const {
+    return mVerbose;
+}
+
 status_t Coordinator::addPackagePath(const std::string& root, const std::string& path, std::string* error) {
     FQName package = FQName(root, "0.0", "");
     for (const PackageRoot &packageRoot : mPackageRoots) {
