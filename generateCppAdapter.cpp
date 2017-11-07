@@ -45,11 +45,7 @@ status_t AST::generateCppAdapter(const std::string& outputPath) const {
 }
 
 status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
-    if (!AST::isInterface()) {
-        return OK;
-    }
-
-    const std::string klassName = getInterface()->getAdapterName();
+    const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
 
     Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
                                                Coordinator::Location::GEN_OUTPUT, klassName + ".h");
@@ -63,37 +59,41 @@ status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
     out << "#ifndef " << guard << "\n";
     out << "#define " << guard << "\n\n";
 
-    generateCppPackageInclude(out, mPackage, getInterface()->localName());
+    if (AST::isInterface()) {
+        generateCppPackageInclude(out, mPackage, getInterface()->localName());
 
-    enterLeaveNamespace(out, true /* enter */);
-    out.endl();
+        enterLeaveNamespace(out, true /* enter */);
+        out.endl();
 
-    const std::string mockName = getInterface()->fqName().cppName();
+        const std::string mockName = getInterface()->fqName().cppName();
 
-    out << "class " << klassName << " : public " << mockName << " ";
-    out.block([&] {
-        out << "public:\n";
-        out << "typedef " << mockName << " Pure;\n";
+        out << "class " << klassName << " : public " << mockName << " ";
+        out.block([&] {
+            out << "public:\n";
+            out << "typedef " << mockName << " Pure;\n";
 
-        out << klassName << "(::android::sp<" << mockName << "> impl);\n";
+            out << klassName << "(::android::sp<" << mockName << "> impl);\n";
 
-        generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
-            if (method->isHidlReserved()) {
+            generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
+                if (method->isHidlReserved()) {
+                    return OK;
+                }
+
+                out << "virtual ";
+                method->generateCppSignature(out);
+                out << " override;\n";
+
                 return OK;
-            }
+            });
+            out << "private:\n";
+            out << "::android::sp<" << mockName << "> mImpl;\n";
 
-            out << "virtual ";
-            method->generateCppSignature(out);
-            out << " override;\n";
+        }) << ";\n\n";
 
-            return OK;
-        });
-        out << "private:\n";
-        out << "::android::sp<" << mockName << "> mImpl;\n";
-
-    }) << ";\n\n";
-
-    enterLeaveNamespace(out, false /* enter */);
+        enterLeaveNamespace(out, false /* enter */);
+    } else {
+        out << "// no adapters for types.hal\n";
+    }
 
     out << "#endif // " << guard << "\n";
 
@@ -101,11 +101,7 @@ status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
 }
 
 status_t AST::generateCppAdapterSource(const std::string& outputPath) const {
-    if (!AST::isInterface()) {
-        return OK;
-    }
-
-    const std::string klassName = getInterface()->getAdapterName();
+    const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
 
     Formatter out = mCoordinator->getFormatter(
         outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
@@ -114,37 +110,41 @@ status_t AST::generateCppAdapterSource(const std::string& outputPath) const {
         return UNKNOWN_ERROR;
     }
 
-    out << "#include <hidladapter/HidlBinderAdapter.h>\n";
-
-    generateCppPackageInclude(out, mPackage, getInterface()->localName());
     generateCppPackageInclude(out, mPackage, klassName);
 
-    std::set<FQName> allImportedNames;
-    getAllImportedNames(&allImportedNames);
-    for (const auto& item : allImportedNames) {
-        if (item.name() == "types") {
-            continue;
+    if (AST::isInterface()) {
+        out << "#include <hidladapter/HidlBinderAdapter.h>\n";
+        generateCppPackageInclude(out, mPackage, getInterface()->localName());
+
+        std::set<FQName> allImportedNames;
+        getAllImportedNames(&allImportedNames);
+        for (const auto& item : allImportedNames) {
+            if (item.name() == "types") {
+                continue;
+            }
+            generateCppPackageInclude(out, item, item.getInterfaceAdapterName());
         }
-        generateCppPackageInclude(out, item, item.getInterfaceAdapterName());
+
+        out.endl();
+
+        enterLeaveNamespace(out, true /* enter */);
+        out.endl();
+
+        const std::string mockName = getInterface()->fqName().cppName();
+
+        out << klassName << "::" << klassName << "(::android::sp<" << mockName
+            << "> impl) : mImpl(impl) {}";
+
+        generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
+            generateAdapterMethod(out, method);
+            return OK;
+        });
+
+        enterLeaveNamespace(out, false /* enter */);
+        out.endl();
+    } else {
+        out << "// no adapters for types.hal\n";
     }
-
-    out.endl();
-
-    enterLeaveNamespace(out, true /* enter */);
-    out.endl();
-
-    const std::string mockName = getInterface()->fqName().cppName();
-
-    out << klassName << "::" << klassName << "(::android::sp<" << mockName
-        << "> impl) : mImpl(impl) {}";
-
-    generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
-        generateAdapterMethod(out, method);
-        return OK;
-    });
-
-    enterLeaveNamespace(out, false /* enter */);
-    out.endl();
 
     return OK;
 }
