@@ -23,10 +23,6 @@ cc_library {
     ],
     shared_libs: [
         "libbase",
-        "liblog",
-    ],
-    export_shared_lib_headers: [
-        "libbase",
     ],
 
     local_include_dirs: ["include/hidl-util"],
