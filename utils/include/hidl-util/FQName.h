@@ -18,7 +18,6 @@
 
 #define FQNAME_H_
 
-#include <android-base/macros.h>
 #include <string>
 #include <vector>
 
