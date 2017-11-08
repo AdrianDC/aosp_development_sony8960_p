@@ -18,7 +18,6 @@
 
 #define FORMATTER_H_
 
-#include <android-base/macros.h>
 #include <functional>
 #include <string>
 
@@ -156,7 +155,8 @@ struct Formatter {
 
     void output(const std::string &text) const;
 
-    DISALLOW_COPY_AND_ASSIGN(Formatter);
+    Formatter(const Formatter&) = delete;
+    void operator=(const Formatter&) = delete;
 };
 
 template <typename I>
