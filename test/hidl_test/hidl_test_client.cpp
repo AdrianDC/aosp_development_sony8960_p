@@ -133,17 +133,6 @@ using ::android::TOLERANCE_NS;
 using ::android::ONEWAY_TOLERANCE_NS;
 using std::to_string;
 
-bool isLibraryOpen(const std::string &lib) {
-    std::ifstream ifs("/proc/self/maps");
-    for (std::string line; std::getline(ifs, line);) {
-        if (line.size() >= lib.size() && line.substr(line.size() - lib.size()) == lib) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 template <typename T>
 static inline ::testing::AssertionResult isOk(const ::android::hardware::Return<T> &ret) {
     return ret.isOk()
@@ -427,20 +416,6 @@ public:
         ALOGI("Test setup complete");
     }
 };
-
-// does not work with linker configurations since libs are statically included
-TEST_F(HidlTest, DISABLED_PreloadTest) {
-    // in passthrough mode, this will already be opened
-    if (mode == BINDERIZED) {
-        using android::hardware::preloadPassthroughService;
-
-        static const std::string kLib = "android.hardware.tests.inheritance@1.0-impl.so";
-
-        EXPECT_FALSE(isLibraryOpen(kLib));
-        preloadPassthroughService<IParent>();
-        EXPECT_TRUE(isLibraryOpen(kLib));
-    }
-}
 
 TEST_F(HidlTest, ToStringTest) {
     using namespace android::hardware;
