@@ -20,7 +20,7 @@ import parser.files.TypesFileParser
 
 class TypesFileWriter(private val parser: TypesFileParser) : AbstractParserFileWriter(parser) {
 
-    override var templateResource = "template/types.html"
+    override var templateResource = "/resources/template/types.html"
 
     override fun replaceVars() {
         super.replaceVars()
