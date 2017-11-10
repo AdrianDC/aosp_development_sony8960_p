@@ -36,7 +36,7 @@ data class EntryData(val fullName: String, //package.BaseName
 class IndexFileWriter : AbstractFileWriter() {
 
     override val baseName = "index"
-    override val templateResource = "template/${this.baseName}.html"
+    override val templateResource = "/resources/template/${this.baseName}.html"
     override val path: Path by lazy { Paths.get("${config.outDir}${File.separator}${this.baseName}.html") }
 
     private val entries = mutableListOf<EntryData>()
