@@ -22,7 +22,7 @@ import writer.formatTextasHTML
 
 class InterfaceFileWriter(private val parser: InterfaceFileParser) : AbstractParserFileWriter(parser) {
 
-    override var templateResource = "template/interface.html"
+    override var templateResource = "/resources/template/interface.html"
 
     override fun replaceVars() {
         super.replaceVars()

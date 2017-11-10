@@ -55,4 +55,10 @@ java_binary_host {
         "src/parser/files/AbstractFileParser.kt",
         "src/parser/files/package.kt",
     ],
+    java_resources: [
+        "resources/template/index.html",
+        "resources/template/types.html",
+        "resources/template/interface.html",
+        "resources/assets/style.css",
+    ],
 }
