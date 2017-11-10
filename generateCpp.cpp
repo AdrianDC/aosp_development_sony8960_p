@@ -935,10 +935,10 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
             << "::descriptor(\""
             << iface->fqName().string()
             << "\");\n\n";
-        out << "__attribute__((constructor))";
+        out << "__attribute__((constructor)) ";
         out << "static void static_constructor() {\n";
         out.indent([&] {
-            out << "::android::hardware::details::gBnConstructorMap.set("
+            out << "::android::hardware::details::getBnConstructorMap().set("
                 << iface->localName()
                 << "::descriptor,\n";
             out.indent(2, [&] {
@@ -952,7 +952,7 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
                 });
                 out << "});\n";
             });
-            out << "::android::hardware::details::gBsConstructorMap.set("
+            out << "::android::hardware::details::getBsConstructorMap().set("
                 << iface->localName()
                 << "::descriptor,\n";
             out.indent(2, [&] {
@@ -973,10 +973,10 @@ status_t AST::generateCppSources(const std::string &outputPath) const {
         out << "__attribute__((destructor))";
         out << "static void static_destructor() {\n";
         out.indent([&] {
-            out << "::android::hardware::details::gBnConstructorMap.erase("
+            out << "::android::hardware::details::getBnConstructorMap().erase("
                 << iface->localName()
                 << "::descriptor);\n";
-            out << "::android::hardware::details::gBsConstructorMap.erase("
+            out << "::android::hardware::details::getBsConstructorMap().erase("
                 << iface->localName()
                 << "::descriptor);\n";
         });
