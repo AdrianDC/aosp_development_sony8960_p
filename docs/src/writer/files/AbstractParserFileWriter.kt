@@ -27,7 +27,7 @@ import java.nio.file.Path
 abstract class AbstractParserFileWriter(private val parser: AbstractFileParser) : AbstractFileWriter() {
 
     override val baseName = parser.name
-    override val templateResource: String by lazy { "template/${this.baseName}.html" }
+    override val templateResource: String by lazy { "/resources/template/${this.baseName}.html" }
     override val path: Path by lazy { getOutPath(parser, config.outDir) }
 
     override fun replaceVars() {

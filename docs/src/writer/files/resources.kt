@@ -26,7 +26,7 @@ object resources {
 
     fun readResourceText(name: String): String {
         return resourceCache.getOrElse(name) {
-            val input = javaClass.classLoader.getResourceAsStream(name)
+            val input = javaClass.getResourceAsStream(name)
                     ?: throw FileNotFoundException("Unable to locate file resource: $name")
 
             val contents = input.bufferedReader().use { it.readText() }

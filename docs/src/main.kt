@@ -65,7 +65,7 @@ fun main(args: Array<String>) {
     if (indexWriter.writeToFile()) println("$LOG_NAME Wrote index: ${indexWriter.path}")
 
     val cssPath = Paths.get("${config.outDir}/assets/style.css")
-    if (resources.copyToFile("assets/style.css", cssPath)) {
+    if (resources.copyToFile("/resources/assets/style.css", cssPath)) {
         println("$LOG_NAME Copied resource file: $cssPath")
     }
 }
