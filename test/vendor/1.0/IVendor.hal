@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package tests.vendor@1.0;
+package hidl.tests.vendor@1.0;
 
 import android.hardware.tests.baz@1.0;
 
