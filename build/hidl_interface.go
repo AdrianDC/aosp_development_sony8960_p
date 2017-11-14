@@ -188,7 +188,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	}
 
 	dependencies, javaDependencies, _ := processDependencies(mctx, i.properties.Interfaces)
-	roots, _ := getRootList(mctx, dependencies)
+	roots, _ := getRootList(mctx, append(dependencies, name.string()))
 	cppDependencies, _ := removeCoreDependencies(mctx, dependencies)
 
 	if mctx.Failed() {
