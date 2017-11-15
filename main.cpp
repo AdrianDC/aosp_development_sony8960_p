@@ -132,6 +132,7 @@ static status_t dumpDefinedButUnreferencedTypeNames(
         Coordinator *coordinator) {
     std::set<FQName> packageDefinedTypes;
     std::set<FQName> packageReferencedTypes;
+    std::set<FQName> packageImportedTypes;
     for (const auto &fqName : packageInterfaces) {
         AST *ast = coordinator->parse(fqName);
         if (!ast) {
@@ -144,11 +145,48 @@ static status_t dumpDefinedButUnreferencedTypeNames(
 
         ast->addDefinedTypes(&packageDefinedTypes);
         ast->addReferencedTypes(&packageReferencedTypes);
+        ast->getAllImportedNames(&packageImportedTypes);
     }
 
+    // Expand each "types" FQName into its constituent types, i.e.
+    // "android.hardware.foo@1.0::types" might expand into the set
+    // { android.hardware.foo@1.0::FirstType, android.hardware.foo@1.0::SecondType }.
+    std::set<FQName> expandedTypes;
+    for (const auto &importedFQName : packageImportedTypes) {
+        if (importedFQName.name() == "types") {
+            AST *ast = coordinator->parse(
+                    importedFQName,
+                    nullptr /* parsedASTs */,
+                    Coordinator::Enforce::NONE);
+
+            ast->addDefinedTypes(&expandedTypes);
+        }
+    }
+
+    // Now remove all "types" FQNames.
+    for (auto it = packageImportedTypes.begin();
+            it != packageImportedTypes.end();) {
+        if (it->name() == "types") {
+            it = packageImportedTypes.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // And merge the sets. (set<T>::merge not available until C++17)
+    std::for_each(
+            expandedTypes.begin(),
+            expandedTypes.end(),
+            [&packageImportedTypes](const auto &fqName) {
+                packageImportedTypes.insert(fqName);
+            });
 #if 0
     for (const auto &fqName : packageDefinedTypes) {
         std::cout << "DEFINED: " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : packageImportedTypes) {
+        std::cout << "IMPORTED: " << fqName.string() << std::endl;
     }
 
     for (const auto &fqName : packageReferencedTypes) {
@@ -158,11 +196,24 @@ static status_t dumpDefinedButUnreferencedTypeNames(
 
     for (const auto &fqName : packageReferencedTypes) {
         packageDefinedTypes.erase(fqName);
+        packageImportedTypes.erase(fqName);
+    }
+
+    // A package implicitly imports its own types, only track them in one set.
+    for (const auto &fqName : packageDefinedTypes) {
+        packageImportedTypes.erase(fqName);
     }
 
     for (const auto &fqName : packageDefinedTypes) {
         std::cerr
             << "VERBOSE: DEFINED-BUT-NOT-REFERENCED "
+            << fqName.string()
+            << std::endl;
+    }
+
+    for (const auto &fqName : packageImportedTypes) {
+        std::cerr
+            << "VERBOSE: IMPORTED-BUT-NOT-REFERENCED "
             << fqName.string()
             << std::endl;
     }
