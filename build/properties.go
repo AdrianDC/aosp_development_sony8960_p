@@ -37,8 +37,11 @@ type ccProperties struct {
 	Vendor_available          *bool
 	Generated_sources         []string
 	Generated_headers         []string
+	Group_static_libs         *bool
 	Shared_libs               []string
+	Static_libs               []string
 	Export_shared_lib_headers []string
+	Export_static_lib_headers []string
 	Export_generated_headers  []string
 }
 
