@@ -21,7 +21,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-snapshot \
     platform-robolectric-utils
 
-LOCAL_MODULE := platform-robolectric-prebuilt
+LOCAL_MODULE := platform-robolectric-3.1.1-prebuilt
 
 LOCAL_SDK_VERSION := current
 LOCAL_MIN_SDK_VERSION := o-b1
