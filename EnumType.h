@@ -92,6 +92,7 @@ struct EnumType : public Scope {
 
     status_t emitTypeDeclarations(Formatter &out) const override;
     void emitTypeForwardDeclaration(Formatter& out) const override;
+    void emitGlobalTypeDeclarations(Formatter& out) const override;
     status_t emitPackageTypeDeclarations(Formatter& out) const override;
     status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
@@ -118,6 +119,9 @@ struct EnumType : public Scope {
     std::vector<const EnumType*> superTypeChain() const;
 
     const Annotation *findExportAnnotation() const;
+
+    void emitIteratorDeclaration(Formatter& out) const;
+    void emitIteratorDefinitions(Formatter& out) const;
 
     void emitEnumBitwiseOperator(
             Formatter &out,
