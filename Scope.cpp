@@ -174,6 +174,13 @@ status_t Scope::emitTypeDeclarations(Formatter &out) const {
     });
 }
 
+void Scope::emitGlobalTypeDeclarations(Formatter& out) const {
+    forEachType([&](Type* type) {
+        type->emitGlobalTypeDeclarations(out);
+        return OK;
+    });
+}
+
 status_t Scope::emitPackageTypeDeclarations(Formatter& out) const {
     return forEachType([&](Type* type) { return type->emitPackageTypeDeclarations(out); });
 }
