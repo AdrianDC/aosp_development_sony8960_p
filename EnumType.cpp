@@ -348,7 +348,7 @@ void EnumType::emitBitFieldBitwiseAssignmentOperator(
     out << "}\n\n";
 }
 
-status_t EnumType::emitGlobalTypeDeclarations(Formatter &out) const {
+status_t EnumType::emitPackageTypeDeclarations(Formatter& out) const {
     emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
     emitEnumBitwiseOperator(out, false /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
     emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, false /* rhsIsEnum */, "|");

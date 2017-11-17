@@ -622,11 +622,11 @@ status_t Type::emitTypeDeclarations(Formatter &) const {
 
 void Type::emitTypeForwardDeclaration(Formatter&) const {}
 
-status_t Type::emitGlobalTypeDeclarations(Formatter &) const {
+status_t Type::emitPackageTypeDeclarations(Formatter&) const {
     return OK;
 }
 
-status_t Type::emitGlobalHwDeclarations(Formatter &) const {
+status_t Type::emitPackageHwDeclarations(Formatter&) const {
     return OK;
 }
 
