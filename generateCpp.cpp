@@ -715,7 +715,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     generateTemplatizationLink(out);
     generateCppTag(out, "android::hardware::details::bnhw_tag");
 
-    out << "::android::sp<" << iface->localName() << "> getImpl() { return _hidl_mImpl; };\n";
+    out << "::android::sp<" << iface->localName() << "> getImpl() { return _hidl_mImpl; }\n";
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
         if (method->isHidlReserved() && method->overridesCppImpl(IMPL_PROXY)) {
