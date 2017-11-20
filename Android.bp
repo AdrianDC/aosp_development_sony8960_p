@@ -28,6 +28,7 @@ cc_defaults {
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wextra-semi",
     ],
     product_variables: {
         debuggable: {
