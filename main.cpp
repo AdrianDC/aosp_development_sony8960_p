@@ -405,8 +405,7 @@ bool isHidlTransportPackage(const FQName& fqName) {
 bool isSystemProcessSupportedPackage(const FQName& fqName) {
     // Technically, so is hidl IBase + IServiceManager, but
     // these are part of libhidltransport.
-    return fqName.string() == "android.hardware.graphics.allocator@2.0" ||
-           fqName.string() == "android.hardware.graphics.common@1.0" ||
+    return fqName.string() == "android.hardware.graphics.common@1.0" ||
            fqName.string() == "android.hardware.graphics.mapper@2.0" ||
            fqName.string() == "android.hardware.graphics.mapper@2.1" ||
            fqName.string() == "android.hardware.renderscript@1.0" ||
