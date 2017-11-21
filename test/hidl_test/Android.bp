@@ -4,6 +4,7 @@ cc_defaults {
 
     shared_libs: [
         "android.hidl.memory@1.0",
+        "android.hidl.memory.token@1.0",
         "android.hidl.token@1.0",
         "libbase",
         "libcutils",

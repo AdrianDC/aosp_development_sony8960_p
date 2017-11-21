@@ -534,6 +534,11 @@ status_t Interface::validate() const {
     return Scope::validate();
 }
 
+void Interface::getAlignmentAndSize(size_t* align, size_t* size) const {
+    *align = 8;
+    *size = 8;
+}
+
 status_t Interface::validateUniqueNames() const {
     std::unordered_map<std::string, const Interface*> registeredMethodNames;
     for (auto const& tuple : allSuperMethodsFromRoot()) {
@@ -753,8 +758,7 @@ void Interface::emitReaderWriter(
         out << "{\n";
         out.indent();
 
-        const std::string binderName = "_hidl_" + name + "_binder";
-
+        const std::string binderName = "_hidl_binder";
         out << "::android::sp<::android::hardware::IBinder> "
             << binderName << ";\n";
 
