@@ -389,8 +389,7 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
                 [](auto &out) {
                     out << "_hidl_cb(";
                     out.block([&] {
-                        out << "::android::hardware::details::debuggable()"
-                            << "? getpid() : -1 /* pid */,\n"
+                        out << "::android::hardware::details::getPidIfSharable(),\n"
                             << "::android::hardware::details::debuggable()"
                             << "? reinterpret_cast<uint64_t>(this) : 0 /* ptr */,\n"
                             << sArch << "\n";
@@ -404,10 +403,9 @@ bool Interface::fillGetDebugInfoMethod(Method *method) const {
             const Type &refInfo = method->results().front()->type();
             out << refInfo.getJavaType(false /* forInitializer */) << " info = new "
                 << refInfo.getJavaType(true /* forInitializer */) << "();\n"
-                // TODO(b/34777099): PID for java.
-                << "info.pid = -1;\n"
+                << "info.pid = android.os.HidlSupport.getPidIfSharable();\n"
                 << "info.ptr = 0;\n"
-                << "info.arch = android.hidl.base.V1_0.DebugInfo.Architecture.UNKNOWN;"
+                << "info.arch = android.hidl.base.V1_0.DebugInfo.Architecture.UNKNOWN;\n"
                 << "return info;";
         } } } /* javaImpl */
     );
