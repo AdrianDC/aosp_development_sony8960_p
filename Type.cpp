@@ -622,6 +622,8 @@ status_t Type::emitTypeDeclarations(Formatter &) const {
 
 void Type::emitTypeForwardDeclaration(Formatter&) const {}
 
+void Type::emitGlobalTypeDeclarations(Formatter&) const {}
+
 status_t Type::emitPackageTypeDeclarations(Formatter&) const {
     return OK;
 }

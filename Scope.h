@@ -64,6 +64,7 @@ struct Scope : public NamedType {
     void topologicalReorder(const std::unordered_map<const Type*, size_t>& reversedOrder);
 
     status_t emitTypeDeclarations(Formatter &out) const override;
+    void emitGlobalTypeDeclarations(Formatter& out) const override;
     status_t emitPackageTypeDeclarations(Formatter& out) const override;
     status_t emitPackageHwDeclarations(Formatter& out) const override;
 

@@ -389,6 +389,8 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     out << "\n";
     enterLeaveNamespace(out, false /* enter */);
 
+    mRootScope.emitGlobalTypeDeclarations(out);
+
     out << "\n#endif  // " << guard << "\n";
 
     return OK;
