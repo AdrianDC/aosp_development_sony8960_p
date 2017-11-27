@@ -456,8 +456,8 @@ void CompoundType::emitTypeForwardDeclaration(Formatter& out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union") << " " << localName() << ";\n";
 }
 
-status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
-    Scope::emitGlobalTypeDeclarations(out);
+status_t CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
+    Scope::emitPackageTypeDeclarations(out);
 
     // TODO(b/65200821): remove these ifdefs
     out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
@@ -521,7 +521,7 @@ status_t CompoundType::emitGlobalTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-status_t CompoundType::emitGlobalHwDeclarations(Formatter &out) const  {
+status_t CompoundType::emitPackageHwDeclarations(Formatter& out) const {
     if (needsEmbeddedReadWrite()) {
         out << "::android::status_t readEmbeddedFromParcel(\n";
 

@@ -119,8 +119,8 @@ struct CompoundType : public Scope {
 
     status_t emitTypeDeclarations(Formatter &out) const override;
     void emitTypeForwardDeclaration(Formatter& out) const override;
-    status_t emitGlobalTypeDeclarations(Formatter &out) const override;
-    status_t emitGlobalHwDeclarations(Formatter &out) const override;
+    status_t emitPackageTypeDeclarations(Formatter& out) const override;
+    status_t emitPackageHwDeclarations(Formatter& out) const override;
 
     status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 

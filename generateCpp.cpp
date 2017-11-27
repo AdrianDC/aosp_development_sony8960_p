@@ -380,7 +380,7 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
         out << "};\n\n";
     }
 
-    err = mRootScope.emitGlobalTypeDeclarations(out);
+    err = mRootScope.emitPackageTypeDeclarations(out);
 
     if (err != OK) {
         return err;
@@ -433,7 +433,7 @@ status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
 
     enterLeaveNamespace(out, true /* enter */);
 
-    status_t err = mRootScope.emitGlobalHwDeclarations(out);
+    status_t err = mRootScope.emitPackageHwDeclarations(out);
     if (err != OK) {
         return err;
     }
