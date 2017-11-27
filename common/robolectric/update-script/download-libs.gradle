@@ -5,12 +5,11 @@
 defaultTasks 'copyLibs'
 
 def shadowArtifacts = [
-        "org.robolectric:framework:${robolectricVersion}",
-        "org.robolectric:httpclient:${robolectricVersion}",
-        "org.robolectric:maps:${robolectricVersion}",
-        "org.robolectric:multidex:${robolectricVersion}",
-        "org.robolectric:playservices:${robolectricVersion}",
-        "org.robolectric:supportv4:${robolectricVersion}",
+        "org.robolectric:shadows-framework:${robolectricVersion}",
+        "org.robolectric:shadows-httpclient:${robolectricVersion}",
+        "org.robolectric:shadows-multidex:${robolectricVersion}",
+        "org.robolectric:shadows-playservices:${robolectricVersion}",
+        "org.robolectric:shadows-supportv4:${robolectricVersion}",
 ]
 
 def buildDir = System.getProperty("user.dir")
