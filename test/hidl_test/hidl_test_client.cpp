@@ -134,6 +134,9 @@ using ::android::ONEWAY_TOLERANCE_NS;
 using std::to_string;
 
 template <typename T>
+using hidl_enum_iterator = ::android::hardware::hidl_enum_iterator<T>;
+
+template <typename T>
 static inline ::testing::AssertionResult isOk(const ::android::hardware::Return<T> &ret) {
     return ret.isOk()
         ? (::testing::AssertionSuccess() << ret.description())
@@ -457,6 +460,38 @@ TEST_F(HidlTest, PassthroughLookupTest) {
     EXPECT_NE(nullptr, IFoo::getService("::::::::", true /* getStub */).get());
     EXPECT_NE(nullptr, IFoo::getService("/////", true /* getStub */).get());
     EXPECT_NE(nullptr, IFoo::getService("\n", true /* getStub */).get());
+}
+
+TEST_F(HidlTest, EnumIteratorTest) {
+    using Empty = ::android::hardware::tests::foo::V1_0::EnumIterators::Empty;
+    using Grandchild = ::android::hardware::tests::foo::V1_0::EnumIterators::Grandchild;
+    using SkipsValues = ::android::hardware::tests::foo::V1_0::EnumIterators::SkipsValues;
+    using MultipleValues = ::android::hardware::tests::foo::V1_0::EnumIterators::MultipleValues;
+
+    for (const auto value : hidl_enum_iterator<Empty>()) {
+        (void)value;
+        EXPECT_TRUE(false) << "Empty iterator should not iterate";
+    }
+
+    auto it1 = hidl_enum_iterator<Grandchild>().begin();
+    EXPECT_EQ(Grandchild::A, *it1++);
+    EXPECT_EQ(Grandchild::B, *it1++);
+    EXPECT_EQ(hidl_enum_iterator<Grandchild>().end(), it1);
+
+    auto it2 = hidl_enum_iterator<SkipsValues>().begin();
+    EXPECT_EQ(SkipsValues::A, *it2++);
+    EXPECT_EQ(SkipsValues::B, *it2++);
+    EXPECT_EQ(SkipsValues::C, *it2++);
+    EXPECT_EQ(SkipsValues::D, *it2++);
+    EXPECT_EQ(SkipsValues::E, *it2++);
+    EXPECT_EQ(hidl_enum_iterator<SkipsValues>().end(), it2);
+
+    auto it3 = hidl_enum_iterator<MultipleValues>().begin();
+    EXPECT_EQ(MultipleValues::A, *it3++);
+    EXPECT_EQ(MultipleValues::B, *it3++);
+    EXPECT_EQ(MultipleValues::C, *it3++);
+    EXPECT_EQ(MultipleValues::D, *it3++);
+    EXPECT_EQ(hidl_enum_iterator<MultipleValues>().end(), it3);
 }
 
 TEST_F(HidlTest, EnumToStringTest) {
