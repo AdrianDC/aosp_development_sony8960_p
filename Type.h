@@ -263,11 +263,15 @@ struct Type {
 
     // Emit any declarations pertaining to this type that have to be
     // at global scope, i.e. enum class operators.
-    virtual status_t emitGlobalTypeDeclarations(Formatter &out) const;
+    // For android.hardware.foo@1.0::*, this will be in namespace
+    // android::hardware::foo::V1_0
+    virtual status_t emitPackageTypeDeclarations(Formatter& out) const;
 
     // Emit any declarations pertaining to this type that have to be
     // at global scope for transport, e.g. read/writeEmbeddedTo/FromParcel
-    virtual status_t emitGlobalHwDeclarations(Formatter &out) const;
+    // For android.hardware.foo@1.0::*, this will be in namespace
+    // android::hardware::foo::V1_0
+    virtual status_t emitPackageHwDeclarations(Formatter& out) const;
 
     virtual status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const;
 

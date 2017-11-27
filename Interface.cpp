@@ -815,8 +815,8 @@ void Interface::emitReaderWriter(
     }
 }
 
-status_t Interface::emitGlobalTypeDeclarations(Formatter &out) const {
-    status_t status = Scope::emitGlobalTypeDeclarations(out);
+status_t Interface::emitPackageTypeDeclarations(Formatter& out) const {
+    status_t status = Scope::emitPackageTypeDeclarations(out);
     if (status != OK) {
         return status;
     }
