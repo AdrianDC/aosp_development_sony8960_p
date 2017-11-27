@@ -283,6 +283,35 @@ void EnumType::emitTypeForwardDeclaration(Formatter& out) const {
     out << "enum class " << localName() << " : " << storageType << ";\n";
 }
 
+void EnumType::emitIteratorDeclaration(Formatter& out) const {
+    size_t elementCount = 0;
+    for (const auto* type : typeChain()) {
+        elementCount += type->mValues.size();
+    }
+
+    out << "template<> struct hidl_enum_iterator<" << getCppStackType() << ">\n";
+    out.block([&] {
+        out << "const " << getCppStackType() << "* begin() { return static_begin(); }\n";
+        out << "const " << getCppStackType() << "* end() { return begin() + " << elementCount
+            << "; }\n";
+        out << "private:\n";
+        out << "static const " << getCppStackType() << "* static_begin() ";
+        out.block([&] {
+            out << "static const " << getCppStackType() << " kVals[" << elementCount << "] ";
+            out.block([&] {
+                auto enumerators = typeChain();
+                std::reverse(enumerators.begin(), enumerators.end());
+                for (const auto* type : enumerators) {
+                    for (const auto* enumValue : type->mValues) {
+                        out << fullName() << "::" << enumValue->name() << ",\n";
+                    }
+                }
+            }) << ";\n";
+            out << "return &kVals[0];\n";
+        });
+    }) << ";\n\n";
+}
+
 void EnumType::emitEnumBitwiseOperator(
         Formatter &out,
         bool lhsIsEnum,
@@ -346,6 +375,16 @@ void EnumType::emitBitFieldBitwiseAssignmentOperator(
     });
 
     out << "}\n\n";
+}
+
+void EnumType::emitGlobalTypeDeclarations(Formatter& out) const {
+    out << "namespace android {\n";
+    out << "namespace hardware {\n";
+
+    emitIteratorDeclaration(out);
+
+    out << "}  // namespace hardware\n";
+    out << "}  // namespace android\n";
 }
 
 status_t EnumType::emitPackageTypeDeclarations(Formatter& out) const {
