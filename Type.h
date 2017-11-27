@@ -256,6 +256,8 @@ struct Type {
 
     virtual status_t emitTypeDeclarations(Formatter &out) const;
 
+    virtual void emitGlobalTypeDeclarations(Formatter& out) const;
+
     // Emit scope C++ forward declaration.
     // There is no need to forward declare interfaces, as
     // they are always declared in global scope in dedicated file.
