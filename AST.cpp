@@ -441,6 +441,7 @@ EnumValue* AST::lookupEnumValue(const FQName& fqName, std::string* errorMsg, Sco
         *errorMsg = "Cannot find type " + enumTypeName.string();
         return nullptr;
     }
+    type = type->resolve();
     if(!type->isEnum()) {
         *errorMsg = "Type " + enumTypeName.string() + " is not an enum type";
         return nullptr;
