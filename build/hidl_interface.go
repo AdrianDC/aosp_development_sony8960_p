@@ -313,7 +313,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		Defaults:          []string{"hidl-module-defaults"},
 		Generated_sources: []string{name.adapterHelperSourcesName()},
 		Generated_headers: []string{name.adapterHelperHeadersName()},
-		Shared_libs: []string {
+		Shared_libs: []string{
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
@@ -332,7 +332,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 			"libhidladapter",
 		}, wrap("", dependencies, "-adapter-helper"), cppDependencies, libraryIfExists),
 		Export_generated_headers: []string{name.adapterHelperHeadersName()},
-		Group_static_libs: proptools.BoolPtr(true),
+		Group_static_libs:        proptools.BoolPtr(true),
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.adapterSourcesName()),
@@ -344,7 +344,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	mctx.CreateModule(android.ModuleFactoryAdaptor(cc.TestFactory), &ccProperties{
 		Name:              proptools.StringPtr(name.adapterName()),
 		Generated_sources: []string{name.adapterSourcesName()},
-		Shared_libs: []string {
+		Shared_libs: []string{
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
