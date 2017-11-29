@@ -82,9 +82,7 @@ function do_makefiles_update() {
 
   for p in $packages; do
     echo "Updating $p";
-    local additional_options=
-    if [[ -f $(get_package_dir $current_dir $current_package $p)/.hidl_for_test ]]; then additional_options="-t"; fi
-    hidl-gen -Landroidbp $root_arguments $additional_options $p;
+    hidl-gen -Landroidbp $root_arguments $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
   done
 }

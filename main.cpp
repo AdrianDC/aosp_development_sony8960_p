@@ -20,14 +20,15 @@
 
 #include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
-#include <hidl-util/Formatter.h>
 #include <hidl-util/FQName.h>
+#include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <iostream>
 #include <set>
-#include <stdio.h>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 using namespace android;
@@ -54,8 +55,6 @@ struct OutputHandler {
     ValidationFunction validate;
     GenerationFunction generate;
 };
-
-static bool generateForTest = false;
 
 static status_t generateSourcesForFile(
         const FQName &fqName,
@@ -420,6 +419,24 @@ bool isSystemPackage(const FQName &package) {
            package.inPackage("android.hardware");
 }
 
+// TODO(b/69862859): remove special case
+bool isTestPackage(const FQName& fqName, Coordinator* coordinator, const std::string& outputPath) {
+    const auto fileExists = [](const std::string& file) {
+        struct stat buf;
+        return stat(file.c_str(), &buf) == 0;
+    };
+
+    const std::string path = coordinator->getFilepath(
+        outputPath, fqName, Coordinator::Location::PACKAGE_ROOT, ".hidl_for_test");
+    const bool exists = fileExists(path);
+
+    if (exists) {
+        coordinator->onFileAccess(path, "r");
+    }
+
+    return exists;
+}
+
 static status_t generateAdapterMainSource(
         const FQName & packageFQName,
         const char* /* hidl_gen */,
@@ -513,6 +530,7 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     if (err != OK) return err;
     bool genJavaLibrary = needsJavaCode && isJavaCompatible;
 
+    bool generateForTest = isTestPackage(packageFQName, coordinator, outputPath);
     bool isVndk = !generateForTest && isSystemPackage(packageFQName);
     bool isVndkSp = isVndk && isSystemProcessSupportedPackage(packageFQName);
 
@@ -954,7 +972,7 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-t] [-v]"
+            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-v]"
             "fqname+\n",
             me);
 
@@ -966,7 +984,6 @@ static void usage(const char *me) {
     fprintf(stderr, "         -o <output path>: Location to output files.\n");
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
-    fprintf(stderr, "         -t: generate build scripts (Android.bp) for tests.\n");
     fprintf(stderr, "         -v: verbose output (locations of touched files).\n");
 }
 
@@ -992,7 +1009,7 @@ int main(int argc, char **argv) {
     }
 
     int res;
-    while ((res = getopt(argc, argv, "hp:o:r:L:tv")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:r:L:v")) >= 0) {
         switch (res) {
             case 'p':
             {
@@ -1057,11 +1074,6 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            case 't': {
-                generateForTest = true;
-                break;
-            }
-
             case '?':
             case 'h':
             default:
@@ -1076,11 +1088,6 @@ int main(int argc, char **argv) {
     if (outputFormat == nullptr) {
         fprintf(stderr,
             "ERROR: no -L option provided.\n");
-        exit(1);
-    }
-
-    if (generateForTest && outputFormat->name() != "androidbp") {
-        fprintf(stderr, "ERROR: -t option is for -Landroidbp only.\n");
         exit(1);
     }
 
