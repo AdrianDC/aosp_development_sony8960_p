@@ -307,6 +307,7 @@ bool AST::addImport(const char *import) {
 
     if (fqName.name().empty()) {
         // import a package
+
         std::vector<FQName> packageInterfaces;
 
         status_t err =
@@ -318,6 +319,8 @@ bool AST::addImport(const char *import) {
         }
 
         for (const auto &subFQName : packageInterfaces) {
+            addToImportedNamesGranular(subFQName);
+
             // Do not enforce restrictions on imports.
             AST* ast = mCoordinator->parse(subFQName, &mImportedASTs, Coordinator::Enforce::NONE);
             if (ast == nullptr) {
@@ -329,6 +332,8 @@ bool AST::addImport(const char *import) {
 
         return true;
     }
+
+    addToImportedNamesGranular(fqName);
 
     AST *importAST;
 
@@ -453,6 +458,9 @@ EnumValue* AST::lookupEnumValue(const FQName& fqName, std::string* errorMsg, Sco
         *errorMsg = "Enum type " + enumTypeName.string() + " does not have " + enumValueName;
         return nullptr;
     }
+
+    mReferencedTypeNames.insert(enumType->fqName());
+
     return v;
 }
 
@@ -643,12 +651,24 @@ Type *AST::lookupTypeFromImports(const FQName &fqName) {
             // in turn referenced the found interface we'd mistakenly use the
             // name of the typedef instead of the proper name of the interface.
 
-            mImportedNames.insert(
-                    static_cast<Interface *>(resolvedType)->fqName());
+            const FQName &typeName =
+                static_cast<Interface *>(resolvedType)->fqName();
+
+            mImportedNames.insert(typeName);
         }
     }
 
     return returnedType;
+}
+
+void AST::addToImportedNamesGranular(const FQName &fqName) {
+    if (fqName.package() == package().package()
+            && fqName.version() == package().version()) {
+        // Our own names are _defined_ here, not imported.
+        return;
+    }
+
+    mImportedNamesGranular.insert(fqName);
 }
 
 Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
@@ -694,6 +714,21 @@ void AST::getAllImportedNames(std::set<FQName> *allImportNames) const {
         allImportNames->insert(name);
         AST* ast = mCoordinator->parse(name, nullptr /* imported */, Coordinator::Enforce::NONE);
         ast->getAllImportedNames(allImportNames);
+    }
+}
+
+void AST::getAllImportedNamesGranular(std::set<FQName> *allImportNames) const {
+    for (const auto& fqName : mImportedNamesGranular) {
+        if (fqName.name() == "types") {
+            // A package will export everything _defined_ but will not
+            // re-export anything it itself imported.
+            AST* ast = mCoordinator->parse(
+                    fqName, nullptr /* imported */, Coordinator::Enforce::NONE);
+
+            ast->addDefinedTypes(allImportNames);
+        } else {
+            allImportNames->insert(fqName);
+        }
     }
 }
 

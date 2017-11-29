@@ -56,7 +56,7 @@ struct Reference {
     const T* operator->() const { return get(); }
 
     /* Returns referenced object.
-       If a type is referenced, all typedefs are unwraped. */
+       If a type is referenced, all typedefs are unwrapped. */
     T* get() {
         CHECK(mResolved != nullptr);
         return mResolved->resolve();
