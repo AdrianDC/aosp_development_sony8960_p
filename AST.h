@@ -153,8 +153,14 @@ struct AST {
         return mImportedNames;
     }
 
-    // Get transitive closure of imported interface/types.
+    // Get transitive closure of imported interface/types. This will add
+    // everything exported by a package even if only a single type from
+    // that package was explicitly imported!
     void getAllImportedNames(std::set<FQName> *allImportSet) const;
+
+    // Get imported types, this includes those explicitly imported as well
+    // as all types defined in imported packages.
+    void getAllImportedNamesGranular(std::set<FQName> *allImportSet) const;
 
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
@@ -179,6 +185,8 @@ struct AST {
     void addDefinedTypes(std::set<FQName> *definedTypes) const;
     void addReferencedTypes(std::set<FQName> *referencedTypes) const;
 
+    void addToImportedNamesGranular(const FQName &fqName);
+
    private:
     const Coordinator *mCoordinator;
     std::string mPath;
@@ -189,7 +197,12 @@ struct AST {
 
     // A set of all external interfaces/types that are _actually_ referenced
     // in this AST, this is a subset of those specified in import statements.
+    // Note that this set only resolves to the granularity of either an
+    // interface type or a whole package.
     std::set<FQName> mImportedNames;
+
+    // This is the set of actually imported types.
+    std::set<FQName> mImportedNamesGranular;
 
     // A set of all ASTs we explicitly or implicitly (types.hal) import.
     std::set<AST *> mImportedASTs;
