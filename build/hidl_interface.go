@@ -132,7 +132,17 @@ func getRootList(mctx android.LoadHookContext, interfaces []string) ([]string, b
 		root := interfaceObject.properties.Root
 		rootObject := lookupPackageRoot(root)
 		if rootObject == nil {
-			mctx.PropertyErrorf("interfaces", "Cannot find package root for "+i+" which is '"+root+"'")
+			mctx.PropertyErrorf("interfaces", `Cannot find package root specification for package `+
+				`root '%s' needed for module '%s'. Either this is a mispelling of the package `+
+				`root, or a new hidl_package_root module needs to be added. For example, you can `+
+				`fix this error by adding the following to <some path>/Android.bp:
+
+hidl_package_root {
+    name: "%s",
+    path: "<some path>",
+}
+
+This corresponds to the "-r%s:<some path>" option that would be passed into hidl-gen.`, root, i, root, root)
 			hasError = true
 			continue
 		}
