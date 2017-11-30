@@ -132,7 +132,17 @@ func getRootList(mctx android.LoadHookContext, interfaces []string) ([]string, b
 		root := interfaceObject.properties.Root
 		rootObject := lookupPackageRoot(root)
 		if rootObject == nil {
-			mctx.PropertyErrorf("interfaces", "Cannot find package root for "+i+" which is '"+root+"'")
+			mctx.PropertyErrorf("interfaces", `Cannot find package root specification for package `+
+				`root '%s' needed for module '%s'. Either this is a mispelling of the package `+
+				`root, or a new hidl_package_root module needs to be added. For example, you can `+
+				`fix this error by adding the following to <some path>/Android.bp:
+
+hidl_package_root {
+    name: "%s",
+    path: "<some path>",
+}
+
+This corresponds to the "-r%s:<some path>" option that would be passed into hidl-gen.`, root, i, root, root)
 			hasError = true
 			continue
 		}
@@ -313,7 +323,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		Defaults:          []string{"hidl-module-defaults"},
 		Generated_sources: []string{name.adapterHelperSourcesName()},
 		Generated_headers: []string{name.adapterHelperHeadersName()},
-		Shared_libs: []string {
+		Shared_libs: []string{
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
@@ -332,7 +342,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 			"libhidladapter",
 		}, wrap("", dependencies, "-adapter-helper"), cppDependencies, libraryIfExists),
 		Export_generated_headers: []string{name.adapterHelperHeadersName()},
-		Group_static_libs: proptools.BoolPtr(true),
+		Group_static_libs:        proptools.BoolPtr(true),
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.adapterSourcesName()),
@@ -344,7 +354,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	mctx.CreateModule(android.ModuleFactoryAdaptor(cc.TestFactory), &ccProperties{
 		Name:              proptools.StringPtr(name.adapterName()),
 		Generated_sources: []string{name.adapterSourcesName()},
-		Shared_libs: []string {
+		Shared_libs: []string{
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
