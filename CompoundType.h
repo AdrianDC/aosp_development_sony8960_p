@@ -139,6 +139,7 @@ struct CompoundType : public Scope {
 
     void getAlignmentAndSize(size_t *align, size_t *size) const;
 
+    bool containsInterface() const;
 private:
     Style mStyle;
     std::vector<NamedReference<Type>*>* mFields;

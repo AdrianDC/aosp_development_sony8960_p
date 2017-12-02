@@ -107,6 +107,7 @@ struct Interface : public Scope {
     status_t emitPackageTypeDeclarations(Formatter& out) const override;
     status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
+    void getAlignmentAndSize(size_t* align, size_t* size) const override;
     void emitJavaReaderWriter(
             Formatter &out,
             const std::string &parcelObj,
