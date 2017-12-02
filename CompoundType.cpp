@@ -48,10 +48,7 @@ status_t CompoundType::validate() const {
     for (const auto* field : *mFields) {
         const Type& type = field->type();
 
-        if (type.isBinder()
-                || (type.isVector()
-                    && static_cast<const VectorType *>(
-                        &type)->isVectorOfBinders())) {
+        if ((type.isVector() && static_cast<const VectorType*>(&type)->isVectorOfBinders())) {
             std::cerr << "ERROR: Struct/Union must not contain references to interfaces at "
                       << field->location() << "\n";
             return UNKNOWN_ERROR;
@@ -128,7 +125,7 @@ std::string CompoundType::getCppType(
             return "const " + base + "&";
 
         case StorageMode_Result:
-            return "const " + base + "*";
+            return base + (containsInterface()?"":"*");
     }
 }
 
@@ -150,6 +147,22 @@ std::string CompoundType::getVtsType() const {
     CHECK(!"Should not be here");
 }
 
+bool CompoundType::containsInterface() const {
+    for (const auto& field : *mFields) {
+        if (field->type().isCompoundType()) {
+            const Type& t = field->type();
+            const CompoundType* ct = static_cast<const CompoundType*>(&t);
+            if (ct->containsInterface()) {
+                return true;
+            }
+        }
+        if (field->type().isInterface()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void CompoundType::emitReaderWriter(
         Formatter &out,
         const std::string &name,
@@ -157,57 +170,47 @@ void CompoundType::emitReaderWriter(
         bool parcelObjIsPointer,
         bool isReader,
         ErrorMode mode) const {
-    const std::string parentName = "_hidl_" + name + "_parent";
-
-    out << "size_t " << parentName << ";\n\n";
 
     const std::string parcelObjDeref =
         parcelObj + (parcelObjIsPointer ? "->" : ".");
 
-    if (isReader) {
-        out << "_hidl_err = "
-            << parcelObjDeref
-            << "readBuffer("
-            << "sizeof(*"
-            << name
-            << "), &"
-            << parentName
-            << ", "
-            << " reinterpret_cast<const void **>("
-            << "&" << name
-            << "));\n";
-
-        handleError(out, mode);
+    if(containsInterface()){
+        for (const auto& field : *mFields) {
+            field->type().emitReaderWriter(out, name + "." + field->name(),
+                                               parcelObj, parcelObjIsPointer, isReader, mode);
+        }
     } else {
-        out << "_hidl_err = "
-            << parcelObjDeref
-            << "writeBuffer(&"
-            << name
-            << ", sizeof("
-            << name
-            << "), &"
-            << parentName
-            << ");\n";
+        const std::string parentName = "_hidl_" + name + "_parent";
 
-        handleError(out, mode);
+        out << "size_t " << parentName << ";\n\n";
+
+        if (isReader) {
+            out << "_hidl_err = " << parcelObjDeref << "readBuffer("
+                << "sizeof(*" << name << "), &" << parentName << ", "
+                << " const_cast<const void**>(reinterpret_cast<void **>("
+                << "&" << name << ")));\n";
+            handleError(out, mode);
+        } else {
+            out << "_hidl_err = "
+                << parcelObjDeref
+                << "writeBuffer(&"
+                << name
+                << ", sizeof("
+                << name
+                << "), &"
+                << parentName
+                << ");\n";
+            handleError(out, mode);
+        }
+        if (mStyle != STYLE_STRUCT) {
+            return;
+        }
+        if (needsEmbeddedReadWrite()) {
+            emitReaderWriterEmbedded(out, 0 /* depth */, name, name, /* sanitizedName */
+                                     isReader /* nameIsPointer */, parcelObj, parcelObjIsPointer,
+                                     isReader, mode, parentName, "0 /* parentOffset */");
+        }
     }
-
-    if (mStyle != STYLE_STRUCT || !needsEmbeddedReadWrite()) {
-        return;
-    }
-
-    emitReaderWriterEmbedded(
-            out,
-            0 /* depth */,
-            name,
-            name, /* sanitizedName */
-            isReader /* nameIsPointer */,
-            parcelObj,
-            parcelObjIsPointer,
-            isReader,
-            mode,
-            parentName,
-            "0 /* parentOffset */");
 }
 
 void CompoundType::emitReaderWriterEmbedded(
@@ -1050,7 +1053,7 @@ bool CompoundType::deepNeedsResolveReferences(std::unordered_set<const Type*>* v
 }
 
 bool CompoundType::resultNeedsDeref() const {
-    return true;
+    return !containsInterface() ;
 }
 
 status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {

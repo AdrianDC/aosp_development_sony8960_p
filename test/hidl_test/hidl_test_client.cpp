@@ -10,7 +10,7 @@
 
 #include <android/hidl/allocator/1.0/IAllocator.h>
 #include <android/hidl/memory/1.0/IMemory.h>
-
+#include <android/hidl/memory/token/1.0/IMemoryToken.h>
 #include <android/hidl/token/1.0/ITokenManager.h>
 
 #include <android/hardware/tests/bar/1.0/BnHwBar.h>
@@ -66,6 +66,7 @@
 
 #include <hidl/ServiceManagement.h>
 #include <hidl/Status.h>
+#include <hidlmemory/HidlMemoryToken.h>
 #include <hidlmemory/mapping.h>
 
 #include <utils/Condition.h>
@@ -113,6 +114,7 @@ using ::android::hardware::Void;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_death_recipient;
 using ::android::hardware::hidl_memory;
+using ::android::hardware::HidlMemory;
 using ::android::hardware::hidl_string;
 using ::android::hardware::hidl_vec;
 using ::android::hidl::allocator::V1_0::IAllocator;
@@ -120,6 +122,8 @@ using ::android::hidl::base::V1_0::IBase;
 using ::android::hidl::manager::V1_1::IServiceManager;
 using ::android::hidl::manager::V1_0::IServiceNotification;
 using ::android::hidl::memory::V1_0::IMemory;
+using ::android::hidl::memory::token::V1_0::IMemoryToken;
+using ::android::hidl::memory::block::V1_0::MemoryBlock;
 using ::android::hidl::token::V1_0::ITokenManager;
 using ::android::sp;
 using ::android::wp;
@@ -886,6 +890,59 @@ TEST_F(HidlTest, BatchSharedMemory) {
         }
         memory->commit();
     }
+}
+
+TEST_F(HidlTest, MemoryBlock) {
+    const uint8_t kValue = 0xCA;
+    using ::android::hardware::IBinder;
+    using ::android::hardware::interfacesEqual;
+    using ::android::hardware::toBinder;
+
+    sp<HidlMemory> mem;
+    EXPECT_OK(ashmemAllocator->allocate(1024, [&](bool success, const hidl_memory& _mem) {
+        ASSERT_TRUE(success);
+        mem = HidlMemory::getInstance(_mem);
+    }));
+    memoryTest->set(*mem);
+    Return<sp<IMemoryToken>> tokenRet = memoryTest->get();
+    EXPECT_OK(tokenRet);
+    sp<IMemoryToken> token = tokenRet;
+    EXPECT_NE(nullptr, token.get());
+    EXPECT_OK(token->get([&](const hidl_memory& mem) {
+        sp<IMemory> memory = mapMemory(mem);
+
+        EXPECT_NE(nullptr, memory.get());
+
+        uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+        EXPECT_NE(data, nullptr);
+
+        EXPECT_EQ(memory->getSize(), mem.size());
+
+        memory->update();
+        memset(data, 0, memory->getSize());
+        memory->commit();
+
+        memoryTest->fillMemory(mem, kValue);
+        memory->commit();
+    }));
+    MemoryBlock blk = {token, 0x200 /* size */, 0x100 /* offset */};
+    EXPECT_OK(memoryTest->haveSomeMemoryBlock(blk, [&](const MemoryBlock& blkBack) {
+        sp<IMemoryToken> tokenBack = blkBack.token;
+        EXPECT_TRUE(interfacesEqual(token, tokenBack));
+        EXPECT_EQ(blkBack.size, 0x200ULL);
+        EXPECT_EQ(blkBack.offset, 0x100ULL);
+        blk = blkBack;
+    }));
+
+    sp<IMemoryToken> mtoken = blk.token;
+    mtoken->get([&](const hidl_memory& mem) {
+        sp<IMemory> memory = mapMemory(mem);
+        uint8_t* data = static_cast<uint8_t*>(static_cast<void*>(memory->getPointer()));
+        EXPECT_NE(data, nullptr);
+        for (size_t i = 0; i < mem.size(); i++) {
+            EXPECT_EQ(kValue, data[i]);
+        }
+    });
 }
 
 TEST_F(HidlTest, NullSharedMemory) {
