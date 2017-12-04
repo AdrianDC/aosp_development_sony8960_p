@@ -35,11 +35,14 @@ struct Type;
 struct Coordinator {
     Coordinator() {};
 
-    const std::string &getRootPath() const;
+    const std::string& getRootPath() const;
     void setRootPath(const std::string &rootPath);
 
     void setVerbose(bool value);
     bool isVerbose() const;
+
+    const std::string& getOwner() const;
+    void setOwner(const std::string& owner);
 
     // adds path only if it doesn't exist
     status_t addPackagePath(const std::string& root, const std::string& path, std::string* error);
@@ -137,7 +140,10 @@ private:
 
     std::vector<PackageRoot> mPackageRoots;
     std::string mRootPath;
+
+    // hidl-gen options
     bool mVerbose;
+    std::string mOwner;
 
     // cache to parse().
     mutable std::map<FQName, AST *> mCache;

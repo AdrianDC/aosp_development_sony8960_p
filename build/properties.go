@@ -19,12 +19,14 @@ type nameProperties struct {
 }
 
 type fileGroupProperties struct {
-	Name *string
-	Srcs []string
+	Name  *string
+	Owner *string
+	Srcs  []string
 }
 
 type genruleProperties struct {
 	Name  *string
+	Owner *string
 	Tools []string
 	Cmd   *string
 	Srcs  []string
@@ -33,6 +35,7 @@ type genruleProperties struct {
 
 type ccProperties struct {
 	Name                      *string
+	Owner                     *string
 	Defaults                  []string
 	Vendor_available          *bool
 	Generated_sources         []string
@@ -47,6 +50,7 @@ type ccProperties struct {
 
 type javaProperties struct {
 	Name              *string
+	Owner             *string
 	Defaults          []string
 	No_framework_libs *bool
 	Srcs              []string
