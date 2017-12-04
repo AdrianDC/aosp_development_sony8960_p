@@ -38,6 +38,9 @@ type hidlInterfaceProperties struct {
 	// Vndk properties for interface library only.
 	cc.VndkProperties
 
+	// The owner of the module
+	Owner *string
+
 	// List of .hal files which compose this interface.
 	Srcs []string
 
@@ -217,12 +220,14 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 
 	// TODO(b/69002743): remove filegroups
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.FileGroupFactory), &fileGroupProperties{
-		Name: proptools.StringPtr(name.fileGroupName()),
-		Srcs: i.properties.Srcs,
+		Name:  proptools.StringPtr(name.fileGroupName()),
+		Owner: i.properties.Owner,
+		Srcs:  i.properties.Srcs,
 	})
 
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.sourcesName()),
+		Owner: i.properties.Owner,
 		Tools: []string{"hidl-gen"},
 		Cmd:   hidlGenCommand("c++-sources", roots, name),
 		Srcs:  i.properties.Srcs,
@@ -231,6 +236,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.headersName()),
+		Owner: i.properties.Owner,
 		Tools: []string{"hidl-gen"},
 		Cmd:   hidlGenCommand("c++-headers", roots, name),
 		Srcs:  i.properties.Srcs,
@@ -246,6 +252,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	if shouldGenerateLibrary {
 		mctx.CreateModule(android.ModuleFactoryAdaptor(cc.LibraryFactory), &ccProperties{
 			Name:              proptools.StringPtr(name.string()),
+			Owner:             i.properties.Owner,
 			Vendor_available:  proptools.BoolPtr(true),
 			Defaults:          []string{"hidl-module-defaults"},
 			Generated_sources: []string{name.sourcesName()},
@@ -271,6 +278,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	if shouldGenerateJava {
 		mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 			Name:  proptools.StringPtr(name.javaSourcesName()),
+			Owner: i.properties.Owner,
 			Tools: []string{"hidl-gen"},
 			Cmd:   hidlGenCommand("java", roots, name),
 			Srcs:  i.properties.Srcs,
@@ -279,6 +287,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		})
 		mctx.CreateModule(android.ModuleFactoryAdaptor(java.LibraryFactory(true)), &javaProperties{
 			Name:              proptools.StringPtr(name.javaName()),
+			Owner:             i.properties.Owner,
 			Defaults:          []string{"hidl-java-module-defaults"},
 			No_framework_libs: proptools.BoolPtr(true),
 			Srcs:              []string{":" + name.javaSourcesName()},
@@ -289,6 +298,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	if shouldGenerateJavaConstants {
 		mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 			Name:  proptools.StringPtr(name.javaConstantsSourcesName()),
+			Owner: i.properties.Owner,
 			Tools: []string{"hidl-gen"},
 			Cmd:   hidlGenCommand("java-constants", roots, name),
 			Srcs:  i.properties.Srcs,
@@ -296,6 +306,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		})
 		mctx.CreateModule(android.ModuleFactoryAdaptor(java.LibraryFactory(true)), &javaProperties{
 			Name:              proptools.StringPtr(name.javaConstantsName()),
+			Owner:             i.properties.Owner,
 			Defaults:          []string{"hidl-java-module-defaults"},
 			No_framework_libs: proptools.BoolPtr(true),
 			Srcs:              []string{":" + name.javaConstantsSourcesName()},
@@ -304,6 +315,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.adapterHelperSourcesName()),
+		Owner: i.properties.Owner,
 		Tools: []string{"hidl-gen"},
 		Cmd:   hidlGenCommand("c++-adapter-sources", roots, name),
 		Srcs:  i.properties.Srcs,
@@ -311,6 +323,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.adapterHelperHeadersName()),
+		Owner: i.properties.Owner,
 		Tools: []string{"hidl-gen"},
 		Cmd:   hidlGenCommand("c++-adapter-headers", roots, name),
 		Srcs:  i.properties.Srcs,
@@ -319,6 +332,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 
 	mctx.CreateModule(android.ModuleFactoryAdaptor(cc.LibraryFactory), &ccProperties{
 		Name:              proptools.StringPtr(name.adapterHelperName()),
+		Owner:             i.properties.Owner,
 		Vendor_available:  proptools.BoolPtr(true),
 		Defaults:          []string{"hidl-module-defaults"},
 		Generated_sources: []string{name.adapterHelperSourcesName()},
@@ -346,6 +360,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(genrule.GenRuleFactory), &genruleProperties{
 		Name:  proptools.StringPtr(name.adapterSourcesName()),
+		Owner: i.properties.Owner,
 		Tools: []string{"hidl-gen"},
 		Cmd:   hidlGenCommand("c++-adapter-main", roots, name),
 		Srcs:  i.properties.Srcs,
@@ -353,6 +368,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 	})
 	mctx.CreateModule(android.ModuleFactoryAdaptor(cc.TestFactory), &ccProperties{
 		Name:              proptools.StringPtr(name.adapterName()),
+		Owner:             i.properties.Owner,
 		Generated_sources: []string{name.adapterSourcesName()},
 		Shared_libs: []string{
 			"libcutils",

@@ -64,10 +64,16 @@ function get_package_dir() {
 # Helps manage the package root of a HAL directory.
 # Should be called from the android root directory.
 #
-# Usage: do_makefiles_update [package:root ...]
+# Usage: do_makefiles_update [-O owner-name] [package:root ...]
 # Where the first package root is the current one.
 #
 function do_makefiles_update() {
+  local owner=
+  if [[ "$1" = "-O" ]]; then
+      owner="$2"
+      shift 2
+  fi
+
   local root_or_cwd=${ANDROID_BUILD_TOP%%/}${ANDROID_BUILD_TOP:+/}
 
   local current_package=$(package_root_to_package $1)
@@ -82,7 +88,7 @@ function do_makefiles_update() {
 
   for p in $packages; do
     echo "Updating $p";
-    hidl-gen -Landroidbp $root_arguments $p;
+    hidl-gen -O "$owner" -Landroidbp $root_arguments $p;
     rc=$?; if [[ $rc != 0 ]]; then return $rc; fi
   done
 }
