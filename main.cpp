@@ -515,6 +515,9 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     out << "hidl_interface ";
     out.block([&] {
         out << "name: \"" << makeLibraryName(packageFQName) << "\",\n";
+        if (!coordinator->getOwner().empty()) {
+            out << "owner: \"" << coordinator->getOwner() << "\",\n";
+        }
         out << "root: \"" << coordinator->getPackageRoot(packageFQName) << "\",\n";
         if (isHidlTransportPackage(packageFQName)) {
             out << "core_interface: true,\n";
@@ -609,8 +612,11 @@ static status_t generateAndroidBpImplForPackage(const FQName& packageFQName, con
 
     out << "cc_library_shared {\n";
     out.indent([&] {
-        out << "name: \"" << libraryName << "\",\n"
-            << "relative_install_path: \"hw\",\n"
+        out << "name: \"" << libraryName << "\",\n";
+        if (!coordinator->getOwner().empty()) {
+            out << "owner: \"" << coordinator->getOwner() << "\",\n";
+        }
+        out << "relative_install_path: \"hw\",\n"
             << "proprietary: true,\n"
             << "srcs: [\n";
         out.indent([&] {
@@ -940,8 +946,8 @@ static std::vector<OutputHandler> formats = {
 
 static void usage(const char *me) {
     fprintf(stderr,
-            "usage: %s [-p <root path>] -o <output path> -L <language> (-r <interface root>)+ [-v]"
-            "fqname+\n",
+            "usage: %s [-p <root path>] -o <output path> -L <language> [-O <owner>] (-r <interface "
+            "root>)+ [-v] fqname+\n",
             me);
 
     fprintf(stderr, "         -h: Prints this menu.\n");
@@ -949,6 +955,7 @@ static void usage(const char *me) {
     for (auto &e : formats) {
         fprintf(stderr, "            %-16s: %s\n", e.name().c_str(), e.description().c_str());
     }
+    fprintf(stderr, "         -O <owner>: The owner of the module for -Landroidbp(-impl)?.\n");
     fprintf(stderr, "         -o <output path>: Location to output files.\n");
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
@@ -977,7 +984,7 @@ int main(int argc, char **argv) {
     }
 
     int res;
-    while ((res = getopt(argc, argv, "hp:o:r:L:v")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:O:r:L:v")) >= 0) {
         switch (res) {
             case 'p':
             {
@@ -994,6 +1001,15 @@ int main(int argc, char **argv) {
             case 'o':
             {
                 outputPath = optarg;
+                break;
+            }
+
+            case 'O': {
+                if (!coordinator.getOwner().empty()) {
+                    fprintf(stderr, "ERROR: -O <owner> can only be specified once.\n");
+                    exit(1);
+                }
+                coordinator.setOwner(optarg);
                 break;
             }
 

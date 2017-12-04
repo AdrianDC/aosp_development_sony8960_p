@@ -2,6 +2,7 @@
 
 hidl_interface {
     name: "hidl.tests.vendor@1.1",
+    owner: "some-owner-name",
     root: "hidl.tests",
     srcs: [
         "IVendor.hal",
