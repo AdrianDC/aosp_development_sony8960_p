@@ -90,9 +90,9 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \\
     platform-robolectric-${roboVersion}-shadow-api:lib/shadowapi-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-snapshot:lib/robolectric-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-utils:lib/utils-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-multidex:lib/multidex-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-shadows-framework:lib/framework-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-shadows-httpclient:lib/httpclient-${roboVersion}.jar
+    platform-robolectric-${roboVersion}-multidex:lib/shadows-multidex-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-shadows-framework:lib/shadows-framework-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-shadows-httpclient:lib/shadows-httpclient-${roboVersion}.jar
 
 include \$(BUILD_MULTI_PREBUILT)
 EOF
