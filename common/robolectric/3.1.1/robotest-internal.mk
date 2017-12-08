@@ -35,6 +35,7 @@ $(my_target_output): \
 $(my_target_output): \
     PRIVATE_TIMEOUT := $(my_timeout)
 # Runs the Robolectric tests and saves the output and return value.
+# Robolectric < 3.5.1 only supports OpenJDK 8 http://b/70286093
 $(my_target_output) $(my_target_retval): \
     $(my_jars)
 	$(hide) echo "host Robolectric: $(PRIVATE_MODULE) ($(dir $@))"
@@ -48,6 +49,7 @@ $(my_target_output) $(my_target_retval): \
 	  PRIVATE_TARGET_MESSAGE="$(PRIVATE_TARGET_MESSAGE)" \
 	  PRIVATE_TIMEOUT="$(PRIVATE_TIMEOUT)" \
 	  PRIVATE_TESTS="$(PRIVATE_TESTS)" \
+	  PATH=${ANDROID_JAVA8_HOME}/bin:${PATH} \
 	  $(PRIVATE_ROBOLECTRIC_SCRIPT_PATH)/wrapper.sh \
 	    "$(PRIVATE_MODULE)" \
 	    "$(PRIVATE_TARGET_OUTPUT)" \

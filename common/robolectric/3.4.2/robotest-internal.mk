@@ -27,6 +27,7 @@ $(my_target_output): PRIVATE_TARGET_RETVAL := $(my_target_retval)
 $(my_target_output): PRIVATE_TIMEOUT := $(my_timeout)
 $(my_target_output): PRIVATE_XML_OUTPUT_FILE := $(my_target_xml)
 # Runs the Robolectric tests and saves the output and return value.
+# Robolectric < 3.5.1 only supports OpenJDK 8 http://b/70286093
 $(my_target_output): $(my_jars)
 	@echo "host Robolectric: $(PRIVATE_MODULE)"
 	$(hide) \
@@ -41,6 +42,7 @@ $(my_target_output): $(my_jars)
 	  PRIVATE_TESTS="$(PRIVATE_TESTS)" \
 	  XML_OUTPUT_FILE="$(PRIVATE_XML_OUTPUT_FILE)" \
 	  TEST_WORKSPACE="$(PRIVATE_MODULE)" \
+	  PATH=${ANDROID_JAVA8_HOME}/bin:${PATH} \
 	  $(PRIVATE_ROBOLECTRIC_SCRIPT_PATH)/wrapper.sh \
 	    "$(PRIVATE_MODULE)" \
 	    "$(PRIVATE_TARGET_OUTPUT)" \
