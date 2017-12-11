@@ -2,8 +2,8 @@ my_robolectric_runtime_deps := \
     lib/accessibility-test-framework-2.1.jar \
     lib/annotations-3.5.1.jar \
     lib/asm-6.0.jar \
-    lib/asm-commons-5.0.1.jar \
-    lib/asm-tree-5.0.1.jar \
+    lib/asm-commons-6.0.jar \
+    lib/asm-tree-6.0.jar \
     lib/bcprov-jdk15on-1.52.jar \
     lib/commons-codec-1.3.jar \
     lib/commons-logging-1.1.1.jar \
