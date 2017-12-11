@@ -36,6 +36,7 @@ dependencies {
     compile('com.ximpleware:vtd-xml:2.11')
     // Force ASM dependency to be 6.0 for JDK9 support
     compile('org.ow2.asm:asm:6.0')
+    compile('org.ow2.asm:asm-commons:6.0')
 
     shadowArtifacts.forEach { shadowArtifact ->
         compile shadowArtifact
