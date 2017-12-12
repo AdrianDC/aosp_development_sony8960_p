@@ -44,8 +44,7 @@ bool VectorType::isCompatibleElementType(const Type* elementType) const {
     if (elementType->isBitField()) {
         return true;
     }
-    if (elementType->isCompoundType() &&
-        static_cast<const CompoundType*>(elementType)->style() == CompoundType::STYLE_STRUCT) {
+    if (elementType->isCompoundType()) {
         return true;
     }
     if (elementType->isInterface()) {
