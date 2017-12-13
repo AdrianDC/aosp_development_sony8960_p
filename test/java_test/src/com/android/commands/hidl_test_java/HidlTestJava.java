@@ -262,6 +262,8 @@ public final class HidlTestJava {
             // Test proper exceptions are thrown
             try {
                 IBase proxy = IBase.getService("this-doesn't-exist");
+                // this should never run
+                ExpectTrue(false);
             } catch (Exception e) {
                 ExpectTrue(e instanceof NoSuchElementException);
             }
