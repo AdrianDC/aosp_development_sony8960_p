@@ -16,7 +16,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-3.5.1-shadows-framework \
     platform-robolectric-3.5.1-shadows-httpclient \
     platform-robolectric-3.5.1-snapshot \
-    platform-robolectric-3.5.1-utils
+    platform-robolectric-3.5.1-utils \
+    platform-robolectric-3.5.1-shadows-support-v4
 
 LOCAL_MODULE := platform-robolectric-3.5.1-prebuilt
 
@@ -39,6 +40,7 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-3.5.1-utils:lib/utils-3.5.1.jar \
     platform-robolectric-3.5.1-multidex:lib/shadows-multidex-3.5.1.jar \
     platform-robolectric-3.5.1-shadows-framework:lib/shadows-framework-3.5.1.jar \
-    platform-robolectric-3.5.1-shadows-httpclient:lib/shadows-httpclient-3.5.1.jar
+    platform-robolectric-3.5.1-shadows-httpclient:lib/shadows-httpclient-3.5.1.jar \
+    platform-robolectric-3.5.1-shadows-support-v4:lib/shadows-supportv4-3.5.1.jar
 
 include $(BUILD_MULTI_PREBUILT)
