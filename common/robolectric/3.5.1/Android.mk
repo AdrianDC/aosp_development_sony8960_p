@@ -6,6 +6,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
+    platform-robolectric-3.5.1-asm \
     platform-robolectric-3.5.1-annotations \
     platform-robolectric-3.5.1-junit \
     platform-robolectric-3.5.1-multidex \
@@ -28,6 +29,7 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+    platform-robolectric-3.5.1-asm:lib/asm-6.0.jar \
     platform-robolectric-3.5.1-annotations:lib/annotations-3.5.1.jar \
     platform-robolectric-3.5.1-junit:lib/junit-3.5.1.jar \
     platform-robolectric-3.5.1-resources:lib/resources-3.5.1.jar \
