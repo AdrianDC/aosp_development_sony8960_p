@@ -138,7 +138,7 @@ ifdef DEBUG_ROBOLECTRIC
     # - suspend: do not start running any code until the debugger connects
     my_java_args := \
         -Drobolectric.logging.enabled=true \
-        -Xdebug -agentlib:jdwp=server=y,transport=dt_socket,address=5005,suspend=y
+        -Xdebug -agentlib:jdwp=server=y,transport=dt_socket,address=localhost:5005,suspend=y
 
     # Remove the timeout so Robolectric doesn't get killed while debugging
     my_timeout := 0
