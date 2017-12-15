@@ -963,6 +963,23 @@ TEST_F(HidlTest, FooGetDescriptorTest) {
     }));
 }
 
+TEST_F(HidlTest, FooConvertToBoolIfSmallTest) {
+    hidl_vec<IFoo::Union> u = {
+        {.intValue = 7}, {.intValue = 0}, {.intValue = 1}, {.intValue = 8},
+    };
+    EXPECT_OK(foo->convertToBoolIfSmall(IFoo::Discriminator::INT, u, [&](const auto& res) {
+        ASSERT_EQ(4u, res.size());
+        EXPECT_EQ(IFoo::Discriminator::INT, res[0].discriminator);
+        EXPECT_EQ(u[0].intValue, res[0].value.intValue);
+        EXPECT_EQ(IFoo::Discriminator::BOOL, res[1].discriminator);
+        EXPECT_EQ(static_cast<bool>(u[1].intValue), res[1].value.boolValue);
+        EXPECT_EQ(IFoo::Discriminator::BOOL, res[2].discriminator);
+        EXPECT_EQ(static_cast<bool>(u[2].intValue), res[2].value.boolValue);
+        EXPECT_EQ(IFoo::Discriminator::INT, res[3].discriminator);
+        EXPECT_EQ(u[3].intValue, res[3].value.intValue);
+    }));
+}
+
 TEST_F(HidlTest, FooDoThisTest) {
     ALOGI("CLIENT call doThis.");
     EXPECT_OK(foo->doThis(1.0f));
