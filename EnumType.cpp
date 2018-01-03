@@ -176,8 +176,9 @@ std::string EnumType::getVtsType() const {
     return "TYPE_ENUM";
 }
 
-std::string EnumType::getBitfieldCppType(StorageMode mode, bool specifyNamespaces) const {
-    return resolveToScalarType()->getCppType(mode, specifyNamespaces);
+std::string EnumType::getBitfieldCppType(StorageMode /* mode */, bool specifyNamespaces) const {
+    const std::string space = specifyNamespaces ? "::android::hardware::" : "";
+    return space + "hidl_bitfield<" + (specifyNamespaces ? fullName() : localName()) + ">";
 }
 
 std::string EnumType::getBitfieldJavaType(bool forInitializer) const {
