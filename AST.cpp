@@ -301,7 +301,10 @@ status_t AST::checkForwardReferenceRestrictions() const {
 
 bool AST::addImport(const char *import) {
     FQName fqName(import);
-    CHECK(fqName.isValid());
+    if (!fqName.isValid()) {
+        std::cerr << "ERROR: '" << import << "' is an invalid fully-qualified name." << std::endl;
+        return false;
+    }
 
     fqName.applyDefaults(mPackage.package(), mPackage.version());
 
