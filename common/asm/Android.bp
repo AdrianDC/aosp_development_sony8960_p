@@ -32,23 +32,29 @@ java_import_host {
     jars: ["asm-tree-5.2.jar"],
 }
 
-java_import_host {
+// These should be host-only, since there is no bytecode on the device to be
+// parsed with ASM, but jacocoagent currently needs them to compile (b/69671801)
+java_import {
     name: "asm-6.0",
+    host_supported: true,
     jars: ["asm-6.0.jar"],
 }
 
-java_import_host {
+java_import {
     name: "asm-analysis-6.0",
+    host_supported: true,
     jars: ["asm-analysis-6.0.jar"],
 }
 
-java_import_host {
+java_import {
     name: "asm-commons-6.0",
+    host_supported: true,
     jars: ["asm-commons-6.0.jar"],
 }
 
-java_import_host {
+java_import {
     name: "asm-tree-6.0",
+    host_supported: true,
     jars: ["asm-tree-6.0.jar"],
 }
 
