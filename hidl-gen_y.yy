@@ -771,6 +771,11 @@ method_declaration
       }
     | opt_annotations valid_identifier '(' typed_vars ')' GENERATES '(' typed_vars ')' require_semicolon
       {
+          if ($8->empty()) {
+              std::cerr << "ERROR: generates clause used without result at " << @1 << "\n";
+              ast->addSyntaxError();
+          }
+
           $$ = new Method($2 /* name */,
                           $4 /* args */,
                           $8 /* results */,
