@@ -785,6 +785,18 @@ public final class HidlTestJava {
             ExpectTrue(set.contains(proxy2));
             ExpectFalse(set.contains(manager));
         }
+        {
+            IBaz baz = IBaz.getService("baz");
+            ExpectTrue(baz != null);
+            IBaz.StructWithInterface swi = new IBaz.StructWithInterface();
+            swi.dummy = baz;
+            swi.number = 12345678;
+            IBaz.StructWithInterface swi_back = baz.haveSomeStructWithInterface(swi);
+            ExpectTrue(swi_back != null);
+            ExpectTrue(swi_back.dummy != null);
+            ExpectTrue(HidlSupport.interfacesEqual(baz, swi_back.dummy));
+            ExpectTrue(swi_back.number == 12345678);
+        }
 
         // --- DEATH RECIPIENT TESTING ---
         // This must always be done last, since it will kill the native server process
@@ -1065,6 +1077,10 @@ public final class HidlTestJava {
 
         public void returnABunchOfStrings(returnABunchOfStringsCallback cb) {
             cb.onValues("Eins", "Zwei", "Drei");
+        }
+
+        public StructWithInterface haveSomeStructWithInterface(StructWithInterface swi) {
+            return swi;
         }
     }
 
