@@ -338,6 +338,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		Generated_sources: []string{name.adapterHelperSourcesName()},
 		Generated_headers: []string{name.adapterHelperHeadersName()},
 		Shared_libs: []string{
+			"libbase",
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
@@ -371,6 +372,7 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		Owner:             i.properties.Owner,
 		Generated_sources: []string{name.adapterSourcesName()},
 		Shared_libs: []string{
+			"libbase",
 			"libcutils",
 			"libhidlbase",
 			"libhidltransport",
