@@ -992,16 +992,15 @@ int main(int argc, char **argv) {
     Coordinator coordinator;
     std::string outputPath;
 
-    const char *ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
-    if (ANDROID_BUILD_TOP != nullptr) {
-        coordinator.setRootPath(ANDROID_BUILD_TOP);
-    }
-
     int res;
     while ((res = getopt(argc, argv, "hp:o:O:r:L:v")) >= 0) {
         switch (res) {
             case 'p':
             {
+                if (!coordinator.getRootPath().empty()) {
+                    fprintf(stderr, "ERROR: -p <root path> can only be specified once.\n");
+                    exit(1);
+                }
                 coordinator.setRootPath(optarg);
                 break;
             }
@@ -1014,6 +1013,10 @@ int main(int argc, char **argv) {
 
             case 'o':
             {
+                if (!outputPath.empty()) {
+                    fprintf(stderr, "ERROR: -o <output path> can only be specified once.\n");
+                    exit(1);
+                }
                 outputPath = optarg;
                 break;
             }
@@ -1080,6 +1083,13 @@ int main(int argc, char **argv) {
                 exit(1);
                 break;
             }
+        }
+    }
+
+    if (coordinator.getRootPath().empty()) {
+        const char* ANDROID_BUILD_TOP = getenv("ANDROID_BUILD_TOP");
+        if (ANDROID_BUILD_TOP != nullptr) {
+            coordinator.setRootPath(ANDROID_BUILD_TOP);
         }
     }
 
