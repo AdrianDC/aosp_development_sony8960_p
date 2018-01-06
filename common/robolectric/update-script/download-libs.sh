@@ -62,13 +62,15 @@ include \$(CLEAR_VARS)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \\
     platform-robolectric-${roboVersion}-annotations \\
+    platform-robolectric-${roboVersion}-asm \\
     platform-robolectric-${roboVersion}-junit \\
-    platform-robolectric-${roboVersion}-multidex \\
     platform-robolectric-${roboVersion}-resources \\
     platform-robolectric-${roboVersion}-sandbox \\
     platform-robolectric-${roboVersion}-shadow-api \\
     platform-robolectric-${roboVersion}-shadows-framework \\
     platform-robolectric-${roboVersion}-shadows-httpclient \\
+    platform-robolectric-${roboVersion}-shadows-multidex \\
+    platform-robolectric-${roboVersion}-shadows-support-v4 \\
     platform-robolectric-${roboVersion}-snapshot \\
     platform-robolectric-${roboVersion}-utils
 
@@ -84,15 +86,17 @@ include \$(CLEAR_VARS)
 
 LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \\
     platform-robolectric-${roboVersion}-annotations:lib/annotations-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-asm:lib/asm-6.0.jar \\
     platform-robolectric-${roboVersion}-junit:lib/junit-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-resources:lib/resources-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-sandbox:lib/sandbox-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-shadow-api:lib/shadowapi-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-snapshot:lib/robolectric-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-utils:lib/utils-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-multidex:lib/shadows-multidex-${roboVersion}.jar \\
     platform-robolectric-${roboVersion}-shadows-framework:lib/shadows-framework-${roboVersion}.jar \\
-    platform-robolectric-${roboVersion}-shadows-httpclient:lib/shadows-httpclient-${roboVersion}.jar
+    platform-robolectric-${roboVersion}-shadows-httpclient:lib/shadows-httpclient-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-shadows-multidex:lib/shadows-multidex-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-shadows-support-v4:lib/shadows-supportv4-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-snapshot:lib/robolectric-${roboVersion}.jar \\
+    platform-robolectric-${roboVersion}-utils:lib/utils-${roboVersion}.jar
 
 include \$(BUILD_MULTI_PREBUILT)
 EOF
