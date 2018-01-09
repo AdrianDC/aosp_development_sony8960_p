@@ -2,7 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-my_jacoco_version := 0.7.2.201409121644
+my_jacoco_version := 0.8.0.201801022044
 
 LOCAL_SRC_FILES := \
     $(call all-java-files-under, src/main/java) \
