@@ -29,6 +29,9 @@ $(my_target_output): PRIVATE_XML_OUTPUT_FILE := $(my_target_xml)
 # Runs the Robolectric tests and saves the output and return value.
 $(my_target_output): $(my_jars)
 	@echo "host Robolectric: $(PRIVATE_MODULE)"
+	# Run `touch` to always create the output XML file, so the build doesn't break even if the
+	# runner failed to create the XML output
+	$(hide) touch "$(PRIVATE_XML_OUTPUT_FILE)"
 	$(hide) \
 	  PRIVATE_INTERMEDIATES="$(dir $@)" \
 	  PRIVATE_JARS="$(PRIVATE_JARS)" \
