@@ -153,6 +153,14 @@ struct AST {
         return mImportedNames;
     }
 
+    // Warning: this only includes names explicitly referenced in code.
+    //   It does not include all names which are imported.
+    //
+    // Currently, there is one valid usecase for this: importing exactly
+    // the names which need to be imported in generated code. If you import
+    // based on getAllImportedNamesGranular instead, you will import things
+    // that aren't actually used in the resultant code.
+    //
     // Get transitive closure of imported interface/types. This will add
     // everything exported by a package even if only a single type from
     // that package was explicitly imported!
@@ -204,6 +212,9 @@ struct AST {
     // This is the set of actually imported types.
     std::set<FQName> mImportedNamesGranular;
 
+    // Warning: this only includes names explicitly referenced in code.
+    //   It does not include all names which are imported.
+    //
     // A set of all ASTs we explicitly or implicitly (types.hal) import.
     std::set<AST *> mImportedASTs;
 
