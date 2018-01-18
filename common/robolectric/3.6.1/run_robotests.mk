@@ -177,6 +177,8 @@ my_jacoco_agent_args = \
     append=false
 my_java_args := \
     -javaagent:$(my_jacoco_agent_jar)=$(call normalize-comma-list, $(my_jacoco_agent_args))
+# JDK9 and jacoco agent doesn't seem to play well together: b/72149122
+my_use_java8 := true
 include $(my_robolectric_script_path)/robotest-internal.mk
 # Clear temporary variables
 my_failure_fatal :=
