@@ -689,7 +689,7 @@ Type *AST::findDefinedType(const FQName &fqName, FQName *matchingName) const {
 }
 
 void AST::getImportedPackages(std::set<FQName> *importSet) const {
-    for (const auto &fqName : mImportedNames) {
+    for (const auto& fqName : mImportedNamesGranular) {
         FQName packageName = fqName.getPackageAndVersion();
 
         if (packageName == mPackage) {
@@ -703,6 +703,7 @@ void AST::getImportedPackages(std::set<FQName> *importSet) const {
 
 void AST::getImportedPackagesHierarchy(std::set<FQName> *importSet) const {
     getImportedPackages(importSet);
+
     std::set<FQName> newSet;
     for (const auto &ast : mImportedASTs) {
         if (importSet->find(ast->package()) != importSet->end()) {
