@@ -119,6 +119,15 @@ struct Coordinator {
 private:
     static bool MakeParentHierarchy(const std::string &path);
 
+    enum class HashStatus {
+        ERROR,
+        UNFROZEN,
+        FROZEN,
+        CHANGED,  // frozen but changed
+    };
+    HashStatus checkHash(const FQName& fqName) const;
+    status_t getUnfrozenDependencies(const FQName& fqName, std::set<FQName>* result) const;
+
     // indicates that packages in "android.hardware" will be looked up in hardware/interfaces
     struct PackageRoot {
         std::string path; // e.x. hardware/interfaces
