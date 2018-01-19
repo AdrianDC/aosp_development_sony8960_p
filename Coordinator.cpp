@@ -624,48 +624,100 @@ status_t Coordinator::enforceMinorVersionUprevs(const FQName &currentPackage) co
     return OK;
 }
 
-status_t Coordinator::enforceHashes(const FQName &currentPackage) const {
-    status_t err = OK;
+Coordinator::HashStatus Coordinator::checkHash(const FQName& fqName) const {
+    AST* ast = parse(fqName);
+    if (ast == nullptr) return HashStatus::ERROR;
+
+    std::string hashPath = makeAbsolute(getPackageRootPath(fqName)) + "/current.txt";
+    std::string error;
+    std::vector<std::string> frozen = Hash::lookupHash(hashPath, fqName.string(), &error);
+
+    if (error.size() > 0) {
+        std::cerr << "ERROR: " << error << std::endl;
+        return HashStatus::ERROR;
+    }
+
+    // hash not defined, interface not frozen
+    if (frozen.size() == 0) {
+        // This ensures that it can be detected.
+        Hash::clearHash(ast->getFilename());
+
+        return HashStatus::UNFROZEN;
+    }
+
+    std::string currentHash = Hash::getHash(ast->getFilename()).hexString();
+
+    if (std::find(frozen.begin(), frozen.end(), currentHash) == frozen.end()) {
+        std::cerr << "ERROR: " << fqName.string() << " has hash " << currentHash
+                  << " which does not match hash on record. This interface has "
+                  << "been frozen. Do not change it!" << std::endl;
+        return HashStatus::CHANGED;
+    }
+
+    return HashStatus::FROZEN;
+}
+
+status_t Coordinator::getUnfrozenDependencies(const FQName& fqName,
+                                              std::set<FQName>* result) const {
+    CHECK(result != nullptr);
+
+    AST* ast = parse(fqName);
+    if (ast == nullptr) return UNKNOWN_ERROR;
+
+    std::set<FQName> imported;
+    ast->getImportedPackages(&imported);
+
+    // no circular dependency is already guaranteed by parsing
+    // indirect dependencies will be checked when the imported interface frozen checks are done
+    for (const FQName& importedPackage : imported) {
+        std::vector<FQName> packageInterfaces;
+        status_t err = appendPackageInterfacesToVector(importedPackage, &packageInterfaces);
+        if (err != OK) {
+            return err;
+        }
+
+        for (const FQName& importedName : packageInterfaces) {
+            HashStatus status = checkHash(importedName);
+            if (status == HashStatus::ERROR) return UNKNOWN_ERROR;
+            if (status == HashStatus::UNFROZEN) {
+                result->insert(importedName);
+            }
+        }
+    }
+
+    return OK;
+}
+
+status_t Coordinator::enforceHashes(const FQName& currentPackage) const {
     std::vector<FQName> packageInterfaces;
-    err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
+    status_t err = appendPackageInterfacesToVector(currentPackage, &packageInterfaces);
     if (err != OK) {
         return err;
     }
 
-    for (const FQName &currentFQName : packageInterfaces) {
-        AST *ast = parse(currentFQName);
+    for (const FQName& currentFQName : packageInterfaces) {
+        HashStatus status = checkHash(currentFQName);
 
-        if (ast == nullptr) {
-            err = UNKNOWN_ERROR;
-            continue;
+        if (status == HashStatus::ERROR) return UNKNOWN_ERROR;
+        if (status == HashStatus::CHANGED) return UNKNOWN_ERROR;
+
+        // frozen interface can only depend on a frozen interface
+        if (status == HashStatus::FROZEN) {
+            std::set<FQName> unfrozenDependencies;
+            err = getUnfrozenDependencies(currentFQName, &unfrozenDependencies);
+            if (err != OK) return err;
+
+            if (!unfrozenDependencies.empty()) {
+                std::cerr << "ERROR: Frozen interface " << currentFQName.string()
+                          << " cannot depend on unfrozen thing(s):" << std::endl;
+                for (const FQName& name : unfrozenDependencies) {
+                    std::cerr << " (unfrozen) " << name.string() << std::endl;
+                }
+                return UNKNOWN_ERROR;
+            }
         }
 
-        std::string hashPath = makeAbsolute(getPackageRootPath(currentFQName)) + "/current.txt";
-        std::string error;
-        std::vector<std::string> frozen = Hash::lookupHash(hashPath, currentFQName.string(), &error);
-
-        if (error.size() > 0) {
-            std::cerr << "ERROR: " << error << std::endl;
-            err = UNKNOWN_ERROR;
-            continue;
-        }
-
-        // hash not defined, interface not frozen
-        if (frozen.size() == 0) {
-            // This ensures that it can be detected.
-            Hash::clearHash(ast->getFilename());
-            continue;
-        }
-
-        std::string currentHash = Hash::getHash(ast->getFilename()).hexString();
-
-        if(std::find(frozen.begin(), frozen.end(), currentHash) == frozen.end()) {
-            std::cerr << "ERROR: " << currentFQName.string() << " has hash " << currentHash
-                      << " which does not match hash on record. This interface has "
-                      << "been frozen. Do not change it!" << std::endl;
-            err = UNKNOWN_ERROR;
-            continue;
-        }
+        // UNFROZEN, ignore
     }
 
     return err;
