@@ -14,17 +14,17 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-# for Android JUnit runner and rules
+# for Android JUnit runner, monitor and rules
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test
 LOCAL_SDK_VERSION := 15
-LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations
+LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations android-support-test-monitor-nodep
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := android-support-test-nodep
 LOCAL_SDK_VERSION := 23
-LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep
+LOCAL_STATIC_JAVA_LIBRARIES := android-support-test-rules-nodep android-support-test-runner-nodep android-support-test-monitor-nodep
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -49,12 +49,23 @@ LOCAL_SDK_VERSION := 15
 LOCAL_UNINSTALLABLE_MODULE := true
 include $(BUILD_PREBUILT)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := android-support-test-monitor-nodep
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := monitor/monitor_release_no_deps.jar
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+LOCAL_SDK_VERSION := 15
+# Uninstallable static Java libraries.
+LOCAL_UNINSTALLABLE_MODULE := true
+include $(BUILD_PREBUILT)
+
 # for espresso-core
 include $(CLEAR_VARS)
 LOCAL_MODULE := espresso-core
 LOCAL_MODULE_TAGS := optional
 LOCAL_SDK_VERSION := 15
-LOCAL_STATIC_JAVA_LIBRARIES := espresso-core-nodep espresso-idling-resource-nodep android-support-test-rules-nodep android-support-test-runner-nodep junit hamcrest hamcrest-library android-support-annotations jsr330
+LOCAL_STATIC_JAVA_LIBRARIES := espresso-core-nodep espresso-idling-resource-nodep android-support-test-rules-nodep android-support-test-runner-nodep android-support-test-monitor-nodep junit hamcrest hamcrest-library android-support-annotations jsr330
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
