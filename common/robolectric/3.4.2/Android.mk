@@ -25,9 +25,8 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 
 ############################
 # Defining the target names for the static prebuilt .JARs.
-include $(CLEAR_VARS)
 
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+prebuilts := \
     platform-robolectric-3.4.2-annotations:lib/annotations-3.4.2.jar \
     platform-robolectric-3.4.2-junit:lib/junit-3.4.2.jar \
     platform-robolectric-3.4.2-resources:lib/resources-3.4.2.jar \
@@ -39,4 +38,19 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-3.4.2-shadows-framework:lib/framework-3.4.2.jar \
     platform-robolectric-3.4.2-shadows-httpclient:lib/httpclient-3.4.2.jar
 
-include $(BUILD_MULTI_PREBUILT)
+define define-prebuilt
+  $(eval tw := $(subst :, ,$(strip $(1)))) \
+  $(eval include $(CLEAR_VARS)) \
+  $(eval LOCAL_MODULE := $(word 1,$(tw))) \
+  $(eval LOCAL_MODULE_TAGS := optional) \
+  $(eval LOCAL_MODULE_CLASS := JAVA_LIBRARIES) \
+  $(eval LOCAL_SRC_FILES := $(word 2,$(tw))) \
+  $(eval LOCAL_UNINSTALLABLE_MODULE := true) \
+  $(eval LOCAL_SDK_VERSION := current) \
+  $(eval include $(BUILD_PREBUILT))
+endef
+
+$(foreach p,$(prebuilts),\
+  $(call define-prebuilt,$(p)))
+
+prebuilts :=

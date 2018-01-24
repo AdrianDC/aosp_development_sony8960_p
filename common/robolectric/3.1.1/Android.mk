@@ -28,11 +28,24 @@ LOCAL_MIN_SDK_VERSION := o-b1
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
+###########################
+# Macro for defining individual prebuilts from <name>:<file> lists
+define define-prebuilt
+  $(eval tw := $(subst :, ,$(strip $(1)))) \
+  $(eval include $(CLEAR_VARS)) \
+  $(eval LOCAL_MODULE := $(word 1,$(tw))) \
+  $(eval LOCAL_MODULE_TAGS := optional) \
+  $(eval LOCAL_MODULE_CLASS := JAVA_LIBRARIES) \
+  $(eval LOCAL_SRC_FILES := $(word 2,$(tw))) \
+  $(eval LOCAL_UNINSTALLABLE_MODULE := true) \
+  $(eval LOCAL_SDK_VERSION := current) \
+  $(eval include $(BUILD_PREBUILT))
+endef
+
 ############################
 # Defining the target names for the static prebuilt .JARs.
-include $(CLEAR_VARS)
 
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+prebuilts := \
     platform-robolectric-annotations:lib/robolectric-annotations-3.1.1.jar \
     platform-robolectric-multidex:lib/shadows-multidex-3.1.1.jar \
     platform-robolectric-resources:lib/robolectric-resources-3.1.1.jar \
@@ -47,7 +60,10 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     platform-robolectric-shadows-httpclient:lib/shadows-httpclient-3.1.1.jar\
     platform-robolectric-snapshot:lib/robolectric-3.1.1.jar
 
-include $(BUILD_MULTI_PREBUILT)
+$(foreach p,$(prebuilts),\
+  $(call define-prebuilt,$(p)))
+
+prebuilts :=
 
 include $(CLEAR_VARS)
 
@@ -57,6 +73,7 @@ LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_SRC_FILES := lib/robolectric-utils-3.1.1.jar
 LOCAL_UNINSTALLABLE_MODULE := true
 LOCAL_MIN_SDK_VERSION := o-b1
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_PREBUILT)
 
@@ -75,11 +92,13 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 
 ############################
 # Defining the target names for the static prebuilt .JARs.
-include $(CLEAR_VARS)
 
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+prebuilts := \
     asm-5.0.1:lib/asm-5.0.1.jar \
     asm-commons-5.0.1:lib/asm-commons-5.0.1.jar \
     asm-tree-5.0.1:lib/asm-tree-5.0.1.jar
 
-include $(BUILD_MULTI_PREBUILT)
+$(foreach p,$(prebuilts),\
+  $(call define-prebuilt,$(p)))
+
+prebuilts :=
