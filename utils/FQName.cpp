@@ -91,12 +91,6 @@ FQName::FQName(const FQName& other)
       mValueName(other.mValueName) {
 }
 
-FQName::FQName(const std::vector<std::string> &names)
-    : mValid(false),
-      mIsIdentifier(false) {
-    setTo(StringHelper::JoinStrings(names, "."));
-}
-
 bool FQName::isValid() const {
     return mValid;
 }

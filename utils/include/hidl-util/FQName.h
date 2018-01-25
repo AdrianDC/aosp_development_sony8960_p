@@ -32,9 +32,6 @@ struct FQName {
            const std::string &name,
            const std::string &valueName = "");
 
-    // a synonym to FQName(names.join("."))
-    FQName(const std::vector<std::string> &names);
-
     FQName(const FQName& other);
 
     bool isValid() const;
