@@ -22,6 +22,7 @@
 
 #include <android-base/logging.h>
 #include <hidl-util/Formatter.h>
+#include <hidl-util/StringHelper.h>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -74,7 +75,7 @@ NamedType *Scope::lookupType(const FQName &fqName) const {
     Scope *outerScope = static_cast<Scope *>(outerType);
     // *slowly* pop first element
     names.erase(names.begin());
-    FQName innerName(names);
+    FQName innerName(StringHelper::JoinStrings(names, "."));
     return outerScope->lookupType(innerName);
 }
 
