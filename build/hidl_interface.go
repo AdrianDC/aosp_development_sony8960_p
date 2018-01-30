@@ -288,10 +288,11 @@ func hidlInterfaceMutator(mctx android.LoadHookContext, i *hidlInterface) {
 		mctx.CreateModule(android.ModuleFactoryAdaptor(java.LibraryFactory(true)), &javaProperties{
 			Name:              proptools.StringPtr(name.javaName()),
 			Owner:             i.properties.Owner,
+			Sdk_version:       proptools.StringPtr("system_current"),
 			Defaults:          []string{"hidl-java-module-defaults"},
 			No_framework_libs: proptools.BoolPtr(true),
 			Srcs:              []string{":" + name.javaSourcesName()},
-			Libs:              append(javaDependencies, "hwbinder"),
+			Libs:              javaDependencies,
 		})
 	}
 
