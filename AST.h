@@ -299,7 +299,7 @@ struct AST {
                                          const Method *method,
                                          const Interface *superInterface) const;
     status_t generateStaticStubMethodSource(Formatter &out,
-                                            const std::string &className,
+                                            const FQName &fqName,
                                             const Method *method) const;
 
     status_t generatePassthroughSource(Formatter &out) const;

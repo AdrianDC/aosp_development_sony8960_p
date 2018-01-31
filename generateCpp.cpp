@@ -1424,7 +1424,7 @@ status_t AST::generateStubSource(
     }).endl().endl();
 
     status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
-        return generateStaticStubMethodSource(out, klassName, method);
+        return generateStaticStubMethodSource(out, iface->fqName(), method);
     }, false /* include parents */);
 
     err = generateMethods(out, [&](const Method *method, const Interface *) {
@@ -1555,11 +1555,13 @@ status_t AST::generateStubSourceForMethod(
 }
 
 status_t AST::generateStaticStubMethodSource(Formatter &out,
-                                             const std::string &klassName,
+                                             const FQName &fqName,
                                              const Method *method) const {
     if (method->isHidlReserved() && method->overridesCppImpl(IMPL_STUB)) {
         return OK;
     }
+
+    const std::string& klassName = fqName.getInterfaceStubName();
 
     out << "::android::status_t " << klassName << "::_hidl_" << method->name() << "(\n";
 
@@ -1629,7 +1631,7 @@ status_t AST::generateStaticStubMethodSource(Formatter &out,
     if (method->isHidlReserved() && method->overridesCppImpl(IMPL_STUB_IMPL)) {
         callee = "_hidl_this";
     } else {
-        callee = "static_cast<" + klassName + "*>(_hidl_this)->_hidl_mImpl";
+        callee = "static_cast<" + fqName.getInterfaceName() + "*>(_hidl_this->getImpl().get())";
     }
 
     if (elidedReturn != nullptr) {
