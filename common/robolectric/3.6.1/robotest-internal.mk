@@ -25,6 +25,7 @@ $(my_target_output): PRIVATE_TARGET_MESSAGE := $(my_target_message)
 $(my_target_output): PRIVATE_TARGET_OUTPUT := $(my_target_output)
 $(my_target_output): PRIVATE_TARGET_RETVAL := $(my_target_retval)
 $(my_target_output): PRIVATE_TIMEOUT := $(my_timeout)
+$(my_target_output): PRIVATE_JAVA_PATH := $(if $(my_use_java8),$(ANDROID_JAVA8_HOME)/bin:,)
 $(my_target_output): PRIVATE_XML_OUTPUT_FILE := $(my_target_xml)
 # Runs the Robolectric tests and saves the output and return value.
 $(my_target_output): $(my_jars)
@@ -44,6 +45,7 @@ $(my_target_output): $(my_jars)
 	  PRIVATE_TESTS="$(PRIVATE_TESTS)" \
 	  XML_OUTPUT_FILE="$(PRIVATE_XML_OUTPUT_FILE)" \
 	  TEST_WORKSPACE="$(PRIVATE_MODULE)" \
+	  PATH=$(PRIVATE_JAVA_PATH)$${PATH} \
 	  $(PRIVATE_ROBOLECTRIC_SCRIPT_PATH)/wrapper.sh \
 	    "$(PRIVATE_MODULE)" \
 	    "$(PRIVATE_TARGET_OUTPUT)" \
@@ -87,3 +89,4 @@ my_target_output :=
 my_target_retval :=
 my_target_xml :=
 my_filename_stem :=
+my_use_java8 :=
