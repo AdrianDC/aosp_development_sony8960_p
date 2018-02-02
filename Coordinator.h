@@ -109,6 +109,11 @@ struct Coordinator {
 
     status_t isTypesOnlyPackage(const FQName& package, bool* result) const;
 
+    // Returns types which are imported/defined but not referenced in code
+    status_t addUnreferencedTypes(const std::vector<FQName>& packageInterfaces,
+                                  std::set<FQName>* unreferencedDefinitions,
+                                  std::set<FQName>* unreferencedImports);
+
     // Enforce a set of restrictions on a set of packages. These include:
     //    - minor version upgrades
     // "packages" contains names like "android.hardware.nfc@1.1".
