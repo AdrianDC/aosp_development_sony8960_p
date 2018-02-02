@@ -449,6 +449,69 @@ status_t Coordinator::isTypesOnlyPackage(const FQName& package, bool* result) co
     return OK;
 }
 
+status_t Coordinator::addUnreferencedTypes(const std::vector<FQName>& packageInterfaces,
+                                           std::set<FQName>* unreferencedDefinitions,
+                                           std::set<FQName>* unreferencedImports) {
+    CHECK(unreferencedDefinitions != nullptr);
+    CHECK(unreferencedImports != nullptr);
+
+    std::set<FQName> packageDefinedTypes;
+    std::set<FQName> packageReferencedTypes;
+    std::set<FQName> packageImportedTypes;
+    std::set<FQName> typesDefinedTypes;  // only types.hal types
+
+    for (const auto& fqName : packageInterfaces) {
+        AST* ast = parse(fqName);
+        if (!ast) {
+            std::cerr << "ERROR: Could not parse " << fqName.string() << ". Aborting." << std::endl;
+
+            return UNKNOWN_ERROR;
+        }
+
+        ast->addDefinedTypes(&packageDefinedTypes);
+        ast->addReferencedTypes(&packageReferencedTypes);
+        ast->getAllImportedNamesGranular(&packageImportedTypes);
+
+        if (fqName.name() == "types") {
+            ast->addDefinedTypes(&typesDefinedTypes);
+        }
+    }
+
+#if 0
+    for (const auto &fqName : packageDefinedTypes) {
+        std::cout << "VERBOSE: DEFINED " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : packageImportedTypes) {
+        std::cout << "VERBOSE: IMPORTED " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : packageReferencedTypes) {
+        std::cout << "VERBOSE: REFERENCED " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : typesDefinedTypes) {
+        std::cout << "VERBOSE: DEFINED in types.hal " << fqName.string() << std::endl;
+    }
+#endif
+
+    for (const auto& fqName : packageReferencedTypes) {
+        packageDefinedTypes.erase(fqName);
+        packageImportedTypes.erase(fqName);
+    }
+
+    // A package implicitly imports its own types.hal, only track them in one set.
+    for (const auto& fqName : typesDefinedTypes) {
+        packageImportedTypes.erase(fqName);
+    }
+
+    // defined but not referenced
+    unreferencedDefinitions->insert(packageDefinedTypes.begin(), packageDefinedTypes.end());
+    // imported but not referenced
+    unreferencedImports->insert(packageImportedTypes.begin(), packageImportedTypes.end());
+    return OK;
+}
+
 status_t Coordinator::enforceRestrictionsOnPackage(const FQName& fqName,
                                                    Enforce enforcement) const {
     CHECK(enforcement == Enforce::FULL || enforcement == Enforce::NO_HASH ||
