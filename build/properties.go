@@ -57,4 +57,5 @@ type javaProperties struct {
 	Sdk_version       *string
 	Srcs              []string
 	Libs              []string
+	Static_libs       []string
 }
