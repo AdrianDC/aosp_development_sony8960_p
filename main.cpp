@@ -132,6 +132,7 @@ static status_t dumpDefinedButUnreferencedTypeNames(
     std::set<FQName> packageDefinedTypes;
     std::set<FQName> packageReferencedTypes;
     std::set<FQName> packageImportedTypes;
+    std::set<FQName> typesDefinedTypes;  // only types.hal types
     for (const auto &fqName : packageInterfaces) {
         AST *ast = coordinator->parse(fqName);
         if (!ast) {
@@ -145,19 +146,27 @@ static status_t dumpDefinedButUnreferencedTypeNames(
         ast->addDefinedTypes(&packageDefinedTypes);
         ast->addReferencedTypes(&packageReferencedTypes);
         ast->getAllImportedNamesGranular(&packageImportedTypes);
+
+        if (fqName.name() == "types") {
+            ast->addDefinedTypes(&typesDefinedTypes);
+        }
     }
 
 #if 0
     for (const auto &fqName : packageDefinedTypes) {
-        std::cout << "DEFINED: " << fqName.string() << std::endl;
+        std::cout << "VERBOSE: DEFINED " << fqName.string() << std::endl;
     }
 
     for (const auto &fqName : packageImportedTypes) {
-        std::cout << "IMPORTED: " << fqName.string() << std::endl;
+        std::cout << "VERBOSE: IMPORTED " << fqName.string() << std::endl;
     }
 
     for (const auto &fqName : packageReferencedTypes) {
-        std::cout << "REFERENCED: " << fqName.string() << std::endl;
+        std::cout << "VERBOSE: REFERENCED " << fqName.string() << std::endl;
+    }
+
+    for (const auto &fqName : typesDefinedTypes) {
+        std::cout << "VERBOSE: DEFINED in types.hal " << fqName.string() << std::endl;
     }
 #endif
 
@@ -166,8 +175,8 @@ static status_t dumpDefinedButUnreferencedTypeNames(
         packageImportedTypes.erase(fqName);
     }
 
-    // A package implicitly imports its own types, only track them in one set.
-    for (const auto &fqName : packageDefinedTypes) {
+    // A package implicitly imports its own types.hal, only track them in one set.
+    for (const auto& fqName : typesDefinedTypes) {
         packageImportedTypes.erase(fqName);
     }
 
