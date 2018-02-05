@@ -29,6 +29,11 @@ struct Method;
 struct InterfaceAndMethod;
 
 struct Interface : public Scope {
+    enum {
+        /////////////////// Flag(s) - DO NOT CHANGE
+        FLAG_ONEWAY = 0x00000001,
+    };
+
     Interface(const char* localName, const FQName& fullName, const Location& location,
               Scope* parent, const Reference<Type>& superType);
 

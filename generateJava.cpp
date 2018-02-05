@@ -420,7 +420,7 @@ status_t AST::generateJava(
                 << " */, _hidl_request, _hidl_reply, ";
 
             if (method->isOneway()) {
-                out << "android.os.IHwBinder.FLAG_ONEWAY";
+                out << Interface::FLAG_ONEWAY << " /* oneway */";
             } else {
                 out << "0 /* flags */";
             }
