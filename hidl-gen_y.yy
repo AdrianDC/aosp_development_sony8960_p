@@ -815,6 +815,17 @@ typed_var
       {
           $$ = new NamedReference<Type>($2, *$1, convertYYLoc(@2));
       }
+    | type
+      {
+          $$ = new NamedReference<Type>("", *$1, convertYYLoc(@1));
+
+          const std::string typeName = $$->isResolved()
+              ? $$->get()->typeName() : $$->getLookupFqName().string();
+
+          std::cerr << "ERROR: variable of type " << typeName
+              << " is missing a variable name at " << @1 << "\n";
+          ast->addSyntaxError();
+      }
     ;
 
 
