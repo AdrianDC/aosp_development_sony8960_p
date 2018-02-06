@@ -662,7 +662,8 @@ interface_declaration
           }
 
           Interface* iface = new Interface(
-              $2, ast->makeFullName($2, *scope), convertYYLoc(@2), *scope, *superType);
+              $2, ast->makeFullName($2, *scope), convertYYLoc(@2),
+              *scope, *superType, ast->getFileHash());
 
           enterScope(ast, scope, iface);
       }
