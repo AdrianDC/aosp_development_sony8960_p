@@ -1233,7 +1233,7 @@ status_t AST::generateStaticProxyMethodSource(Formatter &out,
         << " */, _hidl_data, &_hidl_reply";
 
     if (method->isOneway()) {
-        out << ", ::android::hardware::IBinder::FLAG_ONEWAY";
+        out << ", " << Interface::FLAG_ONEWAY << " /* oneway */";
     }
     out << ");\n";
 
