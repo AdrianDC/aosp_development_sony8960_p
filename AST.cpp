@@ -35,10 +35,11 @@
 
 namespace android {
 
-AST::AST(const Coordinator* coordinator, const std::string& path)
+AST::AST(const Coordinator* coordinator, const Hash* fileHash)
     : mCoordinator(coordinator),
-      mPath(path),
-      mRootScope("(root scope)", FQName(), Location::startOf(path), nullptr /* parent */) {}
+      mFileHash(fileHash),
+      mRootScope("(root scope)", FQName(), Location::startOf(fileHash->getPath()),
+                 nullptr /* parent */) {}
 
 Scope* AST::getRootScope() {
     return &mRootScope;
@@ -53,8 +54,11 @@ size_t AST::syntaxErrors() const {
     return mSyntaxErrors;
 }
 
-const std::string &AST::getFilename() const {
-    return mPath;
+const std::string& AST::getFilename() const {
+    return mFileHash->getPath();
+}
+const Hash* AST::getFileHash() const {
+    return mFileHash;
 }
 
 bool AST::setPackage(const char *package) {

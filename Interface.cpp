@@ -33,7 +33,6 @@
 #include <unordered_map>
 
 #include <android-base/logging.h>
-#include <hidl-hash/Hash.h>
 #include <hidl-util/Formatter.h>
 #include <hidl-util/StringHelper.h>
 
@@ -70,11 +69,15 @@ enum {
 };
 
 Interface::Interface(const char* localName, const FQName& fullName, const Location& location,
-                     Scope* parent, const Reference<Type>& superType)
-    : Scope(localName, fullName, location, parent), mSuperType(superType) {}
+                     Scope* parent, const Reference<Type>& superType, const Hash* fileHash)
+    : Scope(localName, fullName, location, parent), mSuperType(superType), mFileHash(fileHash) {}
 
 std::string Interface::typeName() const {
     return "interface " + localName();
+}
+
+const Hash* Interface::getFileHash() const {
+    return mFileHash;
 }
 
 bool Interface::fillPingMethod(Method *method) const {
@@ -286,20 +289,21 @@ bool Interface::fillDescriptorChainMethod(Method *method) const {
     return true;
 }
 
-static void emitDigestChain(
+void Interface::emitDigestChain(
     Formatter& out, const std::string& prefix, const std::vector<const Interface*>& chain,
-    std::function<std::string(std::unique_ptr<ConstantExpression>)> byteToString) {
-    out.join(chain.begin(), chain.end(), ",\n", [&] (const auto &iface) {
-        const Hash &hash = Hash::getHash(iface->location().begin().filename());
+    std::function<std::string(std::unique_ptr<ConstantExpression>)> byteToString) const {
+    out.join(chain.begin(), chain.end(), ",\n", [&](const auto& iface) {
         out << prefix;
         out << "{";
-        out.join(hash.raw().begin(), hash.raw().end(), ",", [&](const auto &e) {
-            // Use ConstantExpression::cppValue / javaValue
-            // because Java used signed byte for uint8_t.
-            out << byteToString(ConstantExpression::ValueOf(ScalarType::Kind::KIND_UINT8, e));
-        });
+        out.join(
+            iface->getFileHash()->raw().begin(), iface->getFileHash()->raw().end(), ",",
+            [&](const auto& e) {
+                // Use ConstantExpression::cppValue / javaValue
+                // because Java used signed byte for uint8_t.
+                out << byteToString(ConstantExpression::ValueOf(ScalarType::Kind::KIND_UINT8, e));
+            });
         out << "} /* ";
-        out << hash.hexString();
+        out << iface->getFileHash()->hexString();
         out << " */";
     });
 }

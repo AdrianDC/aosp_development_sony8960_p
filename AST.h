@@ -19,6 +19,7 @@
 #define AST_H_
 
 #include <android-base/macros.h>
+#include <hidl-hash/Hash.h>
 #include <hidl-util/FQName.h>
 #include <functional>
 #include <map>
@@ -44,7 +45,7 @@ struct NamedReference;
 struct Type;
 
 struct AST {
-    AST(const Coordinator *coordinator, const std::string &path);
+    AST(const Coordinator* coordinator, const Hash* fileHash);
 
     bool setPackage(const char *package);
     bool addImport(const char *import);
@@ -59,7 +60,8 @@ struct AST {
 
     void addScopedType(NamedType* type, Scope* scope);
 
-    const std::string &getFilename() const;
+    const std::string& getFilename() const;
+    const Hash* getFileHash() const;
 
     // Look up local identifier.
     // It could be plain identifier or enum value as described by lookupEnumValue.
@@ -197,7 +199,7 @@ struct AST {
 
    private:
     const Coordinator *mCoordinator;
-    std::string mPath;
+    const Hash* mFileHash;
 
     RootScope mRootScope;
 
