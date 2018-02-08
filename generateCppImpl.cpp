@@ -33,11 +33,11 @@
 
 namespace android {
 
-status_t AST::generateCppImpl(const std::string &outputPath) const {
-    status_t err = generateCppImplHeader(outputPath);
+status_t AST::generateCppImpl() const {
+    status_t err = generateCppImplHeader();
 
     if (err == OK) {
-        err = generateCppImplSource(outputPath);
+        err = generateCppImplSource();
     }
 
     return err;
@@ -80,7 +80,7 @@ status_t AST::generateStubImplMethod(Formatter &out,
     return OK;
 }
 
-status_t AST::generateCppImplHeader(const std::string& outputPath) const {
+status_t AST::generateCppImplHeader() const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -89,8 +89,8 @@ status_t AST::generateCppImplHeader(const std::string& outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage, Coordinator::Location::DIRECT,
-                                               baseName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::DIRECT, baseName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -161,7 +161,7 @@ status_t AST::generateCppImplHeader(const std::string& outputPath) const {
     return OK;
 }
 
-status_t AST::generateCppImplSource(const std::string& outputPath) const {
+status_t AST::generateCppImplSource() const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -170,8 +170,8 @@ status_t AST::generateCppImplSource(const std::string& outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string baseName = iface->getBaseName();
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage, Coordinator::Location::DIRECT,
-                                               baseName + ".cpp");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::DIRECT, baseName + ".cpp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;

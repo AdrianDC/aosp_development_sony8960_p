@@ -43,8 +43,7 @@ void AST::emitJavaReaderWriter(Formatter& out, const std::string& parcelObj,
             isReader);
 }
 
-status_t AST::generateJavaTypes(
-        const std::string &outputPath, const std::string &limitToType) const {
+status_t AST::generateJavaTypes(const std::string& limitToType) const {
     // Splits types.hal up into one java file per declared type.
 
     for (const auto& type : mRootScope.getSubTypes()) {
@@ -58,8 +57,8 @@ status_t AST::generateJavaTypes(
             continue;
         }
 
-        Formatter out = mCoordinator->getFormatter(
-            outputPath, mPackage, Coordinator::Location::GEN_SANITIZED, typeName + ".java");
+        Formatter out = mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_SANITIZED,
+                                                   typeName + ".java");
 
         if (!out.isValid()) {
             return UNKNOWN_ERROR;
@@ -124,8 +123,7 @@ void emitGetService(
     }).endl().endl();
 }
 
-status_t AST::generateJava(
-        const std::string &outputPath, const std::string &limitToType) const {
+status_t AST::generateJava(const std::string& limitToType) const {
     if (!isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
@@ -138,7 +136,7 @@ status_t AST::generateJava(
     }
 
     if (!AST::isInterface()) {
-        return generateJavaTypes(outputPath, limitToType);
+        return generateJavaTypes(limitToType);
     }
 
     const Interface* iface = mRootScope.getInterface();
@@ -146,8 +144,8 @@ status_t AST::generateJava(
 
     const std::string baseName = iface->getBaseName();
 
-    Formatter out = mCoordinator->getFormatter(
-        outputPath, mPackage, Coordinator::Location::GEN_SANITIZED, ifaceName + ".java");
+    Formatter out = mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_SANITIZED,
+                                               ifaceName + ".java");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
