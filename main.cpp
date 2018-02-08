@@ -938,7 +938,7 @@ static void usage(const char *me) {
     fprintf(stderr, "         -o <output path>: Location to output files.\n");
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
-    fprintf(stderr, "         -v: verbose output (locations of touched files).\n");
+    fprintf(stderr, "         -v: verbose output.\n");
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
