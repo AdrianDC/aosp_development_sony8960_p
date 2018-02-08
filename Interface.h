@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include <hidl-hash/Hash.h>
+
 #include "Reference.h"
 #include "Scope.h"
 
@@ -35,7 +37,9 @@ struct Interface : public Scope {
     };
 
     Interface(const char* localName, const FQName& fullName, const Location& location,
-              Scope* parent, const Reference<Type>& superType);
+              Scope* parent, const Reference<Type>& superType, const Hash* fileHash);
+
+    const Hash* getFileHash() const;
 
     bool addMethod(Method *method);
     bool addAllReservedMethods();
@@ -136,6 +140,8 @@ struct Interface : public Scope {
     std::vector<Method*> mUserMethods;
     std::vector<Method*> mReservedMethods;
 
+    const Hash* mFileHash;
+
     bool fillPingMethod(Method* method) const;
     bool fillDescriptorChainMethod(Method* method) const;
     bool fillGetDescriptorMethod(Method* method) const;
@@ -146,6 +152,10 @@ struct Interface : public Scope {
     bool fillSetHALInstrumentationMethod(Method* method) const;
     bool fillGetDebugInfoMethod(Method* method) const;
     bool fillDebugMethod(Method* method) const;
+
+    void emitDigestChain(
+        Formatter& out, const std::string& prefix, const std::vector<const Interface*>& chain,
+        std::function<std::string(std::unique_ptr<ConstantExpression>)> byteToString) const;
 
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
