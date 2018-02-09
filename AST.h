@@ -193,7 +193,7 @@ struct AST {
     void addToImportedNamesGranular(const FQName &fqName);
 
    private:
-    const Coordinator *mCoordinator;
+    const Coordinator* mCoordinator;
     const Hash* mFileHash;
 
     RootScope mRootScope;

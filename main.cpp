@@ -48,16 +48,14 @@ struct OutputHandler {
 
     using ValidationFunction = std::function<bool(const FQName &, const std::string &language)>;
     using GenerationFunction =
-        std::function<status_t(const FQName& fqName, Coordinator* coordinator)>;
+        std::function<status_t(const FQName& fqName, const Coordinator* coordinator)>;
 
     ValidationFunction validate;
     GenerationFunction generate;
 };
 
-static status_t generateSourcesForFile(
-        const FQName &fqName,
-        Coordinator *coordinator,
-        const std::string &lang) {
+static status_t generateSourcesForFile(const FQName& fqName, const Coordinator* coordinator,
+                                       const std::string& lang) {
     CHECK(fqName.isFullyQualified());
 
     AST *ast;
@@ -151,10 +149,8 @@ static status_t dumpDefinedButUnreferencedTypeNames(const FQName& packageFQName,
     return OK;
 }
 
-static status_t generateSourcesForPackage(
-        const FQName &packageFQName,
-        Coordinator *coordinator,
-        const std::string &lang) {
+static status_t generateSourcesForPackage(const FQName& packageFQName,
+                                          const Coordinator* coordinator, const std::string& lang) {
     CHECK(packageFQName.isValid() &&
         !packageFQName.isFullyQualified() &&
         packageFQName.name().empty());
@@ -178,7 +174,7 @@ static status_t generateSourcesForPackage(
 }
 
 OutputHandler::GenerationFunction generationFunctionForFileOrPackage(const std::string &language) {
-    return [language](const FQName& fqName, Coordinator* coordinator) -> status_t {
+    return [language](const FQName& fqName, const Coordinator* coordinator) -> status_t {
         if (fqName.isFullyQualified()) {
             return generateSourcesForFile(fqName, coordinator, language);
         } else {
@@ -191,10 +187,8 @@ static std::string makeLibraryName(const FQName &packageFQName) {
     return packageFQName.string();
 }
 
-static status_t isPackageJavaCompatible(
-        const FQName &packageFQName,
-        Coordinator *coordinator,
-        bool *compatible) {
+static status_t isPackageJavaCompatible(const FQName& packageFQName, const Coordinator* coordinator,
+                                        bool* compatible) {
     std::vector<FQName> todo;
     status_t err =
         coordinator->appendPackageInterfacesToVector(packageFQName, &todo);
@@ -328,7 +322,7 @@ bool isSystemPackage(const FQName &package) {
 }
 
 // TODO(b/69862859): remove special case
-bool isTestPackage(const FQName& fqName, Coordinator* coordinator) {
+bool isTestPackage(const FQName& fqName, const Coordinator* coordinator) {
     const auto fileExists = [](const std::string& file) {
         struct stat buf;
         return stat(file.c_str(), &buf) == 0;
@@ -345,7 +339,8 @@ bool isTestPackage(const FQName& fqName, Coordinator* coordinator) {
     return exists;
 }
 
-static status_t generateAdapterMainSource(const FQName& packageFQName, Coordinator* coordinator) {
+static status_t generateAdapterMainSource(const FQName& packageFQName,
+                                          const Coordinator* coordinator) {
     Formatter out =
         coordinator->getFormatter(packageFQName, Coordinator::Location::DIRECT, "main.cpp");
 
@@ -390,7 +385,8 @@ static status_t generateAdapterMainSource(const FQName& packageFQName, Coordinat
     return OK;
 }
 
-static status_t generateAndroidBpForPackage(const FQName& packageFQName, Coordinator* coordinator) {
+static status_t generateAndroidBpForPackage(const FQName& packageFQName,
+                                            const Coordinator* coordinator) {
     CHECK(packageFQName.isValid() && !packageFQName.isFullyQualified() &&
           packageFQName.name().empty());
 
@@ -507,7 +503,7 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, Coordin
 }
 
 static status_t generateAndroidBpImplForPackage(const FQName& packageFQName,
-                                                Coordinator* coordinator) {
+                                                const Coordinator* coordinator) {
     const std::string libraryName = makeLibraryName(packageFQName) + "-impl";
 
     std::vector<FQName> packageInterfaces;
@@ -631,7 +627,7 @@ bool validateForSource(
 }
 
 OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
-    return [forJava](const FQName& packageFQName, Coordinator* coordinator) -> status_t {
+    return [forJava](const FQName& packageFQName, const Coordinator* coordinator) -> status_t {
         CHECK(packageFQName.isValid()
                 && !packageFQName.package().empty()
                 && !packageFQName.version().empty()
@@ -716,7 +712,7 @@ OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
     };
 }
 
-static status_t generateHashOutput(const FQName& fqName, Coordinator* coordinator) {
+static status_t generateHashOutput(const FQName& fqName, const Coordinator* coordinator) {
     status_t err;
     std::vector<FQName> packageInterfaces;
 
