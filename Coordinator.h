@@ -37,6 +37,7 @@ struct Coordinator {
 
     const std::string& getRootPath() const;
     void setRootPath(const std::string &rootPath);
+    void setOutputPath(const std::string& outputPath);
 
     void setVerbose(bool value);
     bool isVerbose() const;
@@ -50,16 +51,16 @@ struct Coordinator {
     void addDefaultPackagePath(const std::string& root, const std::string& path);
 
     enum class Location {
-        DIRECT,         // outputPath + file name
-        PACKAGE_ROOT,   // e.x. hal or other files within package root
-        GEN_OUTPUT,     // e.x. android/hardware/foo/1.0/*.cpp
-        GEN_SANITIZED,  // e.x. android/hardware/foo/V1_0/*.cpp
+        DIRECT,         // mOutputPath + file name
+        PACKAGE_ROOT,   // e.x. mRootPath + /nfc/1.0/Android.bp
+        GEN_OUTPUT,     // e.x. mOutputPath + /android/hardware/foo/1.0/*.cpp
+        GEN_SANITIZED,  // e.x. mOutputPath + /android/hardware/foo/V1_0/*.cpp
     };
 
-    std::string getFilepath(const std::string& outputPath, const FQName& fqName, Location location,
+    std::string getFilepath(const FQName& fqName, Location location,
                             const std::string& fileName = "") const;
 
-    Formatter getFormatter(const std::string& outputPath, const FQName& fqName, Location location,
+    Formatter getFormatter(const FQName& fqName, Location location,
                            const std::string& fileName) const;
 
     // must be called before file access
@@ -153,7 +154,8 @@ private:
     std::string convertPackageRootToPath(const FQName& fqName) const;
 
     std::vector<PackageRoot> mPackageRoots;
-    std::string mRootPath;
+    std::string mRootPath;    // root of android source tree (to locate package roots)
+    std::string mOutputPath;  // root of output directory
 
     // hidl-gen options
     bool mVerbose;

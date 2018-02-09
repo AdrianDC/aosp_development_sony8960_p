@@ -52,30 +52,25 @@ TEST_F(HidlGenHostTest, CoordinatorFilepathTest) {
     using Location = Coordinator::Location;
 
     Coordinator coordinator;
+    coordinator.setOutputPath("foo/");
 
     std::string error;
     EXPECT_EQ(OK, coordinator.addPackagePath("a.b", "a1/b1", &error));
     EXPECT_TRUE(error.empty());
 
     const static FQName kName = FQName("a.b.c@1.2");
-    const static std::string kOutputPath = "foo/";
 
     // get file names
-    EXPECT_EQ("foo/x.y", coordinator.getFilepath(kOutputPath, kName, Location::DIRECT, "x.y"));
-    EXPECT_EQ("foo/a1/b1/c/1.2/x.y",
-              coordinator.getFilepath(kOutputPath, kName, Location::PACKAGE_ROOT, "x.y"));
-    EXPECT_EQ("foo/a/b/c/1.2/x.y",
-              coordinator.getFilepath(kOutputPath, kName, Location::GEN_OUTPUT, "x.y"));
-    EXPECT_EQ("foo/a/b/c/V1_2/x.y",
-              coordinator.getFilepath(kOutputPath, kName, Location::GEN_SANITIZED, "x.y"));
+    EXPECT_EQ("foo/x.y", coordinator.getFilepath(kName, Location::DIRECT, "x.y"));
+    EXPECT_EQ("foo/a1/b1/c/1.2/x.y", coordinator.getFilepath(kName, Location::PACKAGE_ROOT, "x.y"));
+    EXPECT_EQ("foo/a/b/c/1.2/x.y", coordinator.getFilepath(kName, Location::GEN_OUTPUT, "x.y"));
+    EXPECT_EQ("foo/a/b/c/V1_2/x.y", coordinator.getFilepath(kName, Location::GEN_SANITIZED, "x.y"));
 
     // get directories
-    EXPECT_EQ("foo/", coordinator.getFilepath(kOutputPath, kName, Location::DIRECT));
-    EXPECT_EQ("foo/a1/b1/c/1.2/",
-              coordinator.getFilepath(kOutputPath, kName, Location::PACKAGE_ROOT));
-    EXPECT_EQ("foo/a/b/c/1.2/", coordinator.getFilepath(kOutputPath, kName, Location::GEN_OUTPUT));
-    EXPECT_EQ("foo/a/b/c/V1_2/",
-              coordinator.getFilepath(kOutputPath, kName, Location::GEN_SANITIZED));
+    EXPECT_EQ("foo/", coordinator.getFilepath(kName, Location::DIRECT));
+    EXPECT_EQ("foo/a1/b1/c/1.2/", coordinator.getFilepath(kName, Location::PACKAGE_ROOT));
+    EXPECT_EQ("foo/a/b/c/1.2/", coordinator.getFilepath(kName, Location::GEN_OUTPUT));
+    EXPECT_EQ("foo/a/b/c/V1_2/", coordinator.getFilepath(kName, Location::GEN_SANITIZED));
 }
 
 TEST_F(HidlGenHostTest, LocationTest) {

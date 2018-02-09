@@ -47,10 +47,8 @@ struct OutputHandler {
     const std::string& description() { return mDescription; }
 
     using ValidationFunction = std::function<bool(const FQName &, const std::string &language)>;
-    using GenerationFunction = std::function<status_t(const FQName &fqName,
-                                                      const char *hidl_gen,
-                                                      Coordinator *coordinator,
-                                                      const std::string &outputDir)>;
+    using GenerationFunction = std::function<status_t(const FQName& fqName, const char* hidl_gen,
+                                                      Coordinator* coordinator)>;
 
     ValidationFunction validate;
     GenerationFunction generate;
@@ -60,7 +58,6 @@ static status_t generateSourcesForFile(
         const FQName &fqName,
         const char *,
         Coordinator *coordinator,
-        const std::string &outputDir,
         const std::string &lang) {
     CHECK(fqName.isFullyQualified());
 
@@ -90,37 +87,37 @@ static status_t generateSourcesForFile(
         return OK; // only parsing, not generating
     }
     if (lang == "c++") {
-        return ast->generateCpp(outputDir);
+        return ast->generateCpp();
     }
     if (lang == "c++-headers") {
-        return ast->generateCppHeaders(outputDir);
+        return ast->generateCppHeaders();
     }
     if (lang == "c++-sources") {
-        return ast->generateCppSources(outputDir);
+        return ast->generateCppSources();
     }
     if (lang == "c++-impl") {
-        return ast->generateCppImpl(outputDir);
+        return ast->generateCppImpl();
     }
     if (lang == "c++-impl-headers") {
-        return ast->generateCppImplHeader(outputDir);
+        return ast->generateCppImplHeader();
     }
     if (lang == "c++-impl-sources") {
-        return ast->generateCppImplSource(outputDir);
+        return ast->generateCppImplSource();
     }
     if (lang == "c++-adapter") {
-        return ast->generateCppAdapter(outputDir);
+        return ast->generateCppAdapter();
     }
     if (lang == "c++-adapter-headers") {
-        return ast->generateCppAdapterHeader(outputDir);
+        return ast->generateCppAdapterHeader();
     }
     if (lang == "c++-adapter-sources") {
-        return ast->generateCppAdapterSource(outputDir);
+        return ast->generateCppAdapterSource();
     }
     if (lang == "java") {
-        return ast->generateJava(outputDir, limitToType);
+        return ast->generateJava(limitToType);
     }
     if (lang == "vts") {
-        return ast->generateVts(outputDir);
+        return ast->generateVts();
     }
     // Unknown language.
     return UNKNOWN_ERROR;
@@ -157,7 +154,6 @@ static status_t generateSourcesForPackage(
         const FQName &packageFQName,
         const char *hidl_gen,
         Coordinator *coordinator,
-        const std::string &outputDir,
         const std::string &lang) {
     CHECK(packageFQName.isValid() &&
         !packageFQName.isFullyQualified() &&
@@ -183,8 +179,7 @@ static status_t generateSourcesForPackage(
     }
 
     for (const auto &fqName : packageInterfaces) {
-        err = generateSourcesForFile(
-                fqName, hidl_gen, coordinator, outputDir, lang);
+        err = generateSourcesForFile(fqName, hidl_gen, coordinator, lang);
         if (err != OK) {
             return err;
         }
@@ -194,21 +189,12 @@ static status_t generateSourcesForPackage(
 }
 
 OutputHandler::GenerationFunction generationFunctionForFileOrPackage(const std::string &language) {
-    return [language](const FQName &fqName,
-              const char *hidl_gen, Coordinator *coordinator,
-              const std::string &outputDir) -> status_t {
+    return [language](const FQName& fqName, const char* hidl_gen,
+                      Coordinator* coordinator) -> status_t {
         if (fqName.isFullyQualified()) {
-                    return generateSourcesForFile(fqName,
-                                                  hidl_gen,
-                                                  coordinator,
-                                                  outputDir,
-                                                  language);
+            return generateSourcesForFile(fqName, hidl_gen, coordinator, language);
         } else {
-                    return generateSourcesForPackage(fqName,
-                                                     hidl_gen,
-                                                     coordinator,
-                                                     outputDir,
-                                                     language);
+            return generateSourcesForPackage(fqName, hidl_gen, coordinator, language);
         }
     };
 }
@@ -354,14 +340,14 @@ bool isSystemPackage(const FQName &package) {
 }
 
 // TODO(b/69862859): remove special case
-bool isTestPackage(const FQName& fqName, Coordinator* coordinator, const std::string& outputPath) {
+bool isTestPackage(const FQName& fqName, Coordinator* coordinator) {
     const auto fileExists = [](const std::string& file) {
         struct stat buf;
         return stat(file.c_str(), &buf) == 0;
     };
 
-    const std::string path = coordinator->getFilepath(
-        outputPath, fqName, Coordinator::Location::PACKAGE_ROOT, ".hidl_for_test");
+    const std::string path =
+        coordinator->getFilepath(fqName, Coordinator::Location::PACKAGE_ROOT, ".hidl_for_test");
     const bool exists = fileExists(path);
 
     if (exists) {
@@ -371,13 +357,10 @@ bool isTestPackage(const FQName& fqName, Coordinator* coordinator, const std::st
     return exists;
 }
 
-static status_t generateAdapterMainSource(
-        const FQName & packageFQName,
-        const char* /* hidl_gen */,
-        Coordinator* coordinator,
-        const std::string &outputPath) {
-    Formatter out = coordinator->getFormatter(outputPath, packageFQName,
-                                              Coordinator::Location::DIRECT, "main.cpp");
+static status_t generateAdapterMainSource(const FQName& packageFQName, const char* /* hidl_gen */,
+                                          Coordinator* coordinator) {
+    Formatter out =
+        coordinator->getFormatter(packageFQName, Coordinator::Location::DIRECT, "main.cpp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -421,8 +404,7 @@ static status_t generateAdapterMainSource(
 }
 
 static status_t generateAndroidBpForPackage(const FQName& packageFQName, const char* /* hidl_gen */,
-                                            Coordinator* coordinator,
-                                            const std::string& outputPath) {
+                                            Coordinator* coordinator) {
     CHECK(packageFQName.isValid() && !packageFQName.isFullyQualified() &&
           packageFQName.name().empty());
 
@@ -464,12 +446,12 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
     if (err != OK) return err;
     bool genJavaLibrary = needsJavaCode && isJavaCompatible;
 
-    bool generateForTest = isTestPackage(packageFQName, coordinator, outputPath);
+    bool generateForTest = isTestPackage(packageFQName, coordinator);
     bool isVndk = !generateForTest && isSystemPackage(packageFQName);
     bool isVndkSp = isVndk && isSystemProcessSupportedPackage(packageFQName);
 
-    Formatter out = coordinator->getFormatter(outputPath, packageFQName,
-                                              Coordinator::Location::PACKAGE_ROOT, "Android.bp");
+    Formatter out =
+        coordinator->getFormatter(packageFQName, Coordinator::Location::PACKAGE_ROOT, "Android.bp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -539,8 +521,7 @@ static status_t generateAndroidBpForPackage(const FQName& packageFQName, const c
 }
 
 static status_t generateAndroidBpImplForPackage(const FQName& packageFQName, const char*,
-                                                Coordinator* coordinator,
-                                                const std::string& outputPath) {
+                                                Coordinator* coordinator) {
     const std::string libraryName = makeLibraryName(packageFQName) + "-impl";
 
     std::vector<FQName> packageInterfaces;
@@ -569,8 +550,8 @@ static status_t generateAndroidBpImplForPackage(const FQName& packageFQName, con
         ast->getImportedPackages(&importedPackages);
     }
 
-    Formatter out = coordinator->getFormatter(outputPath, packageFQName,
-                                              Coordinator::Location::DIRECT, "Android.bp");
+    Formatter out =
+        coordinator->getFormatter(packageFQName, Coordinator::Location::DIRECT, "Android.bp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -664,10 +645,8 @@ bool validateForSource(
 }
 
 OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
-    return [forJava](const FQName &packageFQName,
-                     const char * /* hidl_gen */,
-                     Coordinator *coordinator,
-                     const std::string &outputPath) -> status_t {
+    return [forJava](const FQName& packageFQName, const char* /* hidl_gen */,
+                     Coordinator* coordinator) -> status_t {
         CHECK(packageFQName.isValid()
                 && !packageFQName.package().empty()
                 && !packageFQName.version().empty()
@@ -707,7 +686,7 @@ OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
         const Coordinator::Location location =
             forJava ? Coordinator::Location::GEN_SANITIZED : Coordinator::Location::DIRECT;
 
-        Formatter out = coordinator->getFormatter(outputPath, packageFQName, location, filename);
+        Formatter out = coordinator->getFormatter(packageFQName, location, filename);
 
         if (!out.isValid()) {
             return UNKNOWN_ERROR;
@@ -752,11 +731,8 @@ OutputHandler::GenerationFunction generateExportHeaderForPackage(bool forJava) {
     };
 }
 
-static status_t generateHashOutput(const FQName &fqName,
-        const char* /*hidl_gen*/,
-        Coordinator *coordinator,
-        const std::string & /*outputDir*/) {
-
+static status_t generateHashOutput(const FQName& fqName, const char* /*hidl_gen*/,
+                                   Coordinator* coordinator) {
     status_t err;
     std::vector<FQName> packageInterfaces;
 
@@ -1108,6 +1084,8 @@ int main(int argc, char **argv) {
             break;
     }
 
+    coordinator.setOutputPath(outputPath);
+
     coordinator.addDefaultPackagePath("android.hardware", "hardware/interfaces");
     coordinator.addDefaultPackagePath("android.hidl", "system/libhidl/transport");
     coordinator.addDefaultPackagePath("android.frameworks", "frameworks/hardware/interfaces");
@@ -1131,8 +1109,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        status_t err =
-            outputFormat->generate(fqName, me, &coordinator, outputPath);
+        status_t err = outputFormat->generate(fqName, me, &coordinator);
 
         if (err != OK) {
             exit(1);

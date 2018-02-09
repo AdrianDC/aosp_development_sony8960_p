@@ -119,25 +119,20 @@ struct AST {
 
     status_t gatherReferencedTypes();
 
-    status_t generateCpp(const std::string &outputPath) const;
-    status_t generateCppHeaders(const std::string &outputPath) const;
-    status_t generateCppSources(const std::string &outputPath) const;
+    status_t generateCpp() const;
+    status_t generateCppHeaders() const;
+    status_t generateCppSources() const;
 
-    status_t generateCppImpl(const std::string &outputPath) const;
-    status_t generateCppImplHeader(const std::string& outputPath) const;
-    status_t generateCppImplSource(const std::string& outputPath) const;
+    status_t generateCppImpl() const;
+    status_t generateCppImplHeader() const;
+    status_t generateCppImplSource() const;
 
-    status_t generateCppAdapter(const std::string& outputPath) const;
-    status_t generateCppAdapterHeader(const std::string& outputPath) const;
-    status_t generateCppAdapterSource(const std::string& outputPath) const;
+    status_t generateCppAdapter() const;
+    status_t generateCppAdapterHeader() const;
+    status_t generateCppAdapterSource() const;
 
-    status_t generateJava(
-            const std::string &outputPath,
-            const std::string &limitToType) const;
-
-    status_t generateJavaTypes(
-            const std::string &outputPath,
-            const std::string &limitToType) const;
+    status_t generateJava(const std::string& limitToType) const;
+    status_t generateJavaTypes(const std::string& limitToType) const;
 
     void getImportedPackages(std::set<FQName> *importSet) const;
 
@@ -145,7 +140,7 @@ struct AST {
     // each AST in each package referenced in importSet.
     void getImportedPackagesHierarchy(std::set<FQName> *importSet) const;
 
-    status_t generateVts(const std::string &outputPath) const;
+    status_t generateVts() const;
 
     bool isJavaCompatible() const;
 
@@ -255,11 +250,11 @@ struct AST {
 
     static void generateCheckNonNull(Formatter &out, const std::string &nonNull);
 
-    status_t generateInterfaceHeader(const std::string &outputPath) const;
-    status_t generateHwBinderHeader(const std::string &outputPath) const;
-    status_t generateStubHeader(const std::string &outputPath) const;
-    status_t generateProxyHeader(const std::string &outputPath) const;
-    status_t generatePassthroughHeader(const std::string &outputPath) const;
+    status_t generateInterfaceHeader() const;
+    status_t generateHwBinderHeader() const;
+    status_t generateStubHeader() const;
+    status_t generateProxyHeader() const;
+    status_t generatePassthroughHeader() const;
 
     status_t generateTypeSource(
             Formatter &out, const std::string &ifaceName) const;
