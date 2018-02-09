@@ -34,33 +34,33 @@
 
 namespace android {
 
-status_t AST::generateCpp(const std::string &outputPath) const {
-    status_t err = generateCppHeaders(outputPath);
+status_t AST::generateCpp() const {
+    status_t err = generateCppHeaders();
 
     if (err == OK) {
-        err = generateCppSources(outputPath);
+        err = generateCppSources();
     }
 
     return err;
 }
 
-status_t AST::generateCppHeaders(const std::string &outputPath) const {
-    status_t err = generateInterfaceHeader(outputPath);
+status_t AST::generateCppHeaders() const {
+    status_t err = generateInterfaceHeader();
 
     if (err == OK) {
-        err = generateStubHeader(outputPath);
+        err = generateStubHeader();
     }
 
     if (err == OK) {
-        err = generateHwBinderHeader(outputPath);
+        err = generateHwBinderHeader();
     }
 
     if (err == OK) {
-        err = generateProxyHeader(outputPath);
+        err = generateProxyHeader();
     }
 
     if (err == OK) {
-        err = generatePassthroughHeader(outputPath);
+        err = generatePassthroughHeader();
     }
 
     return err;
@@ -236,12 +236,12 @@ static void implementServiceManagerInteractions(Formatter &out,
     }).endl().endl();
 }
 
-status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
+status_t AST::generateInterfaceHeader() const {
     const Interface *iface = getInterface();
     std::string ifaceName = iface ? iface->localName() : "types";
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, ifaceName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, ifaceName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -396,12 +396,12 @@ status_t AST::generateInterfaceHeader(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateHwBinderHeader(const std::string &outputPath) const {
+status_t AST::generateHwBinderHeader() const {
     const Interface *iface = getInterface();
     std::string klassName = iface ? iface->getHwName() : "hwtypes";
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -651,7 +651,7 @@ void AST::generateCppTag(Formatter& out, const std::string& tag) const {
     out << "typedef " << tag << " _hidl_tag;\n\n";
 }
 
-status_t AST::generateStubHeader(const std::string &outputPath) const {
+status_t AST::generateStubHeader() const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -660,8 +660,8 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string klassName = iface->getStubName();
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -776,7 +776,7 @@ status_t AST::generateStubHeader(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateProxyHeader(const std::string &outputPath) const {
+status_t AST::generateProxyHeader() const {
     if (!AST::isInterface()) {
         // types.hal does not get a proxy header.
         return OK;
@@ -785,8 +785,8 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     const Interface* iface = mRootScope.getInterface();
     const std::string proxyName = iface->getProxyName();
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, proxyName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, proxyName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -878,14 +878,14 @@ status_t AST::generateProxyHeader(const std::string &outputPath) const {
     return OK;
 }
 
-status_t AST::generateCppSources(const std::string &outputPath) const {
+status_t AST::generateCppSources() const {
     std::string baseName = getBaseName();
     const Interface *iface = getInterface();
 
     const std::string klassName = baseName + (baseName == "types" ? "" : "All");
 
-    Formatter out = mCoordinator->getFormatter(
-        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -1776,7 +1776,7 @@ status_t AST::generateStaticStubMethodSource(Formatter &out,
     return OK;
 }
 
-status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
+status_t AST::generatePassthroughHeader() const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -1789,8 +1789,8 @@ status_t AST::generatePassthroughHeader(const std::string &outputPath) const {
 
     bool supportOneway = iface->hasOnewayMethods();
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;

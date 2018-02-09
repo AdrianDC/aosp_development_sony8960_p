@@ -53,12 +53,12 @@ status_t AST::emitVtsTypeDeclarations(Formatter &out) const {
     return OK;
 }
 
-status_t AST::generateVts(const std::string &outputPath) const {
+status_t AST::generateVts() const {
     std::string baseName = AST::getBaseName();
     const Interface *iface = AST::getInterface();
 
-    Formatter out = mCoordinator->getFormatter(
-        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, baseName + ".vts");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, baseName + ".vts");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
