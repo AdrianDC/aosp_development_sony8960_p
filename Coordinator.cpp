@@ -455,7 +455,7 @@ status_t Coordinator::isTypesOnlyPackage(const FQName& package, bool* result) co
 
 status_t Coordinator::addUnreferencedTypes(const std::vector<FQName>& packageInterfaces,
                                            std::set<FQName>* unreferencedDefinitions,
-                                           std::set<FQName>* unreferencedImports) {
+                                           std::set<FQName>* unreferencedImports) const {
     CHECK(unreferencedDefinitions != nullptr);
     CHECK(unreferencedImports != nullptr);
 

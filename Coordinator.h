@@ -113,7 +113,7 @@ struct Coordinator {
     // Returns types which are imported/defined but not referenced in code
     status_t addUnreferencedTypes(const std::vector<FQName>& packageInterfaces,
                                   std::set<FQName>* unreferencedDefinitions,
-                                  std::set<FQName>* unreferencedImports);
+                                  std::set<FQName>* unreferencedImports) const;
 
     // Enforce a set of restrictions on a set of packages. These include:
     //    - minor version upgrades
