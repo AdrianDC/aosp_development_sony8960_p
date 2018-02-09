@@ -108,6 +108,10 @@ bool FQName::isValidValueName() const {
         || (!mName.empty() && !mValueName.empty());
 }
 
+bool FQName::isInterfaceName() const {
+    return !name().empty() && name()[0] == 'I';
+}
+
 bool FQName::setTo(const std::string &s) {
     clearVersion();
     mPackage.clear();
@@ -293,7 +297,7 @@ bool FQName::operator!=(const FQName &other) const {
 
 std::string FQName::getInterfaceName() const {
     CHECK(names().size() == 1) << "Must be a top level type";
-    CHECK(!mName.empty() && mName[0] == 'I') << mName;
+    CHECK(isInterfaceName()) << mName;
 
     return mName;
 }
