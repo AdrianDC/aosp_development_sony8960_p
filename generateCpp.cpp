@@ -34,38 +34,6 @@
 
 namespace android {
 
-status_t AST::generateCpp() const {
-    status_t err = generateCppHeaders();
-
-    if (err == OK) {
-        err = generateCppSources();
-    }
-
-    return err;
-}
-
-status_t AST::generateCppHeaders() const {
-    status_t err = generateInterfaceHeader();
-
-    if (err == OK) {
-        err = generateStubHeader();
-    }
-
-    if (err == OK) {
-        err = generateHwBinderHeader();
-    }
-
-    if (err == OK) {
-        err = generateProxyHeader();
-    }
-
-    if (err == OK) {
-        err = generatePassthroughHeader();
-    }
-
-    return err;
-}
-
 void AST::getPackageComponents(
         std::vector<std::string> *components) const {
     mPackage.getPackageComponents(components);
@@ -236,17 +204,9 @@ static void implementServiceManagerInteractions(Formatter &out,
     }).endl().endl();
 }
 
-status_t AST::generateInterfaceHeader() const {
+status_t AST::generateInterfaceHeader(Formatter& out) const {
     const Interface *iface = getInterface();
     std::string ifaceName = iface ? iface->localName() : "types";
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, ifaceName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
-
     const std::string guard = makeHeaderGuard(ifaceName);
 
     out << "#ifndef " << guard << "\n";
@@ -396,16 +356,9 @@ status_t AST::generateInterfaceHeader() const {
     return OK;
 }
 
-status_t AST::generateHwBinderHeader() const {
+status_t AST::generateHwBinderHeader(Formatter& out) const {
     const Interface *iface = getInterface();
     std::string klassName = iface ? iface->getHwName() : "hwtypes";
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
 
     const std::string guard = makeHeaderGuard(klassName);
 
@@ -651,22 +604,11 @@ void AST::generateCppTag(Formatter& out, const std::string& tag) const {
     out << "typedef " << tag << " _hidl_tag;\n\n";
 }
 
-status_t AST::generateStubHeader() const {
-    if (!AST::isInterface()) {
-        // types.hal does not get a stub header.
-        return OK;
-    }
+status_t AST::generateStubHeader(Formatter& out) const {
+    CHECK(AST::isInterface());
 
     const Interface* iface = mRootScope.getInterface();
     const std::string klassName = iface->getStubName();
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
-
     const std::string guard = makeHeaderGuard(klassName);
 
     out << "#ifndef " << guard << "\n";
@@ -776,7 +718,7 @@ status_t AST::generateStubHeader() const {
     return OK;
 }
 
-status_t AST::generateProxyHeader() const {
+status_t AST::generateProxyHeader(Formatter& out) const {
     if (!AST::isInterface()) {
         // types.hal does not get a proxy header.
         return OK;
@@ -784,14 +726,6 @@ status_t AST::generateProxyHeader() const {
 
     const Interface* iface = mRootScope.getInterface();
     const std::string proxyName = iface->getProxyName();
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, proxyName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
-
     const std::string guard = makeHeaderGuard(proxyName);
 
     out << "#ifndef " << guard << "\n";
@@ -878,18 +812,11 @@ status_t AST::generateProxyHeader() const {
     return OK;
 }
 
-status_t AST::generateCppSources() const {
+status_t AST::generateCppSource(Formatter& out) const {
     std::string baseName = getBaseName();
     const Interface *iface = getInterface();
 
     const std::string klassName = baseName + (baseName == "types" ? "" : "All");
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
 
     out << "#define LOG_TAG \""
         << mPackage.string() << "::" << baseName
@@ -1776,7 +1703,7 @@ status_t AST::generateStaticStubMethodSource(Formatter &out,
     return OK;
 }
 
-status_t AST::generatePassthroughHeader() const {
+status_t AST::generatePassthroughHeader(Formatter& out) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
         return OK;
@@ -1788,13 +1715,6 @@ status_t AST::generatePassthroughHeader() const {
     const std::string klassName = iface->getPassthroughName();
 
     bool supportOneway = iface->hasOnewayMethods();
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
 
     const std::string guard = makeHeaderGuard(klassName);
 

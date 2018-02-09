@@ -51,6 +51,7 @@ struct Coordinator {
     void addDefaultPackagePath(const std::string& root, const std::string& path);
 
     enum class Location {
+        STANDARD_OUT,
         DIRECT,         // mOutputPath + file name
         PACKAGE_ROOT,   // e.x. mRootPath + /nfc/1.0/Android.bp
         GEN_OUTPUT,     // e.x. mOutputPath + /android/hardware/foo/1.0/*.cpp

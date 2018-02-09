@@ -43,44 +43,27 @@ void AST::emitJavaReaderWriter(Formatter& out, const std::string& parcelObj,
             isReader);
 }
 
-status_t AST::generateJavaTypes(const std::string& limitToType) const {
+status_t AST::generateJavaTypes(Formatter& out, const std::string& limitToType) const {
     // Splits types.hal up into one java file per declared type.
+    CHECK(!limitToType.empty()) << getFilename();
 
     for (const auto& type : mRootScope.getSubTypes()) {
         std::string typeName = type->localName();
 
-        if (type->isTypeDef()) {
-            continue;
-        }
-
-        if (!limitToType.empty() && typeName != limitToType) {
-            continue;
-        }
-
-        Formatter out = mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_SANITIZED,
-                                                   typeName + ".java");
-
-        if (!out.isValid()) {
-            return UNKNOWN_ERROR;
-        }
+        if (type->isTypeDef()) continue;
+        if (typeName != limitToType) continue;
 
         std::vector<std::string> packageComponents;
         getPackageAndVersionComponents(
                 &packageComponents, true /* cpp_compatible */);
 
-        out << "package " << mPackage.javaPackage() << ";\n\n";
+        out << "package " << mPackage.javaPackage() << ";\n\n\n";
 
-        out << "\n";
-
-        status_t err =
-            type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
-
-        if (err != OK) {
-            return err;
-        }
+        return type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
     }
 
-    return OK;
+    CHECK(false) << "generateJavaTypes could not find limitToType type";
+    return UNKNOWN_ERROR;
 }
 
 void emitGetService(
@@ -123,7 +106,7 @@ void emitGetService(
     }).endl().endl();
 }
 
-status_t AST::generateJava(const std::string& limitToType) const {
+status_t AST::generateJava(Formatter& out, const std::string& limitToType) const {
     if (!isJavaCompatible()) {
         fprintf(stderr,
                 "ERROR: This interface is not Java compatible. The Java backend"
@@ -131,25 +114,16 @@ status_t AST::generateJava(const std::string& limitToType) const {
                 "In addition, vectors of arrays are limited to at most "
                 "one-dimensional arrays and vectors of {vectors,interfaces} are"
                 " not supported.\n");
-
         return UNKNOWN_ERROR;
     }
 
     if (!AST::isInterface()) {
-        return generateJavaTypes(limitToType);
+        return generateJavaTypes(out, limitToType);
     }
 
     const Interface* iface = mRootScope.getInterface();
-    std::string ifaceName = iface->localName();
-
+    const std::string ifaceName = iface->localName();
     const std::string baseName = iface->getBaseName();
-
-    Formatter out = mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_SANITIZED,
-                                               ifaceName + ".java");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
 
     std::vector<std::string> packageComponents;
     getPackageAndVersionComponents(

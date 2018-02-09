@@ -98,6 +98,10 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
 
 Formatter Coordinator::getFormatter(const FQName& fqName, Location location,
                                     const std::string& fileName) const {
+    if (location == Location::STANDARD_OUT) {
+        return Formatter(stdout);
+    }
+
     std::string filepath = getFilepath(fqName, location, fileName);
 
     onFileAccess(filepath, "w");
