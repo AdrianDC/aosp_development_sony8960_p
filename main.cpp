@@ -123,15 +123,17 @@ static status_t generateSourcesForFile(
     return UNKNOWN_ERROR;
 }
 
-static status_t dumpDefinedButUnreferencedTypeNames(
-        const std::vector<FQName> &packageInterfaces,
-        Coordinator *coordinator) {
+static status_t dumpDefinedButUnreferencedTypeNames(const FQName& packageFQName,
+                                                    const Coordinator* coordinator) {
+    std::vector<FQName> packageInterfaces;
+    status_t err = coordinator->appendPackageInterfacesToVector(packageFQName, &packageInterfaces);
+    if (err != OK) return err;
+
     std::set<FQName> unreferencedDefinitions;
     std::set<FQName> unreferencedImports;
-
-    status_t status = coordinator->addUnreferencedTypes(packageInterfaces, &unreferencedDefinitions,
-                                                        &unreferencedImports);
-    if (status != OK) return status;
+    err = coordinator->addUnreferencedTypes(packageInterfaces, &unreferencedDefinitions,
+                                            &unreferencedImports);
+    if (err != OK) return err;
 
     for (const auto& fqName : unreferencedDefinitions) {
         std::cerr
@@ -165,18 +167,7 @@ static status_t generateSourcesForPackage(
         coordinator->appendPackageInterfacesToVector(packageFQName,
                                                      &packageInterfaces);
 
-    if (err != OK) {
-        return err;
-    }
-
-    if (coordinator->isVerbose()) {
-        err = dumpDefinedButUnreferencedTypeNames(
-                packageInterfaces, coordinator);
-
-        if (err != OK) {
-            return err;
-        }
-    }
+    if (err != OK) return err;
 
     for (const auto &fqName : packageInterfaces) {
         err = generateSourcesForFile(fqName, hidl_gen, coordinator, lang);
@@ -1101,6 +1092,13 @@ int main(int argc, char **argv) {
             fprintf(stderr,
                     "ERROR: Invalid fully-qualified name.\n");
             exit(1);
+        }
+
+        // Dump extra verbose output
+        if (coordinator.isVerbose()) {
+            status_t err =
+                dumpDefinedButUnreferencedTypeNames(fqName.getPackageAndVersion(), &coordinator);
+            if (err != OK) return err;
         }
 
         if (!outputFormat->validate(fqName, outputFormat->name())) {
