@@ -34,21 +34,21 @@
 
 namespace android {
 
-status_t AST::generateCppAdapter(const std::string& outputPath) const {
+status_t AST::generateCppAdapter() const {
     status_t err = OK;
 
-    err = generateCppAdapterHeader(outputPath);
+    err = generateCppAdapterHeader();
     if (err != OK) return err;
-    err = generateCppAdapterSource(outputPath);
+    err = generateCppAdapterSource();
 
     return err;
 }
 
-status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
+status_t AST::generateCppAdapterHeader() const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
 
-    Formatter out = mCoordinator->getFormatter(outputPath, mPackage,
-                                               Coordinator::Location::GEN_OUTPUT, klassName + ".h");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;
@@ -100,11 +100,11 @@ status_t AST::generateCppAdapterHeader(const std::string& outputPath) const {
     return OK;
 }
 
-status_t AST::generateCppAdapterSource(const std::string& outputPath) const {
+status_t AST::generateCppAdapterSource() const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
 
-    Formatter out = mCoordinator->getFormatter(
-        outputPath, mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
+    Formatter out =
+        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
 
     if (!out.isValid()) {
         return UNKNOWN_ERROR;

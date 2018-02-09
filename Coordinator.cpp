@@ -55,6 +55,10 @@ void Coordinator::setRootPath(const std::string &rootPath) {
     }
 }
 
+void Coordinator::setOutputPath(const std::string& outputPath) {
+    mOutputPath = outputPath;
+}
+
 void Coordinator::setVerbose(bool verbose) {
     mVerbose = verbose;
 }
@@ -92,9 +96,9 @@ void Coordinator::addDefaultPackagePath(const std::string& root, const std::stri
     addPackagePath(root, path, nullptr /* error */);
 }
 
-Formatter Coordinator::getFormatter(const std::string& outputPath, const FQName& fqName,
-                                    Location location, const std::string& fileName) const {
-    std::string filepath = getFilepath(outputPath, fqName, location, fileName);
+Formatter Coordinator::getFormatter(const FQName& fqName, Location location,
+                                    const std::string& fileName) const {
+    std::string filepath = getFilepath(fqName, location, fileName);
 
     onFileAccess(filepath, "w");
 
@@ -113,9 +117,9 @@ Formatter Coordinator::getFormatter(const std::string& outputPath, const FQName&
     return Formatter(file);
 }
 
-std::string Coordinator::getFilepath(const std::string& outputPath, const FQName& fqName,
-                                     Location location, const std::string& fileName) const {
-    std::string path = outputPath;
+std::string Coordinator::getFilepath(const FQName& fqName, Location location,
+                                     const std::string& fileName) const {
+    std::string path = mOutputPath;
 
     switch (location) {
         case Location::DIRECT: { /* nothing */
