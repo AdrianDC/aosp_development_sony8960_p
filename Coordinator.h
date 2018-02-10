@@ -158,7 +158,7 @@ private:
     std::string mOutputPath;  // root of output directory
 
     // hidl-gen options
-    bool mVerbose;
+    bool mVerbose = false;
     std::string mOwner;
 
     // cache to parse().
