@@ -279,15 +279,6 @@ std::string FQName::string() const {
     return out;
 }
 
-void FQName::print() const {
-    if (!mValid) {
-        LOG(INFO) << "INVALID";
-        return;
-    }
-
-    LOG(INFO) << string();
-}
-
 bool FQName::operator<(const FQName &other) const {
     return string() < other.string();
 }
