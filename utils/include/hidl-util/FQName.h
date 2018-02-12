@@ -92,6 +92,9 @@ struct FQName {
     // 2. (valueName), aka a single identifier
     bool isValidValueName() const;
 
+    // Interface names start with 'I'
+    bool isInterfaceName() const;
+
     std::string string() const;
 
     bool operator<(const FQName &other) const;
