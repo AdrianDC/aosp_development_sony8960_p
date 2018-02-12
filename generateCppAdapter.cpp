@@ -34,26 +34,8 @@
 
 namespace android {
 
-status_t AST::generateCppAdapter() const {
-    status_t err = OK;
-
-    err = generateCppAdapterHeader();
-    if (err != OK) return err;
-    err = generateCppAdapterSource();
-
-    return err;
-}
-
-status_t AST::generateCppAdapterHeader() const {
+status_t AST::generateCppAdapterHeader(Formatter& out) const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".h");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
-
     const std::string guard = makeHeaderGuard(klassName, true /* indicateGenerated */);
 
     out << "#ifndef " << guard << "\n";
@@ -100,15 +82,8 @@ status_t AST::generateCppAdapterHeader() const {
     return OK;
 }
 
-status_t AST::generateCppAdapterSource() const {
+status_t AST::generateCppAdapterSource(Formatter& out) const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
-
-    Formatter out =
-        mCoordinator->getFormatter(mPackage, Coordinator::Location::GEN_OUTPUT, klassName + ".cpp");
-
-    if (!out.isValid()) {
-        return UNKNOWN_ERROR;
-    }
 
     generateCppPackageInclude(out, mPackage, klassName);
 
