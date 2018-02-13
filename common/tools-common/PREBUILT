@@ -1,5 +1,1 @@
-tools-common-prebuilt.jar in this prebuilt directory was copied from
-    platform/prebuilts/devtools/tools/lib/common.jar
-
-From version 8303c1e4221a94bdc7589d1aef884fada1484fa6 of the platform/prebuilts/devtools project.
-
+tools-common-prebuilt.jar was built from tools/base/common@54d8351a747f2a5dabc3c36012355d4b54f81ae3
