@@ -57,6 +57,35 @@ struct FileGenerator {
     FileNameForFQName mFileNameForFqName;             // Target -> filename
     GenerationFunction mGenerationFunction;           // Function to generate output for file
 
+    std::string getFileName(const FQName& fqName) const {
+        return mFileNameForFqName ? mFileNameForFqName(fqName) : "";
+    }
+
+    std::string getOutputFile(const FQName& fqName, const Coordinator* coordinator,
+                              Coordinator::Location location) const {
+        if (!mShouldGenerateForFqName(fqName)) {
+            return "";
+        }
+
+        return coordinator->getFilepath(fqName, location, getFileName(fqName));
+    }
+
+    void appendOutputFiles(const FQName& fqName, const Coordinator* coordinator,
+                           Coordinator::Location location,
+                           std::vector<std::string>* outputFiles) const {
+        if (location == Coordinator::Location::STANDARD_OUT) {
+            return;
+        }
+
+        if (mShouldGenerateForFqName(fqName)) {
+            const std::string fileName = getOutputFile(fqName, coordinator, location);
+
+            if (!fileName.empty()) {
+                outputFiles->push_back(fileName);
+            }
+        }
+    }
+
     status_t generate(const FQName& fqName, const Coordinator* coordinator,
                       Coordinator::Location location) const {
         CHECK(mShouldGenerateForFqName != nullptr);
@@ -66,10 +95,7 @@ struct FileGenerator {
             return OK;
         }
 
-        // outputPath may be the file or we may be emitting to standard out
-        const std::string fileName = mFileNameForFqName ? mFileNameForFqName(fqName) : "";
-
-        Formatter out = coordinator->getFormatter(fqName, location, fileName);
+        Formatter out = coordinator->getFormatter(fqName, location, getFileName(fqName));
         return mGenerationFunction(out, fqName, coordinator);
     }
 
@@ -91,8 +117,7 @@ struct OutputHandler {
     std::string mDescription;         // for display in help menu
     OutputMode mOutputMode;           // how this option interacts with -o
     Coordinator::Location mLocation;  // how to compute location relative to the output directory
-    GenerationGranularity mGenerationGranularity;  // what to run generate function on
-
+    GenerationGranularity mGenerationGranularity;   // what to run generate function on
     ValidationFunction mValidate;                   // if a given fqName is allowed for this option
     std::vector<FileGenerator> mGenerateFunctions;  // run for each target at this granularity
 
@@ -103,6 +128,14 @@ struct OutputHandler {
     status_t validate(const FQName& fqName, const std::string& language) const {
         return mValidate(fqName, language);
     }
+
+    status_t writeDepFile(const FQName& fqName, const Coordinator* coordinator) const;
+
+   private:
+    status_t appendTargets(const FQName& fqName, const Coordinator* coordinator,
+                           std::vector<FQName>* targets) const;
+    status_t appendOutputFiles(const FQName& fqName, const Coordinator* coordinator,
+                               std::vector<std::string>* outputFiles) const;
 };
 
 // Helper method for GenerationGranularity::PER_TYPE
@@ -131,24 +164,23 @@ static status_t appendPerTypeTargets(const FQName& fqName, const Coordinator* co
     return OK;
 }
 
-status_t OutputHandler::generate(const FQName& fqName, const Coordinator* coordinator) const {
-    std::vector<FQName> targets;
-
+status_t OutputHandler::appendTargets(const FQName& fqName, const Coordinator* coordinator,
+                                      std::vector<FQName>* targets) const {
     switch (mGenerationGranularity) {
         case GenerationGranularity::PER_PACKAGE: {
-            targets = {fqName.getPackageAndVersion()};
+            targets->push_back(fqName.getPackageAndVersion());
         } break;
         case GenerationGranularity::PER_FILE: {
             if (fqName.isFullyQualified()) {
-                targets = {fqName};
+                targets->push_back(fqName);
                 break;
             }
-            status_t err = coordinator->appendPackageInterfacesToVector(fqName, &targets);
+            status_t err = coordinator->appendPackageInterfacesToVector(fqName, targets);
             if (err != OK) return err;
         } break;
         case GenerationGranularity::PER_TYPE: {
             if (fqName.isFullyQualified()) {
-                status_t err = appendPerTypeTargets(fqName, coordinator, &targets);
+                status_t err = appendPerTypeTargets(fqName, coordinator, targets);
                 if (err != OK) return err;
             }
 
@@ -156,13 +188,21 @@ status_t OutputHandler::generate(const FQName& fqName, const Coordinator* coordi
             status_t err = coordinator->appendPackageInterfacesToVector(fqName, &packageInterfaces);
             if (err != OK) return err;
             for (const FQName& packageInterface : packageInterfaces) {
-                err = appendPerTypeTargets(packageInterface, coordinator, &targets);
+                err = appendPerTypeTargets(packageInterface, coordinator, targets);
                 if (err != OK) return err;
             }
         } break;
         default:
             CHECK(!"Should be here");
     }
+
+    return OK;
+}
+
+status_t OutputHandler::generate(const FQName& fqName, const Coordinator* coordinator) const {
+    std::vector<FQName> targets;
+    status_t err = appendTargets(fqName, coordinator, &targets);
+    if (err != OK) return err;
 
     for (const FQName& fqName : targets) {
         for (const FileGenerator& file : mGenerateFunctions) {
@@ -172,6 +212,38 @@ status_t OutputHandler::generate(const FQName& fqName, const Coordinator* coordi
     }
 
     return OK;
+}
+
+status_t OutputHandler::appendOutputFiles(const FQName& fqName, const Coordinator* coordinator,
+                                          std::vector<std::string>* outputFiles) const {
+    std::vector<FQName> targets;
+    status_t err = appendTargets(fqName, coordinator, &targets);
+    if (err != OK) return err;
+
+    for (const FQName& fqName : targets) {
+        for (const FileGenerator& file : mGenerateFunctions) {
+            file.appendOutputFiles(fqName, coordinator, mLocation, outputFiles);
+        }
+    }
+
+    return OK;
+}
+
+status_t OutputHandler::writeDepFile(const FQName& fqName, const Coordinator* coordinator) const {
+    std::vector<std::string> outputFiles;
+    status_t err = appendOutputFiles(fqName, coordinator, &outputFiles);
+    if (err != OK) return err;
+
+    // No need for dep files
+    if (outputFiles.empty()) {
+        return OK;
+    }
+
+    // Depfiles in Android for genrules should be for the 'main file'. Because hidl-gen doesn't have
+    // a main file for most targets, we are just outputting a depfile for one single file only.
+    const std::string forFile = outputFiles[0];
+
+    return coordinator->writeDepFile(forFile);
 }
 
 // Use an AST function as a OutputHandler GenerationFunction
@@ -1063,7 +1135,7 @@ static const std::vector<OutputHandler> kFormats = {
 static void usage(const char *me) {
     fprintf(stderr,
             "usage: %s [-p <root path>] -o <output path> -L <language> [-O <owner>] (-r <interface "
-            "root>)+ [-v] fqname+\n",
+            "root>)+ [-v] [-d <depfile>] fqname+\n",
             me);
 
     fprintf(stderr, "         -h: Prints this menu.\n");
@@ -1076,6 +1148,7 @@ static void usage(const char *me) {
     fprintf(stderr, "         -p <root path>: Android build root, defaults to $ANDROID_BUILD_TOP or pwd.\n");
     fprintf(stderr, "         -r <package:path root>: E.g., android.hardware:hardware/interfaces.\n");
     fprintf(stderr, "         -v: verbose output.\n");
+    fprintf(stderr, "         -d <depfile>: location of depfile to write to.\n");
 }
 
 // hidl is intentionally leaky. Turn off LeakSanitizer by default.
@@ -1095,10 +1168,9 @@ int main(int argc, char **argv) {
     std::string outputPath;
 
     int res;
-    while ((res = getopt(argc, argv, "hp:o:O:r:L:v")) >= 0) {
+    while ((res = getopt(argc, argv, "hp:o:O:r:L:vd:")) >= 0) {
         switch (res) {
-            case 'p':
-            {
+            case 'p': {
                 if (!coordinator.getRootPath().empty()) {
                     fprintf(stderr, "ERROR: -p <root path> can only be specified once.\n");
                     exit(1);
@@ -1107,14 +1179,17 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            case 'v':
-            {
+            case 'v': {
                 coordinator.setVerbose(true);
                 break;
             }
 
-            case 'o':
-            {
+            case 'd': {
+                coordinator.setDepFile(optarg);
+                break;
+            }
+
+            case 'o': {
                 if (!outputPath.empty()) {
                     fprintf(stderr, "ERROR: -o <output path> can only be specified once.\n");
                     exit(1);
@@ -1132,8 +1207,7 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            case 'r':
-            {
+            case 'r': {
                 std::string val(optarg);
                 auto index = val.find_first_of(':');
                 if (index == std::string::npos) {
@@ -1154,8 +1228,7 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            case 'L':
-            {
+            case 'L': {
                 if (outputFormat != nullptr) {
                     fprintf(stderr,
                             "ERROR: only one -L option allowed. \"%s\" already specified.\n",
@@ -1179,8 +1252,7 @@ int main(int argc, char **argv) {
 
             case '?':
             case 'h':
-            default:
-            {
+            default: {
                 usage(me);
                 exit(1);
                 break;
@@ -1276,10 +1348,10 @@ int main(int argc, char **argv) {
         }
 
         status_t err = outputFormat->generate(fqName, &coordinator);
+        if (err != OK) exit(1);
 
-        if (err != OK) {
-            exit(1);
-        }
+        err = outputFormat->writeDepFile(fqName, &coordinator);
+        if (err != OK) exit(1);
     }
 
     return 0;

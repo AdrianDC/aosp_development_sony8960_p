@@ -42,6 +42,8 @@ struct Coordinator {
     void setVerbose(bool value);
     bool isVerbose() const;
 
+    void setDepFile(const std::string& depFile);
+
     const std::string& getOwner() const;
     void setOwner(const std::string& owner);
 
@@ -66,6 +68,8 @@ struct Coordinator {
 
     // must be called before file access
     void onFileAccess(const std::string& path, const std::string& mode) const;
+
+    status_t writeDepFile(const std::string& forFile) const;
 
     enum class Enforce {
         FULL,     // default
@@ -157,6 +161,7 @@ private:
     std::vector<PackageRoot> mPackageRoots;
     std::string mRootPath;    // root of android source tree (to locate package roots)
     std::string mOutputPath;  // root of output directory
+    std::string mDepFile;     // location to write depfile
 
     // hidl-gen options
     bool mVerbose = false;
@@ -167,6 +172,8 @@ private:
 
     // cache to enforceRestrictionsOnPackage().
     mutable std::set<FQName> mPackagesEnforced;
+
+    mutable std::set<std::string> mReadFiles;
 
     // Returns the given path if it is absolute, otherwise it returns
     // the path relative to mRootPath

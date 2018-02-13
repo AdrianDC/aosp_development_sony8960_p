@@ -67,6 +67,10 @@ bool Coordinator::isVerbose() const {
     return mVerbose;
 }
 
+void Coordinator::setDepFile(const std::string& depFile) {
+    mDepFile = depFile;
+}
+
 const std::string& Coordinator::getOwner() const {
     return mOwner;
 }
@@ -147,6 +151,15 @@ std::string Coordinator::getFilepath(const FQName& fqName, Location location,
 }
 
 void Coordinator::onFileAccess(const std::string& path, const std::string& mode) const {
+    if (mode == "r") {
+        // This is a global list. It's not cleared when a second fqname is processed for
+        // two reasons:
+        // 1). If there is a bug in hidl-gen, the dependencies on the first project from
+        //     the second would be required to recover correctly when the bug is fixed.
+        // 2). This option is never used in Android builds.
+        mReadFiles.insert(StringHelper::LTrim(path, mRootPath));
+    }
+
     if (!mVerbose) {
         return;
     }
@@ -155,6 +168,27 @@ void Coordinator::onFileAccess(const std::string& path, const std::string& mode)
             "VERBOSE: file access %s %s\n", path.c_str(), mode.c_str());
 }
 
+status_t Coordinator::writeDepFile(const std::string& forFile) const {
+    // No dep file requested
+    if (mDepFile.empty()) return OK;
+
+    onFileAccess(mDepFile, "w");
+
+    FILE* file = fopen(mDepFile.c_str(), "w");
+    if (file == nullptr) {
+        fprintf(stderr, "ERROR: could not open dep file at %s.\n", mDepFile.c_str());
+        return UNKNOWN_ERROR;
+    }
+
+    Formatter out(file, 2 /* spacesPerIndent */);
+    out << StringHelper::LTrim(forFile, mOutputPath) << ": \\\n";
+    out.indent([&] {
+        for (const std::string& file : mReadFiles) {
+            out << StringHelper::LTrim(file, mRootPath) << " \\\n";
+        }
+    });
+    return OK;
+}
 
 AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
                         Enforce enforcement) const {
