@@ -224,7 +224,6 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
     path.append(fqName.name());
     path.append(".hal");
 
-    onFileAccess(path, "r");
     AST* ast = new AST(this, &Hash::getHash(path));
 
     if (typesAST != NULL) {
@@ -239,6 +238,8 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
 
         return nullptr;
     }
+
+    onFileAccess(path, "r");
 
     status_t err = OK;
     if (ast->package().package() != fqName.package()
