@@ -145,79 +145,70 @@ void Scope::topologicalReorder(const std::unordered_map<const Type*, size_t>& re
     }
 }
 
-status_t Scope::forEachType(const std::function<status_t(Type *)> &func) const {
-    for (size_t i = 0; i < mTypes.size(); ++i) {
-        status_t err = func(mTypes[i]);
-
-        if (err != OK) {
-            return err;
-        }
-    }
-
-    return OK;
-}
-
-status_t Scope::emitTypeDeclarations(Formatter &out) const {
-    if (mTypes.empty()) return OK;
+void Scope::emitTypeDeclarations(Formatter& out) const {
+    if (mTypes.empty()) return;
 
     out << "// Forward declaration for forward reference support:\n";
-    forEachType([&](Type* type) {
+    for (const Type* type : mTypes) {
         type->emitTypeForwardDeclaration(out);
-        return OK;
-    });
+    }
     out << "\n";
 
     if (mTypeOrderChanged) {
         out << "// Order of inner types was changed for forward reference support.\n\n";
     }
-    return forEachType([&](Type* type) {
-        return type->emitTypeDeclarations(out);
-    });
+
+    for (const Type* type : mTypes) {
+        type->emitTypeDeclarations(out);
+    }
 }
 
 void Scope::emitGlobalTypeDeclarations(Formatter& out) const {
-    forEachType([&](Type* type) {
+    for (const Type* type : mTypes) {
         type->emitGlobalTypeDeclarations(out);
-        return OK;
-    });
+    }
 }
 
-status_t Scope::emitPackageTypeDeclarations(Formatter& out) const {
-    return forEachType([&](Type* type) { return type->emitPackageTypeDeclarations(out); });
+void Scope::emitPackageTypeDeclarations(Formatter& out) const {
+    for (const Type* type : mTypes) {
+        type->emitPackageTypeDeclarations(out);
+    }
 }
 
-status_t Scope::emitPackageHwDeclarations(Formatter& out) const {
-    return forEachType([&](Type* type) { return type->emitPackageHwDeclarations(out); });
+void Scope::emitPackageHwDeclarations(Formatter& out) const {
+    for (const Type* type : mTypes) {
+        type->emitPackageHwDeclarations(out);
+    }
 }
 
-status_t Scope::emitJavaTypeDeclarations(
-        Formatter &out, bool atTopLevel) const {
+void Scope::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const {
     if (mTypeOrderChanged) {
         out << "// Order of inner types was changed for forward reference support.\n\n";
     }
-    return forEachType([&](Type *type) {
-        return type->emitJavaTypeDeclarations(out, atTopLevel);
-    });
+
+    for (const Type* type : mTypes) {
+        type->emitJavaTypeDeclarations(out, atTopLevel);
+    }
 }
 
-status_t Scope::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
-    return forEachType([&](Type *type) {
-        return type->emitTypeDefinitions(out, prefix);
-    });
+void Scope::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
+    for (const Type* type : mTypes) {
+        type->emitTypeDefinitions(out, prefix);
+    }
 }
 
 const std::vector<NamedType *> &Scope::getSubTypes() const {
     return mTypes;
 }
 
-status_t Scope::emitVtsTypeDeclarations(Formatter &out) const {
-    return forEachType([&](Type *type) {
-        return type->emitVtsTypeDeclarations(out);
-    });
+void Scope::emitVtsTypeDeclarations(Formatter& out) const {
+    for (const Type* type : mTypes) {
+        type->emitVtsTypeDeclarations(out);
+    }
 }
 
 bool Scope::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
-    for (const auto &type : mTypes) {
+    for (const Type* type : mTypes) {
         if (!type->isJavaCompatible(visited)) {
             return false;
         }
@@ -227,10 +218,9 @@ bool Scope::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const
 
 void Scope::appendToExportedTypesVector(
         std::vector<const Type *> *exportedTypes) const {
-    forEachType([&](Type *type) {
+    for (const Type* type : mTypes) {
         type->appendToExportedTypesVector(exportedTypes);
-        return OK;
-    });
+    }
 }
 
 ////////////////////////////////////////

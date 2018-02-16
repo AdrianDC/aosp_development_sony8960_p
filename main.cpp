@@ -110,8 +110,8 @@ struct FileGenerator {
 
 // Represents a -L option, takes a fqName and generates files
 struct OutputHandler {
-    using ValidationFunction =
-        std::function<bool(const FQName& fqName, const std::string& language)>;
+    using ValidationFunction = std::function<bool(
+        const FQName& fqName, const Coordinator* coordinator, const std::string& language)>;
 
     std::string mKey;                 // -L in Android.bp
     std::string mDescription;         // for display in help menu
@@ -125,8 +125,9 @@ struct OutputHandler {
     const std::string& description() const { return mDescription; }
 
     status_t generate(const FQName& fqName, const Coordinator* coordinator) const;
-    status_t validate(const FQName& fqName, const std::string& language) const {
-        return mValidate(fqName, language);
+    status_t validate(const FQName& fqName, const Coordinator* coordinator,
+                      const std::string& language) const {
+        return mValidate(fqName, coordinator, language);
     }
 
     status_t writeDepFile(const FQName& fqName, const Coordinator* coordinator) const;
@@ -247,7 +248,7 @@ status_t OutputHandler::writeDepFile(const FQName& fqName, const Coordinator* co
 }
 
 // Use an AST function as a OutputHandler GenerationFunction
-static FileGenerator::GenerationFunction astGenerationFunction(status_t (AST::*generate)(Formatter&)
+static FileGenerator::GenerationFunction astGenerationFunction(void (AST::*generate)(Formatter&)
                                                                    const = nullptr) {
     return [generate](Formatter& out, const FQName& fqName,
                       const Coordinator* coordinator) -> status_t {
@@ -258,7 +259,9 @@ static FileGenerator::GenerationFunction astGenerationFunction(status_t (AST::*g
         }
 
         if (generate == nullptr) return OK;  // just parsing AST
-        return (ast->*generate)(out);
+        (ast->*generate)(out);
+
+        return OK;
     };
 }
 
@@ -289,7 +292,8 @@ static status_t generateJavaForPackage(Formatter& out, const FQName& fqName,
         fprintf(stderr, "ERROR: Could not parse %s. Aborting.\n", fqName.string().c_str());
         return UNKNOWN_ERROR;
     }
-    return ast->generateJava(out, limitToType);
+    ast->generateJava(out, limitToType);
+    return OK;
 };
 
 static status_t dumpDefinedButUnreferencedTypeNames(const FQName& packageFQName,
@@ -414,8 +418,8 @@ static bool packageNeedsJavaCode(
     return false;
 }
 
-bool validateIsPackage(
-        const FQName &fqName, const std::string & /* language */) {
+bool validateIsPackage(const FQName& fqName, const Coordinator*,
+                       const std::string& /* language */) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
         return false;
@@ -708,8 +712,8 @@ static status_t generateAndroidBpImplForPackage(Formatter& out, const FQName& pa
     return OK;
 }
 
-bool validateForSource(
-        const FQName &fqName, const std::string &language) {
+bool validateForSource(const FQName& fqName, const Coordinator* coordinator,
+                       const std::string& language) {
     if (fqName.package().empty()) {
         fprintf(stderr, "ERROR: Expecting package name\n");
         return false;
@@ -737,6 +741,23 @@ bool validateForSource(
         }
 
         return true;
+    }
+
+    if (language == "java") {
+        bool isJavaCompatible;
+        status_t err = isPackageJavaCompatible(fqName, coordinator, &isJavaCompatible);
+        if (err != OK) return false;
+
+        if (!isJavaCompatible) {
+            fprintf(stderr,
+                    "ERROR: %s is not Java compatible. The Java backend"
+                    " does NOT support union types nor native handles. "
+                    "In addition, vectors of arrays are limited to at most "
+                    "one-dimensional arrays and vectors of {vectors,interfaces} are"
+                    " not supported.\n",
+                    fqName.string().c_str());
+            return false;
+        }
     }
 
     return true;
@@ -1090,7 +1111,7 @@ static const std::vector<OutputHandler> kFormats = {
         OutputMode::NEEDS_SRC,
         Coordinator::Location::PACKAGE_ROOT,
         GenerationGranularity::PER_PACKAGE,
-        [](const FQName &, const std::string &) {
+        [](const FQName &, const Coordinator*, const std::string &) {
            fprintf(stderr, "ERROR: makefile output is not supported. Use -Landroidbp for all build file generation.\n");
            return false;
         },
@@ -1341,7 +1362,7 @@ int main(int argc, char **argv) {
             if (err != OK) return err;
         }
 
-        if (!outputFormat->validate(fqName, outputFormat->name())) {
+        if (!outputFormat->validate(fqName, &coordinator, outputFormat->name())) {
             fprintf(stderr,
                     "ERROR: output handler failed.\n");
             exit(1);

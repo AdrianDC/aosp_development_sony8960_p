@@ -71,9 +71,8 @@ bool PointerType::deepContainsPointer(std::unordered_set<const Type*>* /* visite
     return true;
 }
 
-status_t PointerType::emitVtsTypeDeclarations(Formatter &out) const {
+void PointerType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
-    return OK;
 }
 
 }  // namespace android
