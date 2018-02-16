@@ -54,6 +54,7 @@ type javaProperties struct {
 	Owner             *string
 	Defaults          []string
 	No_framework_libs *bool
+	Sdk_version       *string
 	Srcs              []string
 	Libs              []string
 }
