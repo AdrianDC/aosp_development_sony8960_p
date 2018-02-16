@@ -209,9 +209,8 @@ bool StringType::resultNeedsDeref() const {
     return true;
 }
 
-status_t StringType::emitVtsTypeDeclarations(Formatter &out) const {
+void StringType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
-    return OK;
 }
 
 static HidlTypeAssertion assertion("hidl_string", 16 /* size */);

@@ -43,7 +43,7 @@ struct TypeDef : public NamedType {
 
     std::vector<const Reference<Type>*> getReferences() const override;
 
-    status_t emitTypeDeclarations(Formatter &out) const override;
+    void emitTypeDeclarations(Formatter& out) const override;
 
    private:
     Reference<Type> mReferencedType;

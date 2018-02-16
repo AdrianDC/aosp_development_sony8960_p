@@ -43,7 +43,7 @@ void AST::emitJavaReaderWriter(Formatter& out, const std::string& parcelObj,
             isReader);
 }
 
-status_t AST::generateJavaTypes(Formatter& out, const std::string& limitToType) const {
+void AST::generateJavaTypes(Formatter& out, const std::string& limitToType) const {
     // Splits types.hal up into one java file per declared type.
     CHECK(!limitToType.empty()) << getFilename();
 
@@ -59,11 +59,11 @@ status_t AST::generateJavaTypes(Formatter& out, const std::string& limitToType) 
 
         out << "package " << mPackage.javaPackage() << ";\n\n\n";
 
-        return type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
+        type->emitJavaTypeDeclarations(out, true /* atTopLevel */);
+        return;
     }
 
     CHECK(false) << "generateJavaTypes could not find limitToType type";
-    return UNKNOWN_ERROR;
 }
 
 void emitGetService(
@@ -106,19 +106,12 @@ void emitGetService(
     }).endl().endl();
 }
 
-status_t AST::generateJava(Formatter& out, const std::string& limitToType) const {
-    if (!isJavaCompatible()) {
-        fprintf(stderr,
-                "ERROR: This interface is not Java compatible. The Java backend"
-                " does NOT support union types nor native handles. "
-                "In addition, vectors of arrays are limited to at most "
-                "one-dimensional arrays and vectors of {vectors,interfaces} are"
-                " not supported.\n");
-        return UNKNOWN_ERROR;
-    }
+void AST::generateJava(Formatter& out, const std::string& limitToType) const {
+    CHECK(isJavaCompatible()) << getFilename();
 
     if (!AST::isInterface()) {
-        return generateJavaTypes(out, limitToType);
+        generateJavaTypes(out, limitToType);
+        return;
     }
 
     const Interface* iface = mRootScope.getInterface();
@@ -220,11 +213,7 @@ status_t AST::generateJava(Formatter& out, const std::string& limitToType) const
     emitGetService(out, ifaceName, iface->fqName().string(), true /* isRetry */);
     emitGetService(out, ifaceName, iface->fqName().string(), false /* isRetry */);
 
-    status_t err = emitJavaTypeDeclarations(out);
-
-    if (err != OK) {
-        return err;
-    }
+    emitJavaTypeDeclarations(out);
 
     for (const auto &method : iface->methods()) {
         if (method->isHiddenFromJava()) {
@@ -669,12 +658,10 @@ status_t AST::generateJava(Formatter& out, const std::string& limitToType) const
 
     out.unindent();
     out << "}\n";
-
-    return OK;
 }
 
-status_t AST::emitJavaTypeDeclarations(Formatter &out) const {
-    return mRootScope.emitJavaTypeDeclarations(out, false /* atTopLevel */);
+void AST::emitJavaTypeDeclarations(Formatter& out) const {
+    mRootScope.emitJavaTypeDeclarations(out, false /* atTopLevel */);
 }
 
 }  // namespace android

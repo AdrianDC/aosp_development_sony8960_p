@@ -616,29 +616,19 @@ void Type::emitReaderWriterEmbeddedForTypeName(
     handleError(out, mode);
 }
 
-status_t Type::emitTypeDeclarations(Formatter &) const {
-    return OK;
-}
+void Type::emitTypeDeclarations(Formatter&) const {}
 
 void Type::emitTypeForwardDeclaration(Formatter&) const {}
 
 void Type::emitGlobalTypeDeclarations(Formatter&) const {}
 
-status_t Type::emitPackageTypeDeclarations(Formatter&) const {
-    return OK;
-}
+void Type::emitPackageTypeDeclarations(Formatter&) const {}
 
-status_t Type::emitPackageHwDeclarations(Formatter&) const {
-    return OK;
-}
+void Type::emitPackageHwDeclarations(Formatter&) const {}
 
-status_t Type::emitTypeDefinitions(Formatter&, const std::string&) const {
-    return OK;
-}
+void Type::emitTypeDefinitions(Formatter&, const std::string&) const {}
 
-status_t Type::emitJavaTypeDeclarations(Formatter &, bool) const {
-    return OK;
-}
+void Type::emitJavaTypeDeclarations(Formatter&, bool) const {}
 
 bool Type::needsEmbeddedReadWrite() const {
     return false;
@@ -701,12 +691,10 @@ void Type::emitJavaReaderWriterWithSuffix(
     out << ");\n";
 }
 
-status_t Type::emitVtsTypeDeclarations(Formatter &) const {
-    return OK;
-}
+void Type::emitVtsTypeDeclarations(Formatter&) const {}
 
-status_t Type::emitVtsAttributeType(Formatter &out) const {
-    return emitVtsTypeDeclarations(out);
+void Type::emitVtsAttributeType(Formatter& out) const {
+    emitVtsTypeDeclarations(out);
 }
 
 bool Type::isJavaCompatible() const {
@@ -760,10 +748,7 @@ void Type::appendToExportedTypesVector(
         std::vector<const Type *> * /* exportedTypes */) const {
 }
 
-status_t Type::emitExportedHeader(
-        Formatter & /* out */, bool /* forJava */) const {
-    return OK;
-}
+void Type::emitExportedHeader(Formatter& /* out */, bool /* forJava */) const {}
 
 bool Type::isNeverStrongReference() const {
     return false;
@@ -807,30 +792,22 @@ status_t TemplatedType::validate() const {
     return Type::validate();
 }
 
-status_t TemplatedType::emitVtsTypeDeclarations(Formatter &out) const {
+void TemplatedType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << getVtsValueName() << ": {\n";
     out.indent();
-    status_t err = mElementType->emitVtsTypeDeclarations(out);
-    if (err != OK) {
-        return err;
-    }
+    mElementType->emitVtsTypeDeclarations(out);
     out.unindent();
     out << "}\n";
-    return OK;
 }
 
-status_t TemplatedType::emitVtsAttributeType(Formatter &out) const {
+void TemplatedType::emitVtsAttributeType(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << getVtsValueName() << ": {\n";
     out.indent();
-    status_t status = mElementType->emitVtsAttributeType(out);
-    if (status != OK) {
-        return status;
-    }
+    mElementType->emitVtsAttributeType(out);
     out.unindent();
     out << "}\n";
-    return OK;
 }
 
 }  // namespace android

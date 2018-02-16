@@ -51,7 +51,7 @@ struct PointerType : public Type {
     bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
     bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
 };
 
 }  // namespace android
