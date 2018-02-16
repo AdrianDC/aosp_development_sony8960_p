@@ -736,8 +736,10 @@ Coordinator::HashStatus Coordinator::checkHash(const FQName& fqName) const {
 
     std::string hashPath = makeAbsolute(getPackageRootPath(fqName)) + "/current.txt";
     std::string error;
-    onFileAccess(hashPath, "r");
-    std::vector<std::string> frozen = Hash::lookupHash(hashPath, fqName.string(), &error);
+    bool fileExists;
+    std::vector<std::string> frozen =
+        Hash::lookupHash(hashPath, fqName.string(), &error, &fileExists);
+    if (fileExists) onFileAccess(hashPath, "r");
 
     if (error.size() > 0) {
         std::cerr << "ERROR: " << error << std::endl;
