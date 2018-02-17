@@ -32,9 +32,9 @@ struct Hash {
     // returns matching hashes of interfaceName in path
     // path is something like hardware/interfaces/current.txt
     // interfaceName is something like android.hardware.foo@1.0::IFoo
-    static std::vector<std::string> lookupHash(const std::string &path,
-                                               const std::string &interfaceName,
-                                               std::string *err);
+    static std::vector<std::string> lookupHash(const std::string& path,
+                                               const std::string& interfaceName, std::string* err,
+                                               bool* fileExists = nullptr);
 
     static std::string hexString(const std::vector<uint8_t> &hash);
     std::string hexString() const;
