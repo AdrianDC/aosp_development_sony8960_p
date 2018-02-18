@@ -399,10 +399,9 @@ std::string ConstantExpression::cppValue(ScalarType::Kind castKind) const {
     // -(uint64_t)9223372036854775808 == 9223372036854775808 could not
     // be narrowed to int64_t.
     if(castKind == SK(INT64) && (int64_t)mValue == INT64_MIN) {
-        return strdup(("static_cast<" +
-                       ScalarType(SK(INT64), nullptr /* parent */).getCppStackType()  // "int64_t"
-                       + ">(" + literal + "ull)")
-                          .c_str());
+        return "static_cast<" +
+               ScalarType(SK(INT64), nullptr /* parent */).getCppStackType()  // "int64_t"
+               + ">(" + literal + "ull)";
     }
 
     // add suffix if necessary.
@@ -425,7 +424,7 @@ std::string ConstantExpression::javaValue(ScalarType::Kind castKind) const {
         case SK(UINT16): return rawValue(SK(INT16));
         case SK(UINT8) : return rawValue(SK(INT8));
         case SK(BOOL)  :
-            return this->cast<bool>() ? strdup("true") : strdup("false");
+            return this->cast<bool>() ? "true" : "false";
         default: break;
     }
     return rawValue(castKind);
