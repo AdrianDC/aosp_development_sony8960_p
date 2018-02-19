@@ -16,10 +16,12 @@
 java_import {
     name: "droiddriver-0.9-prebuilt",
     jars: ["droiddriver-0.9.jar"],
+    sdk_version: "current",
 }
 
 //#################################
 java_import {
     name: "droiddriver-1.0.0-BETA1-prebuilt",
     jars: ["droiddriver-1.0.0-BETA1.jar"],
+    sdk_version: "current",
 }
