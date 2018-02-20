@@ -38,8 +38,6 @@ struct NamedType : public Type {
 
     /* short for fqName().cppName() */
     std::string fullName() const;
-    /* short for fqName().cppLocalName() */
-    std::string partialCppName() const;
     /* short for fqName().fullJavaName() */
     std::string fullJavaName() const;
 
