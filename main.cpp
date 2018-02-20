@@ -1135,8 +1135,11 @@ static const std::vector<OutputHandler> kFormats = {
 static void usage(const char *me) {
     fprintf(stderr,
             "usage: %s [-p <root path>] -o <output path> -L <language> [-O <owner>] (-r <interface "
-            "root>)+ [-v] [-d <depfile>] fqname+\n",
+            "root>)+ [-v] [-d <depfile>] FQNAME...\n\n",
             me);
+
+    fprintf(stderr,
+            "Process FQNAME, PACKAGE(.SUBPACKAGE)*@[0-9]+.[0-9]+(::TYPE)?, to create output.\n\n");
 
     fprintf(stderr, "         -h: Prints this menu.\n");
     fprintf(stderr, "         -L <language>: The following options are available:\n");
@@ -1325,14 +1328,13 @@ int main(int argc, char **argv) {
     for (int i = 0; i < argc; ++i) {
         FQName fqName(argv[i]);
 
-        // TODO(b/65200821): remove
-        gCurrentCompileName = "_" + StringHelper::Uppercase(fqName.tokenName());
-
         if (!fqName.isValid()) {
-            fprintf(stderr,
-                    "ERROR: Invalid fully-qualified name.\n");
+            fprintf(stderr, "ERROR: Invalid fully-qualified name as argument: %s.\n", argv[i]);
             exit(1);
         }
+
+        // TODO(b/65200821): remove
+        gCurrentCompileName = "_" + StringHelper::Uppercase(fqName.tokenName());
 
         // Dump extra verbose output
         if (coordinator.isVerbose()) {
