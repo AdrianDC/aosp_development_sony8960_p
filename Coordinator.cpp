@@ -357,10 +357,6 @@ std::string Coordinator::getPackageRootPath(const FQName &fqName) const {
     return findPackageRoot(fqName).path;
 }
 
-std::string Coordinator::getPackageRootOption(const FQName &fqName) const {
-    return getPackageRoot(fqName) + ":" + getPackageRootPath(fqName);
-}
-
 std::string Coordinator::getPackagePath(
         const FQName& fqName, bool relative, bool sanitized) const {
 
