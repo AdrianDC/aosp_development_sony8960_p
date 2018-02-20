@@ -38,10 +38,6 @@ std::string NamedType::fullName() const {
     return mFullName.cppName();
 }
 
-std::string NamedType::partialCppName() const {
-    return mFullName.cppLocalName();
-}
-
 std::string NamedType::fullJavaName() const {
     return mFullName.javaName();
 }
