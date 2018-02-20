@@ -1779,7 +1779,6 @@ TEST_F(HidlTest, TrieStressTest) {
                 for (size_t i = 0; i != REQUEST_NUM; ++i) {
                     strings.push_back(stringGenerator.next());
                 }
-                std::random_shuffle(strings.begin(), strings.end());
 
                 std::vector<bool> trueResponse(strings.size());
                 std::transform(strings.begin(), strings.end(), trueResponse.begin(),
