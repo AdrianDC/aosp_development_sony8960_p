@@ -56,4 +56,5 @@ type javaProperties struct {
 	No_framework_libs *bool
 	Srcs              []string
 	Libs              []string
+	Static_libs       []string
 }
