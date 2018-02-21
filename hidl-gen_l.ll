@@ -181,13 +181,7 @@ L?\"(\\.|[^\\"])*\" { yylval->str = strdup(yytext); return token::STRING_LITERAL
 
 #pragma clang diagnostic pop
 
-status_t parseFile(AST *ast) {
-    FILE *file = fopen(ast->getFilename().c_str(), "rb");
-
-    if (file == nullptr) {
-        return -errno;
-    }
-
+status_t parseFile(AST* ast, FILE* file) {
     yyscan_t scanner;
     yylex_init(&scanner);
 
