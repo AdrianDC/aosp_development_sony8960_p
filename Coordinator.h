@@ -102,9 +102,6 @@ struct Coordinator {
     // return "android.hardware".
     std::string getPackageRoot(const FQName &fqName) const;
 
-    // return getPackageRoot + ":" + getPackageRootPath
-    std::string getPackageRootOption(const FQName &fqName) const;
-
     status_t getPackageInterfaceFiles(
             const FQName &package,
             std::vector<std::string> *fileNames) const;
