@@ -73,14 +73,12 @@ bool TypeDef::resultNeedsDeref() const {
     return false;
 }
 
-status_t TypeDef::emitTypeDeclarations(Formatter &out) const {
+void TypeDef::emitTypeDeclarations(Formatter& out) const {
     out << "typedef "
         << mReferencedType->getCppStackType()
         << " "
         << localName()
         << ";\n\n";
-
-    return OK;
 }
 
 }  // namespace android

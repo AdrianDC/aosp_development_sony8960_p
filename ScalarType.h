@@ -96,7 +96,7 @@ struct ScalarType : public Type {
             const std::string &offset,
             bool isReader) const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 

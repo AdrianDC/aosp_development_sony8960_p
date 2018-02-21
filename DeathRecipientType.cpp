@@ -78,9 +78,8 @@ void DeathRecipientType::getAlignmentAndSize(size_t *align, size_t *size) const 
     *align = *size = 0; // this object should only be used in passthrough mode
 }
 
-status_t DeathRecipientType::emitVtsTypeDeclarations(Formatter &out) const {
+void DeathRecipientType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
-    return OK;
 }
 
 }  // namespace android

@@ -34,7 +34,7 @@
 
 namespace android {
 
-status_t AST::generateCppAdapterHeader(Formatter& out) const {
+void AST::generateCppAdapterHeader(Formatter& out) const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
     const std::string guard = makeHeaderGuard(klassName, true /* indicateGenerated */);
 
@@ -58,14 +58,12 @@ status_t AST::generateCppAdapterHeader(Formatter& out) const {
 
             generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
                 if (method->isHidlReserved()) {
-                    return OK;
+                    return;
                 }
 
                 out << "virtual ";
                 method->generateCppSignature(out);
                 out << " override;\n";
-
-                return OK;
             });
             out << "private:\n";
             out << "::android::sp<" << mockName << "> mImpl;\n";
@@ -78,11 +76,9 @@ status_t AST::generateCppAdapterHeader(Formatter& out) const {
     }
 
     out << "#endif // " << guard << "\n";
-
-    return OK;
 }
 
-status_t AST::generateCppAdapterSource(Formatter& out) const {
+void AST::generateCppAdapterSource(Formatter& out) const {
     const std::string klassName = AST::isInterface() ? getInterface()->getAdapterName() : "Atypes";
 
     generateCppPackageInclude(out, mPackage, klassName);
@@ -112,7 +108,6 @@ status_t AST::generateCppAdapterSource(Formatter& out) const {
 
         generateMethods(out, [&](const Method* method, const Interface* /* interface */) {
             generateAdapterMethod(out, method);
-            return OK;
         });
 
         enterLeaveNamespace(out, false /* enter */);
@@ -120,8 +115,6 @@ status_t AST::generateCppAdapterSource(Formatter& out) const {
     } else {
         out << "// no adapters for types.hal\n";
     }
-
-    return OK;
 }
 
 void AST::generateAdapterMethod(Formatter& out, const Method* method) const {

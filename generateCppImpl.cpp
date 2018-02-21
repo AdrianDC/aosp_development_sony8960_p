@@ -37,13 +37,11 @@ void AST::generateFetchSymbol(Formatter &out, const std::string& ifaceName) cons
     out << "HIDL_FETCH_" << ifaceName;
 }
 
-status_t AST::generateStubImplMethod(Formatter &out,
-                                     const std::string &className,
-                                     const Method *method) const {
-
+void AST::generateStubImplMethod(Formatter& out, const std::string& className,
+                                 const Method* method) const {
     // ignore HIDL reserved methods -- implemented in IFoo already.
     if (method->isHidlReserved()) {
-        return OK;
+        return;
     }
 
     method->generateCppSignature(out, className, false /* specifyNamespaces */);
@@ -67,13 +65,13 @@ status_t AST::generateStubImplMethod(Formatter &out,
 
     out << "}\n\n";
 
-    return OK;
+    return;
 }
 
-status_t AST::generateCppImplHeader(Formatter& out) const {
+void AST::generateCppImplHeader(Formatter& out) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
-        return OK;
+        return;
     }
 
     const Interface* iface = mRootScope.getInterface();
@@ -110,20 +108,15 @@ status_t AST::generateCppImplHeader(Formatter& out) const {
 
     out.indent();
 
-    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
+    generateMethods(out, [&](const Method* method, const Interface*) {
         // ignore HIDL reserved methods -- implemented in IFoo already.
         if (method->isHidlReserved()) {
-            return OK;
+            return;
         }
         method->generateCppSignature(out, "" /* className */,
                 false /* specifyNamespaces */);
         out << " override;\n";
-        return OK;
     });
-
-    if (err != OK) {
-        return err;
-    }
 
     out.unindent();
 
@@ -140,14 +133,12 @@ status_t AST::generateCppImplHeader(Formatter& out) const {
     enterLeaveNamespace(out, false /* leave */);
 
     out << "\n#endif  // " << guard << "\n";
-
-    return OK;
 }
 
-status_t AST::generateCppImplSource(Formatter& out) const {
+void AST::generateCppImplSource(Formatter& out) const {
     if (!AST::isInterface()) {
         // types.hal does not get a stub header.
-        return OK;
+        return;
     }
 
     const Interface* iface = mRootScope.getInterface();
@@ -158,13 +149,9 @@ status_t AST::generateCppImplSource(Formatter& out) const {
     enterLeaveNamespace(out, true /* enter */);
     out << "namespace implementation {\n\n";
 
-    status_t err = generateMethods(out, [&](const Method *method, const Interface *) {
-        return generateStubImplMethod(out, baseName, method);
+    generateMethods(out, [&](const Method* method, const Interface*) {
+        generateStubImplMethod(out, baseName, method);
     });
-
-    if (err != OK) {
-        return err;
-    }
 
     out.setLinePrefix("//");
     out << iface->localName()
@@ -179,8 +166,6 @@ status_t AST::generateCppImplSource(Formatter& out) const {
 
     out << "}  // namespace implementation\n";
     enterLeaveNamespace(out, false /* leave */);
-
-    return OK;
 }
 
 }  // namespace android

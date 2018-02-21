@@ -63,19 +63,18 @@ struct Scope : public NamedType {
 
     void topologicalReorder(const std::unordered_map<const Type*, size_t>& reversedOrder);
 
-    status_t emitTypeDeclarations(Formatter &out) const override;
+    void emitTypeDeclarations(Formatter& out) const override;
     void emitGlobalTypeDeclarations(Formatter& out) const override;
-    status_t emitPackageTypeDeclarations(Formatter& out) const override;
-    status_t emitPackageHwDeclarations(Formatter& out) const override;
+    void emitPackageTypeDeclarations(Formatter& out) const override;
+    void emitPackageHwDeclarations(Formatter& out) const override;
 
-    status_t emitJavaTypeDeclarations(
-            Formatter &out, bool atTopLevel) const override;
+    void emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const override;
 
-    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
+    void emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
     const std::vector<NamedType *> &getSubTypes() const;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
 
     bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
 
@@ -88,8 +87,6 @@ struct Scope : public NamedType {
     std::vector<Annotation*> mAnnotations;
 
     bool mTypeOrderChanged = false;
-
-    status_t forEachType(const std::function<status_t(Type*)>& func) const;
 
     DISALLOW_COPY_AND_ASSIGN(Scope);
 };

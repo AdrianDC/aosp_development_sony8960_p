@@ -277,10 +277,9 @@ void ScalarType::emitJavaFieldReaderWriter(
         << ");\n";
 }
 
-status_t ScalarType::emitVtsTypeDeclarations(Formatter &out) const {
+void ScalarType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << "scalar_type: \"" << getVtsScalarType() << "\"\n";
-    return OK;
 }
 
 void ScalarType::getAlignmentAndSize(size_t *align, size_t *size) const {
