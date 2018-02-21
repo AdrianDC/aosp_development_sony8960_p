@@ -181,6 +181,8 @@ L?\"(\\.|[^\\"])*\" { yylval->str = strdup(yytext); return token::STRING_LITERAL
 
 #pragma clang diagnostic pop
 
+namespace android {
+
 status_t parseFile(AST* ast, FILE* file) {
     yyscan_t scanner;
     yylex_init(&scanner);
@@ -201,3 +203,5 @@ status_t parseFile(AST* ast, FILE* file) {
 
     return OK;
 }
+
+}  // namespace android
