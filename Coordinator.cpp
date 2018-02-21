@@ -29,8 +29,7 @@
 
 #include "AST.h"
 #include "Interface.h"
-
-extern android::status_t parseFile(android::AST* ast, FILE* file);
+#include "hidl-gen_l.h"
 
 static bool existdir(const char *name) {
     DIR *dir = opendir(name);
