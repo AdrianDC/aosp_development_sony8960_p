@@ -167,9 +167,8 @@ void HandleType::getAlignmentAndSize(size_t *align, size_t *size) const {
     *size = assertion.size();
 }
 
-status_t HandleType::emitVtsTypeDeclarations(Formatter &out) const {
+void HandleType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
-    return OK;
 }
 
 }  // namespace android

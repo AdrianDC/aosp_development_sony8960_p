@@ -254,7 +254,7 @@ struct Type {
             const std::string &offset,
             bool isReader) const;
 
-    virtual status_t emitTypeDeclarations(Formatter &out) const;
+    virtual void emitTypeDeclarations(Formatter& out) const;
 
     virtual void emitGlobalTypeDeclarations(Formatter& out) const;
 
@@ -267,18 +267,17 @@ struct Type {
     // at global scope, i.e. enum class operators.
     // For android.hardware.foo@1.0::*, this will be in namespace
     // android::hardware::foo::V1_0
-    virtual status_t emitPackageTypeDeclarations(Formatter& out) const;
+    virtual void emitPackageTypeDeclarations(Formatter& out) const;
 
     // Emit any declarations pertaining to this type that have to be
     // at global scope for transport, e.g. read/writeEmbeddedTo/FromParcel
     // For android.hardware.foo@1.0::*, this will be in namespace
     // android::hardware::foo::V1_0
-    virtual status_t emitPackageHwDeclarations(Formatter& out) const;
+    virtual void emitPackageHwDeclarations(Formatter& out) const;
 
-    virtual status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const;
+    virtual void emitTypeDefinitions(Formatter& out, const std::string& prefix) const;
 
-    virtual status_t emitJavaTypeDeclarations(
-            Formatter &out, bool atTopLevel) const;
+    virtual void emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const;
 
     virtual bool needsEmbeddedReadWrite() const;
     virtual bool resultNeedsDeref() const;
@@ -289,10 +288,10 @@ struct Type {
 
     // Generates type declaration for vts proto file.
     // TODO (b/30844146): make it a pure virtual method.
-    virtual status_t emitVtsTypeDeclarations(Formatter &out) const;
+    virtual void emitVtsTypeDeclarations(Formatter& out) const;
     // Generates type declaration as attribute of method (return value or method
     // argument) or attribute of compound type for vts proto file.
-    virtual status_t emitVtsAttributeType(Formatter &out) const;
+    virtual void emitVtsAttributeType(Formatter& out) const;
 
     // Returns true iff this type is supported through the Java backend.
     bool isJavaCompatible() const;
@@ -309,7 +308,7 @@ struct Type {
     virtual void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const;
 
-    virtual status_t emitExportedHeader(Formatter &out, bool forJava) const;
+    virtual void emitExportedHeader(Formatter& out, bool forJava) const;
 
     virtual bool isNeverStrongReference() const;
 
@@ -367,8 +366,8 @@ struct TemplatedType : public Type {
 
     virtual status_t validate() const override;
 
-    status_t emitVtsTypeDeclarations(Formatter& out) const override;
-    status_t emitVtsAttributeType(Formatter& out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
+    void emitVtsAttributeType(Formatter& out) const override;
 
    protected:
     TemplatedType(Scope* parent);
