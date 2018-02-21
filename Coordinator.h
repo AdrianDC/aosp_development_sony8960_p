@@ -86,6 +86,15 @@ struct Coordinator {
     AST* parse(const FQName& fqName, std::set<AST*>* parsedASTs = nullptr,
                Enforce enforcement = Enforce::FULL) const;
 
+    // Same as parse, but it distinguishes between "missing file" and "could not parse AST"
+    // return OK, out *ast:
+    //    0xdeadbeef -> successfully parsed
+    //    nullptr    -> file not present
+    // return !OK
+    //    could not parse AST and file exists
+    status_t parseOptional(const FQName& fqName, AST** ast, std::set<AST*>* parsedASTs = nullptr,
+                           Enforce enforcement = Enforce::FULL) const;
+
     // Given package-root paths of ["hardware/interfaces",
     // "vendor/<something>/interfaces"], package roots of
     // ["android.hardware", "vendor.<something>.hardware"], and a

@@ -342,15 +342,17 @@ bool AST::addImport(const char *import) {
 
     addToImportedNamesGranular(fqName);
 
-    AST *importAST;
-
     // cases like android.hardware.foo@1.0::IFoo.Internal
     //            android.hardware.foo@1.0::Abc.Internal
 
     // assume it is an interface, and try to import it.
     const FQName interfaceName = fqName.getTopLevelType();
     // Do not enforce restrictions on imports.
-    importAST = mCoordinator->parse(interfaceName, &mImportedASTs, Coordinator::Enforce::NONE);
+    AST* importAST;
+    status_t err = mCoordinator->parseOptional(interfaceName, &importAST, &mImportedASTs,
+                                               Coordinator::Enforce::NONE);
+    if (err != OK) return false;
+    // importAST nullptr == file doesn't exist
 
     if (importAST != nullptr) {
         // cases like android.hardware.foo@1.0::IFoo.Internal

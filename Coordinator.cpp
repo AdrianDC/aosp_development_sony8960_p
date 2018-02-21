@@ -30,7 +30,7 @@
 #include "AST.h"
 #include "Interface.h"
 
-extern android::status_t parseFile(android::AST *ast);
+extern android::status_t parseFile(android::AST* ast, FILE* file);
 
 static bool existdir(const char *name) {
     DIR *dir = opendir(name);
@@ -192,17 +192,34 @@ status_t Coordinator::writeDepFile(const std::string& forFile) const {
 
 AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
                         Enforce enforcement) const {
+    AST* ret;
+    status_t err = parseOptional(fqName, &ret, parsedASTs, enforcement);
+    if (err != OK) CHECK(ret == nullptr);  // internal consistency
+
+    // only in a handful of places do we want to distinguish between
+    // a missing file and a bad AST. Everywhere else, we just want to
+    // throw an error if we expect an AST to be present but it is not.
+    return ret;
+}
+
+status_t Coordinator::parseOptional(const FQName& fqName, AST** ast, std::set<AST*>* parsedASTs,
+                                    Enforce enforcement) const {
     CHECK(fqName.isFullyQualified());
 
     auto it = mCache.find(fqName);
     if (it != mCache.end()) {
-        AST *ast = (*it).second;
+        *ast = (*it).second;
 
-        if (ast != nullptr && parsedASTs != nullptr) {
-            parsedASTs->insert(ast);
+        if (*ast != nullptr && parsedASTs != nullptr) {
+            parsedASTs->insert(*ast);
         }
 
-        return ast;
+        if (*ast == nullptr) {
+            // circular import OR that AST has errors in it
+            return UNKNOWN_ERROR;
+        }
+
+        return OK;
     }
 
     // Add this to the cache immediately, so we can discover circular imports.
@@ -214,7 +231,8 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
         // Any interface file implicitly imports its package's types.hal.
         FQName typesName = fqName.getTypesForPackage();
         // Do not enforce on imports. Do not add imports' imports to this AST.
-        typesAST = parse(typesName, nullptr, Enforce::NONE);
+        status_t err = parseOptional(typesName, &typesAST, nullptr, Enforce::NONE);
+        if (err != OK) return err;
 
         // fall through.
     }
@@ -224,26 +242,35 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
     path.append(fqName.name());
     path.append(".hal");
 
-    AST* ast = new AST(this, &Hash::getHash(path));
+    *ast = new AST(this, &Hash::getHash(path));
 
     if (typesAST != NULL) {
         // If types.hal for this AST's package existed, make it's defined
         // types available to the (about to be parsed) AST right away.
-        ast->addImportedAST(typesAST);
+        (*ast)->addImportedAST(typesAST);
     }
 
-    if (parseFile(ast) != OK || ast->postParse() != OK) {
-        delete ast;
-        ast = nullptr;
+    FILE* file = fopen(path.c_str(), "rb");
 
-        return nullptr;
+    if (file == nullptr) {
+        mCache.erase(fqName);  // nullptr in cache is used to find circular imports
+        delete *ast;
+        *ast = nullptr;
+        return OK;  // File does not exist, nullptr AST* == file doesn't exist.
     }
 
     onFileAccess(path, "r");
 
+    // parse file takes ownership of file
+    if (parseFile(*ast, file) != OK || (*ast)->postParse() != OK) {
+        delete *ast;
+        *ast = nullptr;
+        return UNKNOWN_ERROR;
+    }
+
     status_t err = OK;
-    if (ast->package().package() != fqName.package()
-            || ast->package().version() != fqName.version()) {
+    if ((*ast)->package().package() != fqName.package() ||
+        (*ast)->package().version() != fqName.version()) {
         fprintf(stderr,
                 "ERROR: File at '%s' does not match expected package and/or "
                 "version.\n",
@@ -251,16 +278,15 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
 
         err = UNKNOWN_ERROR;
     } else {
-        if (ast->isInterface()) {
+        if ((*ast)->isInterface()) {
             if (fqName.name() == "types") {
                 fprintf(stderr,
                         "ERROR: File at '%s' declares an interface '%s' "
                         "instead of the expected types common to the package.\n",
-                        path.c_str(),
-                        ast->getInterface()->localName().c_str());
+                        path.c_str(), (*ast)->getInterface()->localName().c_str());
 
                 err = UNKNOWN_ERROR;
-            } else if (ast->getInterface()->localName() != fqName.name()) {
+            } else if ((*ast)->getInterface()->localName() != fqName.name()) {
                 fprintf(stderr,
                         "ERROR: File at '%s' does not declare interface type "
                         "'%s'.\n",
@@ -277,7 +303,7 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
                     fqName.name().c_str());
 
             err = UNKNOWN_ERROR;
-        } else if (ast->containsInterfaces()) {
+        } else if ((*ast)->containsInterfaces()) {
             fprintf(stderr,
                     "ERROR: types.hal file at '%s' declares at least one "
                     "interface type.\n",
@@ -288,28 +314,29 @@ AST* Coordinator::parse(const FQName& fqName, std::set<AST*>* parsedASTs,
     }
 
     if (err != OK) {
-        delete ast;
-        ast = nullptr;
-
-        return nullptr;
+        delete *ast;
+        *ast = nullptr;
+        return err;
     }
 
-    if (parsedASTs != nullptr) { parsedASTs->insert(ast); }
+    if (parsedASTs != nullptr) {
+        parsedASTs->insert(*ast);
+    }
 
     // put it into the cache now, so that enforceRestrictionsOnPackage can
     // parse fqName.
-    mCache[fqName] = ast;
+    mCache[fqName] = *ast;
 
     // For each .hal file that hidl-gen parses, the whole package will be checked.
     err = enforceRestrictionsOnPackage(fqName, enforcement);
     if (err != OK) {
         mCache[fqName] = nullptr;
-        delete ast;
-        ast = nullptr;
-        return nullptr;
+        delete *ast;
+        *ast = nullptr;
+        return err;
     }
 
-    return ast;
+    return OK;
 }
 
 const Coordinator::PackageRoot &Coordinator::findPackageRoot(const FQName &fqName) const {
