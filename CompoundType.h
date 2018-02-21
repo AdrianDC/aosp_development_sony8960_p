@@ -117,22 +117,21 @@ struct CompoundType : public Scope {
             const std::string &offset,
             bool isReader) const override;
 
-    status_t emitTypeDeclarations(Formatter &out) const override;
+    void emitTypeDeclarations(Formatter& out) const override;
     void emitTypeForwardDeclaration(Formatter& out) const override;
-    status_t emitPackageTypeDeclarations(Formatter& out) const override;
-    status_t emitPackageHwDeclarations(Formatter& out) const override;
+    void emitPackageTypeDeclarations(Formatter& out) const override;
+    void emitPackageHwDeclarations(Formatter& out) const override;
 
-    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
+    void emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
-    status_t emitJavaTypeDeclarations(
-            Formatter &out, bool atTopLevel) const override;
+    void emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const override;
 
     bool needsEmbeddedReadWrite() const override;
     bool deepNeedsResolveReferences(std::unordered_set<const Type*>* visited) const override;
     bool resultNeedsDeref() const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-    status_t emitVtsAttributeType(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
+    void emitVtsAttributeType(Formatter& out) const override;
 
     bool deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const override;
     bool deepContainsPointer(std::unordered_set<const Type*>* visited) const override;

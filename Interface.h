@@ -104,6 +104,7 @@ struct Interface : public Scope {
     status_t resolveInheritance() override;
     status_t validate() const override;
     status_t validateUniqueNames() const;
+    status_t validateAnnotations() const;
 
     void emitReaderWriter(
             Formatter &out,
@@ -113,8 +114,8 @@ struct Interface : public Scope {
             bool isReader,
             ErrorMode mode) const override;
 
-    status_t emitPackageTypeDeclarations(Formatter& out) const override;
-    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
+    void emitPackageTypeDeclarations(Formatter& out) const override;
+    void emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
     void getAlignmentAndSize(size_t* align, size_t* size) const override;
     void emitJavaReaderWriter(
@@ -123,10 +124,10 @@ struct Interface : public Scope {
             const std::string &argName,
             bool isReader) const override;
 
-    status_t emitVtsAttributeType(Formatter &out) const override;
+    void emitVtsAttributeType(Formatter& out) const override;
 
-    status_t emitVtsAttributeDeclaration(Formatter &out) const;
-    status_t emitVtsMethodDeclaration(Formatter &out) const;
+    void emitVtsAttributeDeclaration(Formatter& out) const;
+    void emitVtsMethodDeclaration(Formatter& out) const;
 
     bool hasOnewayMethods() const;
 

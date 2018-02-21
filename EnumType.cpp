@@ -234,7 +234,7 @@ void EnumType::emitJavaFieldReaderWriter(
             out, depth, parcelName, blobName, fieldName, offset, isReader);
 }
 
-status_t EnumType::emitTypeDeclarations(Formatter &out) const {
+void EnumType::emitTypeDeclarations(Formatter& out) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != nullptr);
 
@@ -273,8 +273,6 @@ status_t EnumType::emitTypeDeclarations(Formatter &out) const {
 
     out.unindent();
     out << "};\n\n";
-
-    return OK;
 }
 
 void EnumType::emitTypeForwardDeclaration(Formatter& out) const {
@@ -388,7 +386,7 @@ void EnumType::emitGlobalTypeDeclarations(Formatter& out) const {
     out << "}  // namespace android\n";
 }
 
-status_t EnumType::emitPackageTypeDeclarations(Formatter& out) const {
+void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
     emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
     emitEnumBitwiseOperator(out, false /* lhsIsEnum */, true  /* rhsIsEnum */, "|");
     emitEnumBitwiseOperator(out, true  /* lhsIsEnum */, false /* rhsIsEnum */, "|");
@@ -469,11 +467,9 @@ status_t EnumType::emitPackageTypeDeclarations(Formatter& out) const {
         out << "return os;\n";
     }).endl().endl();
     out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
-
-    return OK;
 }
 
-status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* prefix */) const {
+void EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* prefix */) const {
     // TODO(b/65200821): remove toString from .cpp once all prebuilts are rebuilt
 
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
@@ -531,11 +527,9 @@ status_t EnumType::emitTypeDefinitions(Formatter& out, const std::string& /* pre
             "static_cast<" + scalarType->getCppStackType() + ">(o)");
         out << "return os;\n";
     }).endl().endl();
-
-    return OK;
 }
 
-status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) const {
+void EnumType::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
     CHECK(scalarType != NULL);
 
@@ -620,11 +614,9 @@ status_t EnumType::emitJavaTypeDeclarations(Formatter &out, bool atTopLevel) con
 
     out.unindent();
     out << "};\n\n";
-
-    return OK;
 }
 
-status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
+void EnumType::emitVtsTypeDeclarations(Formatter& out) const {
     const ScalarType *scalarType = mStorageType->resolveToScalarType();
 
     out << "name: \"" << fullName() << "\"\n";
@@ -658,13 +650,11 @@ status_t EnumType::emitVtsTypeDeclarations(Formatter &out) const {
 
     out.unindent();
     out << "}\n";
-    return OK;
 }
 
-status_t EnumType::emitVtsAttributeType(Formatter &out) const {
+void EnumType::emitVtsAttributeType(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << "predefined_type: \"" << fullName() << "\"\n";
-    return OK;
 }
 
 void EnumType::emitJavaDump(
@@ -720,7 +710,7 @@ void EnumType::appendToExportedTypesVector(
     }
 }
 
-status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
+void EnumType::emitExportedHeader(Formatter& out, bool forJava) const {
     const Annotation *annotation = findExportAnnotation();
     CHECK(annotation != nullptr);
 
@@ -807,7 +797,7 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
         }
         out << "\n";
 
-        return OK;
+        return;
     }
 
     if (!name.empty()) {
@@ -847,8 +837,6 @@ status_t EnumType::emitExportedHeader(Formatter &out, bool forJava) const {
     }
 
     out << ";\n\n";
-
-    return OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -968,14 +956,13 @@ bool BitFieldType::deepCanCheckEquality(std::unordered_set<const Type*>* visited
     return resolveToScalarType()->canCheckEquality(visited);
 }
 
-status_t BitFieldType::emitVtsAttributeType(Formatter &out) const {
+void BitFieldType::emitVtsAttributeType(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << "scalar_type: \""
         << mElementType->resolveToScalarType()->getVtsScalarType()
         << "\"\n";
     out << "predefined_type: \"" << static_cast<const NamedType*>(mElementType.get())->fullName()
         << "\"\n";
-    return OK;
 }
 
 void BitFieldType::getAlignmentAndSize(size_t *align, size_t *size) const {

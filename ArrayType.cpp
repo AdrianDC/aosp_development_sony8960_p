@@ -558,17 +558,14 @@ void ArrayType::emitJavaFieldReaderWriter(
     out << "}\n";
 }
 
-status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
+void ArrayType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << "vector_size: " << mSizes[0]->value() << "\n";
     out << "vector_value: {\n";
     out.indent();
     // Simple array case.
     if (mSizes.size() == 1) {
-        status_t err = mElementType->emitVtsTypeDeclarations(out);
-        if (err != OK) {
-            return err;
-        }
+        mElementType->emitVtsTypeDeclarations(out);
     } else {  // Multi-dimension array case.
         for (size_t index = 1; index < mSizes.size(); index++) {
             out << "type: " << getVtsType() << "\n";
@@ -576,10 +573,7 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
             out << "vector_value: {\n";
             out.indent();
             if (index == mSizes.size() - 1) {
-                status_t err = mElementType->emitVtsTypeDeclarations(out);
-                if (err != OK) {
-                    return err;
-                }
+                mElementType->emitVtsTypeDeclarations(out);
             }
         }
     }
@@ -587,7 +581,6 @@ status_t ArrayType::emitVtsTypeDeclarations(Formatter &out) const {
         out.unindent();
         out << "}\n";
     }
-    return OK;
 }
 
 bool ArrayType::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {
