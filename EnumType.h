@@ -90,17 +90,16 @@ struct EnumType : public Scope {
             const std::string &offset,
             bool isReader) const override;
 
-    status_t emitTypeDeclarations(Formatter &out) const override;
+    void emitTypeDeclarations(Formatter& out) const override;
     void emitTypeForwardDeclaration(Formatter& out) const override;
     void emitGlobalTypeDeclarations(Formatter& out) const override;
-    status_t emitPackageTypeDeclarations(Formatter& out) const override;
-    status_t emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
+    void emitPackageTypeDeclarations(Formatter& out) const override;
+    void emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
-    status_t emitJavaTypeDeclarations(
-            Formatter &out, bool atTopLevel) const override;
+    void emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
-    status_t emitVtsAttributeType(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
+    void emitVtsAttributeType(Formatter& out) const override;
 
     void emitJavaDump(
             Formatter &out,
@@ -112,7 +111,7 @@ struct EnumType : public Scope {
     void appendToExportedTypesVector(
             std::vector<const Type *> *exportedTypes) const override;
 
-    status_t emitExportedHeader(Formatter &out, bool forJava) const override;
+    void emitExportedHeader(Formatter& out, bool forJava) const override;
 
    private:
     std::vector<const EnumType*> typeChain() const;
@@ -194,7 +193,7 @@ struct BitFieldType : public TemplatedType {
 
     const EnumType* getEnumType() const;
 
-    status_t emitVtsAttributeType(Formatter &out) const override;
+    void emitVtsAttributeType(Formatter& out) const override;
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 

@@ -374,7 +374,7 @@ void CompoundType::emitResolveReferencesEmbedded(
     handleError(out, mode);
 }
 
-status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
+void CompoundType::emitTypeDeclarations(Formatter& out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union")
         << " "
         << localName()
@@ -395,7 +395,7 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
         out.unindent();
         out << "};\n\n";
 
-        return OK;
+        return;
     }
 
     for (int pass = 0; pass < 2; ++pass) {
@@ -451,15 +451,13 @@ status_t CompoundType::emitTypeDeclarations(Formatter &out) const {
         << ") == "
         << structAlign
         << ", \"wrong alignment\");\n\n";
-
-    return OK;
 }
 
 void CompoundType::emitTypeForwardDeclaration(Formatter& out) const {
     out << ((mStyle == STYLE_STRUCT) ? "struct" : "union") << " " << localName() << ";\n";
 }
 
-status_t CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
+void CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
     Scope::emitPackageTypeDeclarations(out);
 
     // TODO(b/65200821): remove these ifdefs
@@ -520,11 +518,9 @@ status_t CompoundType::emitPackageTypeDeclarations(Formatter& out) const {
         out << "// operator== and operator!= are not generated for " << localName() << "\n\n";
     }
     out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
-
-    return OK;
 }
 
-status_t CompoundType::emitPackageHwDeclarations(Formatter& out) const {
+void CompoundType::emitPackageHwDeclarations(Formatter& out) const {
     if (needsEmbeddedReadWrite()) {
         out << "::android::status_t readEmbeddedFromParcel(\n";
 
@@ -563,17 +559,11 @@ status_t CompoundType::emitPackageHwDeclarations(Formatter& out) const {
             << "size_t parentHandle, size_t parentOffset);\n\n";
         out.unindent(2);
     }
-
-    return OK;
 }
 
-status_t CompoundType::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
+void CompoundType::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
     std::string space = prefix.empty() ? "" : (prefix + "::");
-    status_t err = Scope::emitTypeDefinitions(out, space + localName());
-
-    if (err != OK) {
-        return err;
-    }
+    Scope::emitTypeDefinitions(out, space + localName());
 
     if (needsEmbeddedReadWrite()) {
         emitStructReaderWriter(out, prefix, true /* isReader */);
@@ -631,12 +621,9 @@ status_t CompoundType::emitTypeDefinitions(Formatter& out, const std::string& pr
     } else {
         out << "// operator== and operator!= are not generated for " << localName() << "\n";
     }
-
-    return OK;
 }
 
-status_t CompoundType::emitJavaTypeDeclarations(
-        Formatter &out, bool atTopLevel) const {
+void CompoundType::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const {
     out << "public final ";
 
     if (!atTopLevel) {
@@ -871,8 +858,6 @@ status_t CompoundType::emitJavaTypeDeclarations(
 
     out.unindent();
     out << "};\n\n";
-
-    return OK;
 }
 
 void CompoundType::emitStructReaderWriter(
@@ -1054,7 +1039,7 @@ bool CompoundType::resultNeedsDeref() const {
     return !containsInterface() ;
 }
 
-status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
+void CompoundType::emitVtsTypeDeclarations(Formatter& out) const {
     out << "name: \"" << fullName() << "\"\n";
     out << "type: " << getVtsType() << "\n";
 
@@ -1073,10 +1058,7 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
             }
         }
         out.indent();
-        status_t status(type->emitVtsTypeDeclarations(out));
-        if (status != OK) {
-            return status;
-        }
+        type->emitVtsTypeDeclarations(out);
         out.unindent();
         out << "}\n";
     }
@@ -1097,21 +1079,15 @@ status_t CompoundType::emitVtsTypeDeclarations(Formatter &out) const {
         }
         out.indent();
         out << "name: \"" << field->name() << "\"\n";
-        status_t status = field->type().emitVtsAttributeType(out);
-        if (status != OK) {
-            return status;
-        }
+        field->type().emitVtsAttributeType(out);
         out.unindent();
         out << "}\n";
     }
-
-    return OK;
 }
 
-status_t CompoundType::emitVtsAttributeType(Formatter &out) const {
+void CompoundType::emitVtsAttributeType(Formatter& out) const {
     out << "type: " << getVtsType() << "\n";
     out << "predefined_type: \"" << fullName() << "\"\n";
-    return OK;
 }
 
 bool CompoundType::deepIsJavaCompatible(std::unordered_set<const Type*>* visited) const {

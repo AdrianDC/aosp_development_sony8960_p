@@ -532,7 +532,12 @@ status_t Interface::validate() const {
         return UNKNOWN_ERROR;
     }
 
-    status_t err = validateUniqueNames();
+    status_t err;
+
+    err = validateUniqueNames();
+    if (err != OK) return err;
+
+    err = validateAnnotations();
     if (err != OK) return err;
 
     return Scope::validate();
@@ -574,6 +579,24 @@ status_t Interface::validateUniqueNames() const {
         registeredMethodNames[method->name()] = this;
     }
 
+    return OK;
+}
+
+status_t Interface::validateAnnotations() const {
+    for (const Method* method : methods()) {
+        for (const Annotation* annotation : method->annotations()) {
+            const std::string name = annotation->name();
+
+            if (name == "entry" || name == "exit" || name == "callflow") {
+                continue;
+            }
+
+            std::cerr << "ERROR: Unrecognized annotation '" << name
+                      << "' for method: " << method->name() << ". An annotation should be one of: "
+                      << "entry, exit, callflow." << std::endl;
+            return UNKNOWN_ERROR;
+        }
+    }
     return OK;
 }
 
@@ -823,11 +846,8 @@ void Interface::emitReaderWriter(
     }
 }
 
-status_t Interface::emitPackageTypeDeclarations(Formatter& out) const {
-    status_t status = Scope::emitPackageTypeDeclarations(out);
-    if (status != OK) {
-        return status;
-    }
+void Interface::emitPackageTypeDeclarations(Formatter& out) const {
+    Scope::emitPackageTypeDeclarations(out);
 
     // TODO(b/65200821): remove these ifndefs
     out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
@@ -845,16 +865,11 @@ status_t Interface::emitPackageTypeDeclarations(Formatter& out) const {
             << "return os;\n";
     }).endl().endl();
     out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
-
-    return OK;
 }
 
-status_t Interface::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
+void Interface::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
     std::string space = prefix.empty() ? "" : (prefix + "::");
-    status_t err = Scope::emitTypeDefinitions(out, space + localName());
-    if (err != OK) {
-        return err;
-    }
+    Scope::emitTypeDefinitions(out, space + localName());
 
     // TODO(b/65200821): remove toString from .cpp once all prebuilts are rebuilt
     out << "std::string toString("
@@ -868,8 +883,6 @@ status_t Interface::emitTypeDefinitions(Formatter& out, const std::string& prefi
             << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
             << "return os;\n";
     }).endl().endl();
-
-    return OK;
 }
 
 void Interface::emitJavaReaderWriter(
@@ -892,7 +905,7 @@ void Interface::emitJavaReaderWriter(
     }
 }
 
-status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
+void Interface::emitVtsAttributeDeclaration(Formatter& out) const {
     for (const auto &type : getSubTypes()) {
         // Skip for TypeDef as it is just an alias of a defined type.
         if (type->isTypeDef()) {
@@ -900,17 +913,13 @@ status_t Interface::emitVtsAttributeDeclaration(Formatter &out) const {
         }
         out << "attribute: {\n";
         out.indent();
-        status_t status = type->emitVtsTypeDeclarations(out);
-        if (status != OK) {
-            return status;
-        }
+        type->emitVtsTypeDeclarations(out);
         out.unindent();
         out << "}\n\n";
     }
-    return OK;
 }
 
-status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
+void Interface::emitVtsMethodDeclaration(Formatter& out) const {
     for (const auto &method : methods()) {
         if (method->isHidlReserved()) {
             continue;
@@ -923,10 +932,7 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
         for (const auto &result : method->results()) {
             out << "return_type_hidl: {\n";
             out.indent();
-            status_t status = result->type().emitVtsAttributeType(out);
-            if (status != OK) {
-                return status;
-            }
+            result->type().emitVtsAttributeType(out);
             out.unindent();
             out << "}\n";
         }
@@ -934,10 +940,7 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
         for (const auto &arg : method->args()) {
             out << "arg: {\n";
             out.indent();
-            status_t status = arg->type().emitVtsAttributeType(out);
-            if (status != OK) {
-                return status;
-            }
+            arg->type().emitVtsAttributeType(out);
             out.unindent();
             out << "}\n";
         }
@@ -945,7 +948,7 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
         for (const auto &annotation : method->annotations()) {
             out << "callflow: {\n";
             out.indent();
-            std::string name = annotation->name();
+            const std::string name = annotation->name();
             if (name == "entry") {
                 out << "entry: true\n";
             } else if (name == "exit") {
@@ -959,11 +962,7 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
                     }
                 }
             } else {
-                std::cerr << "ERROR: Unrecognized annotation '" << name
-                          << "' for method: " << method->name()
-                          << ". A VTS annotation should be one of: "
-                          << "entry, exit, callflow." << std::endl;
-                return UNKNOWN_ERROR;
+                CHECK(false);
             }
             out.unindent();
             out << "}\n";
@@ -971,15 +970,13 @@ status_t Interface::emitVtsMethodDeclaration(Formatter &out) const {
         out.unindent();
         out << "}\n\n";
     }
-    return OK;
 }
 
-status_t Interface::emitVtsAttributeType(Formatter &out) const {
+void Interface::emitVtsAttributeType(Formatter& out) const {
     out << "type: " << getVtsType() << "\n"
         << "predefined_type: \""
         << fullName()
         << "\"\n";
-    return OK;
 }
 
 bool Interface::hasOnewayMethods() const {

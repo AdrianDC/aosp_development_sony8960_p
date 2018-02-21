@@ -63,7 +63,7 @@ struct MemoryType : public Type {
 
     void getAlignmentAndSize(size_t *align, size_t *size) const override;
 
-    status_t emitVtsTypeDeclarations(Formatter &out) const override;
+    void emitVtsTypeDeclarations(Formatter& out) const override;
 };
 
 }  // namespace android
