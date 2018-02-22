@@ -146,12 +146,6 @@ struct AST {
 
     bool isJavaCompatible() const;
 
-    // Return the set of FQNames for those interfaces and types that are
-    // actually referenced in the AST, not merely imported.
-    const std::set<FQName>& getImportedNames() const {
-        return mImportedNames;
-    }
-
     // Warning: this only includes names explicitly referenced in code.
     //   It does not include all names which are imported.
     //
