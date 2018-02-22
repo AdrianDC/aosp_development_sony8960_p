@@ -27,6 +27,6 @@ namespace android {
 // entry-point for file parsing
 // - contents of file are added to the AST
 // - expects file to already be open
-status_t parseFile(AST* ast, FILE* file);
+status_t parseFile(AST* ast, std::unique_ptr<FILE, std::function<void(FILE*)>> file);
 
 }  // namespace android
