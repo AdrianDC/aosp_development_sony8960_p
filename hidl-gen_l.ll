@@ -183,19 +183,16 @@ L?\"(\\.|[^\\"])*\" { yylval->str = strdup(yytext); return token::STRING_LITERAL
 
 namespace android {
 
-status_t parseFile(AST* ast, FILE* file) {
+status_t parseFile(AST* ast, std::unique_ptr<FILE, std::function<void(FILE *)>> file) {
     yyscan_t scanner;
     yylex_init(&scanner);
 
-    yyset_in(file, scanner);
+    yyset_in(file.get(), scanner);
 
     Scope* scopeStack = ast->getRootScope();
     int res = yy::parser(scanner, ast, &scopeStack).parse();
 
     yylex_destroy(scanner);
-
-    fclose(file);
-    file = nullptr;
 
     if (res != 0 || ast->syntaxErrors() != 0) {
         return UNKNOWN_ERROR;
