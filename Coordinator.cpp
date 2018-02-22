@@ -249,7 +249,7 @@ status_t Coordinator::parseOptional(const FQName& fqName, AST** ast, std::set<AS
         (*ast)->addImportedAST(typesAST);
     }
 
-    FILE* file = fopen(path.c_str(), "rb");
+    std::unique_ptr<FILE, std::function<void(FILE*)>> file(fopen(path.c_str(), "rb"), fclose);
 
     if (file == nullptr) {
         mCache.erase(fqName);  // nullptr in cache is used to find circular imports
@@ -261,7 +261,7 @@ status_t Coordinator::parseOptional(const FQName& fqName, AST** ast, std::set<AS
     onFileAccess(path, "r");
 
     // parse file takes ownership of file
-    if (parseFile(*ast, file) != OK || (*ast)->postParse() != OK) {
+    if (parseFile(*ast, std::move(file)) != OK || (*ast)->postParse() != OK) {
         delete *ast;
         *ast = nullptr;
         return UNKNOWN_ERROR;
