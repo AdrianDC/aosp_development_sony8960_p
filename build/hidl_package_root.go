@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	"android/soong/android"
-	"android/soong/genrule"
 )
 
 func init() {
@@ -34,17 +33,9 @@ type hidlPackageRoot struct {
 	}
 }
 
-var _ genrule.SourceFileGenerator = (*hidlPackageRoot)(nil)
-
 func (r *hidlPackageRoot) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 }
 func (r *hidlPackageRoot) DepsMutator(ctx android.BottomUpMutatorContext) {
-}
-func (r *hidlPackageRoot) GeneratedHeaderDirs() android.Paths {
-	return []android.Path{}
-}
-func (r *hidlPackageRoot) GeneratedSourceFiles() android.Paths {
-	return []android.Path{}
 }
 
 var packageRootsMutex sync.Mutex
