@@ -60,8 +60,8 @@ struct Coordinator {
         GEN_SANITIZED,  // e.x. mOutputPath + /android/hardware/foo/V1_0/*.cpp
     };
 
-    std::string getFilepath(const FQName& fqName, Location location,
-                            const std::string& fileName = "") const;
+    status_t getFilepath(const FQName& fqName, Location location, const std::string& fileName,
+                         std::string* path) const;
 
     Formatter getFormatter(const FQName& fqName, Location location,
                            const std::string& fileName) const;
@@ -101,15 +101,14 @@ struct Coordinator {
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackagePath()
     // will return "hardware/interfaces/nfc/1.0" (if sanitized = false)
     // or "hardware/interfaces/nfc/V1_0" (if sanitized = true).
-    std::string getPackagePath(
-            const FQName &fqName, bool relative = false,
-            bool sanitized = false) const;
+    status_t getPackagePath(const FQName& fqName, bool relative, bool sanitized,
+                            std::string* path) const;
 
     // Given package roots of ["android.hardware",
     // "vendor.<something>.hardware"] and a FQName of
     // "android.hardware.nfc@1.0::INfc, then getPackageRoot() will
     // return "android.hardware".
-    std::string getPackageRoot(const FQName &fqName) const;
+    status_t getPackageRoot(const FQName& fqName, std::string* root) const;
 
     status_t getPackageInterfaceFiles(
             const FQName &package,
@@ -151,18 +150,19 @@ private:
         FQName root; // e.x. android.hardware@0.0
     };
 
-    const PackageRoot& findPackageRoot(const FQName& fqName) const;
+    // nullptr if it doesn't exist
+    const PackageRoot* findPackageRoot(const FQName& fqName) const;
 
     // Given package-root paths of ["hardware/interfaces",
     // "vendor/<something>/interfaces"], package roots of
     // ["android.hardware", "vendor.<something>.hardware"], and a
     // FQName of "android.hardware.nfc@1.0::INfc, then getPackageRootPath()
     // will return "hardware/interfaces".
-    std::string getPackageRootPath(const FQName& fqName) const;
+    status_t getPackageRootPath(const FQName& fqName, std::string* path) const;
 
     // Given an FQName of "android.hardware.nfc@1.0::INfc", return
     // "android/hardware/".
-    std::string convertPackageRootToPath(const FQName& fqName) const;
+    status_t convertPackageRootToPath(const FQName& fqName, std::string* path) const;
 
     std::vector<PackageRoot> mPackageRoots;
     std::string mRootPath;    // root of android source tree (to locate package roots)
