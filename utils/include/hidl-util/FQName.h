@@ -24,19 +24,23 @@
 namespace android {
 
 struct FQName {
+    __attribute__((warn_unused_result)) static bool parse(const std::string& s, FQName* into);
+
     explicit FQName();
+
+    // TODO(b/73774955): delete
     explicit FQName(const std::string &s);
 
-    FQName(const std::string &package,
-           const std::string &version,
-           const std::string &name,
-           const std::string &valueName = "");
+    FQName(const std::string& package, const std::string& version, const std::string& name = "",
+           const std::string& valueName = "");
 
     FQName(const FQName& other);
 
     bool isValid() const;
     bool isIdentifier() const;
-    bool setTo(const std::string &s);
+
+    // Returns false if string isn't a valid FQName object.
+    __attribute__((warn_unused_result)) bool setTo(const std::string& s);
 
     void applyDefaults(
             const std::string &defaultPackage,
@@ -218,8 +222,10 @@ struct FQName {
     // minor-- if result doesn't underflow, else abort.
     FQName downRev() const;
 
-private:
+   private:
+    // TODO(b/73774955): remove
     bool mValid;
+
     bool mIsIdentifier;
     std::string mPackage;
     // mMajor == 0 means empty.
@@ -228,15 +234,16 @@ private:
     std::string mName;
     std::string mValueName;
 
-    void setVersion(const std::string &v);
+    void clear();
+
+    __attribute__((warn_unused_result)) bool setVersion(const std::string& v);
+    __attribute__((warn_unused_result)) bool parseVersion(const std::string& majorStr,
+                                                          const std::string& minorStr);
     void clearVersion();
-    void parseVersion(const std::string &majorStr, const std::string &minorStr);
 };
 
-static const FQName gIBaseFqName = FQName{"android.hidl.base@1.0::IBase"};
-static const FQName gIBasePackageFqName = FQName{"android.hidl.base"};
-static const FQName gIManagerFqName = FQName{"android.hidl.manager@1.0::IServiceManager"};
-static const FQName gIManagerPackageFqName = FQName{"android.hidl.manager"};
+static const FQName gIBaseFqName = FQName("android.hidl.base", "1.0", "IBase");
+static const FQName gIManagerFqName = FQName("android.hidl.manager", "1.0", "IServiceManager");
 
 }  // namespace android
 

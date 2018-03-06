@@ -62,8 +62,9 @@ const Hash* AST::getFileHash() const {
 }
 
 bool AST::setPackage(const char *package) {
-    mPackage.setTo(package);
-    CHECK(mPackage.isValid());
+    if (!mPackage.setTo(package)) {
+        return false;
+    }
 
     if (mPackage.package().empty()
             || mPackage.version().empty()
@@ -304,8 +305,8 @@ status_t AST::checkForwardReferenceRestrictions() const {
 }
 
 bool AST::addImport(const char *import) {
-    FQName fqName(import);
-    if (!fqName.isValid()) {
+    FQName fqName;
+    if (!FQName::parse(import, &fqName)) {
         std::cerr << "ERROR: '" << import << "' is an invalid fully-qualified name." << std::endl;
         return false;
     }

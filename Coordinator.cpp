@@ -506,16 +506,7 @@ status_t Coordinator::appendPackageInterfacesToVector(
     }
 
     for (const auto &fileName : fileNames) {
-        FQName subFQName(
-                package.package() + package.atVersion() + "::" + fileName);
-
-        if (!subFQName.isValid()) {
-            std::cerr << "ERROR: Whole-package import encountered invalid filename '" << fileName
-                      << "' in package " << package.package() << package.atVersion() << std::endl;
-
-            return UNKNOWN_ERROR;
-        }
-
+        FQName subFQName(package.package(), package.version(), fileName);
         packageInterfaces->push_back(subFQName);
     }
 

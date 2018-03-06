@@ -464,8 +464,8 @@ require_semicolon
 fqname
     : FQNAME
       {
-          $$ = new FQName($1);
-          if(!$$->isValid()) {
+          $$ = new FQName();
+          if(!FQName::parse($1, $$)) {
               std::cerr << "ERROR: FQName '" << $1 << "' is not valid at "
                         << @1
                         << ".\n";
@@ -474,8 +474,8 @@ fqname
       }
     | valid_type_name
       {
-          $$ = new FQName($1);
-          if(!$$->isValid()) {
+          $$ = new FQName();
+          if(!FQName::parse($1, $$)) {
               std::cerr << "ERROR: FQName '" << $1 << "' is not valid at "
                         << @1
                         << ".\n";
@@ -623,7 +623,7 @@ interface_declaration
     : INTERFACE valid_type_name opt_extends
       {
           Reference<Type>* superType = $3;
-          bool isIBase = ast->package().package() == gIBasePackageFqName.string();
+          bool isIBase = ast->package().package() == gIBaseFqName.package();
 
           if (isIBase) {
               if (superType != nullptr) {

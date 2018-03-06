@@ -75,7 +75,8 @@ NamedType *Scope::lookupType(const FQName &fqName) const {
     Scope *outerScope = static_cast<Scope *>(outerType);
     // *slowly* pop first element
     names.erase(names.begin());
-    FQName innerName(StringHelper::JoinStrings(names, "."));
+    FQName innerName;
+    CHECK(FQName::parse(StringHelper::JoinStrings(names, "."), &innerName));
     return outerScope->lookupType(innerName);
 }
 

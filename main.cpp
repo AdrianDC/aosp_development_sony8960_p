@@ -448,8 +448,8 @@ bool validateIsPackage(const FQName& fqName, const Coordinator*,
 }
 
 bool isHidlTransportPackage(const FQName& fqName) {
-    return fqName.package() == gIBasePackageFqName.string() ||
-           fqName.package() == gIManagerPackageFqName.string();
+    return fqName.package() == gIBaseFqName.package() ||
+           fqName.package() == gIManagerFqName.package();
 }
 
 bool isSystemProcessSupportedPackage(const FQName& fqName) {
@@ -1371,9 +1371,8 @@ int main(int argc, char **argv) {
     coordinator.addDefaultPackagePath("android.system", "system/hardware/interfaces");
 
     for (int i = 0; i < argc; ++i) {
-        FQName fqName(argv[i]);
-
-        if (!fqName.isValid()) {
+        FQName fqName;
+        if (!FQName::parse(argv[i], &fqName)) {
             fprintf(stderr, "ERROR: Invalid fully-qualified name as argument: %s.\n", argv[i]);
             exit(1);
         }
