@@ -16,11 +16,13 @@
 
 #define LOG_TAG "libhidl-gen-utils"
 
+#include <hidl-util/FqInstance.h>
 #include <hidl-util/StringHelper.h>
 
 #include <gtest/gtest.h>
 #include <vector>
 
+using ::android::FqInstance;
 using ::android::StringHelper;
 
 class LibHidlGenUtilsTest : public ::testing::Test {};
@@ -126,6 +128,66 @@ TEST_F(LibHidlGenUtilsTest, JoinStrings) {
     EXPECT_EQ("a.,b", StringHelper::JoinStrings({"a", "b"}, ".,"));
     EXPECT_EQ("a,b,c", StringHelper::JoinStrings({"a", "b", "c"}, ","));
     EXPECT_EQ("abc.,def.,ghi", StringHelper::JoinStrings({"abc", "def", "ghi"}, ".,"));
+}
+
+TEST_F(LibHidlGenUtilsTest, FqInstance1) {
+    FqInstance e;
+    ASSERT_TRUE(e.setTo("android.hardware.foo@1.0::IFoo/instance"));
+    EXPECT_EQ("android.hardware.foo@1.0::IFoo/instance", e.string());
+    ASSERT_TRUE(e.hasPackage());
+    EXPECT_EQ("android.hardware.foo", e.getPackage());
+    ASSERT_TRUE(e.hasVersion());
+    EXPECT_EQ(1u, e.getMajorVersion());
+    EXPECT_EQ(0u, e.getMinorVersion());
+    EXPECT_EQ((std::make_pair<size_t, size_t>(1u, 0u)), e.getVersion());
+    ASSERT_TRUE(e.hasInterface());
+    EXPECT_EQ("IFoo", e.getInterface());
+    ASSERT_TRUE(e.hasInstance());
+    EXPECT_EQ("instance", e.getInstance());
+}
+
+TEST_F(LibHidlGenUtilsTest, FqInstance2) {
+    FqInstance e;
+    ASSERT_TRUE(e.setTo("@1.0::IFoo/instance"));
+    EXPECT_EQ("@1.0::IFoo/instance", e.string());
+    ASSERT_FALSE(e.hasPackage());
+    ASSERT_TRUE(e.hasVersion());
+    EXPECT_EQ((std::make_pair<size_t, size_t>(1u, 0u)), e.getVersion());
+    ASSERT_TRUE(e.hasInterface());
+    EXPECT_EQ("IFoo", e.getInterface());
+    ASSERT_TRUE(e.hasInstance());
+    EXPECT_EQ("instance", e.getInstance());
+}
+
+TEST_F(LibHidlGenUtilsTest, FqInstance3) {
+    FqInstance e;
+    ASSERT_TRUE(e.setTo("IFoo/instance"));
+    EXPECT_EQ("IFoo/instance", e.string());
+    ASSERT_FALSE(e.hasPackage());
+    ASSERT_FALSE(e.hasVersion());
+    ASSERT_TRUE(e.hasInterface());
+    EXPECT_EQ("IFoo", e.getInterface());
+    ASSERT_TRUE(e.hasInstance());
+    EXPECT_EQ("instance", e.getInstance());
+}
+
+TEST_F(LibHidlGenUtilsTest, FqInstanceFqNameOnly) {
+    FqInstance e;
+    for (auto testString :
+         {"android.hardware.foo@1.0::IFoo.Type", "@1.0::IFoo.Type", "android.hardware.foo@1.0",
+          "IFoo.Type", "Type", "android.hardware.foo@1.0::IFoo.Type:MY_ENUM_VALUE",
+          "@1.0::IFoo.Type:MY_ENUM_VALUE", "IFoo.Type:MY_ENUM_VALUE"}) {
+        ASSERT_TRUE(e.setTo(testString));
+        EXPECT_EQ(testString, e.string());
+        ASSERT_FALSE(e.hasInstance());
+    };
+}
+
+TEST_F(LibHidlGenUtilsTest, FqInstanceIdentifier) {
+    FqInstance e;
+    ASSERT_TRUE(e.setTo("Type"));
+    EXPECT_EQ("Type", e.string());
+    ASSERT_FALSE(e.hasInstance());
 }
 
 int main(int argc, char **argv) {

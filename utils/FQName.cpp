@@ -93,7 +93,7 @@ bool FQName::isValidValueName() const {
 }
 
 bool FQName::isInterfaceName() const {
-    return !name().empty() && name()[0] == 'I';
+    return !mName.empty() && mName[0] == 'I' && mName.find('.') == std::string::npos;
 }
 
 bool FQName::setTo(const std::string &s) {
@@ -175,7 +175,7 @@ bool FQName::setTo(const std::string &s) {
     return mValid = !invalid;
 }
 
-std::string FQName::package() const {
+const std::string& FQName::package() const {
     return mPackage;
 }
 
@@ -239,7 +239,7 @@ bool FQName::parseVersion(const std::string& majorStr, const std::string& minorS
     return versionParseSuccess;
 }
 
-std::string FQName::name() const {
+const std::string& FQName::name() const {
     return mName;
 }
 
@@ -253,7 +253,7 @@ std::vector<std::string> FQName::names() const {
     return res;
 }
 
-std::string FQName::valueName() const {
+const std::string& FQName::valueName() const {
     return mValueName;
 }
 
@@ -310,8 +310,7 @@ bool FQName::operator!=(const FQName &other) const {
     return !(*this == other);
 }
 
-std::string FQName::getInterfaceName() const {
-    CHECK(names().size() == 1) << "Must be a top level type";
+const std::string& FQName::getInterfaceName() const {
     CHECK(isInterfaceName()) << mName;
 
     return mName;

@@ -19,6 +19,7 @@ cc_library {
     srcs: [
         "FQName.cpp",
         "Formatter.cpp",
+        "FqInstance.cpp",
         "StringHelper.cpp",
     ],
     shared_libs: [
