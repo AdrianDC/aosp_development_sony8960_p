@@ -242,8 +242,8 @@ struct FQName {
     void clearVersion();
 };
 
-static const FQName gIBaseFqName = FQName("android.hidl.base", "1.0", "IBase");
-static const FQName gIManagerFqName = FQName("android.hidl.manager", "1.0", "IServiceManager");
+extern const FQName gIBaseFqName;
+extern const FQName gIManagerFqName;
 
 }  // namespace android
 

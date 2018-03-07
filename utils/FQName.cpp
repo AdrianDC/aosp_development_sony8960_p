@@ -536,5 +536,8 @@ FQName FQName::downRev() const {
     return ret;
 }
 
+const FQName gIBaseFqName = FQName("android.hidl.base", "1.0", "IBase");
+const FQName gIManagerFqName = FQName("android.hidl.manager", "1.0", "IServiceManager");
+
 }  // namespace android
 
