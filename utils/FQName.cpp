@@ -446,6 +446,13 @@ bool FQName::hasVersion() const {
     return mMajor > 0;
 }
 
+FQName FQName::withVersion(size_t major, size_t minor) const {
+    FQName ret(*this);
+    ret.mMajor = major;
+    ret.mMinor = minor;
+    return ret;
+}
+
 size_t FQName::getPackageMajorVersion() const {
     CHECK(hasVersion()) << "FQName: No version exists at getPackageMajorVersion(). "
                         << "Did you check hasVersion()?";
