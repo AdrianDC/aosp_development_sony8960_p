@@ -186,7 +186,7 @@ private:
     std::string makeAbsolute(const std::string& string) const;
 
     // Rules of enforceRestrictionsOnPackage are listed below.
-    status_t enforceMinorVersionUprevs(const FQName &fqName) const;
+    status_t enforceMinorVersionUprevs(const FQName& fqName, Enforce enforcement) const;
     status_t enforceHashes(const FQName &fqName) const;
 
     DISALLOW_COPY_AND_ASSIGN(Coordinator);
