@@ -56,6 +56,8 @@ struct FQName {
     // Return true only if version is present.
     bool hasVersion() const;
 
+    FQName withVersion(size_t major, size_t minor) const;
+
     // The next two methods return the name part of the FQName, that is, the
     // part after the version field.  For example:
     //
