@@ -533,6 +533,15 @@ void AST::generateJava(Formatter& out, const std::string& limitToType) const {
 
         out.indent();
 
+        out << "boolean _hidl_is_oneway = (_hidl_flags & " << Interface::FLAG_ONEWAY
+            << " /* oneway */) != 0\n;";
+        out << "if (_hidl_is_oneway != " << (method->isOneway() ? "true" : "false") << ") ";
+        out.block([&] {
+            out << "_hidl_reply.writeStatus(" << UNKNOWN_ERROR << ");\n";
+            out << "_hidl_reply.send();\n";
+            out << "break;\n";
+        });
+
         if (method->isHidlReserved() && method->overridesJavaImpl(IMPL_STUB)) {
             method->javaImpl(IMPL_STUB, out);
             out.unindent();
