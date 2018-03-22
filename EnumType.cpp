@@ -429,7 +429,7 @@ void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
             << "std::string os;\n"
             << getBitfieldCppType(StorageMode_Stack) << " flipped = 0;\n"
             << "bool first = true;\n";
-        for (EnumValue *value : values()) {
+        forEachValueFromRoot([&](EnumValue* value) {
             std::string valueName = fullName() + "::" + value->name();
             out.sIf("(o & " + valueName + ")" +
                     " == static_cast<" + scalarType->getCppStackType() +
@@ -439,7 +439,7 @@ void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
                     << "first = false;\n"
                     << "flipped |= " << valueName << ";\n";
             }).endl();
-        }
+        });
         // put remaining bits
         out.sIf("o != flipped", [&] {
             out << "os += (first ? \"\" : \" | \");\n";
@@ -456,11 +456,11 @@ void EnumType::emitPackageTypeDeclarations(Formatter& out) const {
 
     out.block([&] {
         out << "using ::android::hardware::details::toHexString;\n";
-        for (EnumValue *value : values()) {
+        forEachValueFromRoot([&](EnumValue* value) {
             out.sIf("o == " + fullName() + "::" + value->name(), [&] {
                 out << "return \"" << value->name() << "\";\n";
             }).endl();
-        }
+        });
         out << "std::string os;\n";
         scalarType->emitHexDump(out, "os",
             "static_cast<" + scalarType->getCppStackType() + ">(o)");

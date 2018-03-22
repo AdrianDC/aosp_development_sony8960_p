@@ -513,6 +513,15 @@ TEST_F(HidlTest, EnumToStringTest) {
               "V0 | V2 (0x5)"s);
     EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0xF), "V0 | V1 | V2 | V3 | VALL (0xf)"s);
     EXPECT_EQ(toString<IFoo::BitField>((uint8_t)0xFF), "V0 | V1 | V2 | V3 | VALL | 0xf0 (0xff)"s);
+
+    // inheritance
+    using Parent = ::android::hardware::tests::foo::V1_0::EnumIterators::Parent;
+    using EmptyChild = ::android::hardware::tests::foo::V1_0::EnumIterators::EmptyChild;
+    using Grandchild = ::android::hardware::tests::foo::V1_0::EnumIterators::Grandchild;
+    EXPECT_EQ(toString(Parent::A), "A"s);
+    EXPECT_EQ(toString(EmptyChild::A), "A"s);
+    EXPECT_EQ(toString(Grandchild::A), "A"s);
+    EXPECT_EQ(toString(Grandchild::B), "B"s);
 }
 
 TEST_F(HidlTest, PingTest) {
