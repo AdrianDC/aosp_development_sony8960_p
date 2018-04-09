@@ -292,6 +292,9 @@ public final class HidlTestJava {
         }
 
         IBaz proxy = IBaz.getService("baz");
+
+        proxy.ping();
+
         proxy.someBaseMethod();
 
         {

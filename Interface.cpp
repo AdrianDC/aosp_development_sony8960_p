@@ -105,7 +105,6 @@ bool Interface::fillPingMethod(Method *method) const {
                     out << "return;\n";
                 }
             },
-            {IMPL_STUB, nullptr /* don't generate code */}
         } /*javaImpl*/
     );
 
