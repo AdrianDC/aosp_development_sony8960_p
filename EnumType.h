@@ -94,7 +94,6 @@ struct EnumType : public Scope {
     void emitTypeForwardDeclaration(Formatter& out) const override;
     void emitGlobalTypeDeclarations(Formatter& out) const override;
     void emitPackageTypeDeclarations(Formatter& out) const override;
-    void emitTypeDefinitions(Formatter& out, const std::string& prefix) const override;
 
     void emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const override;
 

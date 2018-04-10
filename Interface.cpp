@@ -848,12 +848,6 @@ void Interface::emitReaderWriter(
 void Interface::emitPackageTypeDeclarations(Formatter& out) const {
     Scope::emitPackageTypeDeclarations(out);
 
-    // TODO(b/65200821): remove these ifndefs
-    out << "#ifdef REALLY_IS_HIDL_INTERNAL_LIB" << gCurrentCompileName << "\n";
-    out << "std::string toString("
-        << getCppArgumentType()
-        << ");\n";
-    out << "#else\n";
     out << "static inline std::string toString(" << getCppArgumentType() << " o) ";
 
     out.block([&] {
@@ -863,25 +857,12 @@ void Interface::emitPackageTypeDeclarations(Formatter& out) const {
             << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
             << "return os;\n";
     }).endl().endl();
-    out << "#endif  // REALLY_IS_HIDL_INTERNAL_LIB\n";
 }
 
 void Interface::emitTypeDefinitions(Formatter& out, const std::string& prefix) const {
     std::string space = prefix.empty() ? "" : (prefix + "::");
+
     Scope::emitTypeDefinitions(out, space + localName());
-
-    // TODO(b/65200821): remove toString from .cpp once all prebuilts are rebuilt
-    out << "std::string toString("
-        << getCppArgumentType()
-        << " o) ";
-
-    out.block([&] {
-        out << "std::string os = \"[class or subclass of \";\n"
-            << "os += " << fullName() << "::descriptor;\n"
-            << "os += \"]\";\n"
-            << "os += o->isRemote() ? \"@remote\" : \"@local\";\n"
-            << "return os;\n";
-    }).endl().endl();
 }
 
 void Interface::emitJavaReaderWriter(
