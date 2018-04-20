@@ -166,6 +166,9 @@ com/android/server/backup/utils/TarBackupReader.class
 com/android/server/location/GnssMeasurementsProvider$1.class
 com/android/server/location/GnssMeasurementsProvider$StatusChangedOperation.class
 com/android/server/location/GnssMeasurementsProvider.class
+com/android/server/location/GnssNavigationMessageProvider$1.class
+com/android/server/location/GnssNavigationMessageProvider$StatusChangedOperation.class
+com/android/server/location/GnssNavigationMessageProvider.class
 com/android/server/location/RemoteListenerHelper$1$1.class
 com/android/server/location/RemoteListenerHelper$1.class
 com/android/server/location/RemoteListenerHelper$2.class
