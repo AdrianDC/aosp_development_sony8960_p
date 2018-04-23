@@ -163,3 +163,13 @@ com/android/server/backup/utils/PasswordUtils.class
 com/android/server/backup/utils/RestoreUtils.class
 com/android/server/backup/utils/SparseArrayUtils.class
 com/android/server/backup/utils/TarBackupReader.class
+com/android/server/location/GnssMeasurementsProvider$1.class
+com/android/server/location/GnssMeasurementsProvider$StatusChangedOperation.class
+com/android/server/location/GnssMeasurementsProvider.class
+com/android/server/location/RemoteListenerHelper$1$1.class
+com/android/server/location/RemoteListenerHelper$1.class
+com/android/server/location/RemoteListenerHelper$2.class
+com/android/server/location/RemoteListenerHelper$HandlerRunnable.class
+com/android/server/location/RemoteListenerHelper$LinkedListener.class
+com/android/server/location/RemoteListenerHelper$ListenerOperation.class
+com/android/server/location/RemoteListenerHelper.class
