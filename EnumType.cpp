@@ -254,6 +254,8 @@ void EnumType::emitTypeDeclarations(Formatter& out) const {
         const auto &type = *it;
 
         for (const auto &entry : type->values()) {
+            entry->emitDocComment(out);
+
             out << entry->name();
 
             std::string value = entry->cppValue(scalarType->getKind());
@@ -472,6 +474,8 @@ void EnumType::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const {
         const auto &type = *it;
 
         for (const auto &entry : type->values()) {
+            entry->emitDocComment(out);
+
             out << "public static final "
                 << typeName
                 << " "

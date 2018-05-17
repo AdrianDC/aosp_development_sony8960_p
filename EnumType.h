@@ -137,7 +137,7 @@ struct EnumType : public Scope {
     DISALLOW_COPY_AND_ASSIGN(EnumType);
 };
 
-struct EnumValue : public LocalIdentifier {
+struct EnumValue : public LocalIdentifier, DocCommentable {
     EnumValue(const char* name, ConstantExpression* value, const Location& location);
 
     std::string name() const;

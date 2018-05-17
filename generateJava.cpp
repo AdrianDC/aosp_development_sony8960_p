@@ -237,6 +237,8 @@ void AST::generateJava(Formatter& out, const std::string& limitToType) const {
             out << "}\n\n";
         }
 
+        method->emitDocComment(out);
+
         if (returnsValue && !needsCallback) {
             out << method->results()[0]->type().getJavaType();
         } else {

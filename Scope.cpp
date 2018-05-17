@@ -160,6 +160,7 @@ void Scope::emitTypeDeclarations(Formatter& out) const {
     }
 
     for (const Type* type : mTypes) {
+        type->emitDocComment(out);
         type->emitTypeDeclarations(out);
     }
 }
@@ -188,6 +189,7 @@ void Scope::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) const {
     }
 
     for (const Type* type : mTypes) {
+        type->emitDocComment(out);
         type->emitJavaTypeDeclarations(out, atTopLevel);
     }
 }

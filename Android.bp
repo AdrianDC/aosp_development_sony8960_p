@@ -78,6 +78,7 @@ cc_library_host_shared {
         "CompoundType.cpp",
         "ConstantExpression.cpp",
         "DeathRecipientType.cpp",
+        "DocComment.cpp",
         "EnumType.cpp",
         "HandleType.cpp",
         "HidlTypeAssertion.cpp",

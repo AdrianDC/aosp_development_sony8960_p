@@ -123,8 +123,8 @@ Formatter &Formatter::operator<<(const std::string &out) {
 
         if (pos == std::string::npos) {
             if (mAtStartOfLine) {
-                fprintf(mFile, "%s", mLinePrefix.c_str());
                 fprintf(mFile, "%*s", (int)(mSpacesPerIndent * mIndentDepth), "");
+                fprintf(mFile, "%s", mLinePrefix.c_str());
                 mAtStartOfLine = false;
             }
 
@@ -132,17 +132,16 @@ Formatter &Formatter::operator<<(const std::string &out) {
             break;
         }
 
+        if (mAtStartOfLine && (pos > start || !mLinePrefix.empty())) {
+            fprintf(mFile, "%*s", (int)(mSpacesPerIndent * mIndentDepth), "");
+            fprintf(mFile, "%s", mLinePrefix.c_str());
+        }
+
         if (pos == start) {
             fprintf(mFile, "\n");
             mAtStartOfLine = true;
         } else if (pos > start) {
-            if (mAtStartOfLine) {
-                fprintf(mFile, "%s", mLinePrefix.c_str());
-                fprintf(mFile, "%*s", (int)(mSpacesPerIndent * mIndentDepth), "");
-            }
-
             output(out.substr(start, pos - start + 1));
-
             mAtStartOfLine = true;
         }
 

@@ -21,6 +21,7 @@
 #include <android-base/logging.h>
 #include <hidl-util/FQName.h>
 
+#include "DocComment.h"
 #include "Location.h"
 
 namespace android {
@@ -120,7 +121,7 @@ struct Reference {
 };
 
 template <class T>
-struct NamedReference : public Reference<T> {
+struct NamedReference : public Reference<T>, DocCommentable {
     NamedReference(const std::string& name, const Reference<T>& reference, const Location& location)
         : Reference<T>(reference, location), mName(name) {}
 

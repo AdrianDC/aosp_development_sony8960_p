@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "DocComment.h"
 #include "Location.h"
 #include "Reference.h"
 
@@ -50,7 +51,7 @@ enum MethodImplType {
 
 using MethodImpl = std::map<MethodImplType, std::function<void(Formatter &)>>;
 
-struct Method {
+struct Method : DocCommentable {
     Method(const char* name, std::vector<NamedReference<Type>*>* args,
            std::vector<NamedReference<Type>*>* results, bool oneway,
            std::vector<Annotation*>* annotations, const Location& location);

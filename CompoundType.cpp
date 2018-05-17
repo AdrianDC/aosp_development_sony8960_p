@@ -386,6 +386,7 @@ void CompoundType::emitTypeDeclarations(Formatter& out) const {
 
     if (containsPointer()) {
         for (const auto &field : *mFields) {
+            field->emitDocComment(out);
             out << field->type().getCppStackType()
                 << " "
                 << field->name()
@@ -577,7 +578,9 @@ void CompoundType::emitJavaTypeDeclarations(Formatter& out, bool atTopLevel) con
 
     Scope::emitJavaTypeDeclarations(out, false /* atTopLevel */);
 
-    for (const auto &field : *mFields) {
+    for (const auto& field : *mFields) {
+        field->emitDocComment(out);
+
         out << "public ";
 
         field->type().emitJavaFieldInitializer(out, field->name());

@@ -26,6 +26,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "DocComment.h"
 #include "Reference.h"
 
 namespace android {
@@ -36,7 +37,7 @@ struct FQName;
 struct ScalarType;
 struct Scope;
 
-struct Type {
+struct Type : DocCommentable {
     Type(Scope* parent);
     virtual ~Type();
 

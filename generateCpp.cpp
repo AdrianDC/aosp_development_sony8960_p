@@ -288,6 +288,8 @@ void AST::generateInterfaceHeader(Formatter& out) const {
 
             method->dumpAnnotations(out);
 
+            method->emitDocComment(out);
+
             if (elidedReturn) {
                 out << "virtual ::android::hardware::Return<";
                 out << elidedReturn->type().getCppResultType() << "> ";
