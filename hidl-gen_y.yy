@@ -338,6 +338,11 @@ doc_comments
         $1->merge($2);
         $$ = $1;
       }
+    | doc_comments '}'
+      {
+        std::cerr << "ERROR: Doc comments must preceed what they describe at " << @1 << "\n";
+        YYERROR;
+      }
     ;
 
 valid_identifier
