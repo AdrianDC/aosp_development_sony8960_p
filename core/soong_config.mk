@@ -29,6 +29,7 @@ csv_to_json_list = $(call _json_list,$(comma),$(1))
 # 2: Value
 add_json_val = $(eval _contents := $$(_contents)    "$$(strip $$(1))":$$(space)$$(strip $$(2))$$(comma)$$(newline))
 add_json_str = $(call add_json_val,$(1),"$(strip $(2))")
+add_json_str_omitempty = $(if $(strip $(2)),$(call add_json_str, $(1), $(2)))
 add_json_list = $(call add_json_val,$(1),$(call json_list,$(patsubst %,%,$(2))))
 add_json_csv = $(call add_json_val,$(1),$(call csv_to_json_list,$(strip $(2))))
 add_json_bool = $(call add_json_val,$(1),$(if $(strip $(2)),true,false))
