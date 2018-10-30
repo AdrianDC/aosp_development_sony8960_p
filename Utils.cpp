@@ -19,6 +19,7 @@
 #include "Process.h"
 #include "sehandle.h"
 
+#include <android-base/chrono_utils.h>
 #include <android-base/file.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
@@ -42,10 +43,13 @@
 #include <sys/statvfs.h>
 #include <thread>
 
+#include <thread>
+
 #ifndef UMOUNT_NOFOLLOW
 #define UMOUNT_NOFOLLOW    0x00000008  /* Don't follow symlink on umount */
 #endif
 
+using namespace std::chrono_literals;
 using android::base::ReadFileToString;
 using android::base::StringPrintf;
 
@@ -754,6 +758,21 @@ bool WaitForFile(const std::string& filename,
 
 bool IsRunningInEmulator() {
     return android::base::GetBoolProperty("ro.kernel.qemu", false);
+}
+
+// TODO(118708649): fix duplication with init/util.h
+status_t WaitForFile(const char* filename, std::chrono::nanoseconds timeout) {
+    android::base::Timer t;
+    while (t.duration() < timeout) {
+        struct stat sb;
+        if (stat(filename, &sb) != -1) {
+            LOG(INFO) << "wait for '" << filename << "' took " << t;
+            return 0;
+        }
+        std::this_thread::sleep_for(10ms);
+    }
+    LOG(WARNING) << "wait for '" << filename << "' timed out and took " << t;
+    return -1;
 }
 
 bool FsyncDirectory(const std::string& dirname) {
