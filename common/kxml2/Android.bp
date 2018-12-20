@@ -17,3 +17,8 @@ java_import_host {
     jars: ["kxml2-2.3.0.jar"],
     installable: true,
 }
+
+java_import {
+    name: "kxml2-android",
+    jars: ["kxml2-2.3.0.jar"],
+}
