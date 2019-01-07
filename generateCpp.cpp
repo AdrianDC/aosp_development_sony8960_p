@@ -1503,6 +1503,7 @@ status_t AST::generateStubSource(
         << "_hidl_impl, {SCHED_NORMAL, 0});\n";
     out << "mSchedPolicy = prio.sched_policy;\n";
     out << "mSchedPriority = prio.prio;\n";
+    out << "setRequestingSid(::android::hardware::details::gServiceSidMap.get(_hidl_impl, false));\n";
     out.unindent();
 
     out.unindent();
